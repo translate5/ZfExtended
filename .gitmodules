@@ -1,0 +1,3 @@
+[submodule "ThirdParty/REST"]
+	path = ThirdParty/REST
+	url = git@github.com:MittagQI/restful-zend-framework.git

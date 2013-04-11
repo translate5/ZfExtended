@@ -1,0 +1,31 @@
+=====
+Nutzung des errorCollects - wichtige Codinghinweise
+=====
+
+Der Errorhandling-Prozess von ZfExtended bietet die Möglichkeit, während des Prozesses
+(oder bereits über die application.ini) ein errorCollecting anzustoßen. Das bedeutet, dass
+Fehler im Programmcode nicht unmittelbar zu einer Exception führen (wie das per Default geschieht),
+sondern gesammelt werden und am Schluss des Prozesses über die ErrorController-Mechanismen
+in ins Log, die Fehlermail an den Admin und die Browserausgabe übermittelt werden.
+
+Um dies zu nutzen muss 
+- der Zend_Registry-Wert "errorCollet" auf true stehen
+- Dieser wird initial durch runtimeOptions.errorCollect in der application.ini 
+  gesetzt und kann an beliebiger Stelle im Prozesscode mittels 
+  Zend_Registry::set('errorCollect',true); true gestellt werden
+- Um errorCollect zu nutzen, muss runtimeOptions.errorCollect in der application.ini
+  auf jeden Fall gesetzt sein (ob true oder false ist initial egal)
+
+Achtung: Geworfene Exceptions (ob im eigenen Code oder durch das Zend Framework)
+  führen auch im errorCollect zum unmittelbaren Programmabruch. Möchte man Fehler
+  werfen, die im errorCollect gesammelt werden können, muss dies mit trigger_error
+  geschehen. Ist errorCollect nicht aktiviert, führt ohnehin jeder Fehler zu einer Exception
+
+Achtung: Wird trigger_error mit E_USER_NOTICE genutzt (was der default-Wert ist),
+  wird dies nicht als Fehler sondern als Loginfo gewertet. Ausgaben (Log, Mail, Browser)
+  finden statt, jedoch wird für diese Loginfo nur die errorMessage ausgegeben - kein trace etc.
+
+===
+mb-String
+===
+Einige mb-String-Methoden innerhalb der ZfExtended-lib weisen derzeit fest verdrahtet utf-8 als Codierung auf

@@ -1,0 +1,1 @@
+Setzt voraus, dass in der application.ini phpsettings.default_charset auf den Wert gesetzt ist, in dem die application arbeiten soll

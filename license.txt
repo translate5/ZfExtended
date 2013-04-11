@@ -1,0 +1,35 @@
+ZfExtended library - a library to make the use of Zend Framework even more easy
+Copyright (c) 2012, Marc Mittag, MittagQI
+All rights reserved.
+service (ÄTT) MittagQI.com 
+http://www.MittagQI.com/ 
+
+------------------------------------------------------------------------------------------
+This software is multi-licensed under the terms of the Eclipse Public License - v 1.0 (EPLv1)
+as published by the Eclipse Foundation and the GNU LESSER GENERAL PUBLIC LICENSE version 3 (LGPLv3)
+and GNU GENERAL PUBLIC LICENSE version 3 as published by the Free Software Foundation, Inc.
+ 
+A copy of these licenses you can find at http://www.eclipse.org/legal/epl-v10.html or 
+in the same folder as this document in the document eclipse-license.txt, at 
+http://www.gnu.org/licenses/lgpl.html or in the same folder as this document in the 
+document lgpl-license.txt and at http://www.gnu.org/licenses/gpl.html or 
+in the same folder as this document in the document gpl3-license.txt.
+
+An exception to this license are the external software-libs, used by translate5. 
+If you use them, you must follow and apply their specific licenses. Therefore they 
+are not part of the translate5 software package and not part of the translate5 
+git-repository.
+
+These external software-libs are:
+
+- Horde_Text_Diff. It is used by the ZfExtended_diff-class. If you use this 
+functionality, you need the Horde_Text_Diff-package. 
+Horde is licensed under LGPL v. 2.1. A copy of 
+the LGPL v. 2.1 you can find at http://www.horde.org/licenses/lgpl21
+
+- the MittagQI-fork of restful-zend-framework. restful-zend-framework is 
+ Copyright (c) 2011 Code in Chaos Inc. http://www.codeinchaos.com. In our opinion 
+it's license is compareable to a free-bsd-license (no warranty or responsibilty 
+for this opionion in any way by MittagQI or Marc Mittag in person). You find this 
+license at https://github.com/MittagQI/restful-zend-framework/blob/master/LICENSE
+Without this software-lib translate5 will not work.
