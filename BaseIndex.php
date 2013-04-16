@@ -182,12 +182,14 @@ class ZfExtended_BaseIndex{
      */
     public function getAgency(){
         $sName = explode('.', $_SERVER['SERVER_NAME']);
-        if(
-                isset($sName[1])&&
-                isset($sName[2])&&
-                $sName[1]==='translate5'&&
-                $sName[2]==='net'
-            )return $sName[0];
+        $tld = array_pop($sName);
+        $domain = array_pop($sName); 
+        $sub = array_pop($sName);
+        $isLive = ($domain === 'translate5' && $tld === 'net');
+        $isMainT5 = (empty($sub) && $sub === 'www'); 
+        if($isLive && !$isMainT5) {
+            return $sub;
+        }
         return 'translate5';
     }
     
