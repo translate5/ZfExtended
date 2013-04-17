@@ -186,7 +186,7 @@ class ZfExtended_BaseIndex{
         $domain = array_pop($sName); 
         $sub = array_pop($sName);
         $isLive = ($domain === 'translate5' && $tld === 'net');
-        $isMainT5 = (empty($sub) && $sub === 'www'); 
+        $isMainT5 = (empty($sub) || $sub === 'www'); 
         if($isLive && !$isMainT5) {
             return $sub;
         }
