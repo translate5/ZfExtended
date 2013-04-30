@@ -33,6 +33,9 @@
 
 abstract class ZfExtended_RestController extends Zend_Rest_Controller {
 
+    const SET_DATA_WHITELIST = true;
+    const SET_DATA_BLACKLIST = false;
+    
   /**
    * Class Name of the Entity Model
    * @var string
@@ -179,11 +182,16 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
    * sets the entity data out of given post / put data.
    * - setzt für in _sortColMap gesetzten Spalten den übergebenen Wert für beide Spalten
    * @param array $reject list of fieldnames to ignore
+   * @param boolean $mode defines if given fields are a black (false) or a whitelist (true)
    */
-  protected function setDataInEntity(array $reject = null) {
-    settype($reject, 'array');
+  protected function setDataInEntity(array $fields = null, $mode = self::SET_DATA_BLACKLIST) {
+    settype($fields, 'array');
     foreach($this->data as $key => $value) {
-        if($this->entity->hasField($key) && !in_array($key, $reject)){
+        $hasField = in_array($key, $fields);
+        $modeWl = $mode === self::SET_DATA_WHITELIST;
+        $whiteListed = !$modeWl || $hasField && $modeWl;
+        $blackListed = $hasField && $mode === self::SET_DATA_BLACKLIST;
+        if($this->entity->hasField($key) && $whiteListed && !$blackListed){
             $this->entity->__call('set'.ucfirst($key), array($value));
             if(isset($this->_sortColMap[$key])){
                 if(is_string($value)){
