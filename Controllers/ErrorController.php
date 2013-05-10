@@ -308,7 +308,8 @@ class ErrorController extends ZfExtended_Controllers_Action
     public function jserrorAction(){
         throw new Zend_Exception(
                 'Fehler im Javascript. Die folgende Meldung wurde vom JS übergeben: '.
-                $this->_request->getParam('jsError'));
+                $this->_request->getParam('jsError').
+                '  Content of $_SERVER had been: '.  print_r($_SERVER,true));
     }
 
 }
