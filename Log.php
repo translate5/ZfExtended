@@ -155,7 +155,7 @@ class  ZfExtended_Log extends ZfExtended_Mail{
 
     protected function sendMail (string $subject, $message=NULL) {
         $this->setMail();
-        $this->setContent($subject, (string)$message);
+        $this->setContent(substr($subject, 0, 120), $subject."\r\n\r\n".(string)$message);
         $this->send($this->_config->resources->mail->defaultFrom->email,
                 $this->_config->resources->mail->defaultFrom->name);
     }
