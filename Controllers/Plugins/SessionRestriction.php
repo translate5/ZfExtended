@@ -150,6 +150,13 @@ class ZfExtended_Controllers_Plugins_SessionRestriction extends Zend_Controller_
             'Redirector'
         );
         /* @var $redirector Zend_Controller_Action_Helper_Redirector */
-        $redirector->gotoSimpleAndExit('index', 'login');
+        $redirectUrl = "/";
+        if(isset($this->session->runtimeOptions->loginUrl)){
+            $redirectUrl = $this->session->runtimeOptions->loginUrl;
+        }
+        elseif(defined(APPLICATION_RUNDIR) && APPLICATION_RUNDIR != ''){
+            $redirectUrl = APPLICATION_RUNDIR;
+        }
+        $redirector->gotoUrlAndExit($redirectUrl);
     }
 }
