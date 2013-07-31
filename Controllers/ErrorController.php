@@ -273,7 +273,7 @@ class ErrorController extends ZfExtended_Controllers_Action
             }
         }
         if($this->_errors[0]->_errorCode === 404){
-            $this->view->errors[0]->_errorMessage = $this->_translate->_('Seite nicht gefunden: ').$_SERVER['REQUEST_URI'].$this->_translate->_('/ Aufruf derfolgte durch IP: ').$_SERVER['REMOTE_ADDR'];
+            $this->view->errors[0]->_errorMessage = $this->_translate->_('Seite nicht gefunden: ').$_SERVER['REQUEST_URI'].$this->_translate->_('/ Aufruf erfolgte durch IP: ').$_SERVER['REMOTE_ADDR'];
         }
     }
     /**
