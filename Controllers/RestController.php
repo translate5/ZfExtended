@@ -209,4 +209,18 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
     $this->entity->load($this->_getParam('id'));
     $this->entity->delete();
   }
+  /**
+   * not implemented so far, therefore BadMethodCallException
+   * must be present in Zend_Framework 1.12, therefore solved this way
+   */
+  public function headAction() {
+       throw new ZfExtended_BadMethodCallException(__CLASS__.'->head');
+  }
+  /**
+   * not implemented so far, therefore BadMethodCallException
+   * must be present in Zend_Framework 1.12, therefore solved this way
+   */
+  public function optionsAction() {
+       throw new ZfExtended_BadMethodCallException(__CLASS__.'->head');
+  }
 }
