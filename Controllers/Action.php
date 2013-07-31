@@ -58,13 +58,5 @@ abstract class ZfExtended_Controllers_Action extends Zend_Controller_Action {
         $this->view->controller = $this->_request->getControllerName();
         $this->view->action = $this->_request->getActionName();
     }
-    /*
-     * wrapper für die forward-Methode, um sie auch im public-scope einsetzen zu können
-     * @return $this->_forward
-     */
-    public function forward($action, $controller = null, $module = null, array $params = null)
-    {
-        return $this->_forward($action, $controller, $module, $params);
-    }
 }
 
