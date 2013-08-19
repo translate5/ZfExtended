@@ -31,29 +31,25 @@
   END LICENSE AND COPYRIGHT 
  */
 
-/**#@+ 
- * @author Marc Mittag
- * @package ZfExtended
- * @version 2.0
- * 
+/* 
+ * validates, that var is md5-hash
  */
-/**
- * Plugin zur Verifikation des aktuellen Authentifizierungsstatus
- * 
- *
- */
-class ZfExtended_Controllers_Plugins_Access extends Zend_Controller_Plugin_Abstract {
-    /**
-     * Wird vor dem Start des Dispatcher Laufes ausgeführt
-     * 
-     * @param  Zend_Controller_Request_Abstract $request
-     * @return void
-     */
-    public function RouteShutdown(Zend_Controller_Request_Abstract $request)
+class ZfExtended_Validate_Md5 extends Zend_Validate_Abstract
+{
+    const MD5 = 'md5';
+    protected $_messageTemplates = array(
+      self::MD5 => "'%value%' is no md5-hash"
+    );
+    public function isValid($value)
     {
-        $accessHelper = ZfExtended_Zendoverwrites_Controller_Action_HelperBroker::getStaticHelper(
-            'Access'
-        );
-        $accessHelper->isAuthenticated();
+      $this->_setValue($value);
+      $hex = new Zend_Validate_Hex();
+      $strLen = new Zend_Validate_StringLength(array('min' => 32, 'max' => 32));
+
+      if (!$hex->isValid($value)||!$strLen->isValid($value)) {
+          $this->_error(self::BOOLEAN);
+          return false;
+      }
+      return true;
     }
 }

@@ -31,29 +31,23 @@
   END LICENSE AND COPYRIGHT 
  */
 
-/**#@+ 
- * @author Marc Mittag
- * @package ZfExtended
- * @version 2.0
- * 
+/* 
+ * validates, that var is boolean
  */
-/**
- * Plugin zur Verifikation des aktuellen Authentifizierungsstatus
- * 
- *
- */
-class ZfExtended_Controllers_Plugins_Access extends Zend_Controller_Plugin_Abstract {
-    /**
-     * Wird vor dem Start des Dispatcher Laufes ausgeführt
-     * 
-     * @param  Zend_Controller_Request_Abstract $request
-     * @return void
-     */
-    public function RouteShutdown(Zend_Controller_Request_Abstract $request)
+class ZfExtended_Validate_Boolean extends Zend_Validate_Abstract
+{
+    const BOOLEAN = 'Boolean';
+    protected $_messageTemplates = array(
+      self::BOOLEAN => "'%value%' is not boolean"
+    );
+    public function isValid($value)
     {
-        $accessHelper = ZfExtended_Zendoverwrites_Controller_Action_HelperBroker::getStaticHelper(
-            'Access'
-        );
-        $accessHelper->isAuthenticated();
+      $this->_setValue($value);
+
+      if ($value !== false && $value !== true) {
+          $this->_error(self::BOOLEAN);
+          return false;
+      }
+      return true;
     }
 }

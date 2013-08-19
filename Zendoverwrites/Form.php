@@ -85,9 +85,20 @@ class  ZfExtended_Zendoverwrites_Form extends Zend_Form
         foreach($session->libraryNames as $library){
             $this->addElementPrefixPath( $library.'_', APPLICATION_PATH . '/../library/'.$library );
         }
-        $ini_path = APPLICATION_PATH.'/modules/'.$module.'/configs/forms/' . $this->_form;
-        if(!file_exists($ini_path)){
-             throw new Zend_Exception('ini-Datei '.$ini_path.' existiert nicht', 0);
+        $ini_paths = array();
+        $ini_paths[] = APPLICATION_PATH.'/modules/'.$module.'/configs/forms/' . $this->_form;
+        foreach($session->libraryNames as $library){
+            $ini_paths[] = APPLICATION_PATH. '/../library/'.$library.'/configs/forms/' . $this->_form;
+        }
+        $ini_path = false;
+        foreach ($ini_paths as $path) {
+            if(file_exists($path)){
+                $ini_path = $path;
+                break;
+            }
+        }
+        if(!$ini_path){
+            throw new Zend_Exception('the ini-file '.$this->_form.' does not exist', 0);
         }
         $config = new Zend_Config_Ini($ini_path);
         $this->setConfig($config);

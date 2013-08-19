@@ -38,7 +38,7 @@
  *
  */
 /**
- * Stellt Laden der ActionHelper sicher
+ * Stellt Laden der ControllerActionHelper sicher
  *
  *
  *
@@ -100,7 +100,9 @@ class ZfExtended_Resource_AddHelper extends Zend_Application_Resource_ResourceAb
 
         //Es folgen die Controller und View Helper Pfade der einzelnen Libs,
         // ebenfalls in Abhängigkeit des Kunden (Agency)
-        foreach ($this->_session->libraryNames as $lib) {
+        $config = Zend_Registry::get('config');
+        $libs = array_reverse($config->runtimeOptions->libraries->order->toArray());
+        foreach ($libs as $lib) {
             $libPrefix = ucfirst($lib).'_';
             $this->_addPath($agency.'_'.$libPrefix.$c_h, $fowBase.'/library/'.$lib.$c_h_path);
             $this->_addPath($libPrefix.$c_h, APPLICATION_PATH .'/../library/'.$lib.$c_h_path);

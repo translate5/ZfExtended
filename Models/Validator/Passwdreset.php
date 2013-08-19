@@ -31,29 +31,24 @@
   END LICENSE AND COPYRIGHT 
  */
 
-/**#@+ 
+/**#@+
  * @author Marc Mittag
  * @package ZfExtended
  * @version 2.0
- * 
- */
-/**
- * Plugin zur Verifikation des aktuellen Authentifizierungsstatus
- * 
  *
  */
-class ZfExtended_Controllers_Plugins_Access extends Zend_Controller_Plugin_Abstract {
-    /**
-     * Wird vor dem Start des Dispatcher Laufes ausgeführt
-     * 
-     * @param  Zend_Controller_Request_Abstract $request
-     * @return void
-     */
-    public function RouteShutdown(Zend_Controller_Request_Abstract $request)
-    {
-        $accessHelper = ZfExtended_Zendoverwrites_Controller_Action_HelperBroker::getStaticHelper(
-            'Access'
-        );
-        $accessHelper->isAuthenticated();
+
+class ZfExtended_Models_Validator_Passwdreset extends ZfExtended_Models_Validator_Abstract {
+  
+  /**
+   * Validators for Passwdreset Entity
+   * Validation will be done on calling entity->validate
+   */
+    protected function defineValidators() {
+        $this->addValidator('id', 'int');
+        $this->addValidator('userId', 'int');
+        $this->addValidator('expiration', 'int');
+        $this->addValidator('resetHash','md5');
+        $this->addValidator('internalSessionUniqId','md5');
     }
 }

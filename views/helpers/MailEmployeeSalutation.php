@@ -31,29 +31,36 @@
   END LICENSE AND COPYRIGHT 
  */
 
-/**#@+ 
+/**#@+
  * @author Marc Mittag
  * @package ZfExtended
  * @version 2.0
- * 
- */
-/**
- * Plugin zur Verifikation des aktuellen Authentifizierungsstatus
- * 
  *
  */
-class ZfExtended_Controllers_Plugins_Access extends Zend_Controller_Plugin_Abstract {
-    /**
-     * Wird vor dem Start des Dispatcher Laufes ausgeführt
-     * 
-     * @param  Zend_Controller_Request_Abstract $request
-     * @return void
-     */
-    public function RouteShutdown(Zend_Controller_Request_Abstract $request)
+/**
+ * Erzeugt in Mails an den eingeloggten Mitarbeiter die geschlechtsspezifische
+ * Anrede
+ *
+ * @param string $gender optional. Falls nicht gesetzt wird auf das gender des
+ *      aktuell eingeloggten Employee zurückgegriffen. Falls gesetzt sind nur die
+ *      Werte 'm' und 'f' erlaubt.
+ * @return string salutation
+ *
+ */
+
+class ZfExtended_View_Helper_MailEmployeeSalutation extends Zend_View_Helper_Abstract
+{
+    public function mailEmployeeSalutation($gender = false)
     {
-        $accessHelper = ZfExtended_Zendoverwrites_Controller_Action_HelperBroker::getStaticHelper(
-            'Access'
-        );
-        $accessHelper->isAuthenticated();
+        if(!$gender){
+            $user = new Zend_Session_Namespace('user');
+            $gender = $user->gender;
+        }
+        elseif($gender !='f' and $gender!='m'){
+            throw new Zend_Exception('$gender hat den nicht erwarteten Wert '.$gender, 0);
+        }
+        return ($gender == 'f')?
+            $this->view->translate->_('Sehr geehrte Frau'):
+            $this->view->translate->_('Sehr geehrter Herr');
     }
 }

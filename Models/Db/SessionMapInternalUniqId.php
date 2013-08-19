@@ -33,7 +33,7 @@
 
 /**#@+ 
  * @author Marc Mittag
- * @package portal
+ * @package ZfExtended
  * @version 2.0
  * 
  */

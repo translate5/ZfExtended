@@ -31,29 +31,31 @@
   END LICENSE AND COPYRIGHT 
  */
 
-/**#@+ 
+/**#@+
  * @author Marc Mittag
  * @package ZfExtended
  * @version 2.0
- * 
- */
-/**
- * Plugin zur Verifikation des aktuellen Authentifizierungsstatus
- * 
  *
  */
-class ZfExtended_Controllers_Plugins_Access extends Zend_Controller_Plugin_Abstract {
-    /**
-     * Wird vor dem Start des Dispatcher Laufes ausgeführt
-     * 
-     * @param  Zend_Controller_Request_Abstract $request
-     * @return void
-     */
-    public function RouteShutdown(Zend_Controller_Request_Abstract $request)
-    {
-        $accessHelper = ZfExtended_Zendoverwrites_Controller_Action_HelperBroker::getStaticHelper(
-            'Access'
-        );
-        $accessHelper->isAuthenticated();
-    }
+
+class ZfExtended_Models_Validator_User extends ZfExtended_Models_Validator_Abstract {
+  
+  /**
+   * Validators for User Entity
+   * Validation will be done on calling entity->validate
+   */
+  protected function defineValidators() {
+    $config = Zend_Registry::get('config');
+    
+    $this->addValidator('id', 'int');
+    $this->addValidator('userGuid', 'guid');
+    $this->addValidator('firstName', 'stringLength', array('min' => 1, 'max' => 255));
+    $this->addValidator('surName', 'stringLength', array('min' => 1, 'max' => 255));
+    $this->addValidator('login', 'stringLength', array('min' => 6, 'max' => 255));
+    $this->addValidator('gender', 'stringLength', array('min' => 1, 'max' => 1));
+    $this->addValidator('email', 'emailAddress');
+    $this->addValidator('roles', 'stringLength', array('min' => 0, 'max' => 255));
+    $this->addValidator('passwd', 'stringLength', array('min' => 8, 'max' => 255));
+    $this->addValidator('passwdReset', 'boolean');
+  }
 }

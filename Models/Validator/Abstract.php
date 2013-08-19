@@ -194,7 +194,10 @@ abstract class ZfExtended_Models_Validator_Abstract {
    * @return Zend_Validate_Interface
    */
   public function validatorFactory($name, array $parameters = array()){
-    $internalValidators = array('guid' => 'ZfExtended_Validate_Guid');
+    $internalValidators = array('guid' => 'ZfExtended_Validate_Guid',
+        'boolean' => 'ZfExtended_Validate_Boolean',
+        'md5' => 'ZfExtended_Validate_Md5'
+        );
     if(isset($internalValidators[$name])){
       $class = $internalValidators[$name];
     }

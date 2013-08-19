@@ -150,7 +150,6 @@ class ZfExtended_Controller_Helper_General extends Zend_Controller_Action_Helper
     }
 
     /**
-     * Loggt den User aus.
      */
     public function logoutUser() {
         $session = new Zend_Session_Namespace();

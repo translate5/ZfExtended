@@ -1,0 +1,79 @@
+<?php
+ /*
+   START LICENSE AND COPYRIGHT
+
+  This file is part of the ZfExtended library and build on Zend Framework
+
+  Copyright (c) 2013 Marc Mittag; MittagQI - Quality Informatics;  All rights reserved.
+
+  Contact:  http://www.MittagQI.com/  /  service (ÄTT) MittagQI.com
+
+  This file is multi-licensed under the EPL, LGPL and GPL licenses. 
+
+  It may be used under the terms of the Eclipse Public License - v 1.0
+  as published by the Eclipse Foundation and appearing in the file eclipse-license.txt 
+  included in the packaging of this file.  Please review the following information 
+  to ensure the Eclipse Public License - v 1.0 requirements will be met:
+  http://www.eclipse.org/legal/epl-v10.html.
+
+  Also it may be used under the terms of the GNU LESSER GENERAL PUBLIC LICENSE version 3
+  or the GNU GENERAL PUBLIC LICENSE version 3 as published by the 
+  Free Software Foundation, Inc. and appearing in the files lgpl-license.txt and gpl3-license.txt
+  included in the packaging of this file.  Please review the following information 
+  to ensure the GNU LESSER GENERAL PUBLIC LICENSE version 3 requirements or the
+  GNU GENERAL PUBLIC LICENSE version 3 requirements will be met:
+  http://www.gnu.org/licenses/lgpl.html   /  http://www.gnu.org/licenses/gpl.html
+  
+  @copyright  Marc Mittag, MittagQI - Quality Informatics
+  @author     MittagQI - Quality Informatics
+  @license    Multi-licensed under Eclipse Public License - v 1.0 http://www.eclipse.org/legal/epl-v10.html, GNU LESSER GENERAL PUBLIC LICENSE version 3 http://www.gnu.org/licenses/lgpl.html and GNU GENERAL PUBLIC LICENSE version 3 http://www.gnu.org/licenses/gpl.html
+
+  END LICENSE AND COPYRIGHT 
+ */
+
+/**#@+
+ * @author Marc Mittag
+ * @package ZfExtended
+ * @version 2.0
+ *
+ */
+$session = new Zend_Session_Namespace();
+echo sprintf($this->translate->_('%1$s %2$s,
+
+Sie erhalten diese Email, weil wir eine Anfrage zur Änderung des Passwortes für Ihr beoSphere Konto auf http://www.beo-doc.de/portal/public/ erhalten haben. 
+
+Wenn Sie angefragt haben und Ihr Passwort ändern möchten, dann befolgen Sie bitte folgende Anweisungen:
+
+Der folgende Link enthält einen für 30 Minuten gültigen Schlüssel, mit welchem Sie Ihr Passwort neu setzen können. Aus Sicherheitsgründen funktioniert dies nur, wenn Sie den folgenden Link im selben Browser in dem Sie die Änderung Ihres Passwort angefordert haben öffnen und zudem nach Zurücksetzen des Passworts Ihren Browser nicht neu gestartet haben.
+
+==============================
+Link um Passwort neu zu setzen
+------------------------------
+%3$s%4$s%5$s%6$s
+------------------------------
+==============================
+
+Sollte Ihr Schlüssel nicht mehr gültig sein, können Sie unter jederzeit einen neuen Schlüssel anfordern.
+------------------------------
+%3$s%4$s%5$s%7$s
+------------------------------
+
+Sollten Sie die Anfrage nicht selbst ausgelöst haben, bitten wir Sie uns darüber zu informieren.
+
+Vielen Dank und viele Grüße,
+Ihr Projektmanagement Team
+beo Gesellschaft für Sprachen und Technologie
+
+Diese Email wurde automatisch generiert. Please do not reply to this email.'),
+    $this->mailEmployeeSalutation($this->gender),
+    $this->surname,
+    $session->runtimeOptions->server->protocol,
+    $session->runtimeOptions->server->name,
+    APPLICATION_RUNDIR,
+    '/login/passwdnew?resetHash='.$this->resetHash,
+    '/login/passwdreset'
+);
+
+
+
+

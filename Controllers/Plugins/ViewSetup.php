@@ -72,7 +72,9 @@ class ZfExtended_Controllers_Plugins_ViewSetup extends Zend_Controller_Plugin_Ab
             'ViewRenderer'
         );
         $view = new Zend_View();
-        foreach ($this->_session->libraryNames as $lib) {
+        $config = Zend_Registry::get('config');
+        $libs = array_reverse($config->runtimeOptions->libraries->order->toArray());
+        foreach ($libs as $lib) {
             $view->addBasePath(APPLICATION_PATH.'/../library/'.$lib.'/views/', $lib.'_View_');
         }
         $view->addBasePath(APPLICATION_PATH.'/modules/'.Zend_Registry::get('module').'/views/', 'View_');

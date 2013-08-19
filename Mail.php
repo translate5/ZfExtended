@@ -114,8 +114,18 @@ class  ZfExtended_Mail {
     protected function initView() {
         $this->view = new Zend_View();
         $this->view->translate = Zend_Registry::get('Zend_Translate');
-        $this->view->addHelperPath(APPLICATION_PATH.'/modules/'.Zend_Registry::get('module').'/views/helpers', 'View_Helper_');
-        $this->view->setScriptPath(APPLICATION_PATH.'/modules/'.Zend_Registry::get('module') . self::MAIL_TEMPLATE_BASEPATH);
+        $config = Zend_Registry::get('config');
+        $libs = array_reverse($config->runtimeOptions->libraries->order->toArray());
+        foreach ($libs as $lib) {
+            $this->view->addHelperPath(APPLICATION_PATH.'/../library/'.$lib.
+                    '/views/helpers/', $lib.'_View_Helper_');
+            $this->view->addScriptPath(APPLICATION_PATH.'/../library/'.$lib.
+                    self::MAIL_TEMPLATE_BASEPATH);
+        }
+        $this->view->addHelperPath(APPLICATION_PATH.'/modules/'.
+                Zend_Registry::get('module').'/views/helpers', 'View_Helper_');
+        $this->view->addScriptPath(APPLICATION_PATH.'/modules/'.
+                Zend_Registry::get('module') . self::MAIL_TEMPLATE_BASEPATH);
     }
 
     /**

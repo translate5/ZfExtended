@@ -52,6 +52,7 @@ class ZfExtended_Resource_InitRegistry extends Zend_Application_Resource_Resourc
     public function init()
     {
         $index = ZfExtended_BaseIndex::getInstance();
+        /* @var $index ZfExtended_BaseIndex */
         $index->initRegistry($this->getBootstrap());
     }
 }

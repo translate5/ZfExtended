@@ -31,29 +31,43 @@
   END LICENSE AND COPYRIGHT 
  */
 
-/**#@+ 
+/**#@+
  * @author Marc Mittag
  * @package ZfExtended
  * @version 2.0
- * 
- */
-/**
- * Plugin zur Verifikation des aktuellen Authentifizierungsstatus
- * 
  *
  */
-class ZfExtended_Controllers_Plugins_Access extends Zend_Controller_Plugin_Abstract {
+/*
+ * 
+ *
+ * 
+ */
+
+class ZfExtended_Controller_Helper_Auth extends Zend_Controller_Action_Helper_Abstract {
     /**
-     * Wird vor dem Start des Dispatcher Laufes ausgeführt
-     * 
-     * @param  Zend_Controller_Request_Abstract $request
-     * @return void
+     * authenticates a user
+     *
+     * @param  string                   $login 
+     * @param  string                   $passwd in clear text
+     * @param  string                   $authTableName as taken by Zend_Auth_Adapter_DbTable
+     * @param  string                   $identityColumn as taken by Zend_Auth_Adapter_DbTable
+     * @param  string                   $credentialColumn as taken by Zend_Auth_Adapter_DbTable
+     * @param  string                   $credentialTreatment as taken by Zend_Auth_Adapter_DbTable
+     * @return boolean
      */
-    public function RouteShutdown(Zend_Controller_Request_Abstract $request)
-    {
-        $accessHelper = ZfExtended_Zendoverwrites_Controller_Action_HelperBroker::getStaticHelper(
-            'Access'
+    public function isValid(string $login, string $passwd, string $authTableName,string $identityColumn,
+            string $credentialColumn, string $credentialTreatment) {
+        $db = Zend_Registry::get('db');
+        $authAdapter = new Zend_Auth_Adapter_DbTable(
+            $db,
+            $authTableName,
+            $identityColumn,
+            $credentialColumn,
+            $credentialTreatment
         );
-        $accessHelper->isAuthenticated();
+        $authAdapter->setIdentity($login)->setCredential($passwd);
+        $auth = Zend_Auth::getInstance();
+        $result = $auth->authenticate($authAdapter);
+        return $result->isValid()?true:false;
     }
 }
