@@ -336,11 +336,14 @@ abstract class ZfExtended_Models_Entity_Abstract {
      * @throws ZfExtended_ValidateException
      */
     public function validate(){
-      $this->validatorLazyInstatiation();
-      if(!$this->validator->isValid($this->getModifiedData())) {
-        $error = print_r($this->validator->getMessages(), 1);
-        throw new ZfExtended_ValidateException($error);
-      }
+        $this->validatorLazyInstatiation();
+        if(!$this->validator->isValid($this->getModifiedData())) {
+            $errors = $this->validator->getMessages();
+            $error = print_r($errors, 1);
+            $e = new ZfExtended_ValidateException($error);
+            $e->setErrors($errors);
+            throw $e;
+        }
     }
 
     /**

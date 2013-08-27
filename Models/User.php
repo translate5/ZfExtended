@@ -85,7 +85,7 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract {
             }
             $userSession->$key = $value;
         }
-        $userSession->userName = $userSession->firstname.' '.$userSession->surname;
+        $userSession->userName = $userSession->firstName.' '.$userSession->surName;
         $userSession->data = $userData;
     }
 }

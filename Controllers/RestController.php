@@ -131,17 +131,82 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
    * @see Zend_Controller_Action::dispatch()
    */
   public function dispatch($action) {
-    //@todo Ausgabe Type anders festlegen, siehe http://www.codeinchaos.com/post/3107629294/restful-services-with-zend-framework-part-1
-    // Davon ist auch die __toString Methode von ZfExtended_Models_Entity_Abstract betroffen, welche aktuell zum JSON Export genutzt wird
-    // Es muss aber die Möglichkeit gegeben sein, die Ausgabe Möglichkeite zu forcen, da z.B. die Daten bereits als JSON vorliegen
-    $this->getResponse()->setHeader('Content-Type', 'application/json');
-    $this->view->clearVars();
-    parent::dispatch($action);
-    $this->view->message = "OK";
-    $this->view->success = true;
-    $this->getResponse()->setHttpResponseCode(200);
+      //@todo Ausgabe Type anders festlegen, siehe http://www.codeinchaos.com/post/3107629294/restful-services-with-zend-framework-part-1
+      // Davon ist auch die __toString Methode von ZfExtended_Models_Entity_Abstract betroffen, welche aktuell zum JSON Export genutzt wird
+      // Es muss aber die Möglichkeit gegeben sein, die Ausgabe Möglichkeite zu forcen, da z.B. die Daten bereits als JSON vorliegen
+      $this->getResponse()->setHeader('Content-Type', 'application/json');
+      $this->view->clearVars();
+      parent::dispatch($action);
+
+      if(empty($this->view->message) && empty($this->view->success)) {
+          $this->view->message = "OK";
+          $this->view->success = true;
+          $this->getResponse()->setHttpResponseCode(200);
+      }
   }
 
+  /**
+   * Validates the entity, exposes possible failures in a common (extjs known) error format
+   * returns false if entity is not valid, true otherwise
+   * @return boolean
+   */
+  protected function validate() {
+      try {
+          $this->entity->validate();
+          $this->additionalValidations();
+          return true;
+      }
+      catch (ZfExtended_ValidateException $e) {
+          $this->view->errors = $this->transformErrors($e->getErrors());
+          $this->view->message = "NOT OK";
+          $this->view->success = false;
+          $this->getResponse()->setHttpResponseCode($e->getCode());
+      }
+      return false;
+  }
+  
+  /**
+   * Empty function mentionend to be overwritten
+   * Method is called by this->validate after entity->validate
+   */
+  protected function additionalValidations() {}
+  
+  /**
+   * Transforms the Errors in Form of 
+   * Array (
+   *   [affectedFieldName] = Array (
+   *     [errorName] => 'Already translated Error String'
+   *   ) 
+   * )
+   * 
+   * to a format used by ExtJS:
+   * 
+   * Array (
+   *   Object (
+   *     [id] => 'affectedFieldName'
+   *     [msg] => 'Already translated Error String'
+   *   ) 
+   * )
+   * 
+   * @param array $zendErrors
+   * @return array
+   */
+  protected function transformErrors(array $zendErrors) {
+      $result = array();
+      foreach($zendErrors as $id => $oneField) {
+          if(!is_array($oneField)) {
+              $oneField = array($oneField);
+          }
+          foreach($oneField as $oneMsg) {
+              $error = new stdClass();
+              $error->id = $id;
+              $error->msg = $oneMsg;
+              $result[] = $error;
+          }
+      }
+      return $result;
+  }
+  
   public function indexAction()
   {
     $this->view->rows = $this->entity->loadAll();

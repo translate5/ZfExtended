@@ -33,6 +33,12 @@
 
 class ZfExtended_ValidateException extends Zend_Exception {
     /**
+     * internal errors store
+     * @var array
+     */
+    protected $errors; 
+    
+    /**
      * Construct the exception
      *
      * @param  string $msg
@@ -46,5 +52,21 @@ class ZfExtended_ValidateException extends Zend_Exception {
             $code = 400;
         }
         parent::__construct($msg, (int) $code, $previous);
+    }
+
+    /**
+     * stores the given errors internally
+     * @param array $errors
+     */
+    public function setErrors(array $errors) {
+        $this->errors = $errors;
+    }
+
+    /**
+     * return the internally stored errors
+     * @return array
+     */
+    public function getErrors() {
+        return $this->errors;
     }
 }
