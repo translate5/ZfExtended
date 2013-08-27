@@ -79,6 +79,7 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract {
           ->where('passwd = ?',md5($passwd));
         $this->loadRowBySelect($s);
         $userData = $this->getDataObject();
+        /*FIXME: überlegen, ob die userdata für beo noch einzlen in der session liegen muss, also ob die kommende schleife nötig ist*/
         foreach ($userData as $key => $value) {
             if(preg_match('"^\d+$"', $value)){
                 $value = (int)$value;
