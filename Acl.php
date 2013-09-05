@@ -65,9 +65,8 @@ class ZfExtended_Acl extends Zend_Acl {
      * - prüft, ob bereits eine Instanz erstellt wurde;
      *   falls ja, wird diese zurückgegeben
      *
-     * @return Portal_Acl
+     * @return ZfExtended_Acl
      */
-
     public static function getInstance()
     {
         if (null === self::$_instance) {
@@ -101,7 +100,8 @@ class ZfExtended_Acl extends Zend_Acl {
 
         $this->addRules();
     }
-    /*
+    
+    /**
      * erstellt aus der acl_config.ini des aktuellen Moduls ein Zend_Config-Objekt
      *
      * - erlaubt Überschreibung durch /iniOverwrites/'.APPLICATION_AGENCY.'/'.
@@ -239,13 +239,7 @@ class ZfExtended_Acl extends Zend_Acl {
         }
         $rights = $this->_aclConfigObject->frontendRights->toArray();
         
-        if(count($rights==0))return false;
-        if($right === 'all')return true;
-        
-        if(in_array($right, $rights)){
-            return true;
-        }
-        return false;
+        return count($rights) > 0 && ($right === 'all' || in_array($right, $rights));
     }
     /**
      * Holt alle Controller aller Module
@@ -271,5 +265,20 @@ class ZfExtended_Acl extends Zend_Acl {
             }
         }
         return $controllers;
+    }
+    
+    /**
+     * Returns a list of frontend privileges / rights to the given roles
+     * @param array $roles
+     */
+    public function getFrontendRights(array $roles) {
+        $result = array();
+        foreach($roles as $role) {
+            $res = $this->_getRules($this->get('frontend'), $this->getRole($role));
+            if(!empty($res)) {
+                $result = array_merge($result, array_keys($res['byPrivilegeId']));
+            }
+        }
+        return array_unique($result);
     }
 }
