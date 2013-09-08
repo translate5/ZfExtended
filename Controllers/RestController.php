@@ -70,15 +70,21 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
    * @var array array($field => array(origType => newType))
    */
   protected $_filterTypeMap = array();
-  /*
-     * @var integer Länge, auf die die Spalten mit Text gekürzt werden, bevor
-     *      sie in die DB-Spalten die für die Sortierung der Textspalten zuständig
-     *      sind eingefügt werden (nötig für (krank) MSSQL, da MSSQL das auf
-     *      DB-Ebene nicht vernünftig kann.
-     */
+  
+  /**
+   * @var integer Länge, auf die die Spalten mit Text gekürzt werden, bevor
+   *      sie in die DB-Spalten die für die Sortierung der Textspalten zuständig
+   *      sind eingefügt werden (nötig für (krank) MSSQL, da MSSQL das auf
+   *      DB-Ebene nicht vernünftig kann.
+   */
+   protected $_lengthToTruncateSegmentsToSort = NULL;
 
-    protected $_lengthToTruncateSegmentsToSort = NULL;
-
+   /**
+    * POST Blacklist
+    * Blacklisted fields for POST Requests (to ignore autoincrement values)
+    */
+   protected $postBlacklist = array();
+   
   /**
    * inits the internal entity Object, handels given limit, filter and sort parameters
    * @see Zend_Controller_Action::init()
@@ -218,11 +224,15 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
     $this->view->rows = $this->entity->load($this->_getParam('id'));
   }
 
+  /**
+   * (non-PHPdoc)
+   * @see Zend_Rest_Controller::postAction()
+   */
   public function postAction()
   {
       $this->entity->init();
       $this->decodePutData();
-      $this->setDataInEntity();
+      $this->setDataInEntity($this->postBlacklist);
       $this->entity->validate();
       $this->entity->save();
       $this->view->rows = $this->entity->getDataObject();

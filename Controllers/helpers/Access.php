@@ -121,7 +121,7 @@ class ZfExtended_Controller_Helper_Access extends  Zend_Controller_Action_Helper
      * Returns the role which did allow the user to enter application
      * @return string
      */
-    public function getAuthenticaedRole() {
+    public function getAuthenticatedRole() {
       return $this->_role;
     }
     /**
@@ -130,6 +130,15 @@ class ZfExtended_Controller_Helper_Access extends  Zend_Controller_Action_Helper
      */
     public function getRoles() {
       return $this->_roles;
+    }
+    
+    /**
+     * returns true if the current user has the given role
+     * @param string $role
+     * @return boolean
+     */
+    public function hasRole(string $role) {
+        return in_array($role, $this->_roles);
     }
     
     /**

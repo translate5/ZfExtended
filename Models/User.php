@@ -53,12 +53,12 @@
  * @method string getUserGuid() getUserGuid()
  * @method string getFirstName() getFirstName()
  * @method string getSurName() getSurName()
- * @method integer getEmail() getEmail()
- * @method integer getRoles() getRoles()
- * @method integer getPasswd() getPasswd()
+ * @method string getEmail() getEmail()
+ * @method string getRoles() getRoles()
+ * @method string getPasswd() getPasswd()
  * @method boolean getPasswdReset() getPasswdReset()
- * @method boolean getGender() getGender()
- * @method boolean getLogin() getLogin()
+ * @method string getGender() getGender()
+ * @method string getLogin() getLogin()
  */
 class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract {
   protected $dbInstanceClass = 'ZfExtended_Models_Db_User';
