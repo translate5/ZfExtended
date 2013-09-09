@@ -279,6 +279,6 @@ class ZfExtended_Acl extends Zend_Acl {
                 $result = array_merge($result, array_keys($res['byPrivilegeId']));
             }
         }
-        return array_unique($result);
+        return array_values(array_unique($result));
     }
 }
