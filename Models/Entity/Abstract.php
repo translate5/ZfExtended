@@ -361,6 +361,15 @@ abstract class ZfExtended_Models_Entity_Abstract {
       return $result;
     }
 
+    /**
+     * returns true if given field was modified since last load
+     * @param string $field
+     * @return boolean
+     */
+    public function isModified($field) {
+        return in_array($field, $this->modified);
+    }
+    
     protected function validatorLazyInstatiation() {
       if(empty($this->validator)) {
         $this->validator = ZfExtended_Factory::get($this->validatorInstanceClass);
