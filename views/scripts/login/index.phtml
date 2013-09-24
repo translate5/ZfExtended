@@ -38,9 +38,17 @@
  *
  */
 $session = new Zend_Session_Namespace();
-?>
-<div id="loginNiceBox">
-<?php if(isset($this->message)): ?><h2 class="message"><?php echo $this->message;  ?></h2><?php endif; ?>
-<?php echo $this->form ?>
-</div>
+?><h1><?php echo $this->translate('Login'); ?></h1><?php
+if(isset($this->message)): ?><p class="message"><?php echo $this->message;  ?></p><?php endif;
+if(count($this->form->getErrorMessages())>0){ ?>
+    <ul class="errors">
+    <?php
+    foreach ($this->form->getErrorMessages() as $message) {
+        ?><li><?php echo $message; ?></li><?php
+    }
+    ?>
+    </ul>
+    <?php
+}
+echo $this->form ?>
 <p><a href="<?php echo APPLICATION_RUNDIR; ?>/login/passwdreset"><?php echo $this->translate->_('Passwort neu setzen'); ?></a></p>

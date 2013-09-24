@@ -30,7 +30,7 @@
 --  END LICENSE AND COPYRIGHT 
 --  */
 -- 
-CREATE TABLE LEK_users (
+CREATE TABLE Zf_users (
   `id` int (11) NOT NULL AUTO_INCREMENT,
   `userGuid` varchar(38) NOT NULL,
   `firstName` varchar (255) NOT NULL,
@@ -42,6 +42,6 @@ CREATE TABLE LEK_users (
   `passwd` varchar (38) NOT NULL,
   `passwdReset` boolean NOT NULL default 1,
   PRIMARY KEY (`id`),
-  INDEX (`userGuid`),
+  UNIQUE (`userGuid`),
   UNIQUE (`login`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
