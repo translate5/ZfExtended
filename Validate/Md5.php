@@ -47,7 +47,7 @@ class ZfExtended_Validate_Md5 extends Zend_Validate_Abstract
       $strLen = new Zend_Validate_StringLength(array('min' => 32, 'max' => 32));
 
       if (!$hex->isValid($value)||!$strLen->isValid($value)) {
-          $this->_error(self::BOOLEAN);
+          $this->_error(self::MD5);
           return false;
       }
       return true;

@@ -38,9 +38,9 @@
  *
  */
 $session = new Zend_Session_Namespace();
-?><?php if(isset($this->message)): ?><h2><?php echo $this->message;  ?></h2><?php endif;
-if($this->form->isErrors()){ ?>
-    <h2 class="errors"><?php echo $this->translate->_('Fehler im Formular'); ?></h2>
+?><h1><?php echo (isset($this->heading))?$this->heading:$this->translate('Neues Passwort'); ?></h1><?php
+if(isset($this->message)): ?><p class="message"><?php echo $this->message;  ?></p><?php endif;
+if(count($this->form->getErrorMessages())>0){ ?>
     <ul class="errors">
     <?php
     foreach ($this->form->getErrorMessages() as $message) {
@@ -49,9 +49,6 @@ if($this->form->isErrors()){ ?>
     ?>
     </ul>
     <?php
-    if($this->passwdResetInfo){
-        ?><p><?php echo $this->translate->_('Bitte setzen Sie Ihr Passwort ggf. nochmals zurück. Sie bekommen dann nochmals eine E-Mail mit einem neuen Reset-Hash zugesandt. Dieser ist wiederum für 30 min gültig, so lange Sie Ihren Browser geöffnet lassen.'); ?><br/><br/><a href="<?php echo APPLICATION_RUNDIR; ?>/login/passwdreset"><?php echo $this->translate->_('Passwort neu setzen'); ?></a></p><?php
-    }
 }
 if(!$this->passwdResetInfo){
    echo $this->form;

@@ -42,7 +42,7 @@
  * 
  */
 class ZfExtended_Models_Db_Invalidlogin extends Zend_Db_Table_Abstract {
-    protected $_name    = 'LEK_invalidlogin';
+    protected $_name    = 'Zf_invalidlogin';
     public $_primary = 'id';
 }
 

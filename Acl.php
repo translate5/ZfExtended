@@ -124,6 +124,27 @@ class ZfExtended_Acl extends Zend_Acl {
         }
         return new Zend_Config_Ini($path,NULL,$options = array( 'allowModifications' => true));;
     }
+    /**
+     * checks if one of the passed roles allows the resource / privelege
+     *
+     * @param  array     $roles
+     * @param  Zend_Acl_Resource_Interface|string $resource
+     * @param  string                             $privilege
+     * @return boolean
+     */
+    public function isInAllowedRoles(array $roles, $resource = null, $privilege = null){
+        $allowed = false;
+        foreach ($roles as $role){
+            try {
+                if($this->isAllowed($role,$resource,$privilege)){
+                    $allowed = true;
+                }
+            } catch (Zend_Acl_Role_Registry_Exception $exc) {
+                //if role is not registered because it is the role of a differnt module
+            }
+        }
+        return $allowed;
+    }
 
     protected function addRules(){
        foreach ($this->_aclConfigObject->rules as $role => $rule) {
@@ -274,7 +295,13 @@ class ZfExtended_Acl extends Zend_Acl {
     public function getFrontendRights(array $roles) {
         $result = array();
         foreach($roles as $role) {
-            $res = $this->_getRules($this->get('frontend'), $this->getRole($role));
+            try {
+                $roleObject = $this->getRole($role);
+            } catch (Zend_Acl_Role_Registry_Exception $exc) {
+                //if role is not registered because it is the role of a differnt module
+                continue;
+            }
+            $res = $this->_getRules($this->get('frontend'), $roleObject);
             if(!empty($res)) {
                 $result = array_merge($result, array_keys($res['byPrivilegeId']));
             }

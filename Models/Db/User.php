@@ -43,6 +43,6 @@
  *
  */
 class ZfExtended_Models_Db_User extends Zend_Db_Table_Abstract {
-    protected $_name    = 'LEK_users';
+    protected $_name    = 'Zf_users';
     public $_primary = 'id';
 }

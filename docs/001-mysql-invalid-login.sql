@@ -37,6 +37,8 @@ CREATE TABLE IF NOT EXISTS `invalidlogin` (
   PRIMARY KEY (`invalidLoginId`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=0;
 
-RENAME TABLE `invalidlogin` TO  `LEK_invalidlogin` ;
+RENAME TABLE `invalidlogin` TO  `Zf_invalidlogin` ;
 
-ALTER TABLE  `LEK_invalidlogin` CHANGE  `invalidLoginId`  `id` INT( 11 ) NOT NULL AUTO_INCREMENT;
+ALTER TABLE  `Zf_invalidlogin` CHANGE  `eMail`  `login` VARCHAR( 255 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL
+
+ALTER TABLE  `Zf_invalidlogin` CHANGE  `invalidLoginId`  `id` INT( 11 ) NOT NULL AUTO_INCREMENT;

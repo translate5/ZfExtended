@@ -37,10 +37,10 @@
  * @version 2.0
  *
  */
-if(isset($this->message)): ?><h2><?php echo $this->message;  ?></h2><?php endif;
+?><h1><?php echo $this->translate('Neues Passwort'); ?></h1><?php
+if(isset($this->message)): ?><p class="message"><?php echo $this->message;  ?></p><?php endif;
 if(count($this->form->getErrorMessages())>0){ ?>
-    <h2><?php echo $this->translate->_('Fehler im Formular'); ?></h2>
-    <ul>
+    <ul class="errors">
     <?php
     foreach ($this->form->getErrorMessages() as $message) {
         ?><li><?php echo $message; ?></li><?php
@@ -50,4 +50,4 @@ if(count($this->form->getErrorMessages())>0){ ?>
     <?php
 }
 echo $this->form ?>
-    <p class="hint"><a href="<?php echo APPLICATION_RUNDIR; ?>/"><?php echo $this->translate->_('Zurück zur Startseite'); ?></a></p>
+    <p><a href="<?php echo APPLICATION_RUNDIR; ?>/"><?php echo $this->translate->_('Zurück zur Startseite'); ?></a></p>
