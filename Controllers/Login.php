@@ -132,10 +132,15 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
             if($invalidLoginCounter->hasMaximumInvalidations()) {
                 $this->passwdReset($login);
                 $invalidLoginCounter->resetCounter();
-                $this->view->message = $this->_translate->_('Ungültige Logindaten - Zugang gesperrt!<br/><br/>Sie haben Ihr Passwort in den letzten 24 Stunden mehrmals falsch eingegeben, ihr Login wurde gesperrt.<br />Per E-Mail wurde Ihnen ein Link zugesandt, mit welchem Sie Ihr Passwort neu setzen können. Dieser Link ist 30 min gültig und funktioniert nur, so lange Sie Ihren Browser nicht zwischenzeitlich geschlossen haben. Sie können jederzeit einen neuen Link über die "Password neu setzen" Funktion anfordern.');
+                $this->view->errors = true;
+                $this->_form->addError(sprintf($this->_translate->_('Ungültige Logindaten - Zugang gesperrt!<br/>Sie haben Ihr Passwort in den letzten 24 Stunden mehrmals falsch eingegeben, ihr Login wurde gesperrt.<br />Per E-Mail wurde Ihnen ein Link zugesandt, mit welchem Sie Ihr Passwort neu setzen können. Dieser Link ist 30 min gültig und funktioniert nur, so lange Sie Ihren Browser nicht zwischenzeitlich geschlossen haben. Sie können jederzeit einen neuen Link %shier%s anfordern.'),
+                        '<a href="'. APPLICATION_RUNDIR .'/login/passwdreset">','</a>'));
                 return false;
             }
-            $this->view->message = $this->_translate->_('Ungültige Logindaten!<br/><br/>Haben Sie Ihr Passwort vergessen oder bislang noch kein Passwort für Ihren Login gesetzt? Über untenstehenden Link können Sie Ihr Passwort neu setzen!');
+            $this->view->errors = true;
+                $this->_form->addError(sprintf($this->_translate->_('Ungültige Logindaten!<br/>Haben Sie Ihr Passwort vergessen oder bislang noch kein Passwort für Ihren Login gesetzt?  Sie können jederzeit einen neuen Link %shier%s anfordern.'),
+                        '<a href="'. APPLICATION_RUNDIR .'/login/passwdreset">','</a>'));
+                return false;
        }
        return false;
     }
@@ -183,7 +188,7 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
             }
             else{
                 $this->view->errors = true;
-                $this->_form->addError($this->_translate->_('Die angegebene E-Mail existiert nicht in der Datenbank des Portals!'));
+                $this->_form->addError($this->_translate->_('Der angegebene Benutzername existiert nicht!'));
             }
         }
         $this->view->form = $this->_form;
@@ -205,11 +210,7 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
             $this->_form = new ZfExtended_Zendoverwrites_Form('loginPasswdnew.ini');
             $md5Validator = new ZfExtended_Validate_Md5();
             if(!$md5Validator->isValid($this->getRequest()->getParam('resetHash'))){
-                $this->view->errors = true;
-                $this->_form->addError($this->getRequest()->getParam('resetHash').
-                        $this->_translate->_(' ist kein gültiger resetHash'));
-                $this->view->passwdResetInfo = true;
-                $this->view->form = $this->_form;
+                $this->passwdResetHashNotValid();
                 return;
             }
             
@@ -229,10 +230,7 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
                     #echo $s->assemble();exit;
                     $passwdreset->loadRowBySelect($s);
                 } catch (ZfExtended_Models_Entity_NotFoundException $exc) {
-                     $this->view->errors = true;
-                    $this->_form->addError('resetHash oder Browsersitzung ist nicht mehr gültig.');
-                    $this->view->passwdResetInfo = true;
-                    $this->view->form = $this->_form;
+                     $this->passwdResetHashNotValid();
                     return;
                 }
 
@@ -244,6 +242,7 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
                 $user->validate();
                 $user->save();
                 $this->_form = new ZfExtended_Zendoverwrites_Form('loginIndex.ini');
+                $this->view->heading = $this->_translate->_('Login');
                 $this->view->message = $this->_translate->_('Ihr Passwort wurde neu gesetzt. Sie können sich nun einloggen.');
             }
             $this->view->form = $this->_form;
@@ -252,6 +251,16 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
         $this->_redirect('/login');
     }
     
+     /**
+      * render passwdNew when resetHash not valid
+     */
+    protected function passwdResetHashNotValid() {
+        $this->_form = new ZfExtended_Zendoverwrites_Form('loginPasswdreset.ini');
+        $this->view->errors = true;
+        $this->_form->addError('Der ResetHash oder die Browsersitzung ist nicht (mehr) gültig. Bitte fordern Sie über das nebenstehende Formular eine E-Mail mit einem neuen Link an.');
+        $this->view->form = $this->_form;
+        $this->render('passwdreset');
+    }
      /**
      * reset password
      * @param string $login

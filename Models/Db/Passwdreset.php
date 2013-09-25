@@ -42,6 +42,6 @@
  * 
  */
 class ZfExtended_Models_Db_Passwdreset extends Zend_Db_Table_Abstract {
-    protected $_name    = 'LEK_passwdreset';
+    protected $_name    = 'Zf_passwdreset';
     public $_primary = 'id';
 }

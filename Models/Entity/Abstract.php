@@ -85,9 +85,16 @@ abstract class ZfExtended_Models_Entity_Abstract {
 
     /**
      * inits the Entity, resets the internal data
+     * if data object is given, use this values
+     * @param array $data
      */
-    public function init() {
-        $this->row = $this->db->createRow();
+    public function init(array $data = null) {
+        if(empty($data)) {
+            $this->row = $this->db->createRow();
+        }
+        else {
+            $this->row = $this->db->createRow($data);
+        }
     }
 
     /**
@@ -361,6 +368,15 @@ abstract class ZfExtended_Models_Entity_Abstract {
       return $result;
     }
 
+    /**
+     * returns true if given field was modified since last load
+     * @param string $field
+     * @return boolean
+     */
+    public function isModified($field) {
+        return in_array($field, $this->modified);
+    }
+    
     protected function validatorLazyInstatiation() {
       if(empty($this->validator)) {
         $this->validator = ZfExtended_Factory::get($this->validatorInstanceClass);

@@ -62,9 +62,9 @@ class ZfExtended_Controller_Helper_Access extends  Zend_Controller_Action_Helper
      */
     protected $_roles = array('noRights');
     /**
-     * @var string
+     * @var ZfExtended_Acl
      */
-    protected $_role;
+    protected $_acl;
 
     /**
      * Authentifiziert den Benutzer
@@ -82,47 +82,54 @@ class ZfExtended_Controller_Helper_Access extends  Zend_Controller_Action_Helper
         $this->_front = $this->getFrontController();
         $this->_request = $this->_front->getRequest();
         $this->_route = get_class($this->_front->getRouter()->getCurrentRoute());
-        $acl = ZfExtended_Acl::getInstance();
-
-        // Lade aktuelle Rolle aus der Identität falls vorhaben
-        $this->_roles = Zend_Auth::getInstance()->hasIdentity() ? array('user') : $this->_roles;
-        //falls user, lade rolle aus der Session
-        if(in_array('user', $this->_roles)){
-            $user = new Zend_Session_Namespace('user');
-            $this->_roles = explode(',', $user->roles);
-        }
+        $this->_acl = ZfExtended_Acl::getInstance();
+        
+        $this->setRoles();
+        $this->checkRights();
+    }
+    
+    /**
+     * checks the rights of the user and redirects if no access is allowed
+     */
+    protected function checkRights() {
         $module = Zend_Registry::get('module').'_';
         if($module === 'default_'){
             $module = '';
         }
-        // Prüfe Rechte
+        
         try {
-            $allowed = false;
-            foreach ($this->_roles as $role) {
-                if($acl->isAllowed(
-                    $role, $module.$this->_request->getControllerName(),
+                        
+                        
+            if(!$this->_acl->isInAllowedRoles(
+                    $this->_roles, 
+                    $module.$this->_request->getControllerName(), 
                     $this->_request->getActionName())){
-                        $allowed = true;
-                        $this->_role = $role;
-                    }
-            }
-            if(!$allowed){
                 $this->notAuthenticated();
             }
         } catch (Exception $exc) {
             if($this->_route === 'Zend_Rest_Route'){
                 $this->notAuthenticated();
             }
-            #throw new ZfExtended_NotFoundException('Seite nicht gefunden!');
+            throw new ZfExtended_NotFoundException('Seite nicht gefunden!');
         }
     }
-    
     /**
-     * Returns the role which did allow the user to enter application
-     * @return string
+     * Sets the roles 
+     * 
+     * -adds the passed roles to Zend_Session_Namespace('user')->roles
+     * - sets Zend_Session_Namespace('user')->roles as array
+     * - ensures, that they are not added if already existent
+     * 
      */
-    public function getAuthenticatedRole() {
-      return $this->_role;
+    protected function setRoles() {
+        
+        $roles2add = Zend_Auth::getInstance()->hasIdentity() ? array('basic','noRights') : $this->_roles;
+        $user = new Zend_Session_Namespace('user');
+        settype($user->roles, 'array');
+        foreach ($roles2add as $role) {
+            if(!in_array($role, $user->roles))$user->roles[] = $role;
+        }
+        $this->_roles = $user->roles;
     }
     /**
      * Returns the roles of the user
@@ -130,15 +137,6 @@ class ZfExtended_Controller_Helper_Access extends  Zend_Controller_Action_Helper
      */
     public function getRoles() {
       return $this->_roles;
-    }
-    
-    /**
-     * returns true if the current user has the given role
-     * @param string $role
-     * @return boolean
-     */
-    public function hasRole(string $role) {
-        return in_array($role, $this->_roles);
     }
     
     /**
@@ -159,7 +157,7 @@ class ZfExtended_Controller_Helper_Access extends  Zend_Controller_Action_Helper
         $redirector = ZfExtended_Zendoverwrites_Controller_Action_HelperBroker::getStaticHelper(
             'Redirector'
         );
-        if ($this->_role === 'noRights'){
+        if (in_array('noRights', $this->_roles) && count($this->_roles)===1){
             $redirector->gotoSimpleAndExit('index', 'login','default');
         }
         else{

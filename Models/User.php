@@ -38,7 +38,6 @@
  *
  */
 /**
- * 
  * @method void setId() setId(integer $id)
  * @method void setUserGuid() setUserGuid(string $guid)
  * @method void setFirstName() setFirstName(string $name)
@@ -89,5 +88,32 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract {
             $userSession->$key = $value;
         }
         $userSession->data = $userData;
+    }
+    
+    /**
+     * Loads a user by userGuid
+     * @param string $userGuid
+     * @return ZfExtended_Models_User
+     */
+    public function loadByGuid(string $userGuid) {
+        try {
+            $s = $this->db->select()->where('userGuid = ?', $userGuid);
+            $row = $this->db->fetchRow($s);
+        } catch (Exception $e) {
+            $this->notFound('NotFound after other Error', $e);
+        }
+        if (!$row) {
+            $this->notFound(__CLASS__ . '#userGuid', $userGuid);
+        }
+        //load implies loading one Row, so use only the first row
+        $this->row = $row;
+        return $this;
+    }
+    
+    /**
+     * merges firstname and surname to username
+     */
+    public function getUserName() {
+        return $this->getFirstName().' '.$this->getSurName();
     }
 }

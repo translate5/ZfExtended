@@ -48,7 +48,7 @@ class ZfExtended_Validate_IdenticalField extends Zend_Validate_Abstract {
     self::INVALID_FIELD_NAME  =>
       'DEVELOPMENT ERROR: The field "%fieldName%" was not provided to match against.',
     self::NOT_MATCH =>
-      'Does not match %fieldTitle%.'
+      'Sollte mit "%fieldTitle%" identisch sein.'
   );
 
   /**
