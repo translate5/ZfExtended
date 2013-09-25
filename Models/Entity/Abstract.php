@@ -85,9 +85,16 @@ abstract class ZfExtended_Models_Entity_Abstract {
 
     /**
      * inits the Entity, resets the internal data
+     * if data object is given, use this values
+     * @param array $data
      */
-    public function init() {
-        $this->row = $this->db->createRow();
+    public function init(array $data = null) {
+        if(empty($data)) {
+            $this->row = $this->db->createRow();
+        }
+        else {
+            $this->row = $this->db->createRow($data);
+        }
     }
 
     /**

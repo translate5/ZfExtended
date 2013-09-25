@@ -41,6 +41,8 @@
  * Klasse zur Kapselung des Mailversands
  */
 class  ZfExtended_Mail {
+    const MAIL_TEMPLATE_BASEPATH = '/views/scripts/mail/';
+    
     /**
      * @var Zend_View
      */
@@ -105,8 +107,6 @@ class  ZfExtended_Mail {
     public function setMail(){
         $this->mail = new Zend_Mail('utf-8');
     }
-
-    const MAIL_TEMPLATE_BASEPATH = '/views/scripts/mail/';
 
     /**
      * initialisiert die View für die Ausgabe des Mail Templates
@@ -347,6 +347,30 @@ class  ZfExtended_Mail {
         $this->mail->send();
     }
 
+    /**
+     * returns the configured subject
+     * @return string
+     */
+    public function getSubject() {
+        return $this->mail->getSubject();
+    }
+    
+    /**
+     * returns the configured text body
+     * @return string
+     */
+    public function getTextBody() {
+        return $this->mail->getBodyText(true);
+    }
+    
+    /**
+     * returns the configured html body
+     * @return string
+     */
+    public function getHtmlBody() {
+        return $this->mail->getBodyHtml(true);
+    }
+    
     /**
      * sendet eine Mail an den gegebenen employee, Empfängeradresse und Namen, werden automatisch ausgelesen,
      * ebenso die companyGUID für die Suche nach einem Kundenspezifischen Template
