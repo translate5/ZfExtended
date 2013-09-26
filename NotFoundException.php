@@ -32,6 +32,7 @@
  */
 
 class ZfExtended_NotFoundException extends Zend_Exception {
+    const IDENTIFIER = 'ZfExtended_NotFoundException ';
     /**
      * Construct the exception
      *
@@ -45,6 +46,7 @@ class ZfExtended_NotFoundException extends Zend_Exception {
         if((int)$code === 0){
             $code = 404;
         }
+        $msg = self::IDENTIFIER.$msg;
         parent::__construct($msg, (int) $code, $previous);
     }
 }

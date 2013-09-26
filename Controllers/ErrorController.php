@@ -285,7 +285,7 @@ class ErrorController extends ZfExtended_Controllers_Action
         if($highestError->_errorCode === 409){
 
         }
-        elseif($highestError->_errorCode === 404){
+        elseif(preg_match ('"^'.ZfExtended_NotFoundException::IDENTIFIER.'"',$highestError->_errorMessage)){
             $this->_log->log404($highestError->_errorMessage);
         }
         elseif($this->_errorCollect){
