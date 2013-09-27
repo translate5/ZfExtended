@@ -37,12 +37,6 @@
  * @version 2.0
  *
  */
-/*
- * 
- *
- * 
- */
-
 class ZfExtended_Controller_Helper_Auth extends Zend_Controller_Action_Helper_Abstract {
     /**
      * authenticates a user

@@ -82,7 +82,7 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract {
         $userData->userName = $userData->firstName.' '.$userData->surName;
         /*FIXME: überlegen, ob die userdata für beo noch einzlen in der session liegen muss, also ob die kommende schleife nötig ist*/
         foreach ($userData as $key => $value) {
-            if(preg_match('"^\d+$"', $value)){
+            if(is_numeric($value)){
                 $value = (int)$value;
             }
             $userSession->$key = $value;
