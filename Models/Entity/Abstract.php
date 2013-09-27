@@ -334,7 +334,8 @@ abstract class ZfExtended_Models_Entity_Abstract {
      * @return boolean
      */
     public function isValid(){
-      return $this->validator->isValid($this->row->toArray());
+        $this->validatorLazyInstatiation();
+        return $this->validator->isValid($this->row->toArray());
     }
 
     /**

@@ -80,6 +80,13 @@ class ErrorController extends ZfExtended_Controllers_Action
      */
     protected $_showErrorsInBrowser = 0;
     /**
+     * @var boolean this is made to distinguish between 
+     * ZfExtended_Models_Entity_NotFoundException and ZfExtended_NotFoundException
+     * this is a hack, but something else would bean to refactor the whole errorhandling process
+     * @todo refactor errorhandling to be able to catch the ZfExtended_NotFoundException and sent 404 status code
+     */
+    protected $_isHttp404 = false;
+    /**
      * @var array Liste aller gültigen httpResponseCodes (status code 409 wird nicht ins error-log geschrieben)
      *
      */
@@ -272,7 +279,8 @@ class ErrorController extends ZfExtended_Controllers_Action
                 $this->_renderScript = 'error/error404.phtml';
             }
         }
-        if($this->_errors[0]->_errorCode === 404){
+        if(preg_match ('"^'.ZfExtended_NotFoundException::IDENTIFIER.'"',$this->_errors[0]->_errorMessage)){
+            $this->_isHttp404 = true;
             $this->view->errors[0]->_errorMessage = $this->_translate->_('Seite nicht gefunden: ').$_SERVER['REQUEST_URI'].$this->_translate->_('/ Aufruf erfolgte durch IP: ').$_SERVER['REMOTE_ADDR'];
         }
     }
@@ -285,7 +293,7 @@ class ErrorController extends ZfExtended_Controllers_Action
         if($highestError->_errorCode === 409){
 
         }
-        elseif(preg_match ('"^'.ZfExtended_NotFoundException::IDENTIFIER.'"',$highestError->_errorMessage)){
+        elseif($this->_isHttp404){
             $this->_log->log404($highestError->_errorMessage);
         }
         elseif($this->_errorCollect){
