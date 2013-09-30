@@ -212,6 +212,9 @@ class  ZfExtended_Mail {
      */
     protected function addImagesIfExist(){
         $this->decideIfToThrowInitViewException();
+        if(empty($this->template)) {
+            return;
+        }
         $paths = $this->view->getScriptPaths();
         $imagedir = str_replace('.phtml', 'Images', $this->template);
         $directoryFound = false;
