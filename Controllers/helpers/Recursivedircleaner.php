@@ -49,6 +49,8 @@ class ZfExtended_Controller_Helper_Recursivedircleaner extends Zend_Controller_A
      */
 
     public function delete(string $directory) {
+        $log = ZfExtended_Factory::get('ZfExtended_Log');
+        /* @var $log ZfExtended_Log */
         $iterator = new DirectoryIterator($directory);
         foreach ($iterator as $fileinfo) {
             if ($fileinfo->isDot()) {
@@ -58,12 +60,11 @@ class ZfExtended_Controller_Helper_Recursivedircleaner extends Zend_Controller_A
                 $this->delete($directory . DIRECTORY_SEPARATOR . $fileinfo->getFilename());
             }
             if ($fileinfo->isFile()) {
-                //FIXME try catch ist nur eine übergangslösung!!!
                 try {
                     unlink($directory . DIRECTORY_SEPARATOR . $fileinfo->getFilename());
                 }
                 catch (Exception $e){
-
+                       
                 }
             }
         }

@@ -149,7 +149,8 @@ class ZfExtended_Acl extends Zend_Acl {
     protected function addRules(){
        foreach ($this->_aclConfigObject->rules as $role => $rule) {
             foreach ($rule as $resource => $rule2) {
-                if ('all' == $rule2) {
+                if ('all' == $rule2) {#
+                    //FIXME nextrelease Marc ist das hier nötig? Wenn ja auch für regeln pro Action aufrufen
                     if($resource == 'frontend' && !$this->isFrontendRight()){
                         throw new Zend_Exception('For the resource "frontend" no rights are registered');
                     }
