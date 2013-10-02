@@ -221,7 +221,8 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
 
   public function getAction()
   {
-    $this->view->rows = $this->entity->load($this->_getParam('id'));
+      //FIXME Hier kommt immer NULL zurück - das macht daher so keinen Sinn
+      $this->view->rows = $this->entity->load($this->_getParam('id'));
   }
 
   /**
