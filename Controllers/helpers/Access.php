@@ -42,10 +42,6 @@
  */
 class ZfExtended_Controller_Helper_Access extends  Zend_Controller_Action_Helper_Abstract {
     /**
-     * Zend_Session_Namespace
-     */
-    protected $_session = NULL;
-    /**
      * Zend_Controller_Front
      */
     protected $_front = NULL;
@@ -125,11 +121,11 @@ class ZfExtended_Controller_Helper_Access extends  Zend_Controller_Action_Helper
         
         $roles2add = Zend_Auth::getInstance()->hasIdentity() ? array('basic','noRights') : $this->_roles;
         $user = new Zend_Session_Namespace('user');
-        settype($user->roles, 'array');
+        settype($user->data->roles, 'array');
         foreach ($roles2add as $role) {
-            if(!in_array($role, $user->roles))$user->roles[] = $role;
+            if(!in_array($role, $user->data->roles))$user->data->roles[] = $role;
         }
-        $this->_roles = $user->roles;
+        $this->_roles = $user->data->roles;
     }
     /**
      * Returns the roles of the user

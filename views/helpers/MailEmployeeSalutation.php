@@ -54,7 +54,7 @@ class ZfExtended_View_Helper_MailEmployeeSalutation extends Zend_View_Helper_Abs
     {
         if(!$gender){
             $user = new Zend_Session_Namespace('user');
-            $gender = $user->gender;
+            $gender = $user->data->gender;
         }
         elseif($gender !='f' and $gender!='m'){
             throw new Zend_Exception('$gender hat den nicht erwarteten Wert '.$gender, 0);
