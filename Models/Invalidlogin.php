@@ -70,7 +70,7 @@ class ZfExtended_Models_Invalidlogin extends ZfExtended_Models_Db_Invalidlogin {
     public function increment(){
         $this->insert(
             array(
-                'login' => strtolower($this->login),
+                'login' => $this->login,
             )
         );
     }

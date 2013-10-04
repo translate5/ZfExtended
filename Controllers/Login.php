@@ -116,7 +116,7 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
      */
     protected function isValidLogin(){
         if ($this->_form->isValid($this->_request->getParams())) {
-            $login = strtolower($this->_form->getValue('login'));
+            $login = $this->_form->getValue('login');
             $passwd = $this->_form->getValue('passwd');
             $invalidLoginCounter = ZfExtended_Factory::get('ZfExtended_Models_Invalidlogin',array($login));
 
