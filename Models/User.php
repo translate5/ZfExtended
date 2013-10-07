@@ -63,19 +63,40 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract {
   protected $dbInstanceClass = 'ZfExtended_Models_Db_User';
   protected $validatorInstanceClass = 'ZfExtended_Models_Validator_User';
     /**
-     * Registriert die Employee-Rolle im Zend_Session_Namespace('user')
+     * sets the user in Zend_Session_Namespace('user')
      *
-     * - wird registriert in employee->role
+     * @param string login
+     * @return void
+     */
+    public function setUserSessionNamespaceWithoutPwCheck(string $login) {
+        $s = $this->db->select();
+        $s->where('login = ?',$login);
+        $this->setUserSessionNamespace($s);
+    }
+    /**
+     * sets the user in
      *
-     * @param string email
+     * @param string login
      * @param string passwd unverschlüsseltes Passwort, wie vom Benutzer eingegeben
      * @return void
      */
     public function setUserSessionNamespaceWithPwCheck(string $login, string $passwd) {
-        $userSession = new Zend_Session_Namespace('user');
         $s = $this->db->select();
         $s->where('login = ?',$login)
           ->where('passwd = ?',md5($passwd));
+        $this->setUserSessionNamespace($s);
+    }
+    /**
+     * Registriert die Employee-Rolle im Zend_Session_Namespace('user')
+     *
+     * - wird registriert in employee->role
+     *
+     * @param Zend_Db_Table_Select select of ZfExtended_Models_Db_User
+     * @param string passwd unverschlüsseltes Passwort, wie vom Benutzer eingegeben
+     * @return void
+     */
+    protected function setUserSessionNamespace(Zend_Db_Table_Select $s) {
+        $userSession = new Zend_Session_Namespace('user');
         $this->loadRowBySelect($s);
         $userData = $this->getDataObject();
         $userData->roles = explode(',',$userData->roles);
