@@ -31,8 +31,7 @@
   END LICENSE AND COPYRIGHT 
  */
 
-class ZfExtended_NotFoundException extends ZfExtended_Exception {
-    const IDENTIFIER = 'ZfExtended_NotFoundException ';
+class ZfExtended_NotAuthenticatedException extends ZfExtended_Exception {
     /**
      * Construct the exception
      *
@@ -44,12 +43,11 @@ class ZfExtended_NotFoundException extends ZfExtended_Exception {
     public function __construct($msg = '', $code = 0, Exception $previous = null)
     {
         if((int)$code === 0){
-            $code = 404;
+            $code = 401;
         }
         if($msg == ''){
-            $msg = 'Nicht gefunden!';
+            $msg = 'Nicht authentifiziert!';
         }
-        $msg = self::IDENTIFIER.$msg;
         parent::__construct($msg, (int) $code, $previous);
     }
 }

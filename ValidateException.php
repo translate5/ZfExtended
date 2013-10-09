@@ -31,13 +31,7 @@
   END LICENSE AND COPYRIGHT 
  */
 
-class ZfExtended_ValidateException extends Zend_Exception {
-    /**
-     * internal errors store
-     * @var array
-     */
-    protected $errors; 
-    
+class ZfExtended_ValidateException extends ZfExtended_Exception {
     /**
      * Construct the exception
      *
@@ -51,22 +45,9 @@ class ZfExtended_ValidateException extends Zend_Exception {
         if((int)$code === 0){
             $code = 400;
         }
+        if($msg == ''){
+            $msg = 'Nicht validiert!';
+        }
         parent::__construct($msg, (int) $code, $previous);
-    }
-
-    /**
-     * stores the given errors internally
-     * @param array $errors
-     */
-    public function setErrors(array $errors) {
-        $this->errors = $errors;
-    }
-
-    /**
-     * return the internally stored errors
-     * @return array
-     */
-    public function getErrors() {
-        return $this->errors;
     }
 }

@@ -142,12 +142,12 @@ class ZfExtended_Controller_Helper_Access extends  Zend_Controller_Action_Helper
      * - setzen von default/login/index bei Rolle noRights
      * - Ansonsten: setzen von default/index/index bei allen anderen Rollen
      *
-     * @throws ZfExtended_NoAccessException wenn Zugriff via route restDefault nicht (mehr) erlaubt
+     * @throws ZfExtended_NotAuthenticatedException wenn Zugriff via route restDefault nicht (mehr) erlaubt
      * @return false
      */
     private function notAuthenticated(){
         if($this->_route === 'Zend_Rest_Route'){
-            throw new ZfExtended_NoAccessException('Keine Zugriffsrechte!');
+            throw new ZfExtended_NotAuthenticatedException();
             return false;
         }
         $redirector = ZfExtended_Zendoverwrites_Controller_Action_HelperBroker::getStaticHelper(

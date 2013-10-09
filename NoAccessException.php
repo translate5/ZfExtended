@@ -31,7 +31,7 @@
   END LICENSE AND COPYRIGHT 
  */
 
-class ZfExtended_NoAccessException extends Exception {
+class ZfExtended_NoAccessException extends ZfExtended_Exception {
     /**
      * Construct the exception
      *
@@ -44,6 +44,9 @@ class ZfExtended_NoAccessException extends Exception {
     {
         if((int)$code === 0){
             $code = 403;
+        }
+        if($msg == ''){
+            $msg = 'Keine Zugriffsberechtigung!';
         }
         parent::__construct($msg, (int) $code, $previous);
     }

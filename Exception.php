@@ -31,25 +31,45 @@
   END LICENSE AND COPYRIGHT 
  */
 
-class ZfExtended_NotFoundException extends ZfExtended_Exception {
-    const IDENTIFIER = 'ZfExtended_NotFoundException ';
+class ZfExtended_Exception extends Zend_Exception {
+    /**
+     *
+     * @var Zend_Translate 
+     */
+    protected $_translate;
+    
+    /**
+     * internal errors store
+     * @var array
+     */
+    protected $errors; 
     /**
      * Construct the exception
      *
-     * @param  string $msg
+     * @param  string $msg (Message gets translated by ZfExtended_Exception)
      * @param  int $code
      * @param  Exception $previous
      * @return void
      */
     public function __construct($msg = '', $code = 0, Exception $previous = null)
     {
-        if((int)$code === 0){
-            $code = 404;
-        }
-        if($msg == ''){
-            $msg = 'Nicht gefunden!';
-        }
-        $msg = self::IDENTIFIER.$msg;
-        parent::__construct($msg, (int) $code, $previous);
+        $this->_translate = Zend_Registry::get('Zend_Translate');
+        parent::__construct($this->_translate->_($msg), (int) $code, $previous);
+    }
+    
+    /**
+     * stores the given errors internally
+     * @param array $errors
+     */
+    public function setErrors(array $errors) {
+        $this->errors = $errors;
+    }
+
+    /**
+     * return the internally stored errors
+     * @return array
+     */
+    public function getErrors() {
+        return $this->errors;
     }
 }

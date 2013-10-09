@@ -31,7 +31,7 @@
   END LICENSE AND COPYRIGHT 
  */
 
-class ZfExtended_Models_Entity_NoAccessException extends Exception {
+class ZfExtended_Models_Entity_NoAccessException extends ZfExtended_NoAccessException {
 /**
      * Construct the exception
      *
@@ -42,9 +42,6 @@ class ZfExtended_Models_Entity_NoAccessException extends Exception {
      */
     public function __construct($msg = '', $code = 0, Exception $previous = null)
     {
-        if((int)$code === 0){
-            $code = 403;
-        }
         parent::__construct($msg, (int) $code, $previous);
     }
 }
