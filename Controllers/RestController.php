@@ -107,7 +107,7 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
     $limit = $this->_getParam('limit');
     settype($offset, 'integer');
     settype($limit, 'integer');
-    $this->entity->limit($offset, $limit);
+    $this->entity->limit(max(0, $offset), $limit);
   }
 
   /**
