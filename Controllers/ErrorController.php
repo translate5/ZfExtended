@@ -107,7 +107,7 @@ class ErrorController extends ZfExtended_Controllers_Action
         '304' => 'Not Modified',
         '305' => 'Use Proxy',
         '400' => 'Bad Request',
-        '401' => 'Unauthorized',
+        '401' => 'Unauthorized',//no errorlogging on 401, because it is a normal exception on session timeout
         '402' => 'Payment Required',
         '403' => 'Forbidden',
         '404' => 'Not Found',
@@ -115,7 +115,7 @@ class ErrorController extends ZfExtended_Controllers_Action
         '406' => 'Not Acceptable',
         '407' => 'Proxy Authentication Required',
         '408' => 'Request Time-out',
-        '409' => 'Conflict', //(status code 409 wird nicht ins error-log geschrieben)
+        '409' => 'Conflict', 
         '410' => 'Gone',
         '411' => 'Length Required',
         '412' => 'Precondition Failed',
@@ -290,7 +290,7 @@ class ErrorController extends ZfExtended_Controllers_Action
     public function errorAction()
     {
         $highestError = $this->getErrorWithHighesErrorCode();
-        if($highestError->_errorCode === 409){
+        if($highestError->_errorCode === 401){//no errorlogging on 401, because it is a normal exception on session timeout
 
         }
         elseif($this->_isHttp404){
