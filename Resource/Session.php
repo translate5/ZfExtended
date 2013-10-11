@@ -43,7 +43,7 @@
  *   jedem Aufruf neu gesetzt wird) und der $session->internalSessionUniqId
  */
 class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbstract {
-    /*
+    /**
      * @var array config Konfiguration der Parameter für die DB-Sessioninitialisierung
      */
     private $_sessionConfig = array(
@@ -82,7 +82,7 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
         Zend_Session::start();
         $this->setInternalSessionUniqId();
     }
-    /*
+    /**
      * Setzt internalSessionUniqId wie im Klassenkopf beschrieben
      */
     private function setInternalSessionUniqId(){
@@ -98,7 +98,7 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
             $row->save();
         }
     }
-    /*
+    /**
      * Löscht verfallene Sessions aus der Session-Tabelle
      * 
      * - Einbindung von Session-Models ohne ZfExtended_Factory, da die Factory eine initialisierte Session benötigt
