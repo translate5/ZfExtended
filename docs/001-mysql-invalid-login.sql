@@ -32,13 +32,13 @@
 -- 
 CREATE TABLE IF NOT EXISTS `invalidlogin` (
   `invalidLoginId` int(11) NOT NULL AUTO_INCREMENT,
-  `login` varchar(255) NOT NULL,
+  `eMail` varchar(255) NOT NULL,
   `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`invalidLoginId`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=0;
 
 RENAME TABLE `invalidlogin` TO  `Zf_invalidlogin` ;
 
-ALTER TABLE  `Zf_invalidlogin` CHANGE  `eMail`  `login` VARCHAR( 255 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL
+ALTER TABLE  `Zf_invalidlogin` CHANGE  `eMail`  `login` VARCHAR( 255 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL;
 
 ALTER TABLE  `Zf_invalidlogin` CHANGE  `invalidLoginId`  `id` INT( 11 ) NOT NULL AUTO_INCREMENT;
