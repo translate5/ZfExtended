@@ -130,6 +130,17 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract {
     }
     
     /**
+     * 
+     * @param string $newPasswd
+     */
+    public function setNewPasswd(string $newPasswd) {
+        $this->setPasswd(md5($newPasswd));
+        $this->setPasswdReset(FALSE);
+        $this->validate();
+        $this->save();
+    }
+    
+    /**
      * merges firstname and surname to username
      */
     public function getUserName() {

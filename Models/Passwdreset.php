@@ -62,4 +62,21 @@ class ZfExtended_Models_Passwdreset extends ZfExtended_Models_Entity_Abstract {
           }
       }
   }
+  /**
+   * 
+   * @param string $hash
+   * @return type
+   */
+  public function hashMatches($hash) {
+      try {
+          $session = new Zend_Session_Namespace();
+          $s = $this->db->select();
+          $s->where('resetHash = ?', $hash)
+                    ->where('internalSessionUniqId = ?', $session->internalSessionUniqId);
+            $this->loadRowBySelect($s);
+        } catch (ZfExtended_Models_Entity_NotFoundException $exc) {
+            return false;
+        }
+        return true;
+  }
 }

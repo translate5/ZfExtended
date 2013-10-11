@@ -119,7 +119,9 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
             $login = $this->_form->getValue('login');
             $passwd = $this->_form->getValue('passwd');
             $invalidLoginCounter = ZfExtended_Factory::get('ZfExtended_Models_Invalidlogin',array($login));
-
+            /* @var $invalidLoginCounter ZfExtended_Models_Invalidlogin */
+            if($this->hasMaximumInvalidations($invalidLoginCounter))
+                return false;
             if ($this->_helper->auth->isValid($login,$passwd,$this->_authTableName,
                     $this->_identityColumn,$this->_credentialColumn,
                     $this->_credentialTreatment)) {
@@ -129,21 +131,31 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
                 return true;
             }
             $invalidLoginCounter->increment();
-            if($invalidLoginCounter->hasMaximumInvalidations()) {
-                $this->passwdReset($login);
-                $invalidLoginCounter->resetCounter();
-                $this->view->errors = true;
-                $this->_form->addError(sprintf($this->_translate->_('Ungültige Logindaten - Zugang gesperrt!<br/>Sie haben Ihr Passwort in den letzten 24 Stunden mehrmals falsch eingegeben, ihr Login wurde gesperrt.<br />Per E-Mail wurde Ihnen ein Link zugesandt, mit welchem Sie Ihr Passwort neu setzen können. Dieser Link ist 30 min gültig und funktioniert nur, so lange Sie Ihren Browser nicht zwischenzeitlich geschlossen haben. Sie können jederzeit einen neuen Link %shier%s anfordern.'),
-                        '<a href="'. APPLICATION_RUNDIR .'/login/passwdreset">','</a>'));
+            if($this->hasMaximumInvalidations($invalidLoginCounter))
                 return false;
-            }
             $this->view->errors = true;
-                $this->_form->addError(sprintf($this->_translate->_('Ungültige Logindaten!<br/>Haben Sie Ihr Passwort vergessen oder bislang noch kein Passwort für Ihren Login gesetzt?  Sie können jederzeit einen neuen Link %shier%s anfordern.'),
-                        '<a href="'. APPLICATION_RUNDIR .'/login/passwdreset">','</a>'));
-                return false;
+            $this->_form->addError(sprintf($this->_translate->_('Ungültige Logindaten!<br/>Haben Sie Ihr Passwort vergessen oder bislang noch kein Passwort für Ihren Login gesetzt?  Sie können jederzeit einen neuen Link %shier%s anfordern.'),
+                    '<a href="'. APPLICATION_RUNDIR .'/login/passwdreset">','</a>'));
+            return false;
        }
        return false;
     }
+    /**
+     * 
+     * @param ZfExtended_Models_Invalidlogin $invalidLogin
+     * @return boolean
+     */
+    protected function hasMaximumInvalidations(ZfExtended_Models_Invalidlogin $invalidLogin) {
+        if($invalidLogin->hasMaximumInvalidations()) {
+            $this->passwdReset($this->_form->getValue('login'));
+            $this->view->errors = true;
+            $this->_form->addError(sprintf($this->_translate->_('Ungültige Logindaten - Zugang gesperrt!<br/>Sie haben Ihr Passwort in den letzten 24 Stunden mehrmals falsch eingegeben, ihr Login wurde gesperrt.<br />Per E-Mail wurde Ihnen ein Link zugesandt, mit welchem Sie Ihr Passwort neu setzen können. Dieser Link ist 30 min gültig und funktioniert nur, so lange Sie Ihren Browser nicht zwischenzeitlich geschlossen haben. Sie können jederzeit einen neuen Link %shier%s anfordern.'),
+                    '<a href="'. APPLICATION_RUNDIR .'/login/passwdreset">','</a>'));
+            return true;
+        }
+        return false;
+    }
+    
     abstract protected function initDataAndRedirect();
     
     /**
@@ -221,26 +233,23 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
                     $this->_form->isValid($this->_request->getParams())){
 
                 $passwdreset = ZfExtended_Factory::get('ZfExtended_Models_Passwdreset');
-                $passwdreset->deleteOldHashes();
                 /* @var $passwdreset ZfExtended_Models_Passwdreset */
-                try {
-                    $s = $passwdreset->db->select();
-                    $s->where('resetHash = ?', $this->_form->getValue('resetHash'))
-                      ->where('internalSessionUniqId = ?',$this->_session->internalSessionUniqId);
-                    #echo $s->assemble();exit;
-                    $passwdreset->loadRowBySelect($s);
-                } catch (ZfExtended_Models_Entity_NotFoundException $exc) {
-                     $this->passwdResetHashNotValid();
+                $passwdreset->deleteOldHashes();
+                
+                if(!$passwdreset->hashMatches($this->_form->getValue('resetHash'))){
+                    $this->passwdResetHashNotValid();
                     return;
                 }
 
                 $user = ZfExtended_Factory::get('ZfExtended_Models_User');
                 /* @var $user ZfExtended_Models_User */
                 $user->load($passwdreset->getUserId());
-                $user->setPasswd(md5($this->_form->getValue('passwd')));
-                $user->setPasswdReset(FALSE);
-                $user->validate();
-                $user->save();
+                $user->setNewPasswd($this->_form->getValue('passwd'));
+                
+                $invalidLogin = ZfExtended_Factory::get('ZfExtended_Models_Invalidlogin',array($user->getLogin()));
+                /* @var $invalidLogin ZfExtended_Models_Invalidlogin */
+                $invalidLogin->resetCounter();
+                
                 $this->_form = new ZfExtended_Zendoverwrites_Form('loginIndex.ini');
                 $this->view->heading = $this->_translate->_('Login');
                 $this->view->message = $this->_translate->_('Ihr Passwort wurde neu gesetzt. Sie können sich nun einloggen.');
@@ -251,7 +260,7 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
         $this->_redirect('/login');
     }
     
-     /**
+    /**
       * render passwdNew when resetHash not valid
      */
     protected function passwdResetHashNotValid() {
