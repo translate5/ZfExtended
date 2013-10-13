@@ -87,6 +87,11 @@ class ErrorController extends ZfExtended_Controllers_Action
      */
     protected $_isHttp404 = false;
     /**
+     *
+     * @var string  
+     */
+    protected $route;
+    /**
      * @var array Liste aller gültigen httpResponseCodes (status code 409 wird nicht ins error-log geschrieben)
      *
      */
@@ -135,6 +140,7 @@ class ErrorController extends ZfExtended_Controllers_Action
      */
     public function init()
     {
+        $this->route = get_class(Zend_Controller_Front::getInstance()->getRouter()->getCurrentRoute());
         try {
             $config = Zend_Registry::get('config');
             if(isset($config->runtimeOptions->showErrorsInBrowser)){
@@ -266,7 +272,7 @@ class ErrorController extends ZfExtended_Controllers_Action
         $this->view->errors = $this->_errors;
         $this->view->getParams   = $this->_getParams;
         $this->view->errorCollect   = $this->_errorCollect;
-        if(get_class(Zend_Controller_Front::getInstance()->getRouter()->getCurrentRoute()) === 'Zend_Rest_Route'){
+        if($this->route === 'Zend_Rest_Route'){
             Zend_Layout::getMvcInstance()->disableLayout();
             $this->_renderScript = 'error/errorRest.phtml';
         }
@@ -279,7 +285,8 @@ class ErrorController extends ZfExtended_Controllers_Action
                 $this->_renderScript = 'error/error404.phtml';
             }
         }
-        if(preg_match ('"^'.ZfExtended_NotFoundException::IDENTIFIER.'"',$this->_errors[0]->_errorMessage)){
+        if(preg_match ('"^'.ZfExtended_NotFoundException::IDENTIFIER.'"',$this->_errors[0]->_errorMessage)
+                &&($this->route !== 'Zend_Rest_Route')){
             $this->_isHttp404 = true;
             $this->view->errors[0]->_errorMessage = $this->_translate->_('Seite nicht gefunden: ').$_SERVER['REQUEST_URI'].$this->_translate->_('/ Aufruf erfolgte durch IP: ').$_SERVER['REMOTE_ADDR'];
         }
