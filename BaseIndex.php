@@ -140,6 +140,7 @@ class ZfExtended_BaseIndex{
         $bootstrap->bootstrap('cachemanager');
         $cache = $bootstrap->getResource('cachemanager')->getCache('zfExtended');
         Zend_Registry::set('cache', $cache);
+        Zend_Registry::set('module',$this->currentModule );
     }
     /**
      * (re-)configures the session based on the config in the Zend_Registry

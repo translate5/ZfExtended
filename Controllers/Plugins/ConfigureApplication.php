@@ -53,7 +53,6 @@ class ZfExtended_Controllers_Plugins_ConfigureApplication extends Zend_Controlle
     public function RouteShutdown(Zend_Controller_Request_Abstract $request)
     {
         $module = $request->getModuleName();
-        Zend_Registry::set('module',$module );
         Zend_Registry::set('controller',$request->getControllerName() );
         Zend_Registry::set('action',$request->getActionName() );
         $session = new Zend_Session_Namespace();
