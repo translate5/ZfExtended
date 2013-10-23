@@ -84,7 +84,8 @@ class ZfExtended_Models_Filter_ExtJs extends ZfExtended_Models_Filter{
         $method = 'apply'.ucfirst($filter->type);
         switch($filter->type){
           case 'numeric':
-            $method .= '_'.$filter->comparison;
+          case 'date':
+              $method = 'applyNumeric_'.$filter->comparison;
           case 'list':
           case 'listAsString':
           case 'string':
