@@ -202,7 +202,8 @@ abstract class ZfExtended_Models_Entity_Abstract {
       }
       $name = $this->db->info(Zend_Db_Table_Abstract::NAME);
       $schema = $this->db->info(Zend_Db_Table_Abstract::SCHEMA);
-      $s->from($name, array('numrows' => 'count(*)'), $schema);
+      $s->reset($s::COLUMNS);
+      $s->columns(array('numrows' => 'count(*)'));
       $totalCount = $this->db->fetchRow($s)->numrows;
       $s->reset($s::COLUMNS);
       $s->reset($s::FROM);
@@ -329,6 +330,14 @@ abstract class ZfExtended_Models_Entity_Abstract {
       $this->filter = $filter;
     }
 
+    /**
+     * returns the internal configured filter
+     * @return ZfExtended_Models_Filter
+     */
+    public function getFilter() {
+        return $this->filter;
+    }
+    
     /**
      * returns true if all internal set data is valid
      * @return boolean

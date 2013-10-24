@@ -37,17 +37,6 @@
  */
 class ZfExtended_Models_Filter_ExtJs extends ZfExtended_Models_Filter{
   /**
-   * @param ZfExtended_Models_Entity_Abstract $entity
-   * @param string $filter
-   * @param string $sort
-   * @param array|NULL $sort
-   */
-  public function __construct(ZfExtended_Models_Entity_Abstract $entity, $filter,
-          $sort = NULL, $sortColMap = NULL, $filterTypeMap = NULL){
-      parent::__construct($entity, $filter, $sort, $sortColMap, $filterTypeMap);
-  }
-
-  /**
    * decodes the filter/sort string, return always an array
    * @param string $todecode
    * @return array
@@ -80,21 +69,28 @@ class ZfExtended_Models_Filter_ExtJs extends ZfExtended_Models_Filter{
   protected function checkAndApplyOneFilter(stdClass $filter){
     $this->initFilterData($filter);
     $this->checkField($filter->field);
-    if(!empty($filter->value) or $filter->value === 0 or $filter->value === '0'){
-        $method = 'apply'.ucfirst($filter->type);
-        switch($filter->type){
-          case 'numeric':
-          case 'date':
-              $method = 'applyNumeric_'.$filter->comparison;
-          case 'list':
-          case 'listAsString':
-          case 'string':
-          case 'boolean':
-            $this->$method($filter->field, $filter->value);
+    if(!isset($filter->value) || is_array($filter->value) && empty($filter->value)){
+        return;
+    }
+    $method = 'apply'.ucfirst($filter->type);
+    //were assuming that all $methods are using the given field directly as 
+    //DB field name so we can merge the table alias as simple text
+    $field = $filter->field;
+    if(!empty($filter->table)) {
+        $field = '`'.$filter->table.'`.'.$field;
+    }
+    switch($filter->type){
+        case 'numeric':
+        case 'date':
+            $method = 'applyNumeric_'.$filter->comparison;
+        case 'list':
+        case 'listAsString':
+        case 'string':
+        case 'boolean':
+            $this->$method($field, $filter->value);
             return;
-          default:
+        default:
             throw new Zend_Exception("illegal type in filter");
-        }
     }
   }
 
@@ -106,6 +102,7 @@ class ZfExtended_Models_Filter_ExtJs extends ZfExtended_Models_Filter{
     settype($filter->type, 'string');
     settype($filter->field, 'string');
     settype($filter->comparison, 'string');
+    settype($filter->table, 'string');
     if(!isset($filter->value)){
       $filter->value = null;
     }

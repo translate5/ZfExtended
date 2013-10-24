@@ -76,6 +76,7 @@ abstract class ZfExtended_Models_Filter{
    */
   public function __construct(ZfExtended_Models_Entity_Abstract $entity, $filter,
           $sort = NULL, $sortColMap = NULL, $filterTypeMap = NULL){
+      error_log("CONSTRUCTED");
     $this->entity = $entity;
     $this->sort = $this->decode($sort);
     settype($this->sort, 'array');
@@ -85,6 +86,7 @@ abstract class ZfExtended_Models_Filter{
     settype($this->filter, 'array');
     $this->mapFilter();
   }
+  
   /**
    * applies the filter and sort statements to the given select and return it
    * @param Zend_Db_Select $select
@@ -99,6 +101,7 @@ abstract class ZfExtended_Models_Filter{
     foreach($this->filter as $filter){
       $this->checkAndApplyOneFilter($filter);
     }
+    error_log($this->select);
     return $this->select;
   }
   

@@ -41,6 +41,12 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
    * @var string
    */
   protected $entityClass;
+  
+  /**
+   * Default Filter Class to use
+   * @var string
+   */
+  protected $filterClass = 'ZfExtended_Models_Filter_ExtJs';
 
   /**
    * Instance of the Entity
@@ -119,7 +125,7 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
     //der Client Anfrage in welchem Format die Filter und Sortierungsinfos kommen.
     //Aktuell gibt es nur das ExtJS Format, sollte sich das je ändern, muss die Instanzieriungs Logik an dieser Stelle geändert
     //oder als "FilterFactory" in der abstrakten ZfExtended_Models_Filter Klasse implementiert werden
-    $filter = ZfExtended_Factory::get('ZfExtended_Models_Filter_ExtJs',array(
+    $filter = ZfExtended_Factory::get($this->filterClass,array(
       $this->entity,
       $this->_getParam('filter'),
       $this->_getParam('sort'),
