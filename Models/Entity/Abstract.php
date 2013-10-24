@@ -202,8 +202,9 @@ abstract class ZfExtended_Models_Entity_Abstract {
       }
       $name = $this->db->info(Zend_Db_Table_Abstract::NAME);
       $schema = $this->db->info(Zend_Db_Table_Abstract::SCHEMA);
-      $s->reset($s::COLUMNS);
-      $s->columns(array('numrows' => 'count(*)'));
+      $s->from($name, array('numrows' => 'count(*)'), $schema);
+      //$s->reset($s::COLUMNS);
+      //$s->columns(array('numrows' => 'count(*)'));
       $totalCount = $this->db->fetchRow($s)->numrows;
       $s->reset($s::COLUMNS);
       $s->reset($s::FROM);
