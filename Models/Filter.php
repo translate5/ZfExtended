@@ -76,7 +76,6 @@ abstract class ZfExtended_Models_Filter{
    */
   public function __construct(ZfExtended_Models_Entity_Abstract $entity, $filter,
           $sort = NULL, $sortColMap = NULL, $filterTypeMap = NULL){
-      error_log("CONSTRUCTED");
     $this->entity = $entity;
     $this->sort = $this->decode($sort);
     settype($this->sort, 'array');
@@ -101,7 +100,6 @@ abstract class ZfExtended_Models_Filter{
     foreach($this->filter as $filter){
       $this->checkAndApplyOneFilter($filter);
     }
-    error_log($this->select);
     return $this->select;
   }
   
