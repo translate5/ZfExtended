@@ -80,6 +80,12 @@ class ZfExtended_Models_Filter_ExtJs extends ZfExtended_Models_Filter{
         $field = '`'.$filter->table.'`.'.$field;
     }
     switch($filter->type){
+        case 'notIsNull':
+            $this->applyNotIsNull($field);
+            break;
+        case 'isNull':
+            $this->applyIsNull($field);
+            break;
         case 'numeric':
         case 'date':
             $method = 'applyNumeric_'.$filter->comparison;
@@ -156,6 +162,18 @@ class ZfExtended_Models_Filter_ExtJs extends ZfExtended_Models_Filter{
    */
   protected function applyString($field, $value) {
     $this->select->where($field.' like ?', '%'.$value.'%');
+  }
+  /**
+   * @param string $field
+   */
+  protected function applyIsNull($field) {
+    $this->select->where($field.' is null');
+  }
+  /**
+   * @param string $field
+   */
+  protected function applyNotIsNull($field) {
+    $this->select->where('not '.$field.' is null');
   }
   /**
    * Setzt einen Listfilter auf Basis einer Stringsuche um,

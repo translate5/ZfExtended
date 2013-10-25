@@ -83,7 +83,7 @@ abstract class ZfExtended_Models_Filter{
     $this->_filterTypeMap = $filterTypeMap;
     $this->filter = $this->decode($filter);
     settype($this->filter, 'array');
-    $this->mapFilter();
+    $this->init();
   }
   
   /**
@@ -103,10 +103,14 @@ abstract class ZfExtended_Models_Filter{
     return $this->select;
   }
   
+  protected function init() {
+    $this->mapFilter();
+  }
+  
   /**
    * mappt die Filter anhand $this->_filterTypeMap
    */
-  public function mapFilter(){
+  protected function mapFilter(){
       if(!empty($this->_filterTypeMap)){
           foreach($this->_filterTypeMap as $field => $origType){
                 $typeMap = each($origType);
