@@ -71,6 +71,10 @@ class ZfExtended_Controller_Helper_Translate extends Zend_Controller_Action_Help
     protected $translationPaths;
     
     public function __construct() {
+        //this is to have an translation adapter set if an error occurs inside translation
+        //process before translation adapter is set - but errorcontroller needs one
+        $translate = new Zend_Translate('Zend_Translate_Adapter_Array', array('' => ''), 'en');
+        Zend_Registry::set('Zend_Translate', $translate);
         $this->setSourceLang();
         $this->setTargetLang();
         $this->getLogPath();

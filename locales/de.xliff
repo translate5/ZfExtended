@@ -71,6 +71,7 @@ Ihr Projektmanagement Team
 beo Gesellschaft für Sprachen und Technologie
 
 Diese Email wurde automatisch generiert. Please do not reply to this email.</target></trans-unit>
+<trans-unit id="TmV1ZXMgUGFzc3dvcnQ="><source>Neues Passwort</source><target>Neues Passwort</target></trans-unit>
 <trans-unit id="WnVyw7xjayB6dXIgU3RhcnRzZWl0ZQ=="><source>Zurück zur Startseite</source><target>Zurück zur Startseite</target></trans-unit>
 <trans-unit id="QW53ZW5kdW5nc2ZlaGxlcg=="><source>Anwendungsfehler</source><target>Anwendungsfehler</target></trans-unit>
 <trans-unit id="V2lyIGJpdHRlbiB1bSBFbnRzY2h1bGRpZ3VuZyBmw7xyIGRpZSBhdWZnZXRyZXRlbmUgU3TDtnJ1bmch"><source>Wir bitten um Entschuldigung für die aufgetretene Störung!</source><target>Wir bitten um Entschuldigung für die aufgetretene Störung!</target></trans-unit>
@@ -78,23 +79,6 @@ Diese Email wurde automatisch generiert. Please do not reply to this email.</tar
 <trans-unit id="U29sbHRlIGlubmVyaGFsYiBkZXMgbsOkY2hzdGVuIEFyYmVpdHN0YWdzIGtlaW5lIEtvbnRha3RhdWZuYWhtZSBlcmZvbGd0IHNlaW4sIGxpZWd0IGVpbmUgYWxsZ2VtZWluZSBTdMO2cnVuZyB2b3IsIGRpZSBkaWUgYXV0b21hdGlzY2hlIEJlbmFjaHJpY2h0aWd1bmcgdW5zZXJlciBBZG1pbmlzdHJhdG9yZW4gdmVyaGluZGVydC4gQml0dGUgYmVuYWNocmljaHRpZ2VuIFNpZSB1bnMgZGFubiBtw7ZnbGljaHN0IHVtZ2VoZW5kIHVudGVyIGRlbiBmb2xnZW5kZW4gS29udGFrdGRhdGVuOg=="><source>Sollte innerhalb des nächsten Arbeitstags keine Kontaktaufnahme erfolgt sein, liegt eine allgemeine Störung vor, die die automatische Benachrichtigung unserer Administratoren verhindert. Bitte benachrichtigen Sie uns dann möglichst umgehend unter den folgenden Kontaktdaten:</source><target>Sollte innerhalb des nächsten Arbeitstags keine Kontaktaufnahme erfolgt sein, liegt eine allgemeine Störung vor, die die automatische Benachrichtigung unserer Administratoren verhindert. Bitte benachrichtigen Sie uns dann möglichst umgehend unter den folgenden Kontaktdaten:</target></trans-unit>
 <trans-unit id="VGVsZWZvbjo="><source>Telefon:</source><target>Telefon:</target></trans-unit>
 <trans-unit id="RS1NYWlsOg=="><source>E-Mail:</source><target>E-Mail:</target></trans-unit>
-<trans-unit id='RGV1dHNjaA=='><source>Deutsch</source><target>Deutsch</target></trans-unit>
-<trans-unit id='RW5nbGlzY2g='><source>Englisch</source><target>Englisch</target></trans-unit>
-<trans-unit id='QmVudXR6ZXJuYW1l'><source>Benutzername</source><target>Benutzername</target></trans-unit>
-<trans-unit id='UGFzc3dvcnQ='><source>Passwort</source><target>Passwort</target></trans-unit>
-<trans-unit id='RWlubG9nZ2Vu'><source>Einloggen</source><target>Einloggen</target></trans-unit>
-<trans-unit id='Qml0dGUgZ2ViZW4gU2llIGVpbiBQYXNzd29ydCBhbiE='><source>Bitte geben Sie ein Passwort an!</source><target>Bitte geben Sie ein Passwort an!</target></trans-unit>
-<trans-unit id='RGVyIEJlbnV0emVybmFtZSBpc3QgenUga3VyeiE='><source>Der Benutzername ist zu kurz!</source><target>Der Benutzername ist zu kurz!</target></trans-unit>
-<trans-unit id='TmV1ZXMgUGFzc3dvcnQ='><source>Neues Passwort</source><target>Neues Passwort</target></trans-unit>
-<trans-unit id='RS1NYWlsIGFuZm9yZGVybg=='><source>E-Mail anfordern</source><target>E-Mail anfordern</target></trans-unit>
-<trans-unit id='WmZFeHRlbmRlZF9Ob3RGb3VuZEV4Y2VwdGlvbiBLZXk6IFpmRXh0ZW5kZWRfTW9kZWxzX0VudGl0eV9BYnN0cmFjdCN3aGVyZSA7IFZhbHVlOiBsb2dpbiA9ID8='><source>ZfExtended_NotFoundException Key: ZfExtended_Models_Entity_Abstract#where ; Value: login = ?</source><target>ZfExtended_NotFoundException Key: ZfExtended_Models_Entity_Abstract#where ; Value: login = ?</target></trans-unit>
-<trans-unit id='JyV2YWx1ZSUnIGlzIGxlc3MgdGhhbiAlbWluJSBjaGFyYWN0ZXJzIGxvbmc='><source>'%value%' is less than %min% characters long</source><target>'%value%' is less than %min% characters long</target></trans-unit>
-<trans-unit id='JyV2YWx1ZSUnIGlzIG5vIG1kNS1oYXNo'><source>'%value%' is no md5-hash</source><target>'%value%' is no md5-hash</target></trans-unit>
-<trans-unit id='Qml0dGUgbWluZGVzdGVucyA4IFplaWNoZW4gdmVyd2VuZGVu'><source>Bitte mindestens 8 Zeichen verwenden</source><target>Bitte mindestens 8 Zeichen verwenden</target></trans-unit>
-<trans-unit id='UGFzc3dvcnQgd2llZGVyaG9sZW4='><source>Passwort wiederholen</source><target>Passwort wiederholen</target></trans-unit>
-<trans-unit id='TmV1IHNldHplbg=='><source>Neu setzen</source><target>Neu setzen</target></trans-unit>
-<trans-unit id='U29sbHRlIG1pdCAiJWZpZWxkVGl0bGUlIiBpZGVudGlzY2ggc2Vpbi4='><source>Sollte mit "%fieldTitle%" identisch sein.</source><target>Sollte mit "%fieldTitle%" identisch sein.</target></trans-unit>
-<trans-unit id='RGFzIFBhc3N3b3J0IGlzdCB6dSBrdXJ6IQ=='><source>Das Passwort ist zu kurz!</source><target>Das Passwort ist zu kurz!</target></trans-unit>
   </body>
  </file>
 </xliff>
