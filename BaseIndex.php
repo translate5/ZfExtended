@@ -193,6 +193,33 @@ class ZfExtended_BaseIndex{
         }
         return 'translate5';
     }
+    /**
+     * gets paths to all libs. Later ones should overwrite previous ones  (therefore reverse order than in application.ini)
+     * @return array
+     */
+    public function getModulePaths() {
+        $modules = $this->getModules();
+        $paths = array();
+        foreach ($modules as $module) {
+            $paths[] = realpath(APPLICATION_PATH .DIRECTORY_SEPARATOR.'modules'.
+                    DIRECTORY_SEPARATOR.$module);
+        }
+        return $paths;
+    }
+    /**
+     * gets paths to all libs. Later ones should overwrite previous ones  (therefore reverse order than in application.ini)
+     * @return array
+     */
+    public function getLibPaths() {
+        $config = Zend_Registry::get('config');
+        $paths = array();
+        $libs = array_reverse($config->runtimeOptions->libraries->order->toArray());
+        foreach ($libs as $lib) {
+            $paths[] = realpath(APPLICATION_PATH .DIRECTORY_SEPARATOR.'..'.
+                    DIRECTORY_SEPARATOR.'library'.DIRECTORY_SEPARATOR.$lib);
+        }
+        return $paths;
+    }
     
     /**
      * Changes the module of the ZF-Application
@@ -267,7 +294,7 @@ class ZfExtended_BaseIndex{
     /**
      * @return array moduleDirs
      */
-    private function getModuleDirs(){
+    public function getModules(){
         $modules = scandir(APPLICATION_PATH.'/modules');
         foreach ($modules as $key => &$module) {
             if(!is_dir(APPLICATION_PATH .'/modules/'.$module) or $module === '.' or $module === '..' or $module === '.svn'){
@@ -275,6 +302,12 @@ class ZfExtended_BaseIndex{
             }
         }
         return $modules;
+    }
+    /**
+     * alias of getModules
+     */
+    public function getModuleDirs() {
+        return $this->getModules();
     }
 
     /**

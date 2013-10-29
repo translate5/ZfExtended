@@ -44,41 +44,65 @@ class ZfExtended_Controllers_Plugins_ParseXliff extends Zend_Controller_Plugin_A
 {
     /**
      *
+     * @var ZfExtended_Controller_Helper_Translate 
+     */
+    protected $tHelper;
+
+    /**
+     *
      * @param  Zend_Controller_Request_Abstract $request
      * @return void
      */
     public function dispatchLoopShutdown()
     {
-        $session = new Zend_Session_Namespace();
-        $targetLocaleObj = Zend_Registry::get('Zend_Locale');
-        $targetLang = $targetLocaleObj->getLanguage();
-        $logfile = $session->runtimeOptions->dir->logs.'/notFoundTranslation-'.
-            $session->sourceLang.'-'.$targetLang.'.log';
-        //Bereinige Logfile um Dubletten
-        if(file_exists($logfile)){//falls die Sprache nach dem Login automatisch umgestellt wurde kann es sein, dass zu diesem Zeitpunkt das logfile noch nicht angelegt wurde
-            $fileArr = file($logfile);
-            //entferne beginnenden Schlonz, der nix mit der Übersetzung zu tun hat
-            $fileArr = preg_replace("'\d\d\d\d-\d\d-[^ ]+ NOTICE [^<]*'s", '', $fileArr);
-            $fileArr = array_unique($fileArr);
-            $file = implode('', $fileArr);
-            $file = str_replace("<trans-unit id=''><source></source><target></target></trans-unit>","",$file);
-            $file = preg_replace_callback("'(?<=<trans-unit id=\').*?(?=\'><source>)'s",
-			function ($match) {
-                            $match[0] = htmlspecialchars_decode($match[0], ENT_QUOTES);
-                            return htmlspecialchars($match[0],ENT_QUOTES);
-			},
-                    $file);
-            $fileStart = '<?xml version="1.0" ?>
-<xliff version=\'1.1\' xmlns=\'urn:oasis:names:tc:xliff:document:1.1\'>
- <file original=\'php-sourcecode\' source-language=\'de\' target-language=\'de\' datatype=\'php\'>
-  <body>';
-            $fileEnd = '  </body>
- </file>
-</xliff>';
-            $file = str_replace($fileStart, '', $file);
-            $file = str_replace($fileEnd, '', $file);
-            $file = $fileStart.$file.$fileEnd;
-            file_put_contents($logfile, $file);
+        $this->tHelper = ZfExtended_Zendoverwrites_Controller_Action_HelperBroker::getStaticHelper(
+                        'Translate'
+        );
+        $logPath = $this->tHelper->getLogPath();
+        $logArr = $this->parseXliff($logPath);
+        if(!empty($logArr)){
+            $tLang = $this->tHelper->getTargetLang();
+            $sLang = $this->tHelper->getSourceCodeLocale();
+            if($tLang===$sLang){
+                $session = new Zend_Session_Namespace();
+                
+                $xliffPath = APPLICATION_PATH.DIRECTORY_SEPARATOR.'modules'.
+                        DIRECTORY_SEPARATOR.APPLICATION_MODULE.DIRECTORY_SEPARATOR.
+                        'locales'.DIRECTORY_SEPARATOR.$sLang.'.xliff';
+                $integratedPath = $session->runtimeOptions->dir->logs.'/integratedTranslations-'.
+                        APPLICATION_MODULE.'-'.$sLang.'-'.$tLang.'.xliff';
+                
+                $xliffArr = $this->parseXliff($xliffPath);
+                $xliffArr = array_merge($xliffArr,$logArr);
+                $this->saveXliff($xliffArr, $xliffPath);
+                
+                $integratedArr = $this->parseXliff($integratedPath);
+                $integratedArr = array_merge($integratedArr,$logArr);
+                $this->saveXliff($integratedArr, $integratedPath);
+                unlink($logPath);
+                return;
+            }
+            $this->saveXliff($logArr, $logPath);
         }
+    }
+    
+    protected function saveXliff(array $fileArr,string $path) {
+        $fileArr = array_unique($fileArr);
+        $file = implode("</trans-unit>\n", $fileArr).'</trans-unit>';
+        $file = str_replace("<trans-unit id=''><source></source><target></target></trans-unit>","",$file);
+        $file = $this->tHelper->getXliffStartString().$file.$this->tHelper->getXliffEndString();
+        file_put_contents($path, $file);
+    }
+
+
+    protected function parseXliff(string $path) {
+        if(file_exists($path)){
+            $file = file_get_contents($path);
+            $file = trim(str_replace(array($this->tHelper->getXliffStartString(),$this->tHelper->getXliffEndString()), array('',''), $file))."\n";
+            $fileArr = explode("</trans-unit>\n", $file);
+            array_pop($fileArr);
+            return $fileArr;
+        }
+        return array();
     }
 }

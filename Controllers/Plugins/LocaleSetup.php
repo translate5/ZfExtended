@@ -96,7 +96,7 @@ class ZfExtended_Controllers_Plugins_LocaleSetup extends Zend_Controller_Plugin_
                 }
             }
             if(!$session->locale){
-                $session->locale = $session->runtimeOptions->translation->targetDefaultLocale;
+                $session->locale = $session->runtimeOptions->translation->sourceCodeLocale;
             }
         }
         // Speicher locale und translation-object in Registry - so gilt sie für alle locale und
