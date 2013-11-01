@@ -169,12 +169,20 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
           return true;
       }
       catch (ZfExtended_ValidateException $e) {
-          $this->view->errors = $this->transformErrors($e->getErrors());
-          $this->view->message = "NOT OK";
-          $this->view->success = false;
-          $this->getResponse()->setHttpResponseCode($e->getCode());
+          $this->handleValidateException($e);
       }
       return false;
+  }
+
+  /**
+   * handles a ZfExtended_ValidateException
+   * @param ZfExtended_ValidateException $e
+   */
+  protected function handleValidateException(ZfExtended_ValidateException $e) {
+      $this->view->errors = $this->transformErrors($e->getErrors());
+      $this->view->message = "NOT OK";
+      $this->view->success = false;
+      $this->getResponse()->setHttpResponseCode($e->getCode());
   }
   
   /**
@@ -240,9 +248,10 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
       $this->entity->init();
       $this->decodePutData();
       $this->setDataInEntity($this->postBlacklist);
-      $this->entity->validate();
-      $this->entity->save();
-      $this->view->rows = $this->entity->getDataObject();
+      if($this->validate()){
+          $this->entity->save();
+          $this->view->rows = $this->entity->getDataObject();
+      }
   }
 
   public function putAction()
@@ -251,9 +260,10 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
     //@todo implement input check, here or in Entity??? => in Entity throws Ecxeption => HTTP 400
     $this->decodePutData();
     $this->setDataInEntity();
-    $this->entity->validate();
-    $this->entity->save();
-    $this->view->rows = $this->entity->getDataObject();
+    if($this->validate()){
+        $this->entity->save();
+        $this->view->rows = $this->entity->getDataObject();
+    }
   }
 
   protected function decodePutData() {

@@ -130,14 +130,30 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract {
     }
     
     /**
-     * 
-     * @param string $newPasswd
+     * loads all entities without the passwd field
+     * (non-PHPdoc)
+     * @see ZfExtended_Models_Entity_Abstract::loadAll()
+     * @return array
      */
-    public function setNewPasswd(string $newPasswd) {
+    public function loadAll() {
+        $db = $this->db;
+        $cols = array_flip($db->info($db::COLS));
+        unset($cols['passwd']);
+        $s = $db->select()->from($db->info($db::NAME), array_flip($cols));
+        return $this->loadFilterdCustom($s);
+    }
+    
+    /**
+     * @param string $newPasswd
+     * @param boolean $save
+     */
+    public function setNewPasswd(string $newPasswd, $save = true) {
         $this->setPasswd(md5($newPasswd));
         $this->setPasswdReset(FALSE);
-        $this->validate();
-        $this->save();
+        if($save) {
+            $this->validate();
+            $this->save();
+        }
     }
     
     /**
