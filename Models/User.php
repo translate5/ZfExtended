@@ -45,7 +45,6 @@
  * @method void setEmail() setEmail(string $email)
  * @method void setRoles() setRoles(string $roles)
  * @method void setPasswd() setPassword(string $passwd)
- * @method void setPasswdReset() setPasswordReset(boolean $reset)
  * @method void setGender() setGender(string $gender)
  * @method void setLogin() setLogin(string $login)
  * @method integer getId() getId()
@@ -55,7 +54,6 @@
  * @method string getEmail() getEmail()
  * @method string getRoles() getRoles()
  * @method string getPasswd() getPasswd()
- * @method boolean getPasswdReset() getPasswdReset()
  * @method string getGender() getGender()
  * @method string getLogin() getLogin()
  */
@@ -144,12 +142,13 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract {
     }
     
     /**
-     * @param string $newPasswd
+     * @param mixed $newPasswd string or null
      * @param boolean $save
      */
-    public function setNewPasswd(string $newPasswd, $save = true) {
-        $this->setPasswd(md5($newPasswd));
-        $this->setPasswdReset(FALSE);
+    public function setNewPasswd($newPasswd, $save = true) {
+        if(!is_null($newPasswd))
+            $newPasswd = md5($newPasswd);
+        $this->setPasswd($newPasswd);
         if($save) {
             $this->validate();
             $this->save();

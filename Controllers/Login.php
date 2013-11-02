@@ -118,6 +118,8 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
         if ($this->_form->isValid($this->_request->getParams())) {
             $login = $this->_form->getValue('login');
             $passwd = $this->_form->getValue('passwd');
+            if($passwd == '')//ensure that empty passwd can never pass, regardless of what is defined in login.ini, because passwd-default is null in db
+                return false;
             $invalidLoginCounter = ZfExtended_Factory::get('ZfExtended_Models_Invalidlogin',array($login));
             /* @var $invalidLoginCounter ZfExtended_Models_Invalidlogin */
             if($this->hasMaximumInvalidations($invalidLoginCounter))
@@ -147,7 +149,9 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
      */
     protected function hasMaximumInvalidations(ZfExtended_Models_Invalidlogin $invalidLogin) {
         if($invalidLogin->hasMaximumInvalidations()) {
-            $this->passwdReset($this->_form->getValue('login'));
+            $passwdreset = ZfExtended_Factory::get('ZfExtended_Models_Passwdreset');
+            /* @var $passwdreset ZfExtended_Models_Passwdreset */
+            $passwdreset->reset($this->_form->getValue('login'));
             $this->view->errors = true;
             $this->_form->addError(sprintf($this->_translate->_('Ungültige Logindaten - Zugang gesperrt!<br/>Sie haben Ihr Passwort in den letzten 24 Stunden mehrmals falsch eingegeben, ihr Login wurde gesperrt.<br />Per E-Mail wurde Ihnen ein Link zugesandt, mit welchem Sie Ihr Passwort neu setzen können. Dieser Link ist 30 min gültig und funktioniert nur, so lange Sie Ihren Browser nicht zwischenzeitlich geschlossen haben. Sie können jederzeit einen neuen Link %shier%s anfordern.'),
                     '<a href="'. APPLICATION_RUNDIR .'/login/passwdreset">','</a>'));
@@ -195,7 +199,9 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
         $this->_form = new ZfExtended_Zendoverwrites_Form('loginPasswdreset.ini');
         if($this->getRequest()->getParam('login')
                 && $this->_form->isValid($this->_request->getParams())){
-            if($this->passwdReset($this->_form->getValue('login'))){
+            $passwdreset = ZfExtended_Factory::get('ZfExtended_Models_Passwdreset');
+            /* @var $passwdreset ZfExtended_Models_Passwdreset */
+            if($passwdreset->reset($this->_form->getValue('login'))){
                 $this->view->message = $this->_translate->_('Per E-Mail wurde Ihnen ein Link zugesandt, mit welchem Sie Ihr Passwort neu setzen können. Dieser Link ist 30 min gültig und funktioniert nur, so lange Sie Ihren Browser nicht zwischenzeitlich geschlossen haben. Sie können jederzeit einen neuen Link über dieses Formular anfordern.');
             }
             else{
@@ -206,7 +212,6 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
         $this->view->form = $this->_form;
     }
     
-    //@todo aktive Session für passwdnew da?
     /**
      * sets the password and passwdReset to false in the LEK_user-table
      *
@@ -269,46 +274,6 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
         $this->_form->addError('Der ResetHash oder die Browsersitzung ist nicht (mehr) gültig. Bitte fordern Sie über das nebenstehende Formular eine E-Mail mit einem neuen Link an.');
         $this->view->form = $this->_form;
         $this->render('passwdreset');
-    }
-     /**
-     * reset password
-     * @param string $login
-     * @return boolean
-     */
-    protected function passwdReset(string $login) {
-        $session = new Zend_Session_Namespace();
-        $user = ZfExtended_Factory::get('ZfExtended_Models_User');
-        /* @var $user ZfExtended_Models_User */
-        try {
-            $user->loadRow('login = ?', $login);
-        } catch (ZfExtended_Models_Entity_NotFoundException $exc) {//catch the 404 thrown, if no user found
-            return false;
-        }
-
-        $session->resetHash = md5($this->_helper->guid->create());
-        
-        $passwdreset = ZfExtended_Factory::get('ZfExtended_Models_Passwdreset');
-        /* @var $passwdreset ZfExtended_Models_Passwdreset */
-        
-        $passwdreset->setUserId($user->getId());
-        $passwdreset->setResetHash($session->resetHash);
-        $passwdreset->setExpiration(time()+1800);
-        $passwdreset->setInternalSessionUniqId($session->internalSessionUniqId);
-        
-        $passwdreset->validate();
-        $passwdreset->save();
-        
-        $this->_helper->general->mail(
-                $user->getEmail(),
-                '',
-                $this->_translate->_('Passwort neu setzen'),
-                array(
-                    'gender' =>$user->getGender(),
-                    'surname' =>$user->getSurName(),
-                    'resetHash' =>$session->resetHash
-                )
-        );
-        return true;
     }
 }
 

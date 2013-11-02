@@ -40,9 +40,9 @@
 $session = new Zend_Session_Namespace();
 echo sprintf($this->translate->_('%1$s %2$s,
 
-Sie erhalten diese Email, weil wir eine Anfrage zur Änderung des Passwortes für Ihr beoSphere Konto auf http://www.beo-doc.de/portal/public/ erhalten haben. 
+Sie erhalten diese Email, weil wir eine Anfrage zur Änderung des Passwortes für Ihr Konto auf %3$s%4$s%5$s erhalten haben. 
 
-Wenn Sie angefragt haben und Ihr Passwort ändern möchten, dann befolgen Sie bitte folgende Anweisungen:
+Wenn Sie Ihr Passwort ändern möchten, dann befolgen Sie bitte folgende Anweisungen:
 
 Der folgende Link enthält einen für 30 Minuten gültigen Schlüssel, mit welchem Sie Ihr Passwort neu setzen können. Aus Sicherheitsgründen funktioniert dies nur, wenn Sie den folgenden Link im selben Browser in dem Sie die Änderung Ihres Passwort angefordert haben öffnen und zudem nach Zurücksetzen des Passworts Ihren Browser nicht neu gestartet haben.
 
@@ -62,7 +62,7 @@ Sollten Sie die Anfrage nicht selbst ausgelöst haben, bitten wir Sie uns darüb
 
 Vielen Dank und viele Grüße,
 Ihr Projektmanagement Team
-beo Gesellschaft für Sprachen und Technologie
+%8$s
 
 Diese Email wurde automatisch generiert. Please do not reply to this email.'),
     $this->mailEmployeeSalutation($this->gender),
@@ -71,7 +71,8 @@ Diese Email wurde automatisch generiert. Please do not reply to this email.'),
     $session->runtimeOptions->server->name,
     APPLICATION_RUNDIR,
     '/login/passwdnew?resetHash='.$this->resetHash,
-    '/login/passwdreset'
+    '/login/passwdreset',
+    $session->runtimeOptions->companyName
 );
 
 

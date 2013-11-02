@@ -31,3 +31,4 @@
 --  */
 -- 
 ALTER TABLE `Zf_users` DROP `passwdReset`;
+ALTER TABLE `Zf_users` CHANGE `passwd` `passwd` VARCHAR( 38 ) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL 

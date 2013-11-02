@@ -146,10 +146,12 @@ abstract class ZfExtended_Models_Validator_Abstract {
    * adds a custom validation Function (Closure). Must return boolean. First Parameter is the Value. Multiple Validators are allowed
    * @param string $fieldname
    * @param Closure $validationFunction
+   * @param boolean $allowNull optional allows null as valid value
    */
-  public function addValidatorCustom($fieldname, Closure $validationFunction){
+  public function addValidatorCustom($fieldname, Closure $validationFunction, $allowNull = false){
     settype($this->customValidators[$fieldname], 'array');
     $this->customValidators[$fieldname][] = $validationFunction;
+    $this->nullAllowed[$fieldname] = (boolean) $allowNull;
   }
 
   /**

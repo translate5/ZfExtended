@@ -79,4 +79,47 @@ class ZfExtended_Models_Passwdreset extends ZfExtended_Models_Entity_Abstract {
         }
         return true;
   }
+  /**
+    * reset password
+    * @param string $login
+    * @return boolean
+    */
+    public function reset(string $login) {
+        $session = new Zend_Session_Namespace();
+        $user = ZfExtended_Factory::get('ZfExtended_Models_User');
+        /* @var $user ZfExtended_Models_User */
+        try {
+            $user->loadRow('login = ?', $login);
+        } catch (ZfExtended_Models_Entity_NotFoundException $exc) {//catch the 404 thrown, if no user found
+            return false;
+        }
+        $guid = ZfExtended_Zendoverwrites_Controller_Action_HelperBroker::getStaticHelper(
+            'Guid'
+        );
+        $session->resetHash = md5($guid->create());
+        
+        
+        $this->setUserId($user->getId());
+        $this->setResetHash($session->resetHash);
+        $this->setExpiration(time()+1800);
+        $this->setInternalSessionUniqId($session->internalSessionUniqId);
+        
+        $this->validate();
+        $this->save();
+        $general = ZfExtended_Zendoverwrites_Controller_Action_HelperBroker::getStaticHelper(
+            'general'
+        );
+        $translate = Zend_Registry::get('Zend_Translate');
+        $general->mail(
+                $user->getEmail(),
+                '',
+                $translate->_('Passwort neu setzen'),
+                array(
+                    'gender' =>$user->getGender(),
+                    'surname' =>$user->getSurName(),
+                    'resetHash' =>$session->resetHash
+                )
+        );
+        return true;
+    }
 }
