@@ -59,8 +59,10 @@ class ZfExtended_Models_Invalidlogin extends ZfExtended_Models_Db_Invalidlogin {
             $maximum = $config->runtimeOptions->invalidLogin->maximum;
         }
         $this->maximum = $maximum;
-
+        
         parent::__construct();
+        
+        $this->delete("created < '".date('Y-m-d h:i:s',time()-24*3600)."'");
     }
 
     /**
