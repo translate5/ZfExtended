@@ -138,6 +138,7 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract {
         $cols = array_flip($db->info($db::COLS));
         unset($cols['passwd']);
         $s = $db->select()->from($db->info($db::NAME), array_flip($cols));
+        $s->where('login != ?', 'system'); //filter out the system user
         return $this->loadFilterdCustom($s);
     }
     
