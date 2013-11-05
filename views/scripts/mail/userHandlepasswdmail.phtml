@@ -42,6 +42,11 @@ echo sprintf($this->translate->_('%1$s %2$s,
 
 Sie erhalten diese Email, weil Ihr Konto auf %3$s neu angelegt oder Ihr Passwort zurückgesetzt wurde. 
 
+Ihr Benutzername:
+------------------------------
+%6$s
+------------------------------
+
 Wenn Sie Ihr Konto künftig nutzen möchten, dann fordern Sie unter der folgenden
 Adresse eine Link an, um Ihr Passwort neu setzen zu können.
 
@@ -58,7 +63,8 @@ Diese Email wurde automatisch generiert. Bitte antworten Sie nicht auf diese E-M
     $this->userEntity->getSurName(),
     $session->runtimeOptions->server->protocol.$session->runtimeOptions->server->name.APPLICATION_RUNDIR,//site-url
     '/login/passwdreset',
-    $session->runtimeOptions->companyName
+    $session->runtimeOptions->companyName,
+    $this->userEntity->getLogin()
 );
 
 
