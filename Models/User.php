@@ -162,4 +162,12 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract {
     public function getUserName() {
         return $this->getFirstName().' '.$this->getSurName();
     }
+    
+    /**
+     * returns the username as: "Lastname, Firstname (login)"
+     * @return string
+     */
+    public function getUsernameLong() {
+        return $this->getSurName().', '.$this->getFirstName().' ('.$this->getLogin().')';
+    }
 }
