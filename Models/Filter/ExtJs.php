@@ -45,7 +45,16 @@ class ZfExtended_Models_Filter_ExtJs extends ZfExtended_Models_Filter{
     if(empty($todecode)){
       return array();
     }
-    return json_decode($todecode);
+    $filters = json_decode($todecode);
+    if(empty($filters)) {
+        throw new ZfExtended_Exception('errors in parsing filters Filterstring: '.$todecode."\nURL:".$_SERVER['REQUEST_URI']);
+    }
+    foreach ($filters as $filter) {
+        if(is_object($filter) && isset($filter->table)) {
+            unset($filter->table); //table string may not be set from outside for security reasons!
+        }
+    }
+    return $filters;
   }
 
   /**
@@ -68,7 +77,7 @@ class ZfExtended_Models_Filter_ExtJs extends ZfExtended_Models_Filter{
    */
   protected function checkAndApplyOneFilter(stdClass $filter){
     $this->initFilterData($filter);
-    $this->checkField($filter->field);
+    $this->checkField($filter);
     if(!isset($filter->value) || is_array($filter->value) && empty($filter->value)){
         return;
     }
@@ -78,6 +87,8 @@ class ZfExtended_Models_Filter_ExtJs extends ZfExtended_Models_Filter{
     $field = $filter->field;
     if(!empty($filter->table)) {
         $field = '`'.$filter->table.'`.'.$field;
+    }elseif(!empty($this->defaultTable)){
+        $field = '`'.$this->defaultTable.'`.'.$field;
     }
     switch($filter->type){
         case 'notIsNull':
@@ -90,6 +101,7 @@ class ZfExtended_Models_Filter_ExtJs extends ZfExtended_Models_Filter{
         case 'date':
             $method = 'applyNumeric_'.$filter->comparison;
         case 'list':
+        case 'notInList':
         case 'listAsString':
         case 'string':
         case 'boolean':
@@ -108,7 +120,12 @@ class ZfExtended_Models_Filter_ExtJs extends ZfExtended_Models_Filter{
     settype($filter->type, 'string');
     settype($filter->field, 'string');
     settype($filter->comparison, 'string');
-    settype($filter->table, 'string');
+    if(isset($this->fieldTableMap[$filter->field])) {
+        $filter->table = $this->fieldTableMap[$filter->field];
+    }
+    else {
+        settype($filter->table, 'string');
+    }
     if(!isset($filter->value)){
       $filter->value = null;
     }
@@ -116,16 +133,17 @@ class ZfExtended_Models_Filter_ExtJs extends ZfExtended_Models_Filter{
 
   /**
    * check if field name is valid and field exists in entity
-   * @param string $field
+   * @param stdClass $filter
    * @throws Zend_Exception
    */
-  protected function checkField($field) {
-    if(! preg_match('/[a-z0-9-_]+/i', $field)){
-      throw new Zend_Exception('illegal chars in field name');
-    }
-    if(!$this->entity->hasField($field)){
-      throw new Zend_Exception('illegal field requested');
-    }
+  protected function checkField(stdClass $filter) {
+      $field = $filter->field;
+      if(! preg_match('/[a-z0-9-_]+/i', $field)){
+          throw new Zend_Exception('illegal chars in field name');
+      }
+      if(!$this->entity->hasField($field) && empty($filter->table)){
+          throw new Zend_Exception('illegal field requested');
+      }
   }
 
   /**
@@ -134,6 +152,13 @@ class ZfExtended_Models_Filter_ExtJs extends ZfExtended_Models_Filter{
    */
   protected function applyList($field, array $values) {
     $this->select->where($field.' in (?)', $values);
+  }
+  /**
+   * @param string $field
+   * @param array $values
+   */
+  protected function applyNotInList($field, array $values) {
+    $this->select->where($field.' not in (?)', $values);
   }
   /**
    * @param string $field

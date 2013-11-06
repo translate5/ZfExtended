@@ -68,22 +68,45 @@ abstract class ZfExtended_Models_Filter{
    * @var array array($field => array(origType => newType))
    */
   protected $_filterTypeMap = NULL;
+  
+  /**
+   * default table prefix to be used, if its set
+   * @var string
+   */
+  protected $defaultTable = null;
+  
+  /**
+   * fields can be mapped to table / table prefixes to be used
+   * @var array
+   */
+  protected $fieldTableMap = array();
+  
   /**
    * @param ZfExtended_Models_Entity_Abstract $entity
    * @param string $filter
+   * @param string $defaultFilter
    * @param string $sort
-   * @param array|NULL $sort
+   * @param array|NULL $sortColMap
+   * @param array|NULL $filterTypeMap
    */
-  public function __construct(ZfExtended_Models_Entity_Abstract $entity, $filter,
-          $sort = NULL, $sortColMap = NULL, $filterTypeMap = NULL){
+  public function __construct(ZfExtended_Models_Entity_Abstract $entity, $filter, 
+                  $defaultFilter = null, $sort = null, $sortColMap = NULL, $filterTypeMap = NULL){
     $this->entity = $entity;
     $this->sort = $this->decode($sort);
     settype($this->sort, 'array');
     $this->_sortColMap = $sortColMap;
     $this->_filterTypeMap = $filterTypeMap;
     $this->filter = $this->decode($filter);
+    $this->mergeAdditionaFilters($this->decode($defaultFilter));
     settype($this->filter, 'array');
     $this->init();
+  }
+  
+  /**
+   * merges the additional default filters to the internal filter array
+   */
+  protected function mergeAdditionaFilters(array $defaultFilters) {
+      $this->filter = array_merge($this->filter, $defaultFilters);
   }
   
   /**
@@ -105,6 +128,15 @@ abstract class ZfExtended_Models_Filter{
   
   protected function init() {
     $this->mapFilter();
+  }
+  
+  /**
+   * sets the default table prefix to be used for sorting and filtering, 
+   * needed for example on joining tables
+   * @param string $table
+   */
+  public function setDefaultTable(string $table) {
+      $this->defaultTable = $table;
   }
   
   /**
@@ -164,12 +196,24 @@ abstract class ZfExtended_Models_Filter{
    * @return string sortKey
    */
   protected function mapSort(string $sortKey){
-        if (isset($this->_sortColMap[$sortKey])) {
-            return $this->_sortColMap[$sortKey];
-        }
-      return $sortKey;
+      $defaultTable = empty($this->defaultTable) ? '' : '`'.$this->defaultTable.'`.';
+      if (isset($this->_sortColMap[$sortKey])) {
+          return $defaultTable.$this->_sortColMap[$sortKey];
+      }
+      return $defaultTable.$sortKey;
   }
 
+  public function addTableForField($field, $table) {
+      $this->fieldTableMap[$field] = $table;
+  }
+  
+  /**
+   * decodes the filter/sort string, return always an array
+   * @param string $todecode
+   * @return array
+   */
+  abstract protected function decode($todecode);
+  
   /**
    * applies the given filter object to the internal select statement
    * @param stdClass $filter

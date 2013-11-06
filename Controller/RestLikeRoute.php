@@ -38,24 +38,7 @@
  * 
  */
 /**
- * Registriert RegisterRestControllerPluginRestHandler als Controller-Plugin,
- * falls die aktuelle Route Zend_Rest_Route entspricht
- *
+ * Wrapper Class for using additional, normal routes in a RESTful Context
  */
-class ZfExtended_Controllers_Plugins_RegisterRestControllerPluginRestHandler extends Zend_Controller_Plugin_Abstract {
-    /**
-     * Wird vor dem Start des Dispatcher Laufes ausgeführt
-     * 
-     * @param  Zend_Controller_Request_Abstract $request
-     * @return void
-     */
-    public function RouteShutdown(Zend_Controller_Request_Abstract $request)
-    {
-        $front = Zend_Controller_Front::getInstance();
-        $restFulRoutes = array('ZfExtended_Controller_RestLikeRoute', 'Zend_Rest_Route');
-        $routeClass = get_class($front->getRouter()->getCurrentRoute());
-        if(in_array($routeClass, $restFulRoutes, true)){
-            $front->registerPlugin(new REST_Controller_Plugin_RestHandler($front));
-        }
-    }
+class ZfExtended_Controller_RestLikeRoute extends Zend_Controller_Router_Route {
 }
