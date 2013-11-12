@@ -98,8 +98,28 @@ class ZfExtended_Controllers_Plugins_ParseXliff extends Zend_Controller_Plugin_A
     protected function parseXliff(string $path) {
         if(file_exists($path)){
             $file = file_get_contents($path);
-            $file = trim(str_replace(array($this->tHelper->getXliffStartString(),$this->tHelper->getXliffEndString()), array('',''), $file))."\n";
-            $fileArr = explode("</trans-unit>\n", $file);
+            $file = preg_replace(
+                    array(
+                        '"^.*<body[^>]*>"s',
+                        '"</body>.*$"s',
+                        '"\s*<trans-unit"s',
+                        '"</trans-unit>\s*"s',
+                        '"\s*<source"s',
+                        '"</source>\s*"s',
+                        '"\s*<target"s',
+                        '"</target>\s*"s',
+                        ),
+                    array(
+                        '',
+                        '',
+                        '<trans-unit',
+                        '</trans-unit>',
+                        '<source',
+                        '</source>',
+                        '<target',
+                        '</target>',
+                        ),$file);
+            $fileArr = explode("</trans-unit>", $file);
             array_pop($fileArr);
             return $fileArr;
         }
