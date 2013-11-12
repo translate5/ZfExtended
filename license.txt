@@ -15,21 +15,21 @@ http://www.gnu.org/licenses/lgpl.html or in the same folder as this document in 
 document lgpl-license.txt and at http://www.gnu.org/licenses/gpl.html or 
 in the same folder as this document in the document gpl3-license.txt.
 
-An exception to this license are the external software-libs, used by translate5. 
+An exception to this license are the external software-libs, used by ZfExtended. 
 If you use them, you must follow and apply their specific licenses. Therefore they 
-are not part of the translate5 software package and not part of the translate5 
+are not part of the ZfExtended software package and not part of the ZfExtended 
 git-repository.
 
 These external software-libs are:
 
-- Horde_Text_Diff. It is used by the ZfExtended_diff-class. If you use this 
-functionality, you need the Horde_Text_Diff-package. 
-Horde is licensed under LGPL v. 2.1. A copy of 
+- the MittagQI-fork of Horde_Text_Diff. It is used by the diff-Version of the translate5 export,
+which is able to track the changes made in segments. If you use this functionality, you
+need the Horde_Text_Diff-package. Horde is licensed under LGPL v. 2.1. A copy of 
 the LGPL v. 2.1 you can find at http://www.horde.org/licenses/lgpl21
 
 - the MittagQI-fork of restful-zend-framework. restful-zend-framework is 
- Copyright (c) 2011 Code in Chaos Inc. http://www.codeinchaos.com. In our opinion 
+Copyright (c) 2011 Code in Chaos Inc. http://www.codeinchaos.com. In our opinion 
 it's license is compareable to a free-bsd-license (no warranty or responsibilty 
 for this opionion in any way by MittagQI or Marc Mittag in person). You find this 
 license at https://github.com/MittagQI/restful-zend-framework/blob/master/LICENSE
-Without this software-lib translate5 will not work.
+Without this software-lib "translate5 PHP Server" will not work.
