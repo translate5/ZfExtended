@@ -128,6 +128,7 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
     $filter = ZfExtended_Factory::get($this->filterClass,array(
       $this->entity,
       $this->_getParam('filter'),
+      $this->_getParam('defaultFilter'),
       $this->_getParam('sort'),
       $this->_sortColMap,
       $this->_filterTypeMap

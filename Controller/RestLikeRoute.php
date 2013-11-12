@@ -31,42 +31,14 @@
   END LICENSE AND COPYRIGHT 
  */
 
-/**#@+
+/**#@+ 
  * @author Marc Mittag
  * @package ZfExtended
  * @version 2.0
- *
+ * 
  */
-$session = new Zend_Session_Namespace();
-echo sprintf($this->translate->_('%1$s %2$s,
-
-Sie erhalten diese Email, weil Ihr Konto auf %3$s neu angelegt oder Ihr Passwort zurückgesetzt wurde. 
-
-Ihr Benutzername:
-------------------------------
-%6$s
-------------------------------
-
-Wenn Sie Ihr Konto künftig nutzen möchten, dann fordern Sie unter der folgenden
-Adresse eine Link an, um Ihr Passwort neu setzen zu können.
-
-------------------------------
-%3$s%4$s
-------------------------------
-
-Vielen Dank und viele Grüße,
-Ihr Projektmanagement Team
-%5$s
-
-Diese Email wurde automatisch generiert. Bitte antworten Sie nicht auf diese E-Mail.'),
-    $this->mailEmployeeSalutation($this->userEntity->getGender()),
-    $this->userEntity->getSurName(),
-    $session->runtimeOptions->server->protocol.$session->runtimeOptions->server->name.APPLICATION_RUNDIR,//site-url
-    '/login/passwdreset',
-    $session->runtimeOptions->companyName,
-    $this->userEntity->getLogin()
-);
-
-
-
-
+/**
+ * Wrapper Class for using additional, normal routes in a RESTful Context
+ */
+class ZfExtended_Controller_RestLikeRoute extends Zend_Controller_Router_Route {
+}
