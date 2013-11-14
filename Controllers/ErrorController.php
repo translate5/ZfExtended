@@ -272,7 +272,7 @@ class ErrorController extends ZfExtended_Controllers_Action
         $this->view->errors = $this->_errors;
         $this->view->getParams   = $this->_getParams;
         $this->view->errorCollect   = $this->_errorCollect;
-        if($this->route === 'Zend_Rest_Route'){
+        if($this->isRestRoute()){
             Zend_Layout::getMvcInstance()->disableLayout();
             $this->_renderScript = 'error/errorRest.phtml';
         }
@@ -285,12 +285,25 @@ class ErrorController extends ZfExtended_Controllers_Action
                 $this->_renderScript = 'error/error404.phtml';
             }
         }
-        if(preg_match ('"^'.ZfExtended_NotFoundException::IDENTIFIER.'"',$this->_errors[0]->_errorMessage)
-                &&($this->route !== 'Zend_Rest_Route')){
+        $missingAction = $this->_exception instanceof Zend_Controller_Action_Exception && $this->_exception->getCode() == '404';
+        $notFound = preg_match ('"^'.ZfExtended_NotFoundException::IDENTIFIER.'"',$this->_errors[0]->_errorMessage);
+        if(($missingAction || $notFound) && !$this->isRestRoute()) {
             $this->_isHttp404 = true;
             $this->view->errors[0]->_errorMessage = $this->_translate->_('Seite nicht gefunden: ').$_SERVER['REQUEST_URI'].$this->_translate->_('/ Aufruf erfolgte durch IP: ').$_SERVER['REMOTE_ADDR'];
         }
     }
+    
+    /**
+     * returns true if request is a REST Request
+     */
+    protected function isRestRoute(){
+        $restRoute = 'Zend_Rest_Route';
+        if($this->route === $restRoute){
+            return true;
+        }
+        return is_subclass_of($this->route, $restRoute);
+    }
+    
     /**
      * Wird im Error-Falle ausgeführt
      */
