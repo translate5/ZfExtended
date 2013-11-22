@@ -87,6 +87,13 @@ class ZfExtended_Controllers_Plugins_ViewSetup extends Zend_Controller_Plugin_Ab
         $view->module = Zend_Registry::get('module');
         $view->action = Zend_Registry::get('action');
         $view->controller = Zend_Registry::get('controller');
+        try {
+            //im try, damit errorController Seite rendern kann, auch wenn Zend_Translate noch nicht registriert ist
+            //errorController setzt dann für den error-View ein pseudoTranslate-Objekt, aber nur für diesen
+            $view->translate = Zend_Registry::get('Zend_Translate');
+        }
+        catch (Exception $e) {
+        }
         $this->_viewRenderer->setView($view);
         $this->_viewRenderer->setNoRender(true);
         $this->setPhp2Js();
