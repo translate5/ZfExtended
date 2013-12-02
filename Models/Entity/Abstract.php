@@ -72,6 +72,12 @@ abstract class ZfExtended_Models_Entity_Abstract {
      * @var array
      */
     protected $modified = array();
+    
+    /**
+     * List of Field Values overwritten by setting a new value
+     * @var array
+     */
+    protected $modifiedValues = array();
 
     /**
      * @var ZfExtended_Models_Filter
@@ -254,6 +260,10 @@ abstract class ZfExtended_Models_Entity_Abstract {
                     $arguments[0] = null;
                 }
                 $this->modified[] = $fieldName;
+                if(!array_key_exists($fieldName, $this->modifiedValues)) {
+                    //presave old value
+                    $this->modifiedValues[$fieldName] = $this->get($fieldName);
+                }
                 return $this->set($fieldName, $arguments[0]);
         }
         throw new Zend_Exception('Method ' . $name . ' not defined');
@@ -386,6 +396,13 @@ abstract class ZfExtended_Models_Entity_Abstract {
      */
     public function isModified($field) {
         return in_array($field, $this->modified);
+    }
+    
+    /**
+     * returns the value of an attribute before modified
+     */
+    public function getOldValue($field) {
+        return $this->modifiedValues[$field];
     }
     
     protected function validatorLazyInstatiation() {
