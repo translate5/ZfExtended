@@ -225,4 +225,11 @@ abstract class ZfExtended_Models_Filter{
    * applies the data in the internal sort array to the internal select statement
    */
   abstract protected function applySort();
+  
+  /**
+   * provide a way to produce parenthesized OR where statements like: 
+   * where foo and (bar OR baz)
+   * @param stdClass $filter
+   */
+  abstract protected function applyOrExpression(stdClass $filter);
 }

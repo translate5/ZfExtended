@@ -35,7 +35,13 @@
  * converts the given Filter and Sort String from ExtJS to an object structure appliable to a Zend Select Object
  * @author Marc Mittag
  */
-class ZfExtended_Models_Filter_ExtJs extends ZfExtended_Models_Filter{
+class ZfExtended_Models_Filter_ExtJs extends ZfExtended_Models_Filter {
+    /**
+     * defines the Zend_Db_Select where operation to be used (where / orWhere)
+     * @var string
+     */
+    protected $whereOp = 'where';
+    
   /**
    * decodes the filter/sort string, return always an array
    * @param string $todecode
@@ -91,6 +97,9 @@ class ZfExtended_Models_Filter_ExtJs extends ZfExtended_Models_Filter{
         $field = '`'.$this->defaultTable.'`.'.$field;
     }
     switch($filter->type){
+        case 'orExpression':
+            $this->applyOrExpression($filter);
+            break;
         case 'notIsNull':
             $this->applyNotIsNull($field);
             break;
@@ -110,6 +119,34 @@ class ZfExtended_Models_Filter_ExtJs extends ZfExtended_Models_Filter{
         default:
             throw new Zend_Exception("illegal type in filter");
     }
+  }
+  
+  /**
+   * (non-PHPdoc)
+   * @see ZfExtended_Models_Filter::applyOrExpression()
+   */
+  protected function applyOrExpression(stdClass $field) {
+      settype($field->value, 'array');
+      
+      //store original select and filter for recursive walk through the parenthesized OR statement
+      $originalFilter = $this->filter;
+      $originalSelect = $this->select;
+      $originalWhere = $this->whereOp;
+      
+      //populate the internal vars 
+      $this->filter = $field->value;
+      $this->whereOp = 'orWhere';
+      $this->select = ZfExtended_Factory::get('Zend_Db_Select', array($originalSelect->getAdapter()));
+      
+      //start recursive walk through the OR filters
+      $this->applyToSelect($this->select, false);
+      
+      $originalSelect->where(join(' ',$this->select->getPart($originalSelect::WHERE)));
+      
+      //restore original select and filter
+      $this->whereOp = $originalWhere;
+      $this->select = $originalSelect;
+      $this->filter = $originalFilter;
   }
 
   /**
@@ -138,6 +175,9 @@ class ZfExtended_Models_Filter_ExtJs extends ZfExtended_Models_Filter{
    */
   protected function checkField(stdClass $filter) {
       $field = $filter->field;
+      if(isset($filter->type) && $filter->type == 'orExpression' && empty($field)){
+          return;
+      }
       if(! preg_match('/[a-z0-9-_]+/i', $field)){
           throw new Zend_Exception('illegal chars in field name');
       }
@@ -151,54 +191,54 @@ class ZfExtended_Models_Filter_ExtJs extends ZfExtended_Models_Filter{
    * @param array $values
    */
   protected function applyList($field, array $values) {
-    $this->select->where($field.' in (?)', $values);
+    $this->where($field.' in (?)', $values);
   }
   /**
    * @param string $field
    * @param array $values
    */
   protected function applyNotInList($field, array $values) {
-    $this->select->where($field.' not in (?)', $values);
+    $this->where($field.' not in (?)', $values);
   }
   /**
    * @param string $field
    * @param integer $value
    */
   protected function applyNumeric_lt($field, $value) {
-    $this->select->where($field.' < ?', $value);
+    $this->where($field.' < ?', $value);
   }
   /**
    * @param string $field
    * @param integer $value
    */
   protected function applyNumeric_gt($field, $value) {
-    $this->select->where($field.' > ?', $value);
+    $this->where($field.' > ?', $value);
   }
   /**
    * @param string $field
    * @param integer $value
    */
   protected function applyNumeric_eq($field, $value) {
-    $this->select->where($field.' = ?', $value);
+    $this->where($field.' = ?', $value);
   }
   /**
    * @param string $field
    * @param string $value
    */
   protected function applyString($field, $value) {
-    $this->select->where($field.' like ?', '%'.$value.'%');
+    $this->where($field.' like ?', '%'.$value.'%');
   }
   /**
    * @param string $field
    */
   protected function applyIsNull($field) {
-    $this->select->where($field.' is null');
+    $this->where($field.' is null');
   }
   /**
    * @param string $field
    */
   protected function applyNotIsNull($field) {
-    $this->select->where('not '.$field.' is null');
+    $this->where('not '.$field.' is null');
   }
   /**
    * Setzt einen Listfilter auf Basis einer Stringsuche um,
@@ -217,7 +257,7 @@ class ZfExtended_Models_Filter_ExtJs extends ZfExtended_Models_Filter{
         $where[] = ' OR ';
       }
       array_pop($where);
-      $this->select->where(implode('', $where));
+      $this->where(implode('', $where));
   }
   /**
    * @param string $field
@@ -225,10 +265,21 @@ class ZfExtended_Models_Filter_ExtJs extends ZfExtended_Models_Filter{
    */
   protected function applyBoolean($field, $value) {
     if($value){
-      $this->select->where($field);
+      $this->where($field);
     }
     else {
-      $this->select->where('!'.$field);
+      $this->where('!'.$field);
     }
+  }
+  
+  /**
+   * This methods encapsualtes Zend_Db_Select::where and orWhere
+   * @param string $cond
+   * @param mixed $value
+   * @param int $type
+   */
+  protected function where($cond, $value = null, $type = null) {
+      $where = $this->whereOp;
+      $this->select->$where($cond, $value, $type);
   }
 }
