@@ -49,12 +49,18 @@ class ZfExtended_Exception extends Zend_Exception {
      * @param  string $msg (Message gets translated by ZfExtended_Exception)
      * @param  int $code
      * @param  Exception $previous
+     * @param  boolean $translate decides, if the msg should be sent to translation-process.
+     *          do not sent error-messages to translation process which are only meant 
+     *          for logging and which contain variable information
      * @return void
      */
-    public function __construct($msg = '', $code = 0, Exception $previous = null)
+    public function __construct($msg = '', $code = 0, Exception $previous = null,$translate=false)
     {
-        $this->_translate = Zend_Registry::get('Zend_Translate');
-        parent::__construct($this->_translate->_($msg), (int) $code, $previous);
+        if($translate){
+            $this->_translate = Zend_Registry::get('Zend_Translate');
+            $msg = $this->_translate->_($msg);
+        }
+        parent::__construct($msg, (int) $code, $previous);
     }
     
     /**

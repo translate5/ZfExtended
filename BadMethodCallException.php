@@ -31,16 +31,19 @@
   END LICENSE AND COPYRIGHT 
  */
 
-class ZfExtended_BadMethodCallException extends Exception {
+class ZfExtended_BadMethodCallException extends ZfExtended_Exception {
     /**
      * Construct the exception
      *
      * @param  string $msg
      * @param  int $code
      * @param  Exception $previous
+     * @param  boolean $translate decides, if the msg should be sent to translation-process.
+     *          do not sent error-messages to translation process which are only meant 
+     *          for logging and which contain variable information
      * @return void
      */
-    public function __construct($msg = '', $code = 0, Exception $previous = null)
+    public function __construct($msg = '', $code = 0, Exception $previous = null,$translate=false)
     {
         if((int)$code === 0){
             $code = 405;

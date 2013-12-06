@@ -106,7 +106,7 @@ class ZfExtended_Controller_Helper_Access extends  Zend_Controller_Action_Helper
             if($this->_route === 'Zend_Rest_Route'){
                 $this->notAuthenticated();
             }
-            throw new ZfExtended_NotFoundException('Seite nicht gefunden!');
+            throw new ZfExtended_NotFoundException('Seite nicht gefunden!',0,null,true);
         }
     }
     /**
