@@ -390,11 +390,15 @@ abstract class ZfExtended_Models_Entity_Abstract {
     }
 
     /**
-     * returns true if given field was modified since last load
-     * @param string $field
+     * returns true if entity was modified since last load by a setter.
+     * if fieldname is given as parameter, check this field only
+     * @param string $field optional, if given check field only
      * @return boolean
      */
-    public function isModified($field) {
+    public function isModified($field = null) {
+        if(empty($field)) {
+            return !empty($this->modified);
+        }
         return in_array($field, $this->modified);
     }
     
