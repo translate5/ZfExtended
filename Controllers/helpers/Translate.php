@@ -85,7 +85,7 @@ class ZfExtended_Controller_Helper_Translate extends Zend_Controller_Action_Help
 <!-- the transunit-ID should contain the base64-encoded source-string als used in the php source-code. This ID is used for matching. -->
 <!-- html-tags inside the target-string must not be encoded as they should regarding xliff but should be left as plain hmtl. At this stage ZfExtended does not support xliff inline tags -->
  <file original=\'php-sourcecode\' source-language=\''.$this->getSourceLang().
-                '\' target-language=\''.$this->getTargetLang().'\' datatype=\'php\'>
+                '\' target-language=\''.$this->getTargetLang().'\' datatype=\'php\' xml:space=\'preserve\'>
   <body>';
     }
     public function getXliffEndString() {
