@@ -310,8 +310,10 @@ class ErrorController extends ZfExtended_Controllers_Action
     public function errorAction()
     {
         $highestError = $this->getErrorWithHighesErrorCode();
-        if($highestError->_errorCode === 401){//no errorlogging on 401, because it is a normal exception on session timeout
-
+        $loggingDisabled = (($this->_exception instanceof ZfExtended_Exception) && ! $this->_exception->isLoggingEnabled());
+        
+        if($loggingDisabled){
+            //do nothing here
         }
         elseif($this->_isHttp404){
             $this->_log->log404($highestError->_errorMessage);

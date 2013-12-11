@@ -51,6 +51,9 @@ class ZfExtended_NotAuthenticatedException extends ZfExtended_Exception {
         if($msg == ''){
             $msg = 'Nicht authentifiziert!';
         }
+        
+        //no errorlogging on 401, because it is a normal exception on session timeout
+        $this->loggingEnabled = false;
         parent::__construct($msg, (int) $code, $previous);
     }
 }

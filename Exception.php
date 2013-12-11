@@ -42,7 +42,14 @@ class ZfExtended_Exception extends Zend_Exception {
      * internal errors store
      * @var array
      */
-    protected $errors; 
+    protected $errors;
+    
+    /**
+     * Flag if logging for this exception is enabled / disabled
+     * @var boolean
+     */
+    protected $loggingEnabled = true;
+    
     /**
      * Construct the exception
      *
@@ -56,11 +63,21 @@ class ZfExtended_Exception extends Zend_Exception {
      */
     public function __construct($msg = '', $code = 0, Exception $previous = null,$translate=false)
     {
+        $this->setMessage($msg, $translate);
+        parent::__construct($this->message, (int) $code, $previous);
+    }
+    
+    /**
+     * sets the internal exception message
+     * @param string $msg
+     * @param boolean $translate optional, set to true if the message should be translated 
+     */
+    public function setMessage($msg, $translate = false) {
         if($translate){
             $this->_translate = Zend_Registry::get('Zend_Translate');
             $msg = $this->_translate->_($msg);
         }
-        parent::__construct($msg, (int) $code, $previous);
+        $this->message = $msg;
     }
     
     /**
@@ -77,5 +94,21 @@ class ZfExtended_Exception extends Zend_Exception {
      */
     public function getErrors() {
         return $this->errors;
+    }
+    
+    /**
+     * returns true if logging should be done for this exception
+     * @return boolean
+     */
+    public function isLoggingEnabled() {
+        return $this->loggingEnabled;
+    }
+    
+    /**
+     * enables / disables the logging for this exception
+     * @param boolean $enabled
+     */
+    public function setLogging($enabled = true) {
+        $this->loggingEnabled = $enabled;
     }
 }

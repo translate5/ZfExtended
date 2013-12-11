@@ -48,6 +48,6 @@ class ZfExtended_BadMethodCallException extends ZfExtended_Exception {
         if((int)$code === 0){
             $code = 405;
         }
-        parent::__construct($msg, (int) $code, $previous);
+        parent::__construct($msg, (int) $code, $previous, $translate);
     }
 }
