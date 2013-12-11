@@ -32,27 +32,13 @@
  */
 
 class ZfExtended_NotFoundException extends ZfExtended_Exception {
-    const IDENTIFIER = 'ZfExtended_NotFoundException ';
     /**
-     * Construct the exception
-     *
-     * @param  string $msg
-     * @param  int $code
-     * @param  Exception $previous
-     * @param  boolean $translate decides, if the msg should be sent to translation-process.
-     *          do not sent error-messages to translation process which are only meant 
-     *          for logging and which contain variable information
-     * @return void
+     * @var string
      */
-    public function __construct($msg = '', $code = 0, Exception $previous = null,$translate=false)
-    {
-        if((int)$code === 0){
-            $code = 404;
-        }
-        if($msg == ''){
-            $msg = 'Nicht gefunden!';
-        }
-        $msg = self::IDENTIFIER.$msg;
-        parent::__construct($msg, (int) $code, $previous);
-    }
+    protected $defaultMessage = 'Nicht gefunden!';
+    
+    /**
+     * @var integer
+     */
+    protected $defaultCode = 404;
 }

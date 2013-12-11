@@ -33,24 +33,12 @@
 
 class ZfExtended_ValidateException extends ZfExtended_Exception {
     /**
-     * Construct the exception
-     *
-     * @param  string $msg
-     * @param  int $code
-     * @param  Exception $previous
-     * @param  boolean $translate decides, if the msg should be sent to translation-process.
-     *          do not sent error-messages to translation process which are only meant 
-     *          for logging and which contain variable information
-     * @return void
+     * @var string
      */
-    public function __construct($msg = '', $code = 0, Exception $previous = null,$translate=false)
-    {
-        if((int)$code === 0){
-            $code = 400;
-        }
-        if($msg == ''){
-            $msg = 'Nicht validiert!';
-        }
-        parent::__construct($msg, (int) $code, $previous);
-    }
+    protected $defaultMessage = 'Nicht validiert!';
+    
+    /**
+     * @var integer
+     */
+    protected $defaultCode = 400;
 }

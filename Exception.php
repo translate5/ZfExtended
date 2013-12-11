@@ -51,19 +51,40 @@ class ZfExtended_Exception extends Zend_Exception {
     protected $loggingEnabled = true;
     
     /**
+     * @var string
+     */
+    protected $defaultMessage = '';
+    
+    /**
+     * @var boolean
+     */
+    protected $defaultMessageTranslate = false;
+    
+    /**
+     * @var integer
+     */
+    protected $defaultCode = 0;
+    
+    
+    /**
      * Construct the exception
      *
      * @param  string $msg (Message gets translated by ZfExtended_Exception)
      * @param  int $code
      * @param  Exception $previous
-     * @param  boolean $translate decides, if the msg should be sent to translation-process.
-     *          do not sent error-messages to translation process which are only meant 
-     *          for logging and which contain variable information
      * @return void
      */
-    public function __construct($msg = '', $code = 0, Exception $previous = null,$translate=false)
+    public function __construct($msg = '', $code = 0, Exception $previous = null)
     {
-        $this->setMessage($msg, $translate);
+        if((int)$code === 0){
+            $code = $this->defaultCode;
+        }
+        if($msg == ''){
+            $this->setMessage($this->defaultMessage, $this->defaultMessageTranslate);
+        }
+        else {
+            $this->setMessage($msg);
+        }
         parent::__construct($this->message, (int) $code, $previous);
     }
     
