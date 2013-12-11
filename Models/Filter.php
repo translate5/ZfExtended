@@ -84,28 +84,47 @@ abstract class ZfExtended_Models_Filter{
   /**
    * @param ZfExtended_Models_Entity_Abstract $entity
    * @param string $filter
-   * @param string $defaultFilter
+   */
+  public function __construct(ZfExtended_Models_Entity_Abstract $entity, $filter){
+    $this->entity = $entity;
+    $this->filter = $this->decode($filter);
+    settype($this->filter, 'array');
+  }
+
+  /**
+   * sets an additional filter
+   * can be a default filter in addition to the user set filter
+   * @param string $defaultFilter additional filter string to be appended
+   */
+  public function setDefaultFilter($defaultFilter){
+    $this->mergeAdditionalFilters($this->decode($defaultFilter));
+  }
+  
+  /**
+   * sort string
    * @param string $sort
+   */
+  public function setSort($sort) {
+      $this->sort = $this->decode($sort);
+      settype($this->sort, 'array');
+  }
+  
+  /**
+   * sets several field mappings (field name in frontend differs from that in backend)
+   * should be called after setDefaultFilter
    * @param array|NULL $sortColMap
    * @param array|NULL $filterTypeMap
    */
-  public function __construct(ZfExtended_Models_Entity_Abstract $entity, $filter, 
-                  $defaultFilter = null, $sort = null, $sortColMap = NULL, $filterTypeMap = NULL){
-    $this->entity = $entity;
-    $this->sort = $this->decode($sort);
-    settype($this->sort, 'array');
+  function setMappings($sortColMap = null, $filterTypeMap = null) {
     $this->_sortColMap = $sortColMap;
     $this->_filterTypeMap = $filterTypeMap;
-    $this->filter = $this->decode($filter);
-    $this->mergeAdditionaFilters($this->decode($defaultFilter));
-    settype($this->filter, 'array');
-    $this->init();
+    $this->mapFilter();
   }
   
   /**
    * merges the additional default filters to the internal filter array
    */
-  protected function mergeAdditionaFilters(array $defaultFilters) {
+  protected function mergeAdditionalFilters(array $defaultFilters) {
       $this->filter = array_merge($this->filter, $defaultFilters);
   }
   
@@ -124,10 +143,6 @@ abstract class ZfExtended_Models_Filter{
       $this->checkAndApplyOneFilter($filter);
     }
     return $this->select;
-  }
-  
-  protected function init() {
-    $this->mapFilter();
   }
   
   /**
@@ -227,9 +242,10 @@ abstract class ZfExtended_Models_Filter{
   abstract protected function applySort();
   
   /**
-   * provide a way to produce parenthesized OR where statements like: 
-   * where foo and (bar OR baz)
+   * provide a way to produce parenthesized OR/AND where statements like: 
+   * where foo and (bar OR (baz AND bof))
    * @param stdClass $filter
+   * @param boolean $isOr defines if is a OR or an AND expression (if param is false)
    */
-  abstract protected function applyOrExpression(stdClass $filter);
+  abstract protected function applyExpression(stdClass $filter, $isOr = true);
 }

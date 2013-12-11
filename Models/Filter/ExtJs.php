@@ -51,6 +51,10 @@ class ZfExtended_Models_Filter_ExtJs extends ZfExtended_Models_Filter {
     if(empty($todecode)){
       return array();
     }
+    //if its a array we assume that it was already decoded
+    if(is_array($todecode)){
+      return $todecode;
+    }
     $filters = json_decode($todecode);
     if(empty($filters)) {
         throw new ZfExtended_Exception('errors in parsing filters Filterstring: '.$todecode."\nURL:".$_SERVER['REQUEST_URI']);
@@ -98,7 +102,10 @@ class ZfExtended_Models_Filter_ExtJs extends ZfExtended_Models_Filter {
     }
     switch($filter->type){
         case 'orExpression':
-            $this->applyOrExpression($filter);
+            $this->applyExpression($filter, true);
+            break;
+        case 'andExpression':
+            $this->applyExpression($filter, false);
             break;
         case 'notIsNull':
             $this->applyNotIsNull($field);
@@ -123,30 +130,25 @@ class ZfExtended_Models_Filter_ExtJs extends ZfExtended_Models_Filter {
   
   /**
    * (non-PHPdoc)
-   * @see ZfExtended_Models_Filter::applyOrExpression()
+   * @see ZfExtended_Models_Filter::applyExpression()
    */
-  protected function applyOrExpression(stdClass $field) {
+  protected function applyExpression(stdClass $field, $isOr = true) {
       settype($field->value, 'array');
       
-      //store original select and filter for recursive walk through the parenthesized OR statement
-      $originalFilter = $this->filter;
-      $originalSelect = $this->select;
-      $originalWhere = $this->whereOp;
-      
       //populate the internal vars 
-      $this->filter = $field->value;
-      $this->whereOp = 'orWhere';
-      $this->select = ZfExtended_Factory::get('Zend_Db_Select', array($originalSelect->getAdapter()));
+      $select = ZfExtended_Factory::get('Zend_Db_Select', array($this->select->getAdapter()));
+      
+      $subFilter = ZfExtended_Factory::get(get_class($this), array(
+          $this->entity,
+          $field->value
+      ));
+      /* @var $subFilter ZfExtended_Models_Filter_ExtJs */
+      $subFilter->whereOp = $isOr ? 'orWhere' : 'where';
       
       //start recursive walk through the OR filters
-      $this->applyToSelect($this->select, false);
+      $subFilter->applyToSelect($select, false);
       
-      $originalSelect->where(join(' ',$this->select->getPart($originalSelect::WHERE)));
-      
-      //restore original select and filter
-      $this->whereOp = $originalWhere;
-      $this->select = $originalSelect;
-      $this->filter = $originalFilter;
+      $this->where(join(' ',$select->getPart($select::WHERE)));
   }
 
   /**
@@ -175,7 +177,8 @@ class ZfExtended_Models_Filter_ExtJs extends ZfExtended_Models_Filter {
    */
   protected function checkField(stdClass $filter) {
       $field = $filter->field;
-      if(isset($filter->type) && $filter->type == 'orExpression' && empty($field)){
+      $isExpression = $filter->type == 'orExpression' || $filter->type == 'andExpression';
+      if(isset($filter->type) && $isExpression && empty($field)){
           return;
       }
       if(! preg_match('/[a-z0-9-_]+/i', $field)){
