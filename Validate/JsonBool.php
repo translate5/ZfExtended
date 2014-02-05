@@ -41,7 +41,8 @@ class ZfExtended_Validate_JsonBool extends Zend_Validate_Abstract
     const notBoolean = 'notBoolean';
 
     public function  __construct() {
-        $translate = Zend_Registry::get('Zend_Translate');
+        $translate = ZfExtended_Zendoverwrites_Translate::getInstance();
+        /* @var $translate ZfExtended_Zendoverwrites_Translate */;
         $this->_messageTemplates = array(
             self::notBoolean => $translate->_("'%value%' ist nicht vom Typ Boolean")
         );

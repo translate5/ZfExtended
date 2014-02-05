@@ -60,7 +60,8 @@ class ZfExtended_Controllers_Plugins_AddGeneralTitle extends Zend_Controller_Plu
         $this->_viewRenderer = ZfExtended_Zendoverwrites_Controller_Action_HelperBroker::getStaticHelper(
             'ViewRenderer'
         );
-        $translate = Zend_Registry::get('Zend_Translate');
+        $translate = ZfExtended_Zendoverwrites_Translate::getInstance();
+        /* @var $translate ZfExtended_Zendoverwrites_Translate */;
         $this->_viewRenderer->view->headTitle()->setSeparator(' - ')
                 ->append($translate->_('GeneralMetatagTitleSuffix'));
     }

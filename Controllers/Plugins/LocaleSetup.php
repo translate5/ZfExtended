@@ -104,9 +104,5 @@ class ZfExtended_Controllers_Plugins_LocaleSetup extends Zend_Controller_Plugin_
         
         //Prüfe, ob für die locale eine xliff-Datei vorhanden ist - wenn nicht fallback
         Zend_Registry::set('Zend_Locale', $localeRegObj);
-        $generalHelper = ZfExtended_Zendoverwrites_Controller_Action_HelperBroker::getStaticHelper(
-            'Translate'
-        );
-        $generalHelper->setZendTranslate();
     }
 }

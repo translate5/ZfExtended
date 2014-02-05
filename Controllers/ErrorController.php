@@ -56,7 +56,7 @@ class ErrorController extends ZfExtended_Controllers_Action
      */
     protected $_log;
     /**
-     * @var Zend_Translate
+     * @var ZfExtended_Zendoverwrites_Translate
      */
     protected $_translate;
     /**
@@ -152,14 +152,7 @@ class ErrorController extends ZfExtended_Controllers_Action
         }
         catch (Exception $e) {
         }
-        try {
-            $this->_translate = Zend_Registry::get('Zend_Translate');
-        }
-        catch (Exception $e) {
-           $this->_translate = new pseudoTranslate();
-           $this->view->translate = $this->_translate;
-           Zend_Registry::set('Zend_Translate',$this->_translate);
-        }
+        $this->_translate = ZfExtended_Zendoverwrites_Translate::getInstance();
         $this->_log = ZfExtended_Factory::get('ZfExtended_Log');
         if($this->_errorCollect){
             $this->errorcollectInit();

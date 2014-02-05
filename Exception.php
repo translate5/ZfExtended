@@ -34,7 +34,7 @@
 class ZfExtended_Exception extends Zend_Exception {
     /**
      *
-     * @var Zend_Translate 
+     * @var ZfExtended_Zendoverwrites_Translate 
      */
     protected $_translate;
     
@@ -95,7 +95,7 @@ class ZfExtended_Exception extends Zend_Exception {
      */
     public function setMessage($msg, $translate = false) {
         if($translate){
-            $this->_translate = Zend_Registry::get('Zend_Translate');
+            $this->_translate = ZfExtended_Zendoverwrites_Translate::getInstance();
             $msg = $this->_translate->_($msg);
         }
         $this->message = $msg;

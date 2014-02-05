@@ -79,10 +79,8 @@ class TranslateController extends ZfExtended_Controllers_Action
      * @param string $path
      */
     protected function collectAndWriteXliff(string $path) {
-        $translateHelper = ZfExtended_Zendoverwrites_Controller_Action_HelperBroker::getStaticHelper(
-                        'Translate'
-        );
-        /* @var $translateHelper ZfExtended_Controller_Helper_Translate */
+        $translate =  ZfExtended_Zendoverwrites_Translate::getInstance();
+        /* @var $translate ZfExtended_Zendoverwrites_Translate */
         $xliff = array();
         $error = false;
         $path = realpath($path);
@@ -123,12 +121,12 @@ class TranslateController extends ZfExtended_Controllers_Action
         if($path === realpath(APPLICATION_PATH))
             $path = APPLICATION_PATH.DIRECTORY_SEPARATOR.'..'.DIRECTORY_SEPARATOR.'data';
         $xliff2write = $path.DIRECTORY_SEPARATOR.'locales'.
-                    DIRECTORY_SEPARATOR.$translateHelper->getSourceCodeLocale().'.xliff';
+                    DIRECTORY_SEPARATOR.$translate->getSourceCodeLocale().'.xliff';
         
             
         if(!file_exists($xliff2write)||(!is_null($this->_getParam('overwrite')))){
-            file_put_contents($xliff2write, $translateHelper->getXliffStartString().
-                    implode("\n", array_unique($xliff)).$translateHelper->getXliffEndString());
+            file_put_contents($xliff2write, $translate->getXliffStartString().
+                    implode("\n", array_unique($xliff)).$translate->getXliffEndString());
         }
         elseif(file_exists($xliff2write)){
             $message = "The file ".$xliff2write." already exists";

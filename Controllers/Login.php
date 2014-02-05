@@ -55,7 +55,7 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
      */
     protected  $_session;
     /**
-     * @var Zend_Translate
+     * @var ZfExtended_Zendoverwrites_Translate
      */
     protected  $_translate;
     /**
@@ -81,7 +81,7 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
     
     public function init(){
         parent::init();
-        $this->_translate = Zend_Registry::get('Zend_Translate');
+        $this->_translate = ZfExtended_Zendoverwrites_Translate::getInstance();
         $this->_session = new Zend_Session_Namespace();
         $this->_user = new Zend_Session_Namespace('user');
     }

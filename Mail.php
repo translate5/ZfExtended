@@ -113,7 +113,6 @@ class  ZfExtended_Mail {
      */
     protected function initView() {
         $this->view = new Zend_View();
-        $this->view->translate = Zend_Registry::get('Zend_Translate');
         $config = Zend_Registry::get('config');
         $libs = array_reverse($config->runtimeOptions->libraries->order->toArray());
         foreach ($libs as $lib) {

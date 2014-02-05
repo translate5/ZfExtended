@@ -37,14 +37,21 @@
  * @version 2.0
  *
  */
-/*
- * Methoden, die den Translate-Prozess unterstützen
+/**
+ * Klasse zur Initialisierung aller Formulare
  *
- * 
+ * - liest Form aus ini ein entsprechend der Konvention "controllerAction" des aufrufenden Controllers und der aufrufenden Action
+ * - Kinder können auch zur Datenvalidierung im Modell herangezogen werden
  */
-
-class ZfExtended_Controller_Helper_Translate extends Zend_Controller_Action_Helper_Abstract {
+class  ZfExtended_Zendoverwrites_Translate extends Zend_Translate
+{
     /**
+     *
+     * @var boolean if the to translated string should be json-encoded before return
+     */
+    protected $_jsonEncode = false;
+    protected static $_instance = null;
+     /**
      *
      * @var string the language part of the locale 
      */
@@ -61,24 +68,79 @@ class ZfExtended_Controller_Helper_Translate extends Zend_Controller_Action_Help
     protected $logPath;
     /**
      *
-     * @var Zend_Translate 
-     */
-    protected $translate;
-    /**
-     *
      * @var array
      */
     protected $translationPaths;
     
-    public function __construct() {
+     public function __construct() {
+         //we can not set the construct to protected, because parents construct is public
+         //therefore check here, if construct is only called from within
+        $trace=debug_backtrace();
+        $caller=$trace[1];
+        if(!isset($caller['class']) || 
+                $caller['class']!='ZfExtended_Zendoverwrites_Translate' || 
+                $caller['function'] != 'getInstance'){
+            throw new Zend_Exception('construct must only be called from getInstance');
+        }
         //this is to have an translation adapter set if an error occurs inside translation
         //process before translation adapter is set - but errorcontroller needs one
-        $translate = new Zend_Translate('Zend_Translate_Adapter_Array', array('' => ''), 'en');
-        Zend_Registry::set('Zend_Translate', $translate);
+        parent::__construct('Zend_Translate_Adapter_Array', array('' => ''), 'en');
+        Zend_Registry::set('Zend_Translate', $this);
         $this->setSourceLang();
         $this->setTargetLang();
         $this->getLogPath();
+        
+        
+        $session = new Zend_Session_Namespace();
+        
+        try {
+            $log = Zend_Registry::get('translationLog');
+        }
+        catch (Exception $exc) {
+            $writer = new Zend_Log_Writer_Stream($this->getLogPath());
+            $formatter = new Zend_Log_Formatter_Simple('%message%' . PHP_EOL);
+            $writer->setFormatter($formatter);
+            $log    = new Zend_Log($writer);
+            Zend_Registry::set('translationLog', $log);
+        }
+
+        // Lade Übersetzungen und speichere Translate Objekt in der Session
+         //$cache = Zend_Registry::get('cache'); //Caching deaktiviert, da der Aufruf der selben Seite mehrmals innerhalb von Millisekunden bei der Nutzung des Caches für Zend_Translate zu Fatal Error führt
+         //Zend_Translate::setCache($cache);
+        parent::__construct(
+            array(
+                'adapter' => 'ZfExtended_Zendoverwrites_Translate_Adapter_Xliff',
+                'content' => $session->runtimeOptions->dir->locales.'/'.$this->sourceLang.'.xliff',
+                'locale'  => $this->sourceLang,
+                'disableNotices' => true,
+                'log'             => $log,
+                'logUntranslated' => true,
+                'logMessage' => '<trans-unit id=\'%id%\'>'.
+                    '<source>%message%</source>'.
+                    '<target>%message%</target>'.
+                    '</trans-unit>',
+                'useId' => true
+            )
+        );
+        $this->addTranslations();
     }
+    
+    /**
+     * always sets jsonEncode to false to ensure strings are only jsonencoded if explicitly set after instance is fetched
+     * @param boolean $init causes getInstance, to create the singleton new
+     * @return ZfExtended_Acl
+     */
+    public static function getInstance($init = false)
+    {
+        if (null === self::$_instance || $init) {
+            self::$_instance = new self();
+            self::$_instance->setJsonEncode(false);
+            Zend_Registry::set('Zend_Translate', self::$_instance);
+        }
+        
+        return self::$_instance;
+    }
+    
     public function getXliffStartString() {
         return '<?xml version="1.0" ?>
 <xliff version=\'1.1\' xmlns=\'urn:oasis:names:tc:xliff:document:1.1\'>
@@ -96,10 +158,11 @@ class ZfExtended_Controller_Helper_Translate extends Zend_Controller_Action_Help
     }
 
     /**
+     * protected, because if public the instances has to be newly instantiated, which is unneccessary currently
      * 
      * @param string $lang  
      */
-    public function setSourceLang($lang = null) {
+    protected function setSourceLang($lang = null) {
         $this->sourceLang = $lang;
         if(is_null($this->sourceLang)){
             $session = new Zend_Session_Namespace();
@@ -114,10 +177,11 @@ class ZfExtended_Controller_Helper_Translate extends Zend_Controller_Action_Help
         }
     }
     /**
+     * protected, because if public the instances has to be newly instantiated, which is unneccessary currently
      * 
      * @param string $lang  
      */
-    public function setTargetLang($lang = null) {
+    protected function setTargetLang($lang = null) {
         $this->targetLang = $lang;
         if(is_null($this->targetLang)){
             $targetLocaleObj = Zend_Registry::get('Zend_Locale');
@@ -125,58 +189,10 @@ class ZfExtended_Controller_Helper_Translate extends Zend_Controller_Action_Help
         }
     }
     
-    /*
-     * läd die zur aktuellen locale passenden Übersetzungen
-     *
-     * - nutzt den Cache zur Beschleunigung
-     * - nutzt Zend_Log, um Logfile mit nicht in der Überseztzungen gefundene Ausgangstexte zu schreiben
-     * - nutzt xliff als Dateiformat für die Übersetzungen
-     * - zieht ausgangssprachliche Locale und Pfade zu Locale- und Logverzeichnissen aus application.ini (runtimeOptions)
-     * - sorgt dafür, dass im logfile mit nicht gefundenen Übersetzungen mit Ausnahme
-     *   der Übersetzungen des letzten Requests keine Dubletten vorhanden sind
-     *   und die vorangestellten Datums und Notice-Angaben entfernt werden
-     */
-    public function setZendTranslate() {
-        $session = new Zend_Session_Namespace();
-        $this->setSourceLang();
-        
-        try {
-            $log = Zend_Registry::get('translationLog');
-        }
-        catch (Exception $exc) {
-            $writer = new Zend_Log_Writer_Stream($this->getLogPath());
-            $formatter = new Zend_Log_Formatter_Simple('%message%' . PHP_EOL);
-            $writer->setFormatter($formatter);
-            $log    = new Zend_Log($writer);
-            Zend_Registry::set('translationLog', $log);
-        }
-
-        // Lade Übersetzungen und speichere Translate Objekt in der Session
-         //$cache = Zend_Registry::get('cache'); //Caching deaktiviert, da der Aufruf der selben Seite mehrmals innerhalb von Millisekunden bei der Nutzung des Caches für Zend_Translate zu Fatal Error führt
-         //Zend_Translate::setCache($cache);
-        $this->translate = new Zend_Translate(
-            array(
-                'adapter' => 'ZfExtended_Zendoverwrites_Translate_Adapter_Xliff',
-                'content' => $session->runtimeOptions->dir->locales.'/'.$this->sourceLang.'.xliff',
-                'locale'  => $this->sourceLang,
-                'disableNotices' => true,
-                'log'             => $log,
-                'logUntranslated' => true,
-                'logMessage' => '<trans-unit id=\'%id%\'>'.
-                    '<source>%message%</source>'.
-                    '<target>%message%</target>'.
-                    '</trans-unit>',
-                'useId' => true
-            )
-        );
-        $this->addTranslations();
-        Zend_Registry::set('Zend_Translate', $this->translate);
-    }
-    
     protected function addTranslations() {
         $paths = $this->getTranslationPaths(); 
         foreach ($paths as $path) {
-            $this->translate->addTranslation(array(
+            $this->addTranslation(array(
                 'content' => $path,
                 'locale' => $this->getTargetLang())
             );
@@ -247,5 +263,35 @@ class ZfExtended_Controller_Helper_Translate extends Zend_Controller_Action_Help
      */
     public function getSourceLang() {
         return $this->sourceLang;
+    }
+    
+    public function _($s){
+        $s = parent::_($s);
+        if($this->_jsonEncode){
+            $s = json_encode($s,JSON_HEX_APOS);
+            $length = strlen($s);
+            if($s[0] =='"' && $s[$length-1] == '"'){
+                $s = substr($s, 1, -1);//we do not use trim here, because then a second trailing quote would be removed also
+            }
+            else{
+                throw new Zend_Exception('Beginning and trailing Quotes of jsonEncode could not be removed properly.');
+            }
+        }
+        return $s;
+    }
+    public function setJsonEncode(boolean $val) {
+        $this->_jsonEncode = $val;
+    }
+    public function getJsonEncode(){
+        return $this->_jsonEncode;
+    }
+
+    /**
+     * Singleton Instanz auf NULL setzen, um sie neu initialiseren zu können
+     *
+     * @return void
+     */
+    public static function reset() {
+        self::$_instance = NULL;
     }
 }

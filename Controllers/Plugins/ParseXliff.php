@@ -44,25 +44,22 @@ class ZfExtended_Controllers_Plugins_ParseXliff extends Zend_Controller_Plugin_A
 {
     /**
      *
-     * @var ZfExtended_Controller_Helper_Translate 
+     * @var ZfExtended_Zendoverwrites_Translate 
      */
-    protected $tHelper;
+    protected $translate;
 
     /**
      *
      * @param  Zend_Controller_Request_Abstract $request
      * @return void
      */
-    public function dispatchLoopShutdown()
-    {
-        $this->tHelper = ZfExtended_Zendoverwrites_Controller_Action_HelperBroker::getStaticHelper(
-                        'Translate'
-        );
-        $logPath = $this->tHelper->getLogPath();
+    public function dispatchLoopShutdown(){
+        $this->translate = ZfExtended_Zendoverwrites_Translate::getInstance();
+        $logPath = $this->translate->getLogPath();
         $logArr = $this->parseXliff($logPath);
         if(!empty($logArr)){
-            $tLang = $this->tHelper->getTargetLang();
-            $sLang = $this->tHelper->getSourceCodeLocale();
+            $tLang = $this->translate->getTargetLang();
+            $sLang = $this->translate->getSourceCodeLocale();
             if($tLang===$sLang){
                 $session = new Zend_Session_Namespace();
                 
@@ -90,7 +87,7 @@ class ZfExtended_Controllers_Plugins_ParseXliff extends Zend_Controller_Plugin_A
         $fileArr = array_unique($fileArr);
         $file = implode("</trans-unit>\n", $fileArr).'</trans-unit>';
         $file = str_replace("<trans-unit id=''><source></source><target></target></trans-unit>","",$file);
-        $file = $this->tHelper->getXliffStartString().$file.$this->tHelper->getXliffEndString();
+        $file = $this->translate->getXliffStartString().$file.$this->translate->getXliffEndString();
         file_put_contents($path, $file);
     }
 

@@ -109,7 +109,8 @@ class ZfExtended_Models_Passwdreset extends ZfExtended_Models_Entity_Abstract {
         $general = ZfExtended_Zendoverwrites_Controller_Action_HelperBroker::getStaticHelper(
             'general'
         );
-        $translate = Zend_Registry::get('Zend_Translate');
+        $translate = ZfExtended_Zendoverwrites_Translate::getInstance();
+        /* @var $translate ZfExtended_Zendoverwrites_Translate */;
         $general->mail(
                 $user->getEmail(),
                 '',
