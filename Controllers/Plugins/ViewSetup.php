@@ -91,6 +91,16 @@ class ZfExtended_Controllers_Plugins_ViewSetup extends Zend_Controller_Plugin_Ab
         $this->_viewRenderer->setNoRender(true);
         $this->setPhp2Js();
     }
+    
+public function dispatchLoopStartup(Zend_Controller_Request_Abstract
+                                        $request)
+    {
+        $this->_viewRenderer = ZfExtended_Zendoverwrites_Controller_Action_HelperBroker::getStaticHelper(
+            'ViewRenderer'
+        );
+        $this->_viewRenderer->view->translate = ZfExtended_Zendoverwrites_Translate::getInstance();
+    }
+    
      /**
      * Stellt allgemeine php-Variablen in JS zur Verfügung
      *
