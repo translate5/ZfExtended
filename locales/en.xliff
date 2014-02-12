@@ -1,61 +1,10 @@
-<?xml version="1.0"?>
-<xliff version="1.1" xmlns="urn:oasis:names:tc:xliff:document:1.1">
+<?xml version="1.0" ?>
+<xliff version='1.1' xmlns='urn:oasis:names:tc:xliff:document:1.1'>
 <!-- the transunit-ID should contain the base64-encoded source-string als used in the php source-code. This ID is used for matching. -->
 <!-- html-tags inside the target-string must not be encoded as they should regarding xliff but should be left as plain hmtl. At this stage ZfExtended does not support xliff inline tags -->
- <file original="php-sourcecode" source-language="ha" target-language="de" datatype="php">
-  <body><trans-unit id="U2VpdGUgbmljaHQgZ2VmdW5kZW46IA=="><source>Seite nicht gefunden: </source><target>Page not found: </target></trans-unit>
-<trans-unit id="LyBBdWZydWYgZXJmb2xndGUgZHVyY2ggSVA6IA=="><source>/ Aufruf erfolgte durch IP: </source><target>/ Call-up carried out via IP: </target></trans-unit>
-<trans-unit id="R2VuZXJhbE1ldGF0YWdUaXRsZVN1ZmZpeA=="><source>GeneralMetatagTitleSuffix</source><target>beoSphere – create, track, place and analyse orders</target></trans-unit>
-<trans-unit id="VW5nw7xsdGlnZSBMb2dpbmRhdGVuITxici8+SGFiZW4gU2llIElociBQYXNzd29ydCB2ZXJnZXNzZW4gb2RlciBiaXNsYW5nIG5vY2gga2VpbiBQYXNzd29ydCBmw7xyIElocmVuIExvZ2luIGdlc2V0enQ/ICBTaWUga8O2bm5lbiBqZWRlcnplaXQgZWluZW4gbmV1ZW4gTGluayAlc2hpZXIlcyBhbmZvcmRlcm4u"><source>Ungültige Logindaten!<br/>Haben Sie Ihr Passwort vergessen oder bislang noch kein Passwort für Ihren Login gesetzt?  Sie können jederzeit einen neuen Link %shier%s anfordern.</source><target>Invalid login data!<br/>Have you forgotten your password or not yet set a password for your login?  You can request a new link %shere%s at any time.</target></trans-unit>
-<trans-unit id="VW5nw7xsdGlnZSBMb2dpbmRhdGVuIC0gWnVnYW5nIGdlc3BlcnJ0ITxici8+U2llIGhhYmVuIElociBQYXNzd29ydCBpbiBkZW4gbGV0enRlbiAyNCBTdHVuZGVuIG1laHJtYWxzIGZhbHNjaCBlaW5nZWdlYmVuLCBpaHIgTG9naW4gd3VyZGUgZ2VzcGVycnQuPGJyIC8+UGVyIEUtTWFpbCB3dXJkZSBJaG5lbiBlaW4gTGluayB6dWdlc2FuZHQsIG1pdCB3ZWxjaGVtIFNpZSBJaHIgUGFzc3dvcnQgbmV1IHNldHplbiBrw7ZubmVuLiBEaWVzZXIgTGluayBpc3QgMzAgbWluIGfDvGx0aWcgdW5kIGZ1bmt0aW9uaWVydCBudXIsIHNvIGxhbmdlIFNpZSBJaHJlbiBCcm93c2VyIG5pY2h0IHp3aXNjaGVuemVpdGxpY2ggZ2VzY2hsb3NzZW4gaGFiZW4uIFNpZSBrw7ZubmVuIGplZGVyemVpdCBlaW5lbiBuZXVlbiBMaW5rICVzaGllciVzIGFuZm9yZGVybi4="><source>Ungültige Logindaten - Zugang gesperrt!<br/>Sie haben Ihr Passwort in den letzten 24 Stunden mehrmals falsch eingegeben, ihr Login wurde gesperrt.<br/>Per E-Mail wurde Ihnen ein Link zugesandt, mit welchem Sie Ihr Passwort neu setzen können. Dieser Link ist 30 min gültig und funktioniert nur, so lange Sie Ihren Browser nicht zwischenzeitlich geschlossen haben. Sie können jederzeit einen neuen Link %shier%s anfordern.</source><target>Invalid login data – access denied!<br/>You have entered an incorrect password several times in the past 24 hours – your login has been denied.<br/>A link has been sent to you via e-mail, using which you can reset your password. This link is valid for 30 minutes and only works if you have not closed your browser in the meantime. You can request a new link %shere%s at any time.</target></trans-unit>
-<trans-unit id="UGVyIEUtTWFpbCB3dXJkZSBJaG5lbiBlaW4gTGluayB6dWdlc2FuZHQsIG1pdCB3ZWxjaGVtIFNpZSBJaHIgUGFzc3dvcnQgbmV1IHNldHplbiBrw7ZubmVuLiBEaWVzZXIgTGluayBpc3QgMzAgbWluIGfDvGx0aWcgdW5kIGZ1bmt0aW9uaWVydCBudXIsIHNvIGxhbmdlIFNpZSBJaHJlbiBCcm93c2VyIG5pY2h0IHp3aXNjaGVuemVpdGxpY2ggZ2VzY2hsb3NzZW4gaGFiZW4uIFNpZSBrw7ZubmVuIGplZGVyemVpdCBlaW5lbiBuZXVlbiBMaW5rIMO8YmVyIGRpZXNlcyBGb3JtdWxhciBhbmZvcmRlcm4u"><source>Per E-Mail wurde Ihnen ein Link zugesandt, mit welchem Sie Ihr Passwort neu setzen können. Dieser Link ist 30 min gültig und funktioniert nur, so lange Sie Ihren Browser nicht zwischenzeitlich geschlossen haben. Sie können jederzeit einen neuen Link über dieses Formular anfordern.</source><target>A link has been sent to you via e-mail, using which you can reset your password. This link is valid for 30 minutes and only works if you have not closed your browser in the meantime. You can request a new link at any time using this form.</target></trans-unit>
-<trans-unit id="RGVyIGFuZ2VnZWJlbmUgQmVudXR6ZXJuYW1lIGV4aXN0aWVydCBuaWNodCE="><source>Der angegebene Benutzername existiert nicht!</source><target>The user name entered does not exist!</target></trans-unit>
-<trans-unit id="TG9naW4="><source>Login</source><target>Login</target></trans-unit>
-<trans-unit id="SWhyIFBhc3N3b3J0IHd1cmRlIG5ldSBnZXNldHp0LiBTaWUga8O2bm5lbiBzaWNoIG51biBlaW5sb2dnZW4u"><source>Ihr Passwort wurde neu gesetzt. Sie können sich nun einloggen.</source><target>Your password has been reset. You may now log in.</target></trans-unit>
-<trans-unit id="UGFzc3dvcnQgbmV1IHNldHplbg=="><source>Passwort neu setzen</source><target>Reset password</target></trans-unit>
-<trans-unit id="JyV2YWx1ZSUnIGlzdCBuaWNodCB2b20gVHlwIEJvb2xlYW4="><source>'%value%' ist nicht vom Typ Boolean</source><target>'%value%' is not Boolean</target></trans-unit>
-<trans-unit id="JyV2YWx1ZSUnIGlzdCBuaWNodCBUUlVF"><source>'%value%' ist nicht TRUE</source><target>'%value%' is not TRUE</target></trans-unit>
-<trans-unit id="JyV2YWx1ZSUnIGlzdCBuaWNodCBGQUxTRQ=="><source>'%value%' ist nicht FALSE</source><target>'%value%' is not FALSE</target></trans-unit>
-<trans-unit id="U2VociBnZWVocnRlIEZyYXU="><source>Sehr geehrte Frau</source><target>Dear Mrs</target></trans-unit>
-<trans-unit id="U2VociBnZWVocnRlciBIZXJy"><source>Sehr geehrter Herr</source><target>Dear Mr</target></trans-unit>
-<trans-unit id="JTEkcyAlMiRzLA0KDQpTaWUgZXJoYWx0ZW4gZGllc2UgRW1haWwsIHdlaWwgd2lyIGVpbmUgQW5mcmFnZSB6dXIgw4RuZGVydW5nIGRlcyBQYXNzd29ydGVzIGbDvHIgSWhyIGJlb1NwaGVyZSBLb250byBhdWYgaHR0cDovL3d3dy5iZW8tZG9jLmRlL3BvcnRhbC9wdWJsaWMvIGVyaGFsdGVuIGhhYmVuLiANCg0KV2VubiBTaWUgYW5nZWZyYWd0IGhhYmVuIHVuZCBJaHIgUGFzc3dvcnQgw6RuZGVybiBtw7ZjaHRlbiwgZGFubiBiZWZvbGdlbiBTaWUgYml0dGUgZm9sZ2VuZGUgQW53ZWlzdW5nZW46DQoNCkRlciBmb2xnZW5kZSBMaW5rIGVudGjDpGx0IGVpbmVuIGbDvHIgMzAgTWludXRlbiBnw7xsdGlnZW4gU2NobMO8c3NlbCwgbWl0IHdlbGNoZW0gU2llIElociBQYXNzd29ydCBuZXUgc2V0emVuIGvDtm5uZW4uIEF1cyBTaWNoZXJoZWl0c2dyw7xuZGVuIGZ1bmt0aW9uaWVydCBkaWVzIG51ciwgd2VubiBTaWUgZGVuIGZvbGdlbmRlbiBMaW5rIGltIHNlbGJlbiBCcm93c2VyIGluIGRlbSBTaWUgZGllIMOEbmRlcnVuZyBJaHJlcyBQYXNzd29ydCBhbmdlZm9yZGVydCBoYWJlbiDDtmZmbmVuIHVuZCB6dWRlbSBuYWNoIFp1csO8Y2tzZXR6ZW4gZGVzIFBhc3N3b3J0cyBJaHJlbiBCcm93c2VyIG5pY2h0IG5ldSBnZXN0YXJ0ZXQgaGFiZW4uDQoNCj09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQ0KTGluayB1bSBQYXNzd29ydCBuZXUgenUgc2V0emVuDQotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0NCiUzJHMlNCRzJTUkcyU2JHMNCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQ0KPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09DQoNClNvbGx0ZSBJaHIgU2NobMO8c3NlbCBuaWNodCBtZWhyIGfDvGx0aWcgc2Vpbiwga8O2bm5lbiBTaWUgdW50ZXIgamVkZXJ6ZWl0IGVpbmVuIG5ldWVuIFNjaGzDvHNzZWwgYW5mb3JkZXJuLg0KLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tDQolMyRzJTQkcyU1JHMlNyRzDQotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0NCg0KU29sbHRlbiBTaWUgZGllIEFuZnJhZ2UgbmljaHQgc2VsYnN0IGF1c2dlbMO2c3QgaGFiZW4sIGJpdHRlbiB3aXIgU2llIHVucyBkYXLDvGJlciB6dSBpbmZvcm1pZXJlbi4NCg0KVmllbGVuIERhbmsgdW5kIHZpZWxlIEdyw7zDn2UsDQpJaHIgUHJvamVrdG1hbmFnZW1lbnQgVGVhbQ0KYmVvIEdlc2VsbHNjaGFmdCBmw7xyIFNwcmFjaGVuIHVuZCBUZWNobm9sb2dpZQ0KDQpEaWVzZSBFbWFpbCB3dXJkZSBhdXRvbWF0aXNjaCBnZW5lcmllcnQuIFBsZWFzZSBkbyBub3QgcmVwbHkgdG8gdGhpcyBlbWFpbC4="><source>%1$s %2$s,  Sie erhalten diese Email, weil wir eine Anfrage zur Änderung des Passwortes für Ihr beoSphere Konto auf http://www.beo-doc.de/portal/public/ erhalten haben.   Wenn Sie angefragt haben und Ihr Passwort ändern möchten, dann befolgen Sie bitte folgende Anweisungen:  Der folgende Link enthält einen für 30 Minuten gültigen Schlüssel, mit welchem Sie Ihr Passwort neu setzen können. Aus Sicherheitsgründen funktioniert dies nur, wenn Sie den folgenden Link im selben Browser in dem Sie die Änderung Ihres Passwort angefordert haben öffnen und zudem nach Zurücksetzen des Passworts Ihren Browser nicht neu gestartet haben.  ============================== Link um Passwort neu zu setzen ------------------------------ %3$s%4$s%5$s%6$s ------------------------------ ==============================  Sollte Ihr Schlüssel nicht mehr gültig sein, können Sie unter jederzeit einen neuen Schlüssel anfordern. ------------------------------ %3$s%4$s%5$s%7$s ------------------------------  Sollten Sie die Anfrage nicht selbst ausgelöst haben, bitten wir Sie uns darüber zu informieren.  Vielen Dank und viele Grüße, Ihr Projektmanagement Team beo Gesellschaft für Sprachen und Technologie  Diese Email wurde automatisch generiert. Please do not reply to this email.</source><target>%1$s %2$s,
-
-You have received this e-mail because we have received a request to change the password for your beoSphere account at http://www.beo-doc.de/portal/public/. 
-
-If you have sent such a request and would like to change your password, please follow these instructions:
-
-The following link contains a key which is valid for 30 minutes, and which can be used to reset your password. For security reasons, this will only work provided you open the link in the same browser in which you requested the change to your password, and in addition, provided you have not re-opened your browser after resetting the password.
-
-==============================
-Link to reset password
-------------------------------
-%3$s%4$s%5$s%6$s
-------------------------------
-==============================
-
-If your key is no longer valid, you can request a new one at any time.
-------------------------------
-%3$s%4$s%5$s%7$s
-------------------------------
-
-If you did not send the request yourself, please inform us of this.
-
-Many thanks and best regards,
-The Project Management team
-beo Gesellschaft für Sprachen und Technologie
-
-This e-mail has been generated automatically. Please do not reply to this e-mail.</target></trans-unit>
-<trans-unit id="TmV1ZXMgUGFzc3dvcnQ="><source>Neues Passwort</source><target>New password</target></trans-unit>
-<trans-unit id="WnVyw7xjayB6dXIgU3RhcnRzZWl0ZQ=="><source>Zurück zur Startseite</source><target>Return to the homepage</target></trans-unit>
-<trans-unit id="QW53ZW5kdW5nc2ZlaGxlcg=="><source>Anwendungsfehler</source><target>Application error</target></trans-unit>
-<trans-unit id="V2lyIGJpdHRlbiB1bSBFbnRzY2h1bGRpZ3VuZyBmw7xyIGRpZSBhdWZnZXRyZXRlbmUgU3TDtnJ1bmch"><source>Wir bitten um Entschuldigung für die aufgetretene Störung!</source><target>We apologise for the error which has occurred!</target></trans-unit>
-<trans-unit id="VW5zZXJlIEFkbWluaXN0cmF0b3JlbiB3ZXJkZW4gYXV0b21hdGlzY2ggYmVuYWNocmljaHRpZ3QgdW5kIHdlcmRlbiBzaWNoIHVtZ2VoZW5kIG1pdCBJaG5lbiBpbiBWZXJiaW5kdW5nIHNldHplbi4="><source>Unsere Administratoren werden automatisch benachrichtigt und werden sich umgehend mit Ihnen in Verbindung setzen.</source><target>Our administrators will be automatically notified and will contact you in due course.</target></trans-unit>
-<trans-unit id="U29sbHRlIGlubmVyaGFsYiBkZXMgbsOkY2hzdGVuIEFyYmVpdHN0YWdzIGtlaW5lIEtvbnRha3RhdWZuYWhtZSBlcmZvbGd0IHNlaW4sIGxpZWd0IGVpbmUgYWxsZ2VtZWluZSBTdMO2cnVuZyB2b3IsIGRpZSBkaWUgYXV0b21hdGlzY2hlIEJlbmFjaHJpY2h0aWd1bmcgdW5zZXJlciBBZG1pbmlzdHJhdG9yZW4gdmVyaGluZGVydC4gQml0dGUgYmVuYWNocmljaHRpZ2VuIFNpZSB1bnMgZGFubiBtw7ZnbGljaHN0IHVtZ2VoZW5kIHVudGVyIGRlbiBmb2xnZW5kZW4gS29udGFrdGRhdGVuOg=="><source>Sollte innerhalb des nächsten Arbeitstags keine Kontaktaufnahme erfolgt sein, liegt eine allgemeine Störung vor, die die automatische Benachrichtigung unserer Administratoren verhindert. Bitte benachrichtigen Sie uns dann möglichst umgehend unter den folgenden Kontaktdaten:</source><target>If you have not been contacted within the next working day, this is due to a general error which has prevented our administrators from being automatically notified. Please contact us as soon as possible using the following contact details:</target></trans-unit>
-<trans-unit id="VGVsZWZvbjo="><source>Telefon:</source><target>Telephone:</target></trans-unit>
-<trans-unit id="RS1NYWlsOg=="><source>E-Mail:</source><target>E-mail:</target></trans-unit>
+ <file original='php-sourcecode' source-language='de' target-language='en' datatype='php'>
+  <body>
+      <trans-unit id="R2VuZXJhbE1ldGF0YWdUaXRsZVN1ZmZpeA=="><source>GeneralMetatagTitleSuffix</source><target>translate5</target></trans-unit>
   </body>
  </file>
 </xliff>
-
-
-
