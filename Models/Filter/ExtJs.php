@@ -185,7 +185,7 @@ class ZfExtended_Models_Filter_ExtJs extends ZfExtended_Models_Filter {
           throw new Zend_Exception('illegal chars in field name');
       }
       if(!$this->entity->hasField($field) && empty($filter->table)){
-          throw new Zend_Exception('illegal field requested');
+          throw new Zend_Exception('illegal field requested: '.$field);
       }
   }
 
