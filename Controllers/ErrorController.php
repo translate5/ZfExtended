@@ -217,11 +217,17 @@ class ErrorController extends ZfExtended_Controllers_Action
             $this->_errors[0]->_errorTrace = debug_backtrace();
         }
 
-        if($this->_errors[0]->_errorCode == 0){
-            $this->_errors[0]->_errorCode = 500;
-            if($this->_errorhandlerErrors->type == Zend_Controller_Plugin_ErrorHandler::EXCEPTION_NO_ACTION) {
+        if($this->_errors[0]->_errorCode != 0){
+            return;
+        }
+        switch($this->_errorhandlerErrors->type) {
+            case Zend_Controller_Plugin_ErrorHandler::EXCEPTION_NO_ACTION:
+            case Zend_Controller_Plugin_ErrorHandler::EXCEPTION_NO_CONTROLLER:
                 $this->_errors[0]->_errorCode = 404;
-            }
+                break;
+            default:
+                $this->_errors[0]->_errorCode = 500;
+                break;
         }
     }
     /**
@@ -278,9 +284,11 @@ class ErrorController extends ZfExtended_Controllers_Action
                 $this->_renderScript = 'error/error404.phtml';
             }
         }
+        
+        $missingController = $this->_exception instanceof Zend_Controller_Dispatcher_Exception && strpos($this->_exception->getMessage(), 'Invalid controller specified') !== false;
         $missingAction = $this->_exception instanceof Zend_Controller_Action_Exception && $this->_exception->getCode() == '404';
         $notFound = $this->_exception instanceof ZfExtended_NotFoundException;
-        if(($missingAction || $notFound) && !$this->isRestRoute()) {
+        if(($missingAction || $notFound || $missingController) && !$this->isRestRoute()) {
             $this->_isHttp404 = true;
             $this->view->errors[0]->_errorMessage = $this->_translate->_('Seite nicht gefunden: ').$_SERVER['REQUEST_URI'].$this->_translate->_('/ Aufruf erfolgte durch IP: ').$_SERVER['REMOTE_ADDR'];
         }
