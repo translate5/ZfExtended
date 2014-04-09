@@ -71,6 +71,7 @@ class ZfExtended_Resource_LoadLibController extends Zend_Application_Resource_Re
         foreach($libs as $lib){
             $needle = 'library'.DIRECTORY_SEPARATOR.$lib.DIRECTORY_SEPARATOR;
             foreach($controllerDirs as $cDir){
+                $cDir = (DIRECTORY_SEPARATOR!=='/')?str_replace('/',DIRECTORY_SEPARATOR,$cDir):$cDir;//to ensure windows path compatiblity
                 if(strpos($cDir, $needle)!==false){
                      $dirs[] = $cDir;
                 }
