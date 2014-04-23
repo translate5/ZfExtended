@@ -152,7 +152,7 @@ class  ZfExtended_Zendoverwrites_Translate extends Zend_Translate
         $sourceLocale = $session->runtimeOptions->translation->sourceLocale;
         
         $generalHelper = ZfExtended_Zendoverwrites_Controller_Action_HelperBroker::getStaticHelper(
-                        'GeneralHelper'
+                        'General'
         );
         $locales = array();
         $xliffFiles = scandir($session->runtimeOptions->dir->locales);

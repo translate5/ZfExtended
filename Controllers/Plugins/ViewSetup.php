@@ -92,8 +92,7 @@ class ZfExtended_Controllers_Plugins_ViewSetup extends Zend_Controller_Plugin_Ab
         $this->setPhp2Js();
     }
     
-public function dispatchLoopStartup(Zend_Controller_Request_Abstract
-                                        $request)
+    public function dispatchLoopStartup(Zend_Controller_Request_Abstract $request)
     {
         $this->_viewRenderer = ZfExtended_Zendoverwrites_Controller_Action_HelperBroker::getStaticHelper(
             'ViewRenderer'
@@ -107,11 +106,13 @@ public function dispatchLoopStartup(Zend_Controller_Request_Abstract
      * @param Zend_Controller_Request_Abstract $request
      */
     private function setPhp2Js() {
-        $this->_viewRenderer->view->headScript()->prependScript('var '.ucfirst($this->_viewRenderer->view->module).' = {}');
-        $this->_viewRenderer->view->headScript()->appendScript($this->_viewRenderer->view->Php2JsVars());
-        $this->_viewRenderer->view->php2JsVars()->set('pathToRunDir', APPLICATION_RUNDIR);
-        $this->_viewRenderer->view->php2JsVars()->set('zfModule', $this->_viewRenderer->view->module);
-        $this->_viewRenderer->view->php2JsVars()->set('zfController', $this->_viewRenderer->view->controller);
-        $this->_viewRenderer->view->php2JsVars()->set('zfAction', $this->_viewRenderer->view->action);
+        $view = $this->_viewRenderer->view;
+        $view->headScript()->prependScript('var '.ucfirst($this->_viewRenderer->view->module).' = {}');
+        $view->headScript()->appendScript($this->_viewRenderer->view->Php2JsVars());
+        $view->php2JsVars()->set('pathToRunDir', APPLICATION_RUNDIR);
+        $view->php2JsVars()->set('zfModule', $this->_viewRenderer->view->module);
+        $view->php2JsVars()->set('zfController', $this->_viewRenderer->view->controller);
+        $view->php2JsVars()->set('zfAction', $this->_viewRenderer->view->action);
+        $view->php2JsVars()->set('locale', $this->_session->locale);
     }
 }
