@@ -275,5 +275,31 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
         $this->view->form = $this->_form;
         $this->render('passwdreset');
     }
+    
+    /**
+     * updates the session locale by the locale stored in the DB for this user
+     */
+    protected function localeSetup() {
+        $locale = $this->_user->data->locale;
+        if(Zend_Locale::isLocale($locale)){
+            $this->_setLocale($locale);
+        }
+        else{
+            //if there user has no valid locale in the DB we set the current locale 
+            $this->_userModel->setLocale($this->_session->locale);
+        }
+    }
+    
+    /**
+     * internal, overwriteable helper function to set the locale information
+     * @param string $locale
+     */
+    protected function _setLocale($locale) {
+        $Zend_Locale = new Zend_Locale($locale);
+        // save locale in session
+        $this->_session->locale = $locale;
+        // set locale as Zend App default locale
+        Zend_Registry::set('Zend_Locale', $Zend_Locale);
+    }
 }
 
