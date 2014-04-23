@@ -115,10 +115,10 @@ class ZfExtended_Controllers_Plugins_LocaleSetup extends Zend_Controller_Plugin_
         if(!Zend_Auth::getInstance()->hasIdentity()){
             return;
         }
-        $user = new Zend_Session_Namespace('user');
+        $sessionUser = new Zend_Session_Namespace('user');
         $user = ZfExtended_Factory::get('ZfExtended_Models_User');
         /* @var $user ZfExtended_Models_User */
-        $user->load($user->data->id);
+        $user->load($sessionUser->data->id);
         $user->setLocale($locale);
         $user->save();
     }
