@@ -98,6 +98,10 @@ class ZfExtended_Controllers_Plugins_ViewSetup extends Zend_Controller_Plugin_Ab
             'ViewRenderer'
         );
         $this->_viewRenderer->view->translate = ZfExtended_Zendoverwrites_Translate::getInstance();
+        
+        //setting the locale is must be done dispatchLoopStartup
+        $view = $this->_viewRenderer->view;
+        $view->php2JsVars()->set('locale', $this->_session->locale);
     }
     
      /**
@@ -113,6 +117,5 @@ class ZfExtended_Controllers_Plugins_ViewSetup extends Zend_Controller_Plugin_Ab
         $view->php2JsVars()->set('zfModule', $this->_viewRenderer->view->module);
         $view->php2JsVars()->set('zfController', $this->_viewRenderer->view->controller);
         $view->php2JsVars()->set('zfAction', $this->_viewRenderer->view->action);
-        $view->php2JsVars()->set('locale', $this->_session->locale);
     }
 }
