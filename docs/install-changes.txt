@@ -1,2 +1,5 @@
+2014-04-23: excecute 006-mysql-TRANSLATE-170.sql on your db 
+
 2013-11-04: execute 005-mysql-users-editable.sql on your db
+
 2013-11-02: execute 004-mysql-users-passwd-changes.sql on your db

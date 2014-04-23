@@ -80,6 +80,8 @@ class ZfExtended_Controllers_Plugins_LocaleSetup extends Zend_Controller_Plugin_
             if (!Zend_Locale::isLocale($session->locale)) {
                 throw new Zend_Exception('$request->getParam(\'locale\') war keine gültige locale', 0 );
             }
+            
+            $this->updateUserLocale($session->locale);
         }
         elseif (!isset($session->locale)) {
             $localeObj = new Zend_Locale();
@@ -104,5 +106,20 @@ class ZfExtended_Controllers_Plugins_LocaleSetup extends Zend_Controller_Plugin_
         
         //Prüfe, ob für die locale eine xliff-Datei vorhanden ist - wenn nicht fallback
         Zend_Registry::set('Zend_Locale', $localeRegObj);
+    }
+    
+    /**
+     * updates the locale of the currently authenticated user
+     */
+    protected function updateUserLocale($locale) {
+        if(!Zend_Auth::getInstance()->hasIdentity()){
+            return;
+        }
+        $user = new Zend_Session_Namespace('user');
+        $user = ZfExtended_Factory::get('ZfExtended_Models_User');
+        /* @var $user ZfExtended_Models_User */
+        $user->load($user->data->id);
+        $user->setLocale($locale);
+        $user->save();
     }
 }

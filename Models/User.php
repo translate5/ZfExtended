@@ -47,6 +47,7 @@
  * @method void setPasswd() setPassword(string $passwd)
  * @method void setGender() setGender(string $gender)
  * @method void setLogin() setLogin(string $login)
+ * @method void setLocale() setLocale(string $locale)
  * @method integer getId() getId()
  * @method string getUserGuid() getUserGuid()
  * @method string getFirstName() getFirstName()
@@ -56,6 +57,7 @@
  * @method string getPasswd() getPasswd()
  * @method string getGender() getGender()
  * @method string getLogin() getLogin()
+ * @method string getLocale() getLocale()
  */
 class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract {
   protected $dbInstanceClass = 'ZfExtended_Models_Db_User';
