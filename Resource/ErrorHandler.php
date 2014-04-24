@@ -54,6 +54,7 @@ class ZfExtended_Resource_ErrorHandler extends Zend_Application_Resource_Resourc
         $bootstrap = $this->getBootstrap();
         $bootstrap->bootstrap('ZfExtended_Resource_InitRegistry');
         $config = Zend_Registry::get('config');
+        register_shutdown_function(array($this, 'handleFatalError'), $config);
         Zend_Registry::set('showErrorsInBrowser', false);
         if(isset($config->runtimeOptions->showErrorsInBrowser)){
             Zend_Registry::set('showErrorsInBrowser', (boolean) $config->runtimeOptions->showErrorsInBrowser);
@@ -64,6 +65,22 @@ class ZfExtended_Resource_ErrorHandler extends Zend_Application_Resource_Resourc
             Zend_Registry::set('errorCollector', array());
         }
         set_error_handler(array('ZfExtended_Resource_ErrorHandler', 'errorHandler'));
+    }
+    
+    /**
+     * @param Zend_Config $config
+     */
+    public function handleFatalError(Zend_Config $config) {
+        if(!headers_sent()) {
+            header('HTTP/1.1 500 Internal Server Error');
+            ob_clean(); //show only a white page
+            echo '<h1>Internal Server Error</h1>';
+        }
+        $error = error_get_last();
+        $log = new ZfExtended_Log(false);
+        if(!empty($error)) {
+            $log->logFatal($error);
+        }
     }
     
     /**
@@ -99,8 +116,8 @@ class ZfExtended_Resource_ErrorHandler extends Zend_Application_Resource_Resourc
         }
         throw new Zend_Exception($errstr."; File: ".$errfile."; Line: ".$errline."; errno: ".$errno, 0 );
     }
-    /*
-     * 
+    
+    /**
      * @return Gibt debug_backtrace als var_dump in einem String zurück 
      */
     public static function getTrace(){

@@ -65,6 +65,7 @@ class  ZfExtended_Log extends ZfExtended_Mail{
         parent::__construct($initView);
         $this->_config = Zend_Registry::get('config');
         $this->_className = get_class($this);
+        $this->_className .= ' on '.$_SERVER['HTTP_HOST'];
         try {
             $session = new Zend_Session_Namespace();
             $this->_isFork = $session->isFork;
@@ -103,6 +104,20 @@ class  ZfExtended_Log extends ZfExtended_Mail{
         $this->sendMailDefault($message);
         $this->sendMailMinidump($message,$trace);
     }
+    
+    /**
+     * loggs a fatal error
+     * @param array $error
+     */
+    public function logFatal(array $error) {
+        if($this->_config->runtimeOptions->disableErrorMails->default == 1){
+            return; // no extra logging here since fatals are always logged
+        }
+        $msg  = 'Given Fatal Error Info: '.print_r($error,1)."\n\n";
+        $msg .= 'Server Data: '.print_r($_SERVER,1);
+        $this->sendMail($this->_className.' - FATAL ERROR', $msg);
+    }
+    
     /**
      * Holt auf Basis des views mit dem viewhelper getUrl die URL, wenn
      * der view schon vorhanden ist. Dann inkl. ggf. vorhandener POST-Parameter. Ansonsten $_SERVER['REQUEST_URI']
