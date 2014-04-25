@@ -71,22 +71,23 @@ class ZfExtended_Resource_ErrorHandler extends Zend_Application_Resource_Resourc
      * @param Zend_Config $config
      */
     public function handleFatalError(Zend_Config $config) {
+        $error = error_get_last();
+        if(empty($error)) {
+            return;
+        }
         if(!headers_sent()) {
             header('HTTP/1.1 500 Internal Server Error');
-            if($config->runtimeOptions->showErrorsInBrowser) {
-                $out = ob_get_clean();
-            }
-            else {
-                $out = '';
-                ob_clean(); //show only a white page
-            }
-            echo '<h1>Internal Server Error</h1>'."\n".$out;
         }
-        $error = error_get_last();
+        if($config->runtimeOptions->showErrorsInBrowser) {
+            $out = ob_get_clean();
+        }
+        else {
+            $out = '';
+            ob_clean(); //show only a white page
+        }
+        echo '<h1>Internal Server Error</h1>'."\n".$out;
         $log = new ZfExtended_Log(false);
-        if(!empty($error)) {
-            $log->logFatal($error);
-        }
+        $log->logFatal($error);
     }
     
     /**
