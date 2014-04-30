@@ -52,7 +52,8 @@ class ZfExtended_Models_Validator_User extends ZfExtended_Models_Validator_Abstr
     $this->addValidator('firstName', 'stringLength', array('min' => 1, 'max' => 255));
     $this->addValidator('surName', 'stringLength', array('min' => 1, 'max' => 255));
     $this->addValidator('login', 'stringLength', array('min' => 6, 'max' => 255));
-    $this->addValidator('gender', 'stringLength', array('min' => 1, 'max' => 1));
+    $this->addValidator('gender', 'inArray', array(array('f', 'm')));
+    $this->addValidator('locale', 'stringLength', array('min' => 2, 'max' => 3));
     $this->addValidator('email', 'emailAddress');
     $this->addValidator('roles', 'stringLength', array('min' => 0, 'max' => 255));
     $this->setPasswdValidator();
