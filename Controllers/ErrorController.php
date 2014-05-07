@@ -271,6 +271,7 @@ class ErrorController extends ZfExtended_Controllers_Action
         $this->view->errors = $this->_errors;
         $this->view->getParams   = $this->_getParams;
         $this->view->errorCollect   = $this->_errorCollect;
+        $this->view->translate = $this->_translate;
         if($this->isRestRoute()){
             Zend_Layout::getMvcInstance()->disableLayout();
             $this->_renderScript = 'error/errorRest.phtml';
