@@ -32,7 +32,6 @@
  */
 
 abstract class ZfExtended_Models_Entity_Abstract {
-
     /**
      * @var Zend_Db_Table_Abstract
      */
@@ -83,7 +82,7 @@ abstract class ZfExtended_Models_Entity_Abstract {
      * @var ZfExtended_Models_Filter
      */
     protected $filter;
-
+    
     public function __construct() {
         $this->db = ZfExtended_Factory::get($this->dbInstanceClass);
         $this->init();
@@ -429,5 +428,20 @@ abstract class ZfExtended_Models_Entity_Abstract {
     public function getValidator() {
       $this->validatorLazyInstatiation();
       return $this->validator;
+    }
+    
+    /**
+     * truncates the given value to the length defined in the DB for the given field
+     * @param string $field
+     * @param string $value
+     * @return string the truncated string
+     */
+    public function truncateLength($field, $value) {
+        $db = $this->db;
+        $md = $db->info($db::METADATA);
+        if(empty($md[$field]) || empty($md[$field]['LENGTH'])) {
+            return $value;
+        }
+        return (string)mb_substr($value, 0, $md[$field]['LENGTH'], 'utf-8');
     }
 }

@@ -291,11 +291,9 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
         if($this->entity->hasField($key) && $whiteListed && !$blackListed){
             $this->entity->__call('set'.ucfirst($key), array($value));
             if(isset($this->_sortColMap[$key])){
-                if(is_string($value)){
-                    $value = (string)mb_substr($value,0,$this->_lengthToTruncateSegmentsToSort,'utf-8');
-                }
-                $this->entity->__call('set'.ucfirst($this->_sortColMap[$key]),
-                        array($value));
+                $toSort = $this->_sortColMap[$key];
+                $value = $this->entity->truncateLength($toSort, $value);
+                $this->entity->__call('set'.ucfirst($toSort), array($value));
             }
         }
     }
