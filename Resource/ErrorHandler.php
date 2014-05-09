@@ -83,7 +83,7 @@ class ZfExtended_Resource_ErrorHandler extends Zend_Application_Resource_Resourc
         }
         else {
             $out = '';
-            ob_clean(); //show only a white page
+            ob_get_length() && ob_clean(); //show only a white page
         }
         echo '<h1>Internal Server Error</h1>'."\n".$out;
         $log = new ZfExtended_Log(false);
