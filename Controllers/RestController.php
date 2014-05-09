@@ -64,9 +64,12 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
    */
   protected $data = array();
   /**
-   * mappt zu sortierende Spalten auf eine Spalte, nach der statt der übergebenen
-   * Spalte sortiert werden soll (key = übergebene Spalte, value = Spalte, nach
-   * der sortiert werden soll)
+   * maps cols which should be sorted to other cols in the table,
+   * which then are used for the sorting process
+   * (key = given col, value = col to be used for sorting
+   * 
+   * Mainly for text columns, where a short version is used for sorting, 
+   * was introduced for MSSQL which cant sort textblobs
    * @var array
    */
   protected $_sortColMap = array();
@@ -77,14 +80,6 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
    */
   protected $_filterTypeMap = array();
   
-  /**
-   * @var integer Länge, auf die die Spalten mit Text gekürzt werden, bevor
-   *      sie in die DB-Spalten die für die Sortierung der Textspalten zuständig
-   *      sind eingefügt werden (nötig für (krank) MSSQL, da MSSQL das auf
-   *      DB-Ebene nicht vernünftig kann.
-   */
-   protected $_lengthToTruncateSegmentsToSort = NULL;
-
    /**
     * POST Blacklist
     * Blacklisted fields for POST Requests (to ignore autoincrement values)
@@ -101,8 +96,6 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
     $this->_helper->layout->disableLayout();
     $this->handleLimit();
     $this->handleFilterAndSort();
-    $session = new Zend_Session_Namespace();
-    $this->_lengthToTruncateSegmentsToSort = $session->runtimeOptions->lengthToTruncateSegmentsToSort;
   }
 
   /**
@@ -291,11 +284,9 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
         if($this->entity->hasField($key) && $whiteListed && !$blackListed){
             $this->entity->__call('set'.ucfirst($key), array($value));
             if(isset($this->_sortColMap[$key])){
-                if(is_string($value)){
-                    $value = (string)mb_substr($value,0,$this->_lengthToTruncateSegmentsToSort,'utf-8');
-                }
-                $this->entity->__call('set'.ucfirst($this->_sortColMap[$key]),
-                        array($value));
+                $toSort = $this->_sortColMap[$key];
+                $value = $this->entity->truncateLength($toSort, $value);
+                $this->entity->__call('set'.ucfirst($toSort), array($value));
             }
         }
     }

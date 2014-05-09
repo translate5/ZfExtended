@@ -76,9 +76,9 @@ class  ZfExtended_Zendoverwrites_Translate extends Zend_Translate
          //we can not set the construct to protected, because parents construct is public
          //therefore check here, if construct is only called from within
         $trace=debug_backtrace();
-        $caller=$trace[1];
+        $caller=$trace[3];
         if(!isset($caller['class']) || 
-                $caller['class']!='ZfExtended_Zendoverwrites_Translate' || 
+                $caller['class']!=__CLASS__ || 
                 $caller['function'] != 'getInstance'){
             throw new Zend_Exception('construct must only be called from getInstance');
         }
@@ -133,7 +133,9 @@ class  ZfExtended_Zendoverwrites_Translate extends Zend_Translate
     public static function getInstance($init = false)
     {
         if (null === self::$_instance || $init) {
-            self::$_instance = new self();
+            //warning overwriting this method changes also the class 
+            //name since self point to the method defining class!
+            self::$_instance = ZfExtended_Factory::get(__CLASS__);
             self::$_instance->setJsonEncode(false);
             Zend_Registry::set('Zend_Translate', self::$_instance);
         }

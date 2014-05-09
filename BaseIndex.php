@@ -222,7 +222,7 @@ class ZfExtended_BaseIndex{
     }
     
     /**
-     * Changes the module of the ZF-Application
+     * Changes the module of the ZF-Application, and returns the old module which was set before
      * 
      * - sets $this->currentModule
      * - refreshes the loaded application.inis in relation to the new module
@@ -233,6 +233,7 @@ class ZfExtended_BaseIndex{
      * 
      *
      * @param string module
+     * @return string the old module
      */
     public function setModule($module){
         if(!is_dir(APPLICATION_PATH.'/modules/'.  $module)){
@@ -242,12 +243,16 @@ class ZfExtended_BaseIndex{
         if(!class_exists('Zend_Registry')){
             throw new Zend_Exception('application not started yet - Zend_Registry does not exist!');
         }
+        $oldModule = $this->currentModule;
         $this->currentModule = $module;
         $this->applicationInis = $this->getApplicationInis();
         $bootstrap = Zend_Registry::get('bootstrap');
         $bootstrap->getApplication()->setOptions(array('config'=> $this->applicationInis));
         $bootstrap->setOptions($bootstrap->getApplication()->getOptions());
         $this->initRegistry($bootstrap);
+        //update the loaded ACLs:
+        ZfExtended_Acl::getInstance(true);
+        return $oldModule;
     }
     /**
      * adds the options of the passed module-name
