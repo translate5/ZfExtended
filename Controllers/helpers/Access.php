@@ -38,7 +38,7 @@
  *
  * Helper, der bei jedem http-request prüft, ob der Benutzer noch authentifiziert ist
  */
-class ZfExtended_Controller_Helper_Access extends Zend_Controller_Action_Helper_Abstract implements ZfExtended_Controller_Helper_IAccess  {
+class ZfExtended_Controller_Helper_Access extends Zend_Controller_Action_Helper_Abstract implements ZfExtended_Controllers_helpers_IAccess {
     /**
      * Zend_Controller_Front
      */
