@@ -119,9 +119,61 @@ class ZfExtended_Exception extends Zend_Exception {
     
     /**
      * returns true if logging should be done for this exception
+     * We can force to enable the logging even if the exception was coded not to log by setting this in the config:
+     * runtimeOptions.logging.default.delete.index.ZfExtended_BadMethodCallException = true 
+     * where default is the module, delete the controller and index the action to be considered
+     * Module, Controller and Action are each optional, so the config syntax would be:
+     * runtimeOptions.logging.[default.[delete.[index.]]]EXCEPTION_CLASS_NAME
+     * the module part can be overwritten by BaseIndex::setModule, so caution in configuration here. 
      * @return boolean
      */
     public function isLoggingEnabled() {
+        $config = Zend_Registry::get('config');
+        /**
+         * Startpoint in the Config tree
+         */
+        $logConf = $config->runtimeOptions->logging;
+        
+        /**
+         * the names of needed parts (module, action, etc)
+         */
+        $exception = get_class($this);
+        $mod = Zend_Registry::get('module'); //warning this can be changed be BaseIndex::setModule
+        $contr = Zend_Registry::get('controller');
+        $action = Zend_Registry::get('action');
+        
+        /**
+         * all possible config paths are defined in this array
+         * @var unknown_type
+         */
+        $pathsToCheck = array(
+            array($exception),
+            array($mod, $exception),
+            array($mod, $contr, $exception),
+            array($mod, $contr, $action, $exception),
+        );
+        
+        /**
+         * @return boolean if a config was found, NULL if nothing was configured for the path
+         */
+        $checkPath = function(Zend_Config $start, $path) use (&$checkPath) {
+            $part = array_shift($path);
+            if(!isset($start->$part)) {
+                return null;
+            }
+            if($start->$part instanceof Zend_Config) {
+                return $checkPath($start->$part, $path);
+            }
+            return (bool) $start->$part;
+        };
+
+        //walk over each $pathToCheck and look ap the config for it
+        foreach($pathsToCheck as $path) {
+            $res = $checkPath($logConf, $path);
+            if(!is_null($res)) {
+                return $res;
+            }
+        }
         return $this->loggingEnabled;
     }
     
