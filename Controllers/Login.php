@@ -98,8 +98,23 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
         if($this->isLoginRequest() && $this->isValidLogin()){
             return;
         }
+        //redirect the user if the session contains already a user
+        if($this->isAuthenticated()) {
+            $this->initDataAndRedirect();
+            return;
+        }
         $this->view->form = $this->_form;
     }
+    
+    /**
+     * returns true if a user is already registered in this session
+     * @return boolean
+     */
+    protected function isAuthenticated() {
+        $userSession = new Zend_Session_Namespace('user');
+        return !empty($userSession->data->userGuid);
+    }
+    
     /**
      * checks if login-request is made
      * @return boolean
