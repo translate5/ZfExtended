@@ -165,7 +165,7 @@ class  ZfExtended_Log extends ZfExtended_Mail{
                     $message.' Attachment Size: '.strlen($data));
             return;
         }
-        $this->sendMail($this->_className.' '.$message, $data);
+        $this->sendMail($this->_className.': '.$message, $data);
     }
 
     protected function sendMail (string $subject, $message=NULL) {

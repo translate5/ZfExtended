@@ -113,7 +113,7 @@ abstract class ZfExtended_Models_Entity_Abstract {
             $this->notFound('NotFound after other Error', $e);
         }
         if (!$rowset || $rowset->count() == 0) {
-            $this->notFound(__CLASS__ . '#PK', $id);
+            $this->notFound('#PK', $id);
         }
         //load implies loading one Row, so use only the first row
         return $this->row = $rowset->rewind()->current();
@@ -137,7 +137,7 @@ abstract class ZfExtended_Models_Entity_Abstract {
         }
         $this->row = $this->db->fetchRow($s, $order);
         if(empty($this->row)){
-            $this->notFound(__CLASS__ . '#where ', $where);
+            $this->notFound('#where ', $where);
         }
         return $this->row;
     }
@@ -152,7 +152,7 @@ abstract class ZfExtended_Models_Entity_Abstract {
     public function loadRowBySelect(Zend_Db_Table_Select $s) {
         $this->row = $this->db->fetchRow($s);
         if(empty($this->row)){
-            $this->notFound(__CLASS__);
+            $this->notFound('#bySelect');
         }
         return $this->row;
     }
@@ -164,7 +164,8 @@ abstract class ZfExtended_Models_Entity_Abstract {
      * @throws ZfExtended_Models_Entity_NotFoundException
      */
     protected function notFound($key = '', $value = '') {
-        throw new ZfExtended_Models_Entity_NotFoundException("Key: " . $key . '; Value: ' . $value);
+        $cls = explode('_', get_class($this));
+        throw new ZfExtended_Models_Entity_NotFoundException(end($cls)." Entity Not Found: Key: " . $key . '; Value: ' . $value);
     }
 
     /**
