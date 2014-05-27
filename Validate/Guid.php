@@ -40,11 +40,56 @@ class ZfExtended_Validate_Guid extends Zend_Validate_Abstract
     protected $_messageTemplates = array(
       self::GUID => "'%value%' ist keine GUID"
     );
+    
+    /**
+     * per default we do not allow empty guids
+     * @var boolean
+     */
+    protected $allowEmpty = false;
+    
+    /**
+     * Sets validator options
+     * Accepts the following option keys:
+     *   'allowEmpty' => boolean, validates an null value as valid 
+     *
+     * @param  array|Zend_Config $options
+     * @return void
+     */
+    public function __construct($options = null)
+    {
+        if(empty($options)) {
+            return;
+        } elseif ($options instanceof Zend_Config) {
+            $options = $options->toArray();
+        } elseif (!is_array($options)) {
+            $temp = func_get_args();
+            if (!empty($temp)) {
+                $options = array('allowEmpty' => array_shift($temp));
+            }
+        }
+
+        if (is_array($options) && array_key_exists('allowEmpty', $options)) {
+            $this->setAllowEmpty((boolean) $options['allowEmpty']);
+        }
+
+    }
+    
+    /**
+     * @param boolean $allow
+     */
+    public function setAllowEmpty($allow) {
+        $this->allowEmpty = $allow;
+    }
+    
     public function isValid($value)
     {
       $this->_setValue($value);
       $config = Zend_Registry::get('config');
 
+      if($this->allowEmpty && empty($value)) {
+          return true;
+      }
+      
       if (!preg_match($config->runtimeOptions->defines->GUID_REGEX, $value)) {
           $this->_error(self::GUID);
           return false;
