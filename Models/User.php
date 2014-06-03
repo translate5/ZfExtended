@@ -110,6 +110,14 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract {
     }
     
     /**
+     * removes the logged in user from the session
+     */
+    public function removeFromSession() {
+        $userSession = new Zend_Session_Namespace('user');
+        $userSession->data= null;
+    }
+    
+    /**
      * Loads a user by userGuid
      * @param string $userGuid
      * @return ZfExtended_Models_User

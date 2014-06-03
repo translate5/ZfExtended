@@ -37,8 +37,6 @@
  * @version 2.0
  *
  */
-
-$session = new Zend_Session_Namespace();
 ?><h1><?php echo $this->translate->_('Login'); ?></h1><?php
 if(isset($this->message)): ?><p class="message"><?php echo $this->message;  ?></p><?php endif;
 if(count($this->form->getErrorMessages())>0){ ?>
@@ -51,5 +49,5 @@ if(count($this->form->getErrorMessages())>0){ ?>
     </ul>
     <?php
 }
-echo $this->form ?>
+echo $this->form->__toString(); ?>
 <p><a href="<?php echo APPLICATION_RUNDIR; ?>/login/passwdreset"><?php echo $this->translate->_('Passwort neu setzen'); ?></a></p>

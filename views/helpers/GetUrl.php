@@ -55,7 +55,6 @@ class ZfExtended_View_Helper_GetUrl extends Zend_View_Helper_Abstract{
      *       als Values, die nicht in der zurückgegebenen URL zurückgegeben werden sollen | Default NULL
      */
     public function getUrl(array $excludeParamKeys = NULL){
-        $session = new Zend_Session_Namespace();
         $params = Zend_Controller_Front::getInstance()->getRequest()->getParams();
         $url = APPLICATION_RUNDIR;
         if(isset($params['error_handler'])){
