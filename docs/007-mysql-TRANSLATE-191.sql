@@ -33,6 +33,8 @@
 --  END LICENSE AND COPYRIGHT 
 --  */
 -- 
+
+ALTER TABLE `sessionMapInternalUniqId` CONVERT TO CHARACTER SET utf8;
 ALTER TABLE `sessionMapInternalUniqId` ADD UNIQUE KEY (`internalSessionUniqId`);
 
 CREATE TABLE `sessionUserLock` (
