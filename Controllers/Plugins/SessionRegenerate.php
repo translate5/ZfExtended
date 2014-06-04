@@ -73,7 +73,7 @@ class ZfExtended_Controllers_Plugins_SessionRegenerate extends Zend_Controller_P
         /* @var $row ZfExtended_Models_Entity */
         $row->loadRow('session_id = ?',Zend_Session::getId());
         
-        if($layouthelper->isEnabled() and !Zend_Session::isDestroyed()){
+        if($layouthelper->isEnabled() && !Zend_Session::isDestroyed()){
             $config = Zend_Registry::get('config');
             Zend_Session::rememberMe($config->resources->ZfExtended_Resource_Session->remember_me_seconds);
             $row->setSession_id(Zend_Session::getId());
