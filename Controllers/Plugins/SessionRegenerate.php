@@ -67,16 +67,18 @@ class ZfExtended_Controllers_Plugins_SessionRegenerate extends Zend_Controller_P
         $layouthelper = ZfExtended_Zendoverwrites_Controller_Action_HelperBroker::getStaticHelper(
             'layout'
         );
+        $row = ZfExtended_Factory::get('ZfExtended_Models_Entity',
+                    array('ZfExtended_Models_Db_SessionMapInternalUniqId',
+                        array()));
+        /* @var $row ZfExtended_Models_Entity */
+        $row->loadRow('session_id = ?',Zend_Session::getId());
+        
         if($layouthelper->isEnabled() and !Zend_Session::isDestroyed()){
-            $row = ZfExtended_Factory::get('ZfExtended_Models_Entity',
-                        array('ZfExtended_Models_Db_SessionMapInternalUniqId',
-                            array()));
-            $row->loadRow('session_id = ?',Zend_Session::getId());
             $config = Zend_Registry::get('config');
             Zend_Session::rememberMe($config->resources->ZfExtended_Resource_Session->remember_me_seconds);
             $row->setSession_id(Zend_Session::getId());
-            $row->setModified(time());
-            $row->save();
         }
+        $row->setModified(time());
+        $row->save();
     }
 }
