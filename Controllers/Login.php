@@ -192,7 +192,7 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
         catch(Zend_Db_Statement_Exception $e) {
             $m = $e->getMessage();
             $isSqlState = strpos($m,'SQLSTATE') === 0;
-            $isMissingLogin = stripos($m,'FOREIGN KEY (`login`)') === false && stripos($m,'a foreign key constraint fails') === false;
+            $isMissingLogin = stripos($m,'FOREIGN KEY (`login`)') !== false && stripos($m,'a foreign key constraint fails') !== false;
             //if entered a missing login we get an contraint error here, 
             //we return false here since this user does not have a session. 
             //The not existence of the login is then checked correctly later.
