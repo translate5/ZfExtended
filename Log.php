@@ -97,12 +97,28 @@ class  ZfExtended_Log extends ZfExtended_Mail{
      */
     public function logException(Exception $exception){
         $message = $exception->getMessage();
-        $trace = $exception->getTraceAsString();
+        $trace = $this->elog($exception);
+        $this->sendMailDefault($message);
+        $this->sendMailMinidump($message, $trace);
+        $prev = $exception->getPrevious();
+        if(! empty($prev)) { //FIXME this only if debugging enabled → da gabs doch schon ein flag???
+            $this->elog($prev);
+        }
+    }
+    
+    /**
+     * error_logs the given exception
+     * @param Exception $e
+     * @return string returns the trace as string
+     */
+    protected function elog(Exception $e) {
+        $message = $e->getMessage();
+        $trace = $e->getTraceAsString();
         $trace .= $this->getUrlLogMessage();
         error_log($this->_className.': '.$message.
                 "\r\n                       Trace: \r\n".$trace);
-        $this->sendMailDefault($message);
-        $this->sendMailMinidump($message,$trace);
+        
+        return $trace;
     }
     
     /**
