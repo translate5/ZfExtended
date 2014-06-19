@@ -35,6 +35,7 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
 
     const SET_DATA_WHITELIST = true;
     const SET_DATA_BLACKLIST = false;
+    const ENTITY_VERSION_HEADER = 'Mqi-Entity-Version';
     
   /**
    * Class Name of the Entity Model
@@ -91,11 +92,33 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
    * @see Zend_Controller_Action::init()
    */
   public function init() {
-    $this->entity = ZfExtended_Factory::get($this->entityClass);
-    $this->_helper->viewRenderer->setNoRender(true);
-    $this->_helper->layout->disableLayout();
-    $this->handleLimit();
-    $this->handleFilterAndSort();
+      $this->entity = ZfExtended_Factory::get($this->entityClass);
+      $this->_helper->viewRenderer->setNoRender(true);
+      $this->_helper->layout->disableLayout();
+      $this->handleLimit();
+      $this->handleFilterAndSort();
+  }
+
+  /**
+   * 
+   */
+  public function processClientReferenceVersion() {
+      $entity = $this->entity;
+
+      //if the entity self has a version field, we rely on this and must not use headers etc.
+      if($entity->hasField($entity::VERSION_FIELD)) {
+          return;
+      }
+      
+      $version = $this->_request->getHeader(self::ENTITY_VERSION_HEADER);
+      if($version === false) {
+          $data = get_object_vars($this->data);
+          if(! isset($data[$entity::VERSION_FIELD])) {
+              return; //no version is set either in header nor in given data
+          }
+          $version = $data[$entity::VERSION_FIELD];
+      }
+      $entity->setEntityVersion($version);
   }
 
   /**
@@ -147,7 +170,18 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
       // Es muss aber die Möglichkeit gegeben sein, die Ausgabe Möglichkeite zu forcen, da z.B. die Daten bereits als JSON vorliegen
       $this->getResponse()->setHeader('Content-Type', 'application/json');
       $this->view->clearVars();
-      parent::dispatch($action);
+      try {
+          parent::dispatch($action);
+      }
+      //this is the only usefule place in processing REST request to translate 
+      //the entityVersion DB exception to an 409 conflict exception
+      catch(Zend_Db_Statement_Exception $e) {
+          $m = $e->getMessage();
+          if(stripos($m, 'raise_version_conflict does not exist') !== false) {
+              throw new ZfExtended_VersionConflictException('', 0, $e);
+          }
+          throw $e;
+      }
 
       if(empty($this->view->message) && empty($this->view->success)) {
           $this->view->message = "OK";
@@ -245,6 +279,7 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
   {
       $this->entity->init();
       $this->decodePutData();
+      $this->processClientReferenceVersion();
       $this->setDataInEntity($this->postBlacklist);
       if($this->validate()){
           $this->entity->save();
@@ -257,6 +292,7 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
     $this->entity->load($this->_getParam('id'));
     //@todo implement input check, here or in Entity??? => in Entity throws Ecxeption => HTTP 400
     $this->decodePutData();
+    $this->processClientReferenceVersion();
     $this->setDataInEntity();
     if($this->validate()){
         $this->entity->save();
@@ -295,6 +331,7 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
   public function deleteAction()
   {
     $this->entity->load($this->_getParam('id'));
+    $this->processClientReferenceVersion();
     $this->entity->delete();
   }
   /**

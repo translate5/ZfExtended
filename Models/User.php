@@ -156,6 +156,15 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract {
     }
     
     /**
+     * returns the total (without LIMIT) count of rows
+     */
+    public function getTotalCount(){
+        $s = $this->db->select();
+        $s->where('login != ?', 'system'); //filter out the system user
+        return $this->computeTotalCount($s);
+    }
+    
+    /**
      * @param mixed $newPasswd string or null
      * @param boolean $save
      */

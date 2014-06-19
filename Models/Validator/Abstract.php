@@ -55,6 +55,10 @@ abstract class ZfExtended_Models_Validator_Abstract {
 
   public function __construct() {
     $this->defineValidators();
+    $version = ZfExtended_Models_Entity_Abstract::VERSION_FIELD;
+    if(empty($this->validators[$version])) {
+        $this->addValidator($version, 'int');
+    }
   }
 
   /**
