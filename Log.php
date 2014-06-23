@@ -85,6 +85,7 @@ class  ZfExtended_Log extends ZfExtended_Mail{
     public function logError(string $message,string $longMessage=NULL){
         $viewRenderer = ZfExtended_Zendoverwrites_Controller_Action_HelperBroker::getStaticHelper('ViewRenderer');
         $longMessage .= $this->getUrlLogMessage();
+        $message = $this->addUserInfo($message);
         error_log($this->_className.': '.$message.
                 "\r\n                       ".$longMessage);
         $this->sendMailDefault($message);
@@ -96,7 +97,7 @@ class  ZfExtended_Log extends ZfExtended_Mail{
      * @param Exception
      */
     public function logException(Exception $exception){
-        $message = $exception->getMessage();
+        $message = $this->addUserInfo($exception->getMessage());
         $trace = $this->elog($exception);
         $this->sendMailDefault($message);
         $this->sendMailMinidump($message, $trace);
@@ -104,6 +105,19 @@ class  ZfExtended_Log extends ZfExtended_Mail{
         if(! empty($prev)) { //FIXME this only if debugging enabled → da gabs doch schon ein flag???
             $this->elog($prev);
         }
+    }
+    
+    /**
+     * adds informations abaout the current user / session to the given string (error message)
+     * @param string $msg
+     * @return string
+     */
+    protected function addUserInfo($msg) {
+        $sessionUser = new Zend_Session_Namespace('user');
+        if(!empty($sessionUser->data->login)) {
+            $msg .= "\n".' current user: '.$sessionUser->data->login;
+        }
+        return $msg;
     }
     
     /**
