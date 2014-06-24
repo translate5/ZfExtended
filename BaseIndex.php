@@ -233,9 +233,10 @@ class ZfExtended_BaseIndex{
      * 
      *
      * @param string module
+     * @param boolean $withAcl default true, enables resetting the ACLs, false to prevent this 
      * @return string the old module
      */
-    public function setModule($module){
+    public function setModule($module, $withAcl = true){
         if(!is_dir(APPLICATION_PATH.'/modules/'.  $module)){
             throw new Zend_Exception('The module-directory '.APPLICATION_PATH.
                     '/modules/'.  $module.' does not exist.');
@@ -251,7 +252,7 @@ class ZfExtended_BaseIndex{
         $bootstrap->setOptions($bootstrap->getApplication()->getOptions());
         $this->initRegistry($bootstrap);
         //update the loaded ACLs:
-        ZfExtended_Acl::getInstance(true);
+        $withAcl && ZfExtended_Acl::getInstance(true);
         return $oldModule;
     }
     /**
@@ -265,7 +266,7 @@ class ZfExtended_BaseIndex{
     public function addModuleOptions($module){
         $bootstrap = Zend_Registry::get('bootstrap');
         $oldOptions = $bootstrap->getApplication()->getOptions();
-        $this->setModule($module);
+        $this->setModule($module, false);
         $newOptions = $bootstrap->getApplication()->getOptions();
         $options = $bootstrap->getApplication()->mergeOptions($newOptions,$oldOptions);
         $bootstrap->getApplication()->setOptions($options);
