@@ -85,6 +85,7 @@ class  ZfExtended_Log extends ZfExtended_Mail{
     public function logError(string $message,string $longMessage=NULL){
         $viewRenderer = ZfExtended_Zendoverwrites_Controller_Action_HelperBroker::getStaticHelper('ViewRenderer');
         $longMessage .= $this->getUrlLogMessage();
+        $message = $this->addUserInfo($message);
         error_log($this->_className.': '.$message.
                 "\r\n                       ".$longMessage);
         $this->sendMailDefault($message);
@@ -96,13 +97,42 @@ class  ZfExtended_Log extends ZfExtended_Mail{
      * @param Exception
      */
     public function logException(Exception $exception){
-        $message = $exception->getMessage();
-        $trace = $exception->getTraceAsString();
+        $message = $this->addUserInfo($exception->getMessage());
+        $trace = $this->elog($exception);
+        $this->sendMailDefault($message);
+        $this->sendMailMinidump($message, $trace);
+        $prev = $exception->getPrevious();
+        if(! empty($prev)) { //FIXME this only if debugging enabled → da gabs doch schon ein flag???
+            $this->elog($prev);
+        }
+    }
+    
+    /**
+     * adds informations abaout the current user / session to the given string (error message)
+     * @param string $msg
+     * @return string
+     */
+    protected function addUserInfo($msg) {
+        $sessionUser = new Zend_Session_Namespace('user');
+        if(!empty($sessionUser->data->login)) {
+            $msg .= "\n".' current user: '.$sessionUser->data->login;
+        }
+        return $msg;
+    }
+    
+    /**
+     * error_logs the given exception
+     * @param Exception $e
+     * @return string returns the trace as string
+     */
+    protected function elog(Exception $e) {
+        $message = $e->getMessage();
+        $trace = $e->getTraceAsString();
         $trace .= $this->getUrlLogMessage();
         error_log($this->_className.': '.$message.
                 "\r\n                       Trace: \r\n".$trace);
-        $this->sendMailDefault($message);
-        $this->sendMailMinidump($message,$trace);
+        
+        return $trace;
     }
     
     /**
@@ -165,7 +195,7 @@ class  ZfExtended_Log extends ZfExtended_Mail{
                     $message.' Attachment Size: '.strlen($data));
             return;
         }
-        $this->sendMail($this->_className.' '.$message, $data);
+        $this->sendMail($this->_className.': '.$message, $data);
     }
 
     protected function sendMail (string $subject, $message=NULL) {

@@ -1,3 +1,5 @@
+2014-06-02: excecute 007-mysql-TRANSLATE-191.sql on your db
+
 2014-04-23: excecute 006-mysql-TRANSLATE-170.sql on your db 
 
 2013-11-04: execute 005-mysql-users-editable.sql on your db

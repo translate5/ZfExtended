@@ -92,56 +92,124 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
      * - checks if login has been blocked
      * - blocks login, if necessary
      * @return bool
-     *
      */
     public function indexAction() {
         if($this->isLoginRequest() && $this->isValidLogin()){
             return;
         }
+        //redirect the user if the session contains already a user
+        if($this->isAuthenticated()) {
+            $this->initDataAndRedirect();
+            return;
+        }
         $this->view->form = $this->_form;
     }
+    
+    /**
+     * returns true if a user is already registered in this session
+     * @return boolean
+     */
+    protected function isAuthenticated() {
+        return !empty($this->_user->data->userGuid);
+    }
+    
     /**
      * checks if login-request is made
      * @return boolean
      */
     protected function isLoginRequest(){
-        if (!($this->getRequest()->getParam('login') || $this->getRequest()->getParam('passwd'))) {
-            return false;
-        }
-        return true;
+        return ($this->getRequest()->getParam('login') || $this->getRequest()->getParam('passwd'));
     }
     /**
      * checks if login-request is valid and does corresponding handling
      * @return boolean
      */
     protected function isValidLogin(){
-        if ($this->_form->isValid($this->_request->getParams())) {
-            $login = $this->_form->getValue('login');
-            $passwd = $this->_form->getValue('passwd');
-            if($passwd == '')//ensure that empty passwd can never pass, regardless of what is defined in login.ini, because passwd-default is null in db
-                return false;
-            $invalidLoginCounter = ZfExtended_Factory::get('ZfExtended_Models_Invalidlogin',array($login));
-            /* @var $invalidLoginCounter ZfExtended_Models_Invalidlogin */
-            if($this->hasMaximumInvalidations($invalidLoginCounter))
-                return false;
-            if ($this->_helper->auth->isValid($login,$passwd,$this->_authTableName,
-                    $this->_identityColumn,$this->_credentialColumn,
-                    $this->_credentialTreatment)) {
-                $invalidLoginCounter->resetCounter(); // bei erfolgreichem login den counter zurücksetzen
-                $this->_userModel->setUserSessionNamespaceWithPwCheck($login, $passwd);
-                $this->initDataAndRedirect();
-                return true;
-            }
-            $invalidLoginCounter->increment();
-            if($this->hasMaximumInvalidations($invalidLoginCounter))
-                return false;
-            $this->view->errors = true;
-            $this->_form->addError(sprintf($this->_translate->_('Ungültige Logindaten!<br/>Haben Sie Ihr Passwort vergessen oder bislang noch kein Passwort für Ihren Login gesetzt?  Sie können jederzeit einen neuen Link %shier%s anfordern.'),
-                    '<a href="'. APPLICATION_RUNDIR .'/login/passwdreset">','</a>'));
+        if (! $this->_form->isValid($this->_request->getParams())) {
             return false;
-       }
-       return false;
+        }
+        $login = $this->_form->getValue('login');
+        $passwd = $this->_form->getValue('passwd');
+        //ensure that empty passwd can never pass, regardless of what is defined in login.ini, because passwd-default is null in db
+        if($passwd == '') {
+            return false;
+        }
+        $invalidLoginCounter = ZfExtended_Factory::get('ZfExtended_Models_Invalidlogin',array($login));
+        /* @var $invalidLoginCounter ZfExtended_Models_Invalidlogin */
+        if($this->hasMaximumInvalidations($invalidLoginCounter)){
+            return false;
+        }
+        if($this->hasUserAlreadyASession($login)) {
+            return false;
+        }
+        if ($this->authIsValid($login, $passwd)) {
+            $invalidLoginCounter->resetCounter(); // bei erfolgreichem login den counter zurücksetzen
+            $this->_userModel->setUserSessionNamespaceWithPwCheck($login, $passwd);
+            $this->initDataAndRedirect();
+            return true;
+        }
+        $invalidLoginCounter->increment();
+        if($this->hasMaximumInvalidations($invalidLoginCounter))
+            return false;
+        $this->view->errors = true;
+        $this->_form->addError(sprintf($this->_translate->_('Ungültige Logindaten!<br/>Haben Sie Ihr Passwort vergessen oder bislang noch kein Passwort für Ihren Login gesetzt?  Sie können jederzeit einen neuen Link %shier%s anfordern.'),
+                '<a href="'. APPLICATION_RUNDIR .'/login/passwdreset">','</a>'));
+        return false;
     }
+    
+    /**
+     * Shortcut method for convenience
+     * @param string $login
+     * @param string $passwd
+     */
+    protected function authIsValid($login, $passwd) {
+        return $this->_helper->auth->isValid($login,$passwd,$this->_authTableName,
+                    $this->_identityColumn,$this->_credentialColumn,
+                    $this->_credentialTreatment);
+    }
+    
+    /**
+     * ensures - if enabled by configuration - that a unique user is only logged in once
+     * is enabled by setting $config->runtimeOptions->singleUserRestriction to true
+     * @param string $login
+     * @return boolean
+     */
+    protected function hasUserAlreadyASession($login) {
+        $config = Zend_Registry::get('config');
+        if(! $config->runtimeOptions->singleUserRestriction) {
+            return false;
+        }
+        $lock = ZfExtended_Factory::get('ZfExtended_Models_Db_SessionUserLock');
+        /* @var $lock ZfExtended_Models_Db_SessionUserLock */
+        
+        try {
+            $lock->insert(array(
+                'login' => $login,
+                'internalSessionUniqId' => $this->_session->internalSessionUniqId,
+            ));
+            return false;
+        }
+        catch(Zend_Db_Statement_Exception $e) {
+            $m = $e->getMessage();
+            $isSqlState = strpos($m,'SQLSTATE') === 0;
+            $isMissingLogin = stripos($m,'FOREIGN KEY (`login`)') !== false && stripos($m,'a foreign key constraint fails') !== false;
+            //if entered a missing login we get an contraint error here, 
+            //we return false here since this user does not have a session. 
+            //The not existence of the login is then checked correctly later.
+            if($isSqlState && $isMissingLogin) {
+                return false; 
+            }
+            //if error is no "duplicate entry" error we throw it regularly! 
+            if(!$isSqlState || stripos($m,'Duplicate entry') === false) {
+                throw $e;
+            }
+        }
+        
+        $this->view->errors = true;
+        $this->_form->addError($this->_translate->_('Dieser Benutzer wird bereits verwendet. <br/>Bitte warten Sie bis der Benutzer wieder verfügbar ist, oder benutzen Sie einen anderen!'));
+        return true;
+    }
+    
     /**
      * 
      * @param ZfExtended_Models_Invalidlogin $invalidLogin
@@ -177,7 +245,6 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
 
         $this->doOnLogout();
         
-        $session = new Zend_Session_Namespace();
         $this->_helper->general->logoutUser();
         if($this->getRequest()->getParam('redirect', true)){
             header('Location: '.APPLICATION_RUNDIR.'/');

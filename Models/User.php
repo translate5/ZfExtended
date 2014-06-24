@@ -110,6 +110,14 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract {
     }
     
     /**
+     * removes the logged in user from the session
+     */
+    public function removeFromSession() {
+        $userSession = new Zend_Session_Namespace('user');
+        $userSession->data= null;
+    }
+    
+    /**
      * Loads a user by userGuid
      * @param string $userGuid
      * @return ZfExtended_Models_User
@@ -145,6 +153,15 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract {
             $this->filter->addSort('login');
         }
         return $this->loadFilterdCustom($s);
+    }
+    
+    /**
+     * returns the total (without LIMIT) count of rows
+     */
+    public function getTotalCount(){
+        $s = $this->db->select();
+        $s->where('login != ?', 'system'); //filter out the system user
+        return $this->computeTotalCount($s);
     }
     
     /**

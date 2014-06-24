@@ -31,52 +31,8 @@
   END LICENSE AND COPYRIGHT 
  */
 
-/**#@+
- * @author Marc Mittag
- * @package ZfExtended
- * @version 2.0
- *
- */
-/**
- * Gibt die aktuelle URL zurück
- *
- */
-class ZfExtended_View_Helper_GetUrl extends Zend_View_Helper_Abstract{
-    public $view;
-
-    public function setView(Zend_View_Interface $view) {
-        $this->view = $view;
-    }
-    
-    /**
-     * generiert die aktuelle url
-     *
-     * @param array excludeParamKeys array mit einer Liste von Parameterschlüsseln
-     *       als Values, die nicht in der zurückgegebenen URL zurückgegeben werden sollen | Default NULL
-     */
-    public function getUrl(array $excludeParamKeys = NULL){
-        $params = Zend_Controller_Front::getInstance()->getRequest()->getParams();
-        $url = APPLICATION_RUNDIR;
-        if(isset($params['error_handler'])){
-            unset($params['error_handler']);
-        }
-        if ($params['module'] !== 'default') {
-            $url .= '/' . $params['module'];
-        }
-        unset($params['module']);
-        $url .= '/' . $params['controller'];
-        unset($params['controller']);
-        $url .= '/' . $params['action'];
-        unset($params['action']);
-        if(!is_null($excludeParamKeys)){
-            foreach($excludeParamKeys as $key){
-                if(isset($params[$key]))unset($params[$key]);
-            }
-        }
-        foreach ($params as $key => $val) {
-            $url .= '/' . $key . '/' . print_r($val,1); //$val can be an array, fastest fix is print_r
-        }
-        return $url;
-    }
-
+class ZfExtended_VersionConflictException extends ZfExtended_Exception {
+    protected $defaultCode = 409;
+    protected $defaultMessage = 'Die Ausgangsdaten wurden in der Zwischenzeit verändert. Bitte aktualisieren Sie Ihre Ansicht!';
+    protected $defaultMessageTranslate = true;
 }

@@ -33,6 +33,10 @@
 
 abstract class ZfExtended_Models_Entity_Abstract {
     /**
+     * @var string
+     */
+    const VERSION_FIELD = 'entityVersion';
+    /**
      * @var Zend_Db_Table_Abstract
      */
     public $db;
@@ -113,7 +117,7 @@ abstract class ZfExtended_Models_Entity_Abstract {
             $this->notFound('NotFound after other Error', $e);
         }
         if (!$rowset || $rowset->count() == 0) {
-            $this->notFound(__CLASS__ . '#PK', $id);
+            $this->notFound('#PK', $id);
         }
         //load implies loading one Row, so use only the first row
         return $this->row = $rowset->rewind()->current();
@@ -137,7 +141,7 @@ abstract class ZfExtended_Models_Entity_Abstract {
         }
         $this->row = $this->db->fetchRow($s, $order);
         if(empty($this->row)){
-            $this->notFound(__CLASS__ . '#where ', $where);
+            $this->notFound('#where ', $where);
         }
         return $this->row;
     }
@@ -152,7 +156,7 @@ abstract class ZfExtended_Models_Entity_Abstract {
     public function loadRowBySelect(Zend_Db_Table_Select $s) {
         $this->row = $this->db->fetchRow($s);
         if(empty($this->row)){
-            $this->notFound(__CLASS__);
+            $this->notFound('#bySelect');
         }
         return $this->row;
     }
@@ -164,7 +168,8 @@ abstract class ZfExtended_Models_Entity_Abstract {
      * @throws ZfExtended_Models_Entity_NotFoundException
      */
     protected function notFound($key = '', $value = '') {
-        throw new ZfExtended_Models_Entity_NotFoundException("Key: " . $key . '; Value: ' . $value);
+        $cls = explode('_', get_class($this));
+        throw new ZfExtended_Models_Entity_NotFoundException(end($cls)." Entity Not Found: Key: " . $key . '; Value: ' . $value);
     }
 
     /**
@@ -218,7 +223,6 @@ abstract class ZfExtended_Models_Entity_Abstract {
 
     /**
      * saves the Entity to the DB
-     *
      * @return mixed  The primary key value(s), as an associative array if the key is compound, or a scalar if the key is single-column.
      */
     public function save() {
@@ -268,6 +272,21 @@ abstract class ZfExtended_Models_Entity_Abstract {
         throw new Zend_Exception('Method ' . $name . ' not defined');
     }
 
+    /**
+     * sets the entity version to be compared against
+     * @param integer $version
+     */
+    public function setEntityVersion($version) {
+        if($this->hasField(self::VERSION_FIELD)) {
+            //sets the version to be compared as entitiy value, is evaluated by trigger
+            $this->__call(__FUNCTION__, array($version));
+        }
+        else {
+            //sets the version to be compared as mysql var, is evaluated by trigger
+            $this->db->getAdapter()->query('SET @`'.self::VERSION_FIELD.'` := '.(int)$version.';');
+        }
+    }
+    
     /**
      * sets the value of the given data field
      * @param string $name

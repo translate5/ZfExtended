@@ -96,9 +96,8 @@ class ZfExtended_BaseIndex{
     /**
      *@param $indexpath filesystem-path to the index.php of the application; 
      *      gets set to $_SERVER['SCRIPT_FILENAME'], if not set (only relevant on first invocation)
-     * @return self
+     * @return ZfExtended_BaseIndex
      */
-
     public static function getInstance($indexpath=NULL)
     {
         if (null === self::$_instance) {
