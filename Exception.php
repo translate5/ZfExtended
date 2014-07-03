@@ -157,7 +157,7 @@ class ZfExtended_Exception extends Zend_Exception {
          * @return boolean if a config was found, NULL if nothing was configured for the path
          */
         $checkPath = function($start, $path) use (&$checkPath) {
-            if(!is_null($start) && !($start->$part instanceof Zend_Config)) {
+            if(!is_null($start) && !($start instanceof Zend_Config)) {
                 throw new Exception('start is not NULL and not instanceof Zend_Config');
             }
             $part = array_shift($path);
