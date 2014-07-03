@@ -135,9 +135,15 @@ class  ZfExtended_Zendoverwrites_Translate extends Zend_Translate
         if (null === self::$_instance || $init) {
             //warning overwriting this method changes also the class 
             //name since self point to the method defining class!
-            self::$_instance = ZfExtended_Factory::get(__CLASS__);
-            self::$_instance->setJsonEncode(false);
-            Zend_Registry::set('Zend_Translate', self::$_instance);
+            try {
+                self::$_instance = ZfExtended_Factory::get(__CLASS__);
+                self::$_instance->setJsonEncode(false);
+                Zend_Registry::set('Zend_Translate', self::$_instance);
+            }
+            catch(Exception $e){
+                self::$_instance = new ZfExtended_Zendoverwrites_TranslateError($e);
+                return self::$_instance;
+            }
         }
         
         return self::$_instance;
