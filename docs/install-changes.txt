@@ -1,4 +1,4 @@
-2014-06-02: excecute 007-mysql-TRANSLATE-191.sql on your db
+2014-06-02: excecute 007-mysql-TRANSLATE-191.sql on your db; be carefull: If your table "sessionMapInternalUniqId" is still of type MyISAM, please recreate this table with type InnoDB.
 
 2014-04-23: excecute 006-mysql-TRANSLATE-170.sql on your db 
 
