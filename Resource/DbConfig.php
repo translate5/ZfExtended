@@ -51,7 +51,6 @@ class ZfExtended_Resource_DbConfig extends Zend_Application_Resource_ResourceAbs
      * @see Zend_Application_Resource_Resource::init()
      */
     public function init() {
-        error_log(__FUNCTION__);
         //init some needed objects
         $bootstrap = $this->getBootstrap();
         /* $bootstrap Bootstrap */
