@@ -85,22 +85,22 @@ class  ZfExtended_Zendoverwrites_Controller_Action_HelperBroker extends Zend_Con
         $name = self::overwriteName($name);
         return parent::getHelper($name);
     }
-    /*
+    
+    /**
      * überschreibt in factoryOverwrites.ini gelistete ControllerHelper-Objekte,
      * so dass das dort vorgesehene Mapping geladen wird, statt des eigentlichen Helpers
      */
     protected static function overwriteName($name){
-        ZfExtended_Factory::loadConfig();
         $ucName = ucfirst($name);
         $lcName = lcfirst($name);
-        if(is_null(self::$_session)){
-            return $name;
+        
+        $config = Zend_Registry::get('config');
+        $fo = $config->factoryOverwrites;
+        if(isset($fo->helper->$lcName)){
+            return $fo->helper->$lcName;
         }
-        if(isset(self::$_session->_factoryOverwrites->helper->$lcName)){
-            return self::$_session->_factoryOverwrites->helper->$lcName;
-        }
-        if(isset(self::$_session->_factoryOverwrites->helper->$ucName)){
-            return self::$_session->_factoryOverwrites->helper->$ucName;
+        if(isset($fo->helper->$ucName)){
+            return $fo->helper->$ucName;
         }
         return $name;
     }

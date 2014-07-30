@@ -64,9 +64,9 @@ class ZfExtended_Resource_PreFillSession extends Zend_Application_Resource_Resou
             $session->libraryNames =  $this->getLibraries();
         }
     }
-    /*
-     * Gibt die Namen aller Module zurück
-     *
+    
+    /**
+     * returns all module names
      * @return array modules
      */
     private function getModules()
@@ -80,9 +80,9 @@ class ZfExtended_Resource_PreFillSession extends Zend_Application_Resource_Resou
         }
         return $modules;
     }
-    /*
-     * Gibt die Namen aller libraries zurück
-     *
+    
+    /**
+     * returns all available library names
      * @return array libraries
      */
     private function getLibraries()

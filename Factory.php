@@ -37,80 +37,25 @@
  * @version 2.0
  */
 /**
- * Factory, die Objekte bereit stellt
- * - existiert /application/iniOverwrites/APPLICATION_AGENCY/factoryOverwrites.ini, werden die dort
- *   gemappten Objekte statt der eigentlich bei der factory angeforderten
- *   Objekte zurückgegeben
- *
+ * Factory implements the factory pattern  
+ * to overwrite classes this has to be configured in the factoryOverwrites part of the app.ini
  */
-class  ZfExtended_Factory
-{
+class  ZfExtended_Factory {
     /**
-      * @var Zend_Session_Namespace | NULL
-      */
-    static protected $_session = NULL;
-    /**
-      * @var Zend_Config_Ini | NULL
-      */
-    static protected $_factoryIni = NULL;
-
-    private static function init() {
-        try {
-            self::$_session = new Zend_Session_Namespace();
-        }
-        catch (Exception $e) {
-        }
-    }
-    /**
-     * Gibt ein Objekt von $className zurück; Anwendung derzeit nur für Models;
-     * ControllerHelper werden automatisch durch den ZfExtended_Zendoverwrites_Controller_Action_HelperBroker geladen
-     * falls sie in der factoryOverwrites.innii entsprechend definiert wurden
+     * returns a $className instance, currently only for models
+     * ControllerHelper are loaded automagicly by ZfExtended_Zendoverwrites_Controller_Action_HelperBroker
      *
      * @param string className
-     * @param array params Optional; Parameter, die an den Konstruktor übergeben
-     *          werden sollen; Reihenfolge und Typen wie im Konstruktor
-     * @return void
+     * @param array params optional; parameters for class constructor
+     * @return mixed
      */
     public static function get(string $className, array $params = array()){
-        self::loadConfig();
-        if(!is_null(self::$_factoryIni) and
-                isset(self::$_session->_factoryOverwrites->models->$className)){
-            $rc = new ReflectionClass(self::$_session->_factoryOverwrites->models->$className);
-            return $rc->newInstanceArgs($params);
+        $config = Zend_Registry::get('config');
+        $fo = $config->factoryOverwrites;
+        if(isset($fo->models->$className)){
+            $className = $fo->models->$className;
         }
         $rc = new ReflectionClass($className);
         return $rc->newInstanceArgs($params);
     }
-
-     /* Legt Konfiguration aus der factoryOverwrites.ini in die Session, holt
-      * sie aus der Session und stellt sie in der Klassenvariable self::$_factoryIni
-      * zur Verfügung
-     *
-     * @return void
-     */
-    public static function loadConfig(){
-        self::init();
-        if(!is_null(self::$_session) and
-                 isset(self::$_session->_factoryOverwrites)){
-             self::$_factoryIni = self::$_session->_factoryOverwrites;
-         }
-         elseif(!is_null(self::$_session) and
-                 !isset(self::$_session->_factoryOverwrites) and
-                 file_exists(APPLICATION_PATH.'/iniOverwrites/'.APPLICATION_AGENCY.
-                     '/factoryOverwrites.ini')){
-            self::$_session->_factoryOverwrites = self::getConfig();
-         }
-         elseif(file_exists(APPLICATION_PATH.'/iniOverwrites/'.APPLICATION_AGENCY.
-                     '/factoryOverwrites.ini')){
-             self::getConfig();
-         }
-     }
-     /* Lädt Konfiguration aus der factoryOverwrites.ini in self::$_factoryIni
-     *
-     * @return Zend_Config_Ini factoryIni
-     */
-    protected static function getConfig(){
-        return self::$_factoryIni = new Zend_Config_Ini(APPLICATION_PATH.
-                    '/iniOverwrites/'.APPLICATION_AGENCY.'/factoryOverwrites.ini');
-     }
 }
