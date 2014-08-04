@@ -71,12 +71,13 @@ class ZfExtended_Controller_Helper_ExtJs extends Zend_Controller_Action_Helper_A
         $this->_extPaths = $general->natksortReverseUtf($this->_extPaths);
         $extConfig = $config->extVersionMapping;
         
-        // In der Reihenfolge wie die Bestandteile abgearbeitet werden sollen hinzufügen
-        $mcaPath[] = Zend_Registry::get('module');
-        $mcaPath[] = Zend_Registry::get('controller');
-        $mcaPath[] = Zend_Registry::get('action'); 
-        
-        $this->_extVersion = $this->getVersionRecursive($mcaPath, $extConfig);
+        if(!empty($extConfig)) {
+            // In der Reihenfolge wie die Bestandteile abgearbeitet werden sollen hinzufügen
+            $mcaPath[] = Zend_Registry::get('module');
+            $mcaPath[] = Zend_Registry::get('controller');
+            $mcaPath[] = Zend_Registry::get('action'); 
+            $this->_extVersion = $this->getVersionRecursive($mcaPath, $extConfig);
+        }
         
         //Kein Wert definiert, dann die höchste Version als Default verwenden: 
         if($this->_extVersion <= 0){

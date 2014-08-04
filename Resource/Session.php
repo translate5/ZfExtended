@@ -69,13 +69,15 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
         $bootstrap->bootstrap('db');
         $bootstrap->bootstrap('ZfExtended_Resource_ErrorHandler');
         $config = new Zend_config($bootstrap->getOptions());
-        $this->garbageCollector();
-        Zend_Session::setOptions($config->resources->ZfExtended_Resource_Session->toArray());
+        $resconf = $config->resources->ZfExtended_Resource_Session->toArray();
+        $this->garbageCollector($resconf['garbageCollectorLifetime']);
+        unset($resconf['garbageCollectorLifetime']); //Zend_Session does not know this value! 
+        Zend_Session::setOptions($resconf);
         //im if: wichtiger workaround für swfuploader, welcher in awesomeuploader 
         //verwendet wird. flash überträgt keine session-cookies außerhalb IE korrekt, 
         //daher wird hier die session im post übergeben
-        if (isset($_POST[$config->resources->ZfExtended_Resource_Session->name])) {
-            Zend_Session::setId($_POST[$config->resources->ZfExtended_Resource_Session->name]);
+        if (isset($_POST[$resconf['name']])) {
+            Zend_Session::setId($_POST[$resconf['name']]);
         }
         Zend_Session::setSaveHandler(new Zend_Session_SaveHandler_DbTable($this->_sessionConfig));
 
@@ -102,12 +104,12 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
      * Löscht verfallene Sessions aus der Session-Tabelle
      * 
      * - Einbindung von Session-Models ohne ZfExtended_Factory, da die Factory eine initialisierte Session benötigt
+     * @param integer $lifetime in seconds
      */
-    private function garbageCollector(){
-        $config = Zend_Registry::get('config');
+    private function garbageCollector($lifetime){
         $sessionTable = new ZfExtended_Models_Db_Session();
-        $sessionTable->delete('modified < '.(string)(time()-$config->runtimeOptions->ZfExtendedGarbageColletorLifetime));
+        $sessionTable->delete('modified < '.(string)(time()-$lifetime));
         $SessionMapInternalUniqIdTable = new ZfExtended_Models_Db_SessionMapInternalUniqId();
-        $SessionMapInternalUniqIdTable->delete('modified < '.(string)(time()-$config->runtimeOptions->ZfExtendedGarbageColletorLifetime));
+        $SessionMapInternalUniqIdTable->delete('modified < '.(string)(time()-$lifetime));
     }
 }
