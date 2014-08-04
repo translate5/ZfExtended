@@ -340,8 +340,10 @@ class ZfExtended_BaseIndex{
      */
     protected function getIniList() {
         $applicationInis = array();
-        $applicationInis[] = APPLICATION_PATH . '/application.ini';
-        $applicationInis[] = APPLICATION_PATH.'/modules/'.$this->currentModule.'/configs/application.ini';
+        $applicationInis[] = APPLICATION_PATH . '/config/application.ini';
+        $applicationInis[] = APPLICATION_PATH.'/modules/'.$this->currentModule.'/configs/module.ini';
+        $applicationInis[] = APPLICATION_PATH . '/config/installation.ini';
+        //FIXME in theory the following lines are obsolete since, the contained informations are in installation.ini 
         if(APPLICATION_AGENCY) {
           $applicationInis[] = APPLICATION_PATH.'/iniOverwrites/'.APPLICATION_AGENCY.'/application.ini';
           $applicationInis[] = APPLICATION_PATH.'/iniOverwrites/'.APPLICATION_AGENCY.'/'.$this->currentModule.'Application.ini';
