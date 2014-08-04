@@ -140,7 +140,8 @@ class  ZfExtended_Log extends ZfExtended_Mail{
      * @param array $error
      */
     public function logFatal(array $error) {
-        if($this->_config->runtimeOptions->disableErrorMails->default == 1){
+        $ro = $this->_config->runtimeOptions;
+        if($ro && $ro->disableErrorMails && $ro->disableErrorMails->default == 1){
             return; // no extra logging here since fatals are always logged
         }
         $msg  = 'Given Fatal Error Info: '.print_r($error,1)."\n\n";
@@ -174,7 +175,8 @@ class  ZfExtended_Log extends ZfExtended_Mail{
      * @param string $message
      */
     public function log404(string $message){
-        if($this->_config->runtimeOptions->disableErrorMails->notFound == 1){
+        $ro = $this->_config->runtimeOptions;
+        if($ro && $ro->disableErrorMails && $ro->disableErrorMails->notFound == 1){
             error_log($this->_className.': Versand der NotFound-Fehlermails deaktiviert: '.$message);
             return;
         }
@@ -182,7 +184,8 @@ class  ZfExtended_Log extends ZfExtended_Mail{
     }
 
     protected function sendMailDefault(string $message){
-        if($this->_config->runtimeOptions->disableErrorMails->default == 1){
+        $ro = $this->_config->runtimeOptions;
+        if($ro && $ro->disableErrorMails && $ro->disableErrorMails->default == 1){
             error_log($this->_className.': Versand der Default-Fehlermails ohne dump deaktiviert - Subject: '.
                     $message);
             return;
@@ -190,7 +193,8 @@ class  ZfExtended_Log extends ZfExtended_Mail{
         $this->sendMail($this->_className.' - Kurzmeldung: '.$message);
     }
     protected function sendMailMinidump(string $message, string $data){
-        if($this->_config->runtimeOptions->disableErrorMails->minidump == 1){
+        $ro = $this->_config->runtimeOptions;
+        if($ro && $ro->disableErrorMails && $ro->disableErrorMails->minidump == 1){
             error_log($this->_className.': Versand der Minidump-Fehlermails deaktiviert - Subject: '.
                     $message.' Attachment Size: '.strlen($data));
             return;
@@ -204,5 +208,4 @@ class  ZfExtended_Log extends ZfExtended_Mail{
         $this->send($this->_config->resources->mail->defaultFrom->email,
                 $this->_config->resources->mail->defaultFrom->name);
     }
-
 }
