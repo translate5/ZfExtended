@@ -62,14 +62,14 @@ class ZfExtended_Controller_Helper_ExtJs extends Zend_Controller_Action_Helper_A
     protected $_cssPath;
 
     public function __construct(){
-        $session = new Zend_Session_Namespace();
+        $config = Zend_Registry::get('config');
         $general = ZfExtended_Zendoverwrites_Controller_Action_HelperBroker::getStaticHelper(
             'General'
         );
-        $this->_cssPath = $session->runtimeOptions->extJs->cssFile;
-        $this->_extPaths = $session->runtimeOptions->extJs->basepath->toArray();
+        $this->_cssPath = $config->runtimeOptions->extJs->cssFile;
+        $this->_extPaths = $config->runtimeOptions->extJs->basepath->toArray();
         $this->_extPaths = $general->natksortReverseUtf($this->_extPaths);
-        $extConfig = new Zend_Config_Ini(APPLICATION_PATH .'/extVersionMapping.ini');
+        $extConfig = $config->extVersionMapping;
         
         // In der Reihenfolge wie die Bestandteile abgearbeitet werden sollen hinzufügen
         $mcaPath[] = Zend_Registry::get('module');
