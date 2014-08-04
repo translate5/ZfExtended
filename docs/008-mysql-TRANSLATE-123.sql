@@ -37,14 +37,14 @@
 CREATE TABLE `Zf_configuration` (
   `id` int (11) NOT NULL AUTO_INCREMENT,
   `name` varchar(255) NOT NULL COMMENT 'corresponds to the old INI key',
-  `confirmed:` tinyint NOT NULL DEFAULT 0 COMMENT 'used for new values, 0 not confirmed by user, 1 confirmed',
-  `module:` varchar(100) DEFAULT NULL COMMENT 'the PHP module this config value is defined for',
-  `category` varchar(100) DEFAULT NULL COMMENT 'field to categorize the config values',
-  `value` varchar(1024) DEFAULT NULL COMMENT 'the config value',
+  `confirmed` tinyint NOT NULL DEFAULT 0 COMMENT 'used for new values, 0 not confirmed by user, 1 confirmed',
+  `module` varchar(100) DEFAULT NULL COMMENT 'the PHP module this config value is defined for',
+  `category` varchar(100) NOT NULL DEFAULT 'other' COMMENT 'field to categorize the config values',
+  `value` varchar(1024) DEFAULT NULL COMMENT 'the config value, if data exceeds 1024byte (especially for list and map) data should be stored in a own table',
   `default` varchar(1024) DEFAULT NULL COMMENT 'the system default value for this config',
   `defaults` varchar(1024) DEFAULT NULL COMMENT 'a comma separated list of default values, only one of this value is possible to be set by the GUI',
-  `type` enum('string', 'integer', 'boolean') DEFAULT 'string' COMMENT 'the type of the config value is needed also for GUI',
+  `type` enum('string', 'integer', 'boolean', 'list', 'map','absolutepath') NOT NULL DEFAULT 'string' COMMENT 'the type of the config value is needed also for GUI',
   `description` varchar(1024) NOT NULL COMMENT 'contains a human readable description for what this config is for',
   PRIMARY KEY (`id`),
-  INDEX(`name`)
+  UNIQUE KEY (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;

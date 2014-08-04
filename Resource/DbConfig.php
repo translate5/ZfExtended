@@ -40,6 +40,9 @@
 /**
  */
 class ZfExtended_Resource_DbConfig extends Zend_Application_Resource_ResourceAbstract {
+    const TYPE_MAP = 'map';
+    const TYPE_LIST = 'list';
+    const TYPE_ABSPATH = 'absolutepath';
     /**
      * internal options tree
      * @var array
@@ -85,20 +88,75 @@ class ZfExtended_Resource_DbConfig extends Zend_Application_Resource_ResourceAbs
     protected function addOneEntry(array $entry){
         $recursiveSetter = null;
         $path = explode('.', $entry['name']);
-        
+        $this->recursiveSetter($this->dbOptionTree, $path, $entry);
+    }
+    
+    protected function recursiveSetter(array &$dbOptionTree, array $path, $entry) {
         $value = $entry['value'];
         $type = $entry['type'];
-        $recursiveSetter = function(array &$dbOptionTree, array $path) use ($value, $type, &$recursiveSetter) {
-            $key = array_shift($path);
-            if(empty($path)) {
-                $dbOptionTree[$key] = $value;
-                settype($dbOptionTree[$key], $type);
-                return;
-            }
-            settype($dbOptionTree[$key], 'array');
-            $recursiveSetter($dbOptionTree[$key], $path, $value, $type);
-        };
-        
-        $recursiveSetter($this->dbOptionTree, $path);
+        $key = array_shift($path);
+        if(empty($path)) {
+            $dbOptionTree[$key] = $this->convertConfigValue($type, $value);
+            settype($dbOptionTree[$key], $this->convertConfigToPhpType($type));
+            return;
+        }
+        settype($dbOptionTree[$key], 'array');
+        $this->recursiveSetter($dbOptionTree[$key], $path, $entry);
+    }
+    
+    /**
+     * converts the config values stored in the DB to the applicable target format
+     * @param string $type
+     * @param string $value
+     */
+    protected function convertConfigValue($type, $value) {
+        switch ($type) {
+            case self::TYPE_LIST:
+            case self::TYPE_MAP:
+                return json_decode($value);
+            case self::TYPE_ABSPATH:
+                return $this->convertFilepath($value);
+        }
+        return $value;
+    }
+    
+    /**
+     * converts the type of the config value to the corresponding PHP type
+     * @param string $type
+     * @return string
+     */
+    protected function convertConfigToPhpType($type) {
+        switch ($type) {
+            case self::TYPE_LIST:
+            case self::TYPE_MAP:
+                return 'array';
+            case self::TYPE_ABSPATH:
+                return 'string';
+        }
+        return $type;
+    }
+    
+    /**
+     * checks if the given path is notated as relative path, if yes the APPLICATION_PATH is prepended
+     * @param string $path
+     * @return string
+     */
+    protected function convertFilepath($path) {
+        $firstChar = mb_substr($path, 0, 1);
+        //this is a absolute path
+        if($firstChar == DIRECTORY_SEPARATOR) {
+            return $path;
+        }
+        //on windows we have to check for driveletters also
+        $secondChar = mb_substr($path, 1, 1); //is on windows with driveletter == :
+        if(DIRECTORY_SEPARATOR != '/' && $secondChar == ':') {
+            return $path;
+        }
+        //convert / to \ under windows in stored / default values
+        if(DIRECTORY_SEPARATOR != '/') {
+            $path = str_replace('/', DIRECTORY_SEPARATOR, $path);
+        }
+        //all others are relative, so we have to append the APPLICATION_PATH
+        return APPLICATION_PATH.DIRECTORY_SEPARATOR.$path;
     }
 }

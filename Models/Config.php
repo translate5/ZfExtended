@@ -59,6 +59,8 @@
  * @method string getDefaults() getDefaults()
  * @method string getType() getType()
  * @method string getDescription() getDescription()
+ * 
+ * The conversion from DB Storage Format to Zend Config Format is done by ZfExtended_Resource_DbConfig
  */
 class ZfExtended_Models_Config extends ZfExtended_Models_Entity_Abstract {
   protected $dbInstanceClass = 'ZfExtended_Models_Db_Config';
