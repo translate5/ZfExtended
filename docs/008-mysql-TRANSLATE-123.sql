@@ -38,7 +38,7 @@ CREATE TABLE `Zf_configuration` (
   `id` int (11) NOT NULL AUTO_INCREMENT,
   `name` varchar(255) NOT NULL COMMENT 'corresponds to the old INI key',
   `confirmed` tinyint NOT NULL DEFAULT 0 COMMENT 'used for new values, 0 not confirmed by user, 1 confirmed',
-  `module` varchar(100) DEFAULT NULL COMMENT 'the PHP module this config value is defined for',
+  `module` varchar(100) DEFAULT NULL COMMENT 'the PHP module this config value was defined for',
   `category` varchar(100) NOT NULL DEFAULT 'other' COMMENT 'field to categorize the config values',
   `value` varchar(1024) DEFAULT NULL COMMENT 'the config value, if data exceeds 1024byte (especially for list and map) data should be stored in a own table',
   `default` varchar(1024) DEFAULT NULL COMMENT 'the system default value for this config',
@@ -47,4 +47,14 @@ CREATE TABLE `Zf_configuration` (
   `description` varchar(1024) NOT NULL COMMENT 'contains a human readable description for what this config is for',
   PRIMARY KEY (`id`),
   UNIQUE KEY (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE `Zf_acl_rules` (
+  `id` int (11) NOT NULL AUTO_INCREMENT,
+  `module` varchar(100) DEFAULT NULL COMMENT 'the PHP module this acl rule was defined for',
+  `role` varchar(100) NOT NULL COMMENT 'the name of the role which has the defined rule',
+  `resource` varchar(100) NOT NULL COMMENT 'the resource to be allowed',
+  `right` varchar(100) NOT NULL COMMENT 'the single right to be allowed',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY (`module`,`role`,`resource`,`right`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;

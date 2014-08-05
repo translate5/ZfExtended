@@ -148,26 +148,33 @@ class ZfExtended_Acl extends Zend_Acl {
     }
 
     protected function addRules(){
-       foreach ($this->_aclConfigObject->rules as $role => $rule) {
-            foreach ($rule as $resource => $rule2) {
-                if ('all' == $rule2) {#
-                    //FIXME nextrelease Marc ist das hier nötig? Wenn ja auch für regeln pro Action aufrufen
-                    if($resource == 'frontend' && !$this->isFrontendRight()){
-                        throw new Zend_Exception('For the resource "frontend" no rights are registered');
-                    }
-                    $this->allow($role, $resource);
-                    continue;
+        if(isset($this->_aclConfigObject->rules)) {
+            throw new ZfExtended_Exception("There are ACL rules loaded from ini config, this should not be: ".print_r($this->_aclConfigObject->rules->toArray()));
+        }
+        $rules = ZfExtended_Factory::get('ZfExtended_Models_Db_AclRules');
+        /* @var $rules ZfExtended_Models_Db_AclRules */
+        $loaded = $rules->loadByModule(Zend_Registry::get('module'))->toArray();
+        if(empty($loaded)) {
+            return;
+        }
+        foreach($loaded as $rule) {
+            $role = $rule['role'];
+            $right = $rule['right'];
+            $resource = $rule['resource'];
+            if ($right == 'all') {
+                if($resource == 'frontend' && !$this->isFrontendRight()){
+                    throw new Zend_Exception('For the resource "frontend" no rights are registered');
                 }
-                foreach ($rule2 as $privilege) {
-                    if($this->allowFrontendPrivilege($role,$resource,$privilege)){
-                        continue;
-                    }
-                    if($this->allowControllerPrivilege($role,$resource,$privilege)){
-                        continue;
-                    }
-                    $this->allowOtherPrivilege($role,$resource,$privilege);
-                }
+                $this->allow($role, $resource);
+                continue;
             }
+            if($this->allowFrontendPrivilege($role, $resource, $right)){
+                continue;
+            }
+            if($this->allowControllerPrivilege($role, $resource, $right)){
+                continue;
+            }
+            $this->allowOtherPrivilege($role, $resource, $right);
         }
     }
     
@@ -183,6 +190,7 @@ class ZfExtended_Acl extends Zend_Acl {
             $this->add(new Zend_Acl_Resource($resource));
         }
         foreach ($this->_aclConfigObject->resources as $resource) {
+            error_log("ADDED ".$resource);
             $this->add(new Zend_Acl_Resource($resource));
         }
     }

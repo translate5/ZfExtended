@@ -77,13 +77,6 @@ class ZfExtended_BaseIndex{
             || define('APPLICATION_PATH',$this->application_path);
 
         // Define application environment
-        if(isset($_SERVER['REQUEST_URI']) and 
-                (
-                    strpos($_SERVER['REQUEST_URI'], 'wsdl?wsdl=show')!== false or 
-                    strpos($_SERVER['REQUEST_URI'], '/wsdl.xml')!== false
-                )){
-            define('APPLICATION_ENV', 'wsdl');
-        }
         defined('APPLICATION_ENV')||
                 define('APPLICATION_ENV', ( getenv('APPLICATION_ENV') ? getenv('APPLICATION_ENV') : 'application'));
         defined('APPLICATION_AGENCY')||
