@@ -1,3 +1,5 @@
+2014-08-07: TRANSLATE-123: the whole configuration system of application is changed, since much data was kept redundant.
+
 2013-10-29: changes in translation process
     - locales can now be placed inside each module (/application/modues/MODULE/locales/targetLanguage.xliff), inside each library (/library/LIBNAME/locales/targetLanguage.xliff) and in addition inside /data/locales/targetLanguage.xliff
     - translations in the different locations get added up

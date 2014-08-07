@@ -204,12 +204,13 @@ class  ZfExtended_Zendoverwrites_Translate extends Zend_Translate
     protected function setSourceLang($lang = null) {
         $this->sourceLang = $lang;
         if(is_null($this->sourceLang)){
-            $session = new Zend_Session_Namespace();
+            $config = Zend_Registry::get('config');
             //setzte die sourceLang in der Session  ///
-            $sourceLocale = $session->runtimeOptions->translation->sourceLocale;
+            $sourceLocale = $config->runtimeOptions->translation->sourceLocale;
             if (!Zend_Locale::isLocale($sourceLocale)) {
                 throw new Zend_Exception('$sourceLocale war keine gültige locale - fehlerhafte Konfiguration in application.ini (runtimeOptions.translation.locale)', 0 );
             }
+            $session = new Zend_Session_Namespace();
             $sourceLocaleObj = new Zend_Locale($sourceLocale);
             $session->sourceLang = $sourceLocaleObj->getLanguage();
             $this->sourceLang = $session->sourceLang;
