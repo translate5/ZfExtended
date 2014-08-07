@@ -283,6 +283,8 @@ class ErrorController extends ZfExtended_Controllers_Action
             }
             if($this->_errors[0]->_errorCode === 404){
                 $this->_renderScript = 'error/error404.phtml';
+                //FIXME wie machen dass das immer in entwicklungsumgebung??? 
+                $this->_renderScript = 'error/errorAdmin.phtml';
             }
         }
         

@@ -190,7 +190,6 @@ class ZfExtended_Acl extends Zend_Acl {
             $this->add(new Zend_Acl_Resource($resource));
         }
         foreach ($this->_aclConfigObject->resources as $resource) {
-            error_log("ADDED ".$resource);
             $this->add(new Zend_Acl_Resource($resource));
         }
     }
