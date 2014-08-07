@@ -5,11 +5,14 @@ A ZfExtended Application have several places to store configuration parameters.
 This are (all following paths relative to APPLICATION_PATH):
 
     /config/application.ini
-    /config/installation.ini
+    /config/MODULE.ini    → OPTIONAL
     /modules/MODULE/configs/module.ini
+    /config/installation.ini
     In Database: PHP Entity Class DbConfig
-    
-Normally only the settings of the actual module are loaded. The settings of other modules can be imported if needed.
+
+The given file order above is also the order in which the configuration is read. That means settings of a later imported file overwrites equal settings of ini files imported before. The entries in DB are imported at last. But since in the ini files the application it self is configured, settings defined in the DB are mainly to configure the application to runtime. So no conflicts should occur.
+
+Normally only the settings of the actual module are loaded. The settings of other modules can be imported manually if needed.
     
 Contents of /config/application.ini
 -----------------------------------
@@ -52,9 +55,14 @@ Contents of /modules/MODULE/configs/module.ini
 ----------------------------------------------
 This file contains the same contens as application.ini, only that they are concentrated to the needs of the module containing this file. 
 
-The contents can also be overwritten / extended by installation.ini.
+The contents can also be overwritten / extended by *installation.ini* and by *MODULE.ini*.
 
 **The contents of the file are overwritten by update / deploy process.**
+
+
+Contents of /config/MODULE.ini
+-------------------------------------------
+Sometimes it is necessary that a application overwrites predefined settings of a single module. For this case developers can provide a *MODULE.ini* in the application/config directory. *MODULE* must be replaced with the lowercase module name, for example: *editor.ini*. This file is loaded only if the actual module has the same name as the file.
 
     
 Contents of Database Config: PHP DbConfig

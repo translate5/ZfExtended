@@ -333,9 +333,18 @@ class ZfExtended_BaseIndex{
      */
     protected function getIniList() {
         $applicationInis = array();
-        $applicationInis[] = APPLICATION_PATH . '/config/application.ini';
-        $applicationInis[] = APPLICATION_PATH.'/modules/'.$this->currentModule.'/configs/module.ini';
-        $applicationInis[] = APPLICATION_PATH . '/config/installation.ini';
+        //the main configuration file:
+        $applicationInis[] = APPLICATION_PATH.'/config/application.ini';
+        //the main configuration file of a module, provided by the module:
+        $applicationInis[] = APPLICATION_PATH.'/modules/'.$this->currentModule.'/configs/module.ini'; 
+        //the application configuration file of a module, provided by the application, can overwrite module settings:
+        $applicationInis[] = APPLICATION_PATH.'/config/'.$this->currentModule.'.ini';
+        //a customized configuration file for the local installation:
+        $applicationInis[] = APPLICATION_PATH.'/config/installation.ini';
+        //a customized configuration file for the local installation, called only for a specific module:
+        // this feature is currently not documented!
+        $applicationInis[] = APPLICATION_PATH.'/config/installation-'.$this->currentModule.'.ini';
+        
         //FIXME in theory the following lines are obsolete since, the contained informations are in installation.ini 
         if(APPLICATION_AGENCY) {
           $applicationInis[] = APPLICATION_PATH.'/iniOverwrites/'.APPLICATION_AGENCY.'/application.ini';
