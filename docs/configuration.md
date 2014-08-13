@@ -122,6 +122,24 @@ For example a delete controller in the default module of a client specific Trans
     runtimeOptions.logging.editor.delete.index.ZfExtended_BadMethodCallException = true
 
 
+SQL Path configuration for the automatic DB updater
+---------------------------------------------------
+The Install and Update Kit updates the Database Structure automatically. Therefore the search paths of the SQL files have to been configured.
+The directories are parsed in the given order. In the future with the Install and Update Kit there is configured only one path in productive systems. This path contains the SQL files of the actual build. This would then be: 
+
+	sqlPaths[] = APPLICATION_PATH "/database/"
+
+For developing (and currently for the productive systems until the IUK is ready) each path with SQL files must be configured:
+
+	sqlPaths[] = APPLICATION_PATH "/../library/ZfExtended/database/"
+	sqlPaths[] = APPLICATION_PATH "/modules/default/database/"
+	sqlPaths[] = APPLICATION_PATH "/modules/editor/database/"
+
+If your mysql command is not at the default place */usr/bin/mysql* you must configure the path in your installation.ini along with your DB credentials:
+
+	resources.db.executable = /path/to/mysqlclient
+
+
 ExtJS Configuration (set in INI and DB)
 --------------------------------
 The settings below are used by ZfExtended_Controller_Helper_ExtJs and configure the ExtJS Version to be used by the desired Module / Controller / Action Combination.
@@ -142,9 +160,6 @@ The application determines by the follwing INI settings which ExtJS Version (411
 * All modul, controller and action names have to be notated in lowercase letters.
 * on every level a default value can be defined with DEFAULT where the keyword DEFAULT is completly in uppercase. 
 
-
-
-    
 **Examples:**
 
     extVersionMapping.default.index = 340        
