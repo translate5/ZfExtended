@@ -47,3 +47,35 @@ Configuration: Path to mysql client
 If your mysql command is not at the default place */usr/bin/mysql* you must configure the path in your installation.ini along with your DB credentials:
 
 	resources.db.executable = /path/to/mysqlclient
+
+
+For Developers: How and where to place SQL files
+------------------------------------------------
+Each project, library and module can have its own *database* directory, called a "SQL package" in this docu. In the directory are located the SQL files. Each database directory contains a file *metainformation.xml*. This file contains additional informations to the SQL package. In general this is the *name* of the SQL package of this module / library. This is needed by the database updater to identify the source of the SQL files, the updater stores this SQL package name in the dbversion table.
+
+In addition one can place dependency informations to SQL files. So you can assure that a specific SQL file was installed before another. By using package names, the dependencies can also come across from different packages.
+
+**The dependency resolution is currently not implemented, its somekind of a working draft.**
+
+Content of a metainformation.xml:
+
+	<database>
+		<name>sqlPackageName</name>
+		<file>
+			<name>thisfilehasdependencies.sql</name>
+			<dependencies>
+				<dependency>thismustbebefore.sql</dependency>
+				<dependency package="anotherOne">thistoo.sql</dependency>
+			</dependencies>
+		</file>
+	</database>
+
+### Simple Overwrite Mechanism
+The Database Updater knows a simple way to overwrite specific SQL files. If in one DB package a directory exists with the same name as one of the other packages, the files of this directory supersede the equal named files in target package. 
+
+Example: 
+
+	APPLICATION_PATH "/modules/default/database/editor/123-foo.sql"
+	APPLICATION_PATH "/modules/editor/database/123-foo.sql"
+
+Both files has the same name. The second SQL package has the configured name *editor*. In this case the DB Updater recognizes, that it should use the first file instead the second one.
