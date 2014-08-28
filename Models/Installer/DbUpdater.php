@@ -76,7 +76,7 @@ class ZfExtended_Models_Installer_DbUpdater {
                 continue;
             }
             $version = 'INITIAL'; //FIXME with TRANSLATE-131
-            $dbversion->insert($this->getInserData($file, $version));
+            $dbversion->insert($this->getInsertData($file, $version));
         }
     }
     
