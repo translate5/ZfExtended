@@ -1,11 +1,11 @@
 2014-08-13: TRANSLATE-130: DB Updater as a first part of the Install and Update Kit introduced.
             - for usage have a look at docs/databaseMaintenance.md
             - moved all DB SQL files from docs to database
-            - execute 010-mysql-TRANSLATE-130-dbversion.sql
+            - execute /library/ZfExtended/database/010-mysql-TRANSLATE-130-dbversion.sql
 
 2014-08-06: TRANSLATE-123: configuration refactored
-            execute 008-mysql-TRANSLATE-123.sql
-            execute 009-mysql-TRANSLATE-123-initial-config.sql
+            execute /library/ZfExtended/database/008-mysql-TRANSLATE-123.sql
+            execute /library/ZfExtended/database/009-mysql-TRANSLATE-123-initial-config.sql
 
 2014-06-02: excecute 007-mysql-TRANSLATE-191.sql on your db; be carefull: If your table "sessionMapInternalUniqId" is still of type MyISAM, please recreate this table with type InnoDB.
 
