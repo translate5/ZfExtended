@@ -259,6 +259,10 @@ class  ZfExtended_Zendoverwrites_Translate extends Zend_Translate
                     APPLICATION_MODULE.$ds.'locales'.$ds.$xliff;
             $this->translationPaths[] =  $session->runtimeOptions->dir->locales.
                     $ds.$xliff; 
+            
+            // add client-specific Translations
+            $this->translationPaths[] = APPLICATION_PATH.$ds.'..'.$ds.'client-specific'.$ds.'locales'.$ds.$xliff;
+            
             foreach ($this->translationPaths as $key => &$path) {
                 if(!file_exists($path)){
                     unset($this->translationPaths[$key]);

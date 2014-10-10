@@ -78,9 +78,10 @@ class ZfExtended_Controllers_Plugins_ViewSetup extends Zend_Controller_Plugin_Ab
             $view->addBasePath(APPLICATION_PATH.'/../library/'.$lib.'/views/', $lib.'_View_');
         }
         $view->addBasePath(APPLICATION_PATH.'/modules/'.Zend_Registry::get('module').'/views/', 'View_');
+        $view->addBasePath(APPLICATION_PATH.'/../client-specific/views/'.Zend_Registry::get('module').'/', 'View_');
+        
         $view->doctype('XHTML1_STRICT');
-        $view->headMeta()->appendHttpEquiv('Content-Type',
-                'text/html; charset=utf-8');
+        $view->headMeta()->appendHttpEquiv('Content-Type', 'text/html; charset=utf-8');
         $view->layout = Zend_Layout::getMvcInstance();
         $view->cache = Zend_Registry::get('cache');
         $view->session = $this->_session;
