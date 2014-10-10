@@ -15,6 +15,26 @@ http://www.gnu.org/licenses/lgpl.html or in the same folder as this document in 
 document lgpl-license.txt and at http://www.gnu.org/licenses/gpl.html or 
 in the same folder as this document in the document gpl3-license.txt.
 
+For ZfExtended you are allowed to make
+use of the same FLOSS exceptions to GPL3 as specified by Sencha for ExtJs. 
+
+These exceptions are:
+
+* Open Source License Exception for Applications
+  A copy of these License Exception you can find on
+  http://www.sencha.com/products/floss-exception.php or 
+  in the same folder than this document in the document floss-exception.txt.
+
+* Open Source License Exception for Development
+  A copy of these License Exception you can find on
+  http://www.sencha.com/products/ux-exception.php or
+  in the same folder than this document in the document ux-exception.txt.
+
+Please be aware, that Marc Mittag / MittagQI take no warranty for any legal issue, that 
+may arise, if you use these FLOSS exceptions and recommend to stick to GPL 3.
+------------------------------------------------------------------------------------------
+
+
 An exception to this license are the external software-libs, used by ZfExtended. 
 If you use them, you must follow and apply their specific licenses. Therefore they 
 are not part of the ZfExtended software package and not part of the ZfExtended 
