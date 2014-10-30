@@ -31,45 +31,30 @@
   END LICENSE AND COPYRIGHT 
  */
 
-/**
- * This class extends the original Zend EventManager.
- * 
- * Extensions:
- * 
- * -    trigger(): if $this->logTrigger is set to true, every triggered event is written to error_log
- * 
+/**#@+
+ * @author Marc Mittag
+ * @package ZfExtended
+ * @version 2.0
+ *
  */
-class ZfExtended_EventManager extends Zend_EventManager_EventManager
+/**
+ */
+/**
+ * Initialize all plugins wich should be loaded.
+ * They are defined in Zf_configuration-list runtimeOptions.plugins.active
+ *
+ */
+class ZfExtended_Resource_PluginLoader extends Zend_Application_Resource_ResourceAbstract
 {
-    /**
-     * 
-     * @var boolean 
-     */
-    protected $logTrigger = true;
     
-    
-    /**
-     * ZfExtended:
-     * if $this->logTrigger is set to true, all triggered events are 
-     * written to error_log wich can be used for debuging
-     * 
-     * Zend:
-     * Trigger all listeners for a given event
-     *
-     * Can emulate triggerUntil() if the last argument provided is a callback.
-     *
-     * @param  string $event
-     * @param  string|object $target Object calling emit, or symbol describing target (such as static method name)
-     * @param  array|ArrayAccess $argv Array of arguments; typically, should be associative
-     * @param  null|callback $callback
-     * @return Zend_EventManager_ResponseCollection All listener return values
-     */
-    public function trigger($event, $target = null, $argv = array(), $callback = null)
+    public function init()
     {
-        if ($this->logTrigger == true)
+        $config = Zend_Registry::get('config');
+        $pluginClasses = $config->runtimeOptions->plugins->active->toArray();
+        foreach ($pluginClasses as $pluginClass)
         {
-            error_log("event triggered: ".$event."; target: ".get_class($target));
+            //error_log("Plugin-Class ".$pluginClass." initialized.");
+            ZfExtended_Factory::get($pluginClass);
         }
-        return parent::trigger($event, $target, $argv, $callback);
     }
 }
