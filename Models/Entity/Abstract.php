@@ -233,7 +233,7 @@ abstract class ZfExtended_Models_Entity_Abstract {
      * @return mixed  The primary key value(s), as an associative array if the key is compound, or a scalar if the key is single-column.
      */
     public function save() {
-        $this->events->trigger("beforeSave", $this);
+        $this->events->trigger("beforeSave", $this, array('model' => $this));
         return $this->row->save();
     }
 
