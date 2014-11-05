@@ -1,3 +1,7 @@
+2014-11-05 - New Features:
+            TRANSLATE-298: add client-specific Translations
+            TRANSLATE-284: added client-specific view-path
+
 2014-08-13: TRANSLATE-130: DB Updater as a first part of the Install and Update Kit introduced.
             - for usage have a look at docs/databaseMaintenance.md
             - moved all DB SQL files from docs to database
