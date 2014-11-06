@@ -87,12 +87,12 @@ class ZfExtended_Models_Installer_DbUpdater {
      * @return array
      */
     protected function getInsertData(array $file, $appVersion) {
-        return [
+        return array(
             'origin' => $file['origin'],
             'filename' => $file['relativeToOrigin'],
             'md5' => $this->filehash($file['absolutePath']),
             'appVersion' => $appVersion
-        ];
+        );
     }
     
     /**
@@ -174,10 +174,10 @@ class ZfExtended_Models_Installer_DbUpdater {
         
         foreach($this->sqlFilesChanged as $key => $file) {
             $a = $dbversion->getAdapter();
-            $where= [
+            $where= array(
                 $a->quoteInto('origin = ?', $file['origin']),
                 $a->quoteInto('filename = ?', $file['relativeToOrigin']),
-            ];
+            );
         
             $count = $dbversion->update(array('md5' => $this->filehash($file['absolutePath'])), $where);
             if($count === 1){
@@ -240,7 +240,7 @@ class ZfExtended_Models_Installer_DbUpdater {
         if(!file_exists($exec) || !is_executable($exec)) {
             throw new ZfExtended_Exception("Cant find or execute mysql excecutable ".$exec);
         }
-        $cmd = [$this->mysqlBin];
+        $cmd = array($this->mysqlBin);
         $cmd[] = '-h';
         $cmd[] = escapeshellarg($db->host);
         $cmd[] = '-u';
