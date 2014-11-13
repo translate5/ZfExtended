@@ -34,7 +34,7 @@
  END LICENSE AND COPYRIGHT 
  */
 
-abstract class ZfExtended_Worker_Abstract { // extends ZfExtended_Models_Worker {
+abstract class ZfExtended_Worker_Abstract {
     
     /**
      * @var ZfExtended_Models_Worker
@@ -42,25 +42,33 @@ abstract class ZfExtended_Worker_Abstract { // extends ZfExtended_Models_Worker 
     protected $workerModel = false;
     
     /**
-     * Number of allowed parallel processes for a certain worker-type
+     * Number of allowed parallel processes for a certain worker
      * @var integer
      */
     protected $maxParallelProcesses = 1;
     
+    
     /**
      * This constant values define the different blocking-types
-     * @var integer
+     * @var string
      */
-    const BLOCK_GLOBAL = 0;
-    const BLOCK_TYPE = 0;
-    const BLOCK_TYPEANDSLOT = 0;
+    const BLOCK_SLOT = 'slot';
+    const BLOCK_RESOURCE = 'resource';
+    const BLOCK_GLOBAL = 'global';
     
     /**
-     * Number of allowed parallel processes for a certain worker-type
+     * Blocking-typ for this certain worker
      * @var const blocking-type BLOCK_XYZ
      */
-    protected $blockingType = self::BLOCK_TYPEANDSLOT;
+    protected $blockingType = self::BLOCK_SLOT;
     
+    
+    /**
+     * holds the result-values of processing method $this->work()
+     *  
+     * @var mixed
+     */
+    protected $result;
     
     
     /**
@@ -68,20 +76,28 @@ abstract class ZfExtended_Worker_Abstract { // extends ZfExtended_Models_Worker 
      * 
      * @param string $taskGuid
      * @param array $parameters stored in the worker-model
+     * 
+     * @return boolean true if worker cann be initialized.
      */
     public function init($taskGuid = NULL, $parameters = array()) {
         //error_log(__CLASS__.' -> '.__FUNCTION__);
+        
+        if (!$this->validateParameters($parameters)) {
+            //error_log(__CLASS__.' -> '.__FUNCTION__.' Parameters can not be validated');
+            return false;
+        }
+        
         $this->workerModel = ZfExtended_Factory::get('ZfExtended_Models_Worker');
         
         $this->workerModel->setState(ZfExtended_Models_Worker::STATE_WAITING);
         $this->workerModel->setWorker(get_class($this));
         $this->workerModel->setTaskGuid($taskGuid);
         $this->workerModel->setParameters(serialize($parameters));
-        //error_log('Startzeit: '.$this->workerModel->getStarttime());
+        $this->workerModel->setHash(uniqid(NULL, true));
         
-        //$id = $this->workerModel->save();
-        //$this->workerModel->load($id);
-        //error_log(print_r($this->workerModel, true));
+        $this->workerModel->setBlockingType($this->blockingType);
+        
+        return true;
     }
     
     
@@ -99,56 +115,140 @@ abstract class ZfExtended_Worker_Abstract { // extends ZfExtended_Models_Worker 
      * Get a worker-instance from a worker-model
      * 
      * @param ZfExtended_Models_Worker $model
-     * @return mixed a concrete worker corresponding to the submittied worker-model
+     * @return mixed a concrete worker corresponding to the submittied worker-model; false if instance could not be initialized;
      */
     static public function instanceByModel(ZfExtended_Models_Worker $model) {
-        //error_log(__CLASS__.' -> '.__FUNCTION__.'; worker: '.$model->workerModel->getWorker());
-        //return;
-        
-        // !!! this only works if all __construct() has same function-parameters
+        //error_log(__CLASS__.' -> '.__FUNCTION__.'; worker: '.$model->getWorker());
         $instance = ZfExtended_Factory::get($model->getWorker());
-        $instance->init($model->getTaskGuid(), array($model->getParameters()));
+        if (!$instance->init($model->getTaskGuid(), unserialize($model->getParameters()))) {
+            return false;
+        }
+        
         $instance->workerModel = $model;
         return $instance;
     }
     
     
-    public function queue($taskGuid = NULL) {
-        
-        // SBE: why this ??
-        $this->workerModel->setTaskGuid($taskGuid);
-        
-        $this->workerModel->setSlot($this->calculateQueuedSlot());
-    }
-    
-    protected function calculateQueuedSlot() {
-        return 'default';
-    }
-    
-    protected function calculateDirectSlot() {
-        return $this->calculateQueuedSlot();
-    }
+    /**
+     * Checks the parameters given to init().
+     * Need to be defined in concrete worker.
+     * 
+     * @param array $parameters
+     * @return boolean true if everything is OK
+     */
+    abstract protected function validateParameters($parameters = array());
     
     
-    
-    
-    protected function run($taskGuid = NULL) {
-        error_log(__CLASS__.' -> '.__FUNCTION__);
-        $this->workerModel->setStarttime(new Zend_Db_Expr('NOW()'));
-        $this->workerModel->setHash(uniqid(NULL, true));
-        // alternative try restore serialized class
-        $this->workerModel->setClassDump(serialize($this));
-        
+    public function queue() {
+        //error_log(__CLASS__.' -> '.__FUNCTION__);
+        $tempSlot = $this->calculateQueuedSlot();
+        $this->workerModel->setResource($tempSlot['resource']);
+        $this->workerModel->setSlot($tempSlot['slot']);
         $this->workerModel->save();
     }
     
     
+    /**
+     * @return array('resource' => ResurceName, 'slot' => SlotName);
+     */
+    protected function calculateDirectSlot() {
+        return $this->calculateQueuedSlot();
+    }
+    /**
+     * @return array('resource' => ResurceName, 'slot' => SlotName);
+     */
+    protected function calculateQueuedSlot() {
+        return array('resource' => $this->workerModel->getWorker(), 'slot' => 'default');
+    }
+    
+    
+    /**
+     * if function is needed public, you have to define a public function in the concrete worker
+     * and call this by parent::run();
+     * 
+     * direct calls per run are not mutex-save!
+     * 
+     * @return boolean true if $this->work() runs without errors
+     */
+    protected function run() {
+        //error_log(__CLASS__.' -> '.__FUNCTION__);
+        return $this->_run($this->calculateDirectSlot());
+    }
+    
+    /**
+     * Mutex save worker-run. Before this function can be called, the worker must be queued with $this->queue();
+     * 
+     * @return boolean true if $this->work() runs without errors
+     */
     public function runQueued() {
-        error_log(__CLASS__.' -> '.__FUNCTION__);
+        //error_log(__CLASS__.' -> '.__FUNCTION__);
         if (!$this->workerModel->setRunningMutex())
         {
             return false;
         }
+        $result = $this->_run($this->calculateQueuedSlot());
+        
+        return $result;
+    }
+    
+    
+    /**
+     * inner run function used by run and runQueued
+     * 
+     * @param array $resource = array('resource' => resourceName, 'slot' => slotName)
+     * @return boolean true if $this->work() runs without errors
+     */
+    private function _run($resource = array()) {
+        //error_log(__CLASS__.' -> '.__FUNCTION__);
+        $this->workerModel->setState(ZfExtended_Models_Worker::STATE_RUNNING);
+        $this->workerModel->setResource($resource['resource']);
+        $this->workerModel->setSlot($resource['slot']);
+        $this->workerModel->setStarttime(new Zend_Db_Expr('NOW()'));
+        $this->workerModel->setMaxRuntime(new Zend_Db_Expr('NOW() + INTERVAL '.$this->workerModel->getMaxLifetime()));
+        $this->workerModel->setPid(getmypid());
+        
+        $this->workerModel->save();
+        $result = $this->work();
+        $this->workerModel->delete();
+        
+        $this->startWorkerQueue();
+        
+        return $result;
+    }
+    
+    /**
+     * trigger application-wide worker-queue
+     */
+    private function startWorkerQueue() {
+        // Stephan:
+        // done by calling ZfExtended_Worker_Queue -> process();
+        
+        // VS.
+        
+        // Thomas:
+        // start workerQueue by calling the REST-Controller
+        // something like:
+        // $ch = curl_init('/url/to/restcontroller');
+        // curl_exec($ch);
+        // curl_close($ch);
+    }
+    
+    
+    /**
+     * need to be defined in concrete worker.
+     * Results (if any) shold be written in $this->result so they can be read-out later by $this->getResults()
+     * 
+     * @return boolean true if everything is OK
+     */
+    abstract protected function work();
+    
+    
+    /**
+     * Get the result-values of prrocessing $this->work();
+     * @return mixed
+     */
+    public function getResult() {
+        return $this->result;
     }
     
 }
