@@ -37,23 +37,33 @@
  * Abstract Worker Class
  * 
  * @method void setId() setId(integer $id)
+ * @method void setState() setState(string $state)
  * @method void setWorker() setWorker(string $phpClassName)
+ * @method void setResource() setResource(string $resource)
  * @method void setSlot() setSlot(string $slotName)
  * @method void setTaskGuid() setTaskGuid(string $taskGuid)
  * @method void setParameters() setParameters(string $serializedParameters)
  * @method void setPid() setPid(integer $pid)
  * @method void setStarttime() setStarttime(string $starttime)
+ * @method void setMaxRuntime() setMaxRuntime(string $maxRuntime)
  * @method void setHash() setHash(string $hash)
+ * @method void setMaxParallelProcesses() setMaxParallelProcesses(integer $maxParallelProcesses)
+ * @method void setBlockingType() setBlockingType(string $blockingType)
  * 
- * @method void getId()
- * @method void getWorker()
- * @method void getSlot()
- * @method void getTaskGuid()
- * @method void getParameters()
- * @method void getPid()
- * @method void getStarttime()
- * @method void getHash()
- * 
+ * @method integer getId()
+ * @method string getState()
+ * @method string getWorker()
+ * @method string getResource()
+ * @method string getSlot()
+ * @method string getTaskGuid()
+ * @method string getParameters()
+ * @method integer getPid()
+ * @method string getStarttime()
+ * @method string getMaxRuntime()
+ * @method string getHash()
+ * @method integer getMaxParallelProcesses()
+ * @method string getBlockingType()
+ *  
  */
 class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
     /**
@@ -76,52 +86,160 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
     const STATE_WAITING = 'waiting';
     const STATE_RUNNING = 'running';
     
-    /*
-    public function run() {
-        error_log(__CLASS__.' -> '.__FUNCTION__);
-        //error_log(print_r($this->row, true));
-        //$this->setStarttime('Lifetime: '.$this->maxLifetime);
-        $this->setWorker(get_class($this));
-        $this->setStarttime(new Zend_Db_Expr('NOW()'));
-        $this->setHash(uniqid(NULL, true));
-        //$this->save();
-    }
-    */
     
-    
+    /**
+     * Try to set worker into mutex-save mode
+     * 
+     * @return boolean true if workerModel is set to mutex-save
+     */
     public function setRunningMutex() {
-        //error_log(__CLASS__.' -> '.__FUNCTION__);
-        
         // workerModel can not be set to mutex if it is new 
         if (!$this->getId() || !$this->getHash())
         {
+            //error_log(__CLASS__.' -> '.__FUNCTION__.' workerModel can not be set to mutex (ID-Error, Hash-Error)');
             return false;
         }
+        $data = array('hash' => uniqid(NULL, true));
         
-        $sql = $this->db->select()
-                    ->where('id = ?', $this->getId())
-                    ->where('hash = ?', $this->getHash())
-                    ->where('state = ?', self::STATE_WAITING);
-        //error_log('sql: '.$sql);
-        $row = $this->db->fetchRow($sql);
+        $whereStatements = array();
+        $whereStatements[] ='id = "'.$this->getId().'"';
+        $whereStatements[] = 'hash = "'.$this->getHash().'"';
+        $whereStatements[] = 'state = "'.self::STATE_WAITING.'"';
         
-        // workerModel can not be set to mutex because no entry with this id an hash can be found in database
-        if (!$row)
+        
+        $countRows = $this->db->update($data, $whereStatements);
+        
+        // workerModel can not be set to mutex because no entry with same id and hash can be found in database
+        if ($countRows < 1)
         {
+            //error_log(__CLASS__.' -> '.__FUNCTION__.' workerModel can not be set to mutex (no entry found in DB)');
             return false;
         }
-        
-        // is mutex-save: set new hash and save it to the DB
-        $this->setHash(uniqid(NULL, true));
-        $this->save();
         
         return true;
+    }
+    
+    /**
+     * 
+     * @param string $taskGuid
+     * @return array: list of queued entries in table LEK_worker which are "ready to run"
+     */
+    public function getListQueued($taskGuid = NULL) {
+        $listQueued = array();
+        $listWaiting = $this->getListWaiting($taskGuid);
+        $listRunning = $this->getListRunning($taskGuid);
+        
+        $listRunningSerialized = array();
+        foreach ($listRunning as $running) {
+            // stop if one running worker is of blocking-type 'global'
+            if ($running['blockingType'] == ZfExtended_Worker_Abstract::BLOCK_GLOBAL) {
+                //error_log(__CLASS__.' -> '.__FUNCTION__.'; Blocked global by '.print_r($running, true));
+                return array();
+            }
+            $listRunningSerialized[] = serialize(array($running['resource'], $running['slot']));
+        }
+        
+        foreach($listWaiting as $waiting) {
+            $tempResourceSlot = array($waiting['resource'], $waiting['slot']);
+            $tempResourceSlotSerialized = serialize($tempResourceSlot);
+            
+            // check if blocking-type 'type' blocks this waiting worker
+            if ($waiting['blockingType'] == ZfExtended_Worker_Abstract::BLOCK_RESOURCE
+                && in_array($tempResourceSlotSerialized, $listRunningSerialized)) {
+                
+                //error_log(__CLASS__.' -> '.__FUNCTION__.'; Blocked resource for '.print_r($waiting, true));
+                continue;
+            }
+            
+            // check if blocking-type is 'slot' and number of parallel processes for this resource/slot is not reached
+            $countedWorkers = array_count_values($listRunningSerialized);
+            //error_log(__CLASS__.' -> '.__FUNCTION__.'; $countedWorkers '.print_r($countedWorkers, true));
+            $countRunningSlotProcesses = 0;
+            if (array_key_exists($tempResourceSlotSerialized, $countedWorkers)) {
+                $countRunningSlotProcesses = $countedWorkers[$tempResourceSlotSerialized];
+                //error_log(__CLASS__.' -> '.__FUNCTION__.'; $countRunningSlotProcesses: '.$countRunningSlotProcesses.'; $tempResourceSlot: '.print_r($tempResourceSlot, true));
+            }
+            
+            if ($waiting['blockingType'] == ZfExtended_Worker_Abstract::BLOCK_SLOT
+                && $countRunningSlotProcesses >= $waiting['maxParallelProcesses']) {
+                
+                //error_log(__CLASS__.' -> '.__FUNCTION__.'; Blocked slot for '.print_r($tempResourceSlot, true));
+                continue;
+            }
+            
+            //error_log(__CLASS__.' -> '.__FUNCTION__.'; .. starten: '.print_r($tempResourceSlot, true));
+            $listQueued[] = $waiting;
+            $listRunning[] = $tempResourceSlot;
+            $listRunningSerialized[] = $tempResourceSlotSerialized;
+        }
+        //error_log(__CLASS__.' -> '.__FUNCTION__.'; ListQueued: '.print_r($listQueued, true));
+        //error_log(__CLASS__.' -> '.__FUNCTION__.'; ListRunning: '.print_r($listRunning, true));
+        
+        return $listQueued;
+    }
+    
+    private function getListWaiting($taskGuid = NULL) {
+        //error_log(__CLASS__.' -> '.__FUNCTION__.'; taskQuid = '.$taskGuid);
+        $sql = $this->db->select()->where('state = ?', self::STATE_WAITING)->order('id ASC');
+        
+        if ($taskGuid) {
+            $sql->where('taskGuid = ?', $taskGuid);
+        }
+        
+        //error_log(__CLASS__.' -> '.__FUNCTION__.'; SQL: '.$sql);
+        $rows = $this->db->fetchAll($sql)->toArray();
+        //error_log(__CLASS__.' -> '.__FUNCTION__.'; Result: '.print_r($rows, true));
+        
+        return $rows;
+    }
+    private function getListRunning($taskGuid = NULL) {
+        //error_log(__CLASS__.' -> '.__FUNCTION__.'; taskQuid = '.$taskGuid);
+        $db = $this->db;
+        $sql = $db->select()
+                    //->columns(array('resource', 'slot')) // this does not work :-((((
+                    ->from($db->info($db::NAME), array('resource', 'slot', 'blockingType'))
+                    ->where('state = ?', self::STATE_RUNNING)
+                    ->order('resource ASC')->order('slot ASC');
+        
+        if ($taskGuid) {
+            $sql->where('taskGuid = ?', $taskGuid);
+        }
+    
+        //error_log(__CLASS__.' -> '.__FUNCTION__.'; SQL: '.$sql);
+        $rows = $this->db->fetchAll($sql)->toArray();
+        //error_log(__CLASS__.' -> '.__FUNCTION__.'; Result: '.print_r($rows, true));
+        
+        return $rows;
+    }
+    
+    /**
+     * Get a counted list of all slots (no matter what state (running or waiting) the entry has)
+     * for the given resource $resourceName
+     * 
+     * @param string $resourceName
+     * @return array: list of array(slot, count) for the given resource
+     */
+    public function getListSlotsCount($resourceName = '') {
+        //error_log(__CLASS__.' -> '.__FUNCTION__.'; $resourceName = '.$resourceName);
+        $db = $this->db;
+        $sql = $db->select()
+                    //->columns(array('resource', 'slot')) // this does not work :-((((
+                    ->from($db->info($db::NAME), array('slot', 'COUNT(*) AS count'))
+                    ->where('resource = ?', $resourceName)
+                    ->group(array('resource', 'slot'))
+                    ->order('count ASC');
+        
+        //error_log(__CLASS__.' -> '.__FUNCTION__.'; SQL: '.$sql);
+        $rows = $this->db->fetchAll($sql)->toArray();
+        //error_log(__CLASS__.' -> '.__FUNCTION__.'; Result: '.print_r($rows, true));
+        
+        return $rows;
     }
     
     
     public function cleanGarbage() {
         error_log(__CLASS__.' -> '.__FUNCTION__);
-        $sql = $this->db->select()->where('starttime < NOW() - INTERVAL '.$this->maxLifetime);
+        $sql = $this->db->select()->where('maxRuntime < NOW()');
         //error_log('SQL: '.$sql);
         $rows = $this->db->fetchAll($sql);
         //error_log('Result: '.print_r($rows, true));
@@ -131,5 +249,9 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
         }
     }
     
+    
+    public function getMaxLifetime() {
+        return $this->maxLifetime;
+    }
     
 }
