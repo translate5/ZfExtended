@@ -114,6 +114,15 @@ abstract class ZfExtended_Models_Entity_Abstract {
     }
 
     /**
+     * Deep Cloning of the internal data object
+     * else all cloned objects will only have a reference to the same $this->rows
+     */
+    public function __clone() {
+        $this->row = clone $this->row;
+    }
+    
+    
+    /**
      * loads the Entity by Primary Key Id
      * @param integer $id
      */
