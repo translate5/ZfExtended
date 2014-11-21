@@ -42,6 +42,11 @@ abstract class ZfExtended_Worker_Abstract {
     protected $workerModel = false;
     
     /**
+     * @var ZfExtended_Models_Worker
+     */
+    protected $workerModelBeforeDelete = false;
+    
+    /**
      * Number of allowed parallel processes for a certain worker
      * @var integer
      */
@@ -89,7 +94,7 @@ abstract class ZfExtended_Worker_Abstract {
         
         $this->workerModel = ZfExtended_Factory::get('ZfExtended_Models_Worker');
         
-        $this->workerModel->setState(ZfExtended_Models_Worker::STATE_WAITING);
+        $this->workerModel->setState(ZfExtended_Models_Worker::STATE_SCHEDULED);
         $this->workerModel->setWorker(get_class($this));
         $this->workerModel->setTaskGuid($taskGuid);
         $this->workerModel->setParameters(serialize($parameters));
@@ -110,6 +115,14 @@ abstract class ZfExtended_Worker_Abstract {
         return $this->workerModel;
     }
     
+    /**
+     * Returns the internal worker-model in the state before it was deleted
+     * 
+     * @return ZfExtended_Models_Worker
+     */
+    public function getModelBeforeDelete() {
+        return $this->workerModelBeforeDelete;
+    }
     
     /**
      * Get a worker-instance from a worker-model
@@ -121,6 +134,7 @@ abstract class ZfExtended_Worker_Abstract {
         //error_log(__CLASS__.' -> '.__FUNCTION__.'; worker: '.$model->getWorker());
         $instance = ZfExtended_Factory::get($model->getWorker());
         if (!$instance->init($model->getTaskGuid(), unserialize($model->getParameters()))) {
+            error_log(__CLASS__.' -> '.__FUNCTION__.'; $model->getParameters(): '.print_r(unserialize($model->getParameters()), true));
             return false;
         }
         
@@ -145,6 +159,8 @@ abstract class ZfExtended_Worker_Abstract {
         $this->workerModel->setResource($tempSlot['resource']);
         $this->workerModel->setSlot($tempSlot['slot']);
         $this->workerModel->save();
+        
+        $this->workerModel->wakeupScheduled($this->workerModel->getTaskGuid());
     }
     
     
@@ -172,7 +188,11 @@ abstract class ZfExtended_Worker_Abstract {
      */
     protected function run() {
         //error_log(__CLASS__.' -> '.__FUNCTION__);
-        return $this->_run($this->calculateDirectSlot());
+        $tempSlot = $this->calculateDirectSlot();
+        $this->workerModel->setResource($tempSlot['resource']);
+        $this->workerModel->setSlot($tempSlot['slot']);
+        
+        return $this->_run();
     }
     
     /**
@@ -186,31 +206,30 @@ abstract class ZfExtended_Worker_Abstract {
         {
             return false;
         }
-        $result = $this->_run($this->calculateQueuedSlot());
         
-        return $result;
+        return $this->_run();
     }
     
     
     /**
      * inner run function used by run and runQueued
      * 
-     * @param array $resource = array('resource' => resourceName, 'slot' => slotName)
      * @return boolean true if $this->work() runs without errors
      */
     private function _run($resource = array()) {
-        //error_log(__CLASS__.' -> '.__FUNCTION__);
+        error_log(__CLASS__.' -> '.__FUNCTION__.'; resource/slot: '.$this->workerModel->getResource().'/'.$this->workerModel->getSlot());
         $this->workerModel->setState(ZfExtended_Models_Worker::STATE_RUNNING);
-        $this->workerModel->setResource($resource['resource']);
-        $this->workerModel->setSlot($resource['slot']);
         $this->workerModel->setStarttime(new Zend_Db_Expr('NOW()'));
         $this->workerModel->setMaxRuntime(new Zend_Db_Expr('NOW() + INTERVAL '.$this->workerModel->getMaxLifetime()));
         $this->workerModel->setPid(getmypid());
         
         $this->workerModel->save();
         $result = $this->work();
+        $this->workerModel->setState(ZfExtended_Models_Worker::STATE_DONE);
+        $this->workerModelBeforeDelete = clone $this->workerModel;
         $this->workerModel->delete();
         
+        $this->workerModel->wakeupScheduled($this->workerModelBeforeDelete->getTaskGuid());
         $this->startWorkerQueue();
         
         return $result;
@@ -220,17 +239,9 @@ abstract class ZfExtended_Worker_Abstract {
      * trigger application-wide worker-queue
      */
     private function startWorkerQueue() {
-        // Stephan:
-        // done by calling ZfExtended_Worker_Queue -> process();
-        
-        // VS.
-        
-        // Thomas:
-        // start workerQueue by calling the REST-Controller
-        // something like:
-        // $ch = curl_init('/url/to/restcontroller');
-        // curl_exec($ch);
-        // curl_close($ch);
+        $trigger = ZfExtended_Factory::get('ZfExtended_Worker_TriggerByHttp');
+        /* @var $trigger ZfExtended_Worker_TriggerByHttp */
+        $trigger->triggerQueue();
     }
     
     

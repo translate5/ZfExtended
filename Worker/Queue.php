@@ -36,44 +36,20 @@
 
 class ZfExtended_Worker_Queue {
     
-    public function process($taskGuid = NULL) {
+    public function process() {
         error_log(__CLASS__.' -> '.__FUNCTION__);
         
         $workerModel = ZfExtended_Factory::get('ZfExtended_Models_Worker');
         /* @var $workerModel ZfExtended_Models_Worker */
         $workerListQueued = $workerModel->getListQueued();
-        //$workerListQueued = $workerModel->getListQueued('{10ea5327-8257-4f4e-abf0-8063e9878b17}');
-    
-        foreach ($workerListQueued as $workerQueue) {
-            
-            $workerModel->init($workerQueue);
-            // TODO start workerQueue by calling the REST-Controller
-            // something like:
-            $url = '/worker/'.$workerModel->getId().'/'.$workerModel->getHash();
-            error_log(__CLASS__.' -> '.__FUNCTION__.'; start worker: '.$url);
-            
-            // $ch = curl_init($url);
-            // curl_exec($ch);
-            // curl_close($ch);
-            
-            continue;
-            
-            
-            
-            
-            
-            $worker = ZfExtended_Worker_Abstract::instanceByModel($workerModel);
-            /* @var $worker editor_Worker_TermTagger */
-    
-            if (!$worker) {
-                error_log(__CLASS__.' -> '.__FUNCTION__.' Worker could not be instanciated');
-                return false;
-            }
-            //$worker->runQueued();
-            //$result = $worker->getResult();
-            error_log(__CLASS__.' -> '.__FUNCTION__.': '.print_r($result, true));
-        }
+        //error_log(__CLASS__.' -> '.__FUNCTION__.'; $workerListQueued: '.print_r($workerListQueued, true));
         
+        $trigger = ZfExtended_Factory::get('ZfExtended_Worker_TriggerByHttp');
+        /* @var $trigger ZfExtended_Worker_TriggerByHttp */
+        
+        foreach ($workerListQueued as $workerQueue) {
+            error_log(__CLASS__.' -> '.__FUNCTION__.'; trigger worker ID: '.$workerQueue['id']);
+            $trigger->triggerWorker($workerQueue['id'], $workerQueue['hash']);
+        }
     }
-    
 }
