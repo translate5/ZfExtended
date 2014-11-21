@@ -45,7 +45,7 @@ class ZfExtended_EventManager extends Zend_EventManager_EventManager
      * 
      * @var boolean 
      */
-    protected $logTrigger = true;
+    protected $logTrigger = false;
     
     
     /**

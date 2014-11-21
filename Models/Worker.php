@@ -83,8 +83,59 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
      * This constant values define the different worker-states
      * @var string
      */
+    const STATE_SCHEDULED = 'scheduled';
     const STATE_WAITING = 'waiting';
     const STATE_RUNNING = 'running';
+    const STATE_DONE    = 'done';
+    
+    
+    /**
+     * Wake up a scheduled worker (set state from scheduled to waiting)
+     * if there are no other worker waiting or running with the given taskGuid
+     * 
+     * @param string $taskGuid
+     */
+    public function wakeupScheduled($taskGuid = NULL) {
+        // check if there are any worker waiting or running with this taskGuid
+        $db = $this->db;
+        $sql = $db->select()
+                    ->from($db->info($db::NAME), array('COUNT(*) AS count'))
+                    ->where('taskGuid = ?', $taskGuid)
+                    ->where('state IN(?)', array(self::STATE_RUNNING, self::STATE_WAITING));
+        $count = $this->db->fetchRow($sql)->count;
+        
+        // if no waiting/running worker was found, wake up the next scheduled worker with this taskGuid
+        if ($count == 0) {
+            $sql = $db->select()
+            ->from($db->info($db::NAME), array('id'))
+            ->where('taskGuid = ?', $taskGuid)
+            ->where('state = ?', self::STATE_SCHEDULED)
+            ->order('id ASC')
+            ->limit(1);
+            error_log(__CLASS__.' -> '.__FUNCTION__.'; SQL: '.$sql);
+            $row = $this->db->fetchRow($sql);
+            
+            // there ist no scheduled worker with this taskGuid
+            if (empty($row)) {
+                error_log(__CLASS__.' -> '.__FUNCTION__.' no scheduled worker to wake up for taskGuid '.$taskGuid);
+                return;
+            }
+            
+            $id = $row->id;
+            $data = array('state' => self::STATE_WAITING);
+            $whereStatements = array();
+            $whereStatements[] ='id = "'.$id.'"';
+            
+            $countRows = $this->db->update($data, $whereStatements);
+            
+            // workerModel can not be set to mutex because no entry with same id and hash can be found in database
+            if ($countRows < 1)
+            {
+                error_log(__CLASS__.' -> '.__FUNCTION__.' workerModel can not wake up next scheduled worker with $id='.$id);
+                return false;
+            }
+        }
+    }
     
     
     /**
@@ -94,9 +145,9 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
      */
     public function setRunningMutex() {
         // workerModel can not be set to mutex if it is new 
-        if (!$this->getId() || !$this->getHash())
+        if (!$this->getId() || !$this->getHash() || $this->getState() != self::STATE_WAITING)
         {
-            //error_log(__CLASS__.' -> '.__FUNCTION__.' workerModel can not be set to mutex (ID-Error, Hash-Error)');
+            error_log(__CLASS__.' -> '.__FUNCTION__.' workerModel can not be set to mutex (id-Error, state-Error, hash-Error)');
             return false;
         }
         $data = array('hash' => uniqid(NULL, true));
@@ -106,13 +157,12 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
         $whereStatements[] = 'hash = "'.$this->getHash().'"';
         $whereStatements[] = 'state = "'.self::STATE_WAITING.'"';
         
-        
         $countRows = $this->db->update($data, $whereStatements);
         
         // workerModel can not be set to mutex because no entry with same id and hash can be found in database
         if ($countRows < 1)
         {
-            //error_log(__CLASS__.' -> '.__FUNCTION__.' workerModel can not be set to mutex (no entry found in DB)');
+            error_log(__CLASS__.' -> '.__FUNCTION__.' workerModel can not be set to mutex (no entry found in DB)');
             return false;
         }
         
@@ -129,30 +179,32 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
         $listWaiting = $this->getListWaiting($taskGuid);
         $listRunning = $this->getListRunning($taskGuid);
         
-        $listRunningSerialized = array();
+        $listRunningResources = array();
+        $listRunningResourceSlotSerialized = array();
         foreach ($listRunning as $running) {
-            // stop if one running worker is of blocking-type 'global'
+            // stop if one running worker is of blocking-type 'GLOBAL'
             if ($running['blockingType'] == ZfExtended_Worker_Abstract::BLOCK_GLOBAL) {
                 //error_log(__CLASS__.' -> '.__FUNCTION__.'; Blocked global by '.print_r($running, true));
                 return array();
             }
-            $listRunningSerialized[] = serialize(array($running['resource'], $running['slot']));
+            $listRunningResources[] = $running['resource'];
+            $listRunningResourceSlotSerialized[] = serialize(array($running['resource'], $running['slot']));
         }
         
         foreach($listWaiting as $waiting) {
-            $tempResourceSlot = array($waiting['resource'], $waiting['slot']);
-            $tempResourceSlotSerialized = serialize($tempResourceSlot);
-            
-            // check if blocking-type 'type' blocks this waiting worker
+            // check if blocking-type 'RESOURCE' blocks this waiting worker
             if ($waiting['blockingType'] == ZfExtended_Worker_Abstract::BLOCK_RESOURCE
-                && in_array($tempResourceSlotSerialized, $listRunningSerialized)) {
+                && in_array($waiting['resource'], $listRunningResources)) {
                 
                 //error_log(__CLASS__.' -> '.__FUNCTION__.'; Blocked resource for '.print_r($waiting, true));
                 continue;
             }
             
-            // check if blocking-type is 'slot' and number of parallel processes for this resource/slot is not reached
-            $countedWorkers = array_count_values($listRunningSerialized);
+            // check if blocking-type is 'SLOT' and number of parallel processes for this resource/slot is not reached
+            $tempResourceSlot = array($waiting['resource'], $waiting['slot']);
+            $tempResourceSlotSerialized = serialize($tempResourceSlot);
+            
+            $countedWorkers = array_count_values($listRunningResourceSlotSerialized);
             //error_log(__CLASS__.' -> '.__FUNCTION__.'; $countedWorkers '.print_r($countedWorkers, true));
             $countRunningSlotProcesses = 0;
             if (array_key_exists($tempResourceSlotSerialized, $countedWorkers)) {
@@ -170,10 +222,12 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
             //error_log(__CLASS__.' -> '.__FUNCTION__.'; .. starten: '.print_r($tempResourceSlot, true));
             $listQueued[] = $waiting;
             $listRunning[] = $tempResourceSlot;
-            $listRunningSerialized[] = $tempResourceSlotSerialized;
+            $listRunningResources[] = $waiting['resource'];
+            $listRunningResourceSlotSerialized[] = $tempResourceSlotSerialized;
         }
-        //error_log(__CLASS__.' -> '.__FUNCTION__.'; ListQueued: '.print_r($listQueued, true));
-        //error_log(__CLASS__.' -> '.__FUNCTION__.'; ListRunning: '.print_r($listRunning, true));
+        //error_log(__CLASS__.' -> '.__FUNCTION__.'; $listQueued: '.print_r($listQueued, true));
+        //error_log(__CLASS__.' -> '.__FUNCTION__.'; $listRunning: '.print_r($listRunning, true));
+        //error_log(__CLASS__.' -> '.__FUNCTION__.'; $listRunningResourceSlotSerialized: '.print_r($listRunningResourceSlotSerialized, true));
         
         return $listQueued;
     }
