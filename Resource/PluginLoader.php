@@ -50,6 +50,9 @@ class ZfExtended_Resource_PluginLoader extends Zend_Application_Resource_Resourc
     public function init()
     {
         $config = Zend_Registry::get('config');
+        if(!isset($config->runtimeOptions->plugins)){
+            return;
+        }
         $pluginClasses = $config->runtimeOptions->plugins->active->toArray();
         foreach ($pluginClasses as $pluginClass)
         {
