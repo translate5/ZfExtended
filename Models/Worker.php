@@ -98,42 +98,47 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
     public function wakeupScheduled($taskGuid = NULL) {
         // check if there are any worker waiting or running with this taskGuid
         $db = $this->db;
+        $db->getAdapter()->beginTransaction();
         $sql = $db->select()
-                    ->from($db->info($db::NAME), array('COUNT(*) AS count'))
-                    ->where('taskGuid = ?', $taskGuid)
-                    ->where('state IN(?)', array(self::STATE_RUNNING, self::STATE_WAITING));
-        $count = $this->db->fetchRow($sql)->count;
+                ->from($db->info($db::NAME), array('COUNT(*) AS count'))
+                ->where('taskGuid = ?', $taskGuid)
+                ->where('state IN(?)', array(self::STATE_RUNNING, self::STATE_WAITING));
+        $count = $db->fetchRow($sql)->count;
         
         // if no waiting/running worker was found, wake up the next scheduled worker with this taskGuid
-        if ($count == 0) {
-            $sql = $db->select()
-            ->from($db->info($db::NAME), array('id'))
-            ->where('taskGuid = ?', $taskGuid)
-            ->where('state = ?', self::STATE_SCHEDULED)
-            ->order('id ASC')
-            ->limit(1);
-            error_log(__CLASS__.' -> '.__FUNCTION__.'; SQL: '.$sql);
-            $row = $this->db->fetchRow($sql);
-            
-            // there ist no scheduled worker with this taskGuid
-            if (empty($row)) {
-                error_log(__CLASS__.' -> '.__FUNCTION__.' no scheduled worker to wake up for taskGuid '.$taskGuid);
-                return;
-            }
-            
-            $id = $row->id;
-            $data = array('state' => self::STATE_WAITING);
-            $whereStatements = array();
-            $whereStatements[] ='id = "'.$id.'"';
-            
-            $countRows = $this->db->update($data, $whereStatements);
-            
-            // workerModel can not be set to mutex because no entry with same id and hash can be found in database
-            if ($countRows < 1)
-            {
-                error_log(__CLASS__.' -> '.__FUNCTION__.' workerModel can not wake up next scheduled worker with $id='.$id);
-                return false;
-            }
+        if ($count != 0) {
+            $db->getAdapter()->commit();
+            return;
+        }
+        
+        $sql = $db->select()
+                ->from($db->info($db::NAME), array('id'))
+                ->where('taskGuid = ?', $taskGuid)
+                ->where('state = ?', self::STATE_SCHEDULED)
+                ->order('id ASC')
+                ->limit(1);
+        //error_log(__CLASS__.' -> '.__FUNCTION__.'; SQL: '.$sql);
+        $row = $db->fetchRow($sql);
+        
+        // there is no scheduled worker with this taskGuid
+        if (empty($row)) {
+            //error_log(__CLASS__.' -> '.__FUNCTION__.' no scheduled worker to wake up for taskGuid '.$taskGuid);
+            $db->getAdapter()->commit();
+            return;
+        }
+        
+        $id = $row->id;
+        $data = array('state' => self::STATE_WAITING);
+        $whereStatements = array();
+        $whereStatements[] ='id = "'.$id.'"';
+        
+        $countRows = $db->update($data, $whereStatements);
+        $db->getAdapter()->commit();
+        
+        if ($countRows < 1)
+        {
+            error_log(__CLASS__.' -> '.__FUNCTION__.' workerModel can not wake up next scheduled worker with $id='.$id);
+            return false;
         }
     }
     
@@ -176,8 +181,11 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
      */
     public function getListQueued($taskGuid = NULL) {
         $listQueued = array();
+        $db = $this->db;
+        $db->getAdapter()->beginTransaction();
         $listWaiting = $this->getListWaiting($taskGuid);
         $listRunning = $this->getListRunning($taskGuid);
+        $db->getAdapter()->commit();
         
         $listRunningResources = array();
         $listRunningResourceSlotSerialized = array();
@@ -260,7 +268,7 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
         }
     
         //error_log(__CLASS__.' -> '.__FUNCTION__.'; SQL: '.$sql);
-        $rows = $this->db->fetchAll($sql)->toArray();
+        $rows = $db->fetchAll($sql)->toArray();
         //error_log(__CLASS__.' -> '.__FUNCTION__.'; Result: '.print_r($rows, true));
         
         return $rows;
@@ -284,7 +292,7 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
                     ->order('count ASC');
         
         //error_log(__CLASS__.' -> '.__FUNCTION__.'; SQL: '.$sql);
-        $rows = $this->db->fetchAll($sql)->toArray();
+        $rows = $db->fetchAll($sql)->toArray();
         //error_log(__CLASS__.' -> '.__FUNCTION__.'; Result: '.print_r($rows, true));
         
         return $rows;

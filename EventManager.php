@@ -66,7 +66,7 @@ class ZfExtended_EventManager extends Zend_EventManager_EventManager
      */
     public function trigger($event, $target = null, $argv = array(), $callback = null)
     {
-        if ($this->logTrigger == true)
+        if ($this->logTrigger)
         {
             error_log("event triggered: ".$event."; target: ".get_class($target));
         }
