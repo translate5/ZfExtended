@@ -46,14 +46,16 @@ class ZfExtended_Worker_TriggerByHttp {
     public function triggerWorker($id, string $hash) {
         $config = Zend_Registry::get('config');
         $serverName = $config->runtimeOptions->server->name;
+        $serverProtocol =  $config->runtimeOptions->server->protocol;
         //$this->triggerUrl('http://test.local/editor/worker/'.$id, array('state' => 'running', 'hash' => $hash), 'PUT');
-        $this->triggerUrl('http://'.$serverName.APPLICATION_RUNDIR.'/editor/worker/'.$id, array('state' => 'running', 'hash' => $hash), 'PUT');
+        $this->triggerUrl($serverProtocol.$serverName.APPLICATION_RUNDIR.'/editor/worker/'.$id, array('state' => 'running', 'hash' => $hash), 'PUT');
     }
     
     public function triggerQueue() {
         $config = Zend_Registry::get('config');
         $serverName = $config->runtimeOptions->server->name;
-        $this->triggerUrl('http://'.$serverName.APPLICATION_RUNDIR.'/editor/worker/queue');
+        $serverProtocol =  $config->runtimeOptions->server->protocol;
+        $this->triggerUrl($serverProtocol.$serverName.APPLICATION_RUNDIR.'/editor/worker/queue');
     }
     
     /**
@@ -84,11 +86,12 @@ class ZfExtended_Worker_TriggerByHttp {
                     break;
             }
         }
+        if (!empty($urlParts['port'])) {
+            $port = $urlParts['port'];
+        }
         
-        if (!empty($postParameters)) {
-            if ($method != 'PUT') {
-                $method = 'POST';
-            }
+        if (!empty($postParameters) && $method != 'PUT') {
+            $method = 'POST';
         }
         
         $getParameters = '';
