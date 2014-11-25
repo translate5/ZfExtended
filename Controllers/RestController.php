@@ -81,11 +81,16 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
    */
   protected $_filterTypeMap = array();
   
-   /**
-    * POST Blacklist
-    * Blacklisted fields for POST Requests (to ignore autoincrement values)
-    */
-   protected $postBlacklist = array();
+  /**
+   * POST Blacklist
+   * Blacklisted fields for POST Requests (to ignore autoincrement values)
+   */
+  protected $postBlacklist = array();
+   
+  /**
+   * @var ZfExtended_EventManager
+   */
+  protected $events = false;
    
   /**
    * inits the internal entity Object, handels given limit, filter and sort parameters
@@ -97,8 +102,25 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
       $this->_helper->layout->disableLayout();
       $this->handleLimit();
       $this->handleFilterAndSort();
+      $this->events = ZfExtended_Factory::get('ZfExtended_EventManager', array(get_class($this)));
   }
-
+  
+  /**
+   * triggers event "before<Controllername>Action"
+   */
+   public function preDispatch() {
+      $eventName = "before".ucfirst($this->_request->getActionName())."Action";
+      $this->events->trigger($eventName, $this);
+   }
+    
+  /**
+   * triggers event "after<Controllername>Action"
+   */
+  public function postDispatch() {
+      $eventName = "after".ucfirst($this->_request->getActionName())."Action";
+      $this->events->trigger($eventName, $this, array($this->view));
+  }
+  
   /**
    * 
    */

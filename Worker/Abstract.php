@@ -42,6 +42,11 @@ abstract class ZfExtended_Worker_Abstract {
     protected $workerModel = false;
     
     /**
+     * @var string taskguid
+     */
+    protected $taskGuid;
+    
+    /**
      * @var ZfExtended_Models_Worker
      */
     protected $workerModelBeforeDelete = false;
@@ -92,6 +97,8 @@ abstract class ZfExtended_Worker_Abstract {
             return false;
         }
         
+        $this->taskGuid = $taskGuid;
+        
         $this->workerModel = ZfExtended_Factory::get('ZfExtended_Models_Worker');
         
         $this->workerModel->setState(ZfExtended_Models_Worker::STATE_SCHEDULED);
@@ -139,6 +146,7 @@ abstract class ZfExtended_Worker_Abstract {
         }
         
         $instance->workerModel = $model;
+        $this->taskGuid = $model->getTaskGuid();
         return $instance;
     }
     
