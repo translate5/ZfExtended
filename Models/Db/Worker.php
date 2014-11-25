@@ -41,6 +41,6 @@
  * Class to access worker-table
  */
 class ZfExtended_Models_Db_Worker extends Zend_Db_Table_Abstract {
-    protected $_name    = 'LEK_worker';
+    protected $_name    = 'Zf_worker';
     public $_primary = 'id';
 }

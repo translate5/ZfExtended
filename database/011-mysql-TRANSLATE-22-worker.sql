@@ -34,8 +34,8 @@
 --  */
 -- 
 
-DROP TABLE IF EXISTS `LEK_worker`;
-CREATE TABLE `LEK_worker` (
+DROP TABLE IF EXISTS `Zf_worker`;
+CREATE TABLE `Zf_worker` (
   `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `state` varchar(38) NOT NULL DEFAULT 'waiting',
   `worker` varchar(255) NOT NULL DEFAULT '',
