@@ -140,6 +140,10 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
             error_log(__CLASS__.' -> '.__FUNCTION__.' workerModel can not wake up next scheduled worker with $id='.$id);
             return false;
         }
+        
+        $async = ZfExtended_Factory::get('ZfExtended_Worker_TriggerByHttp');
+        /* @var $async ZfExtended_Worker_TriggerByHttp */
+        $async->triggerQueue();
     }
     
     
