@@ -80,6 +80,14 @@ abstract class ZfExtended_Worker_Abstract {
      */
     protected $result;
     
+    /**
+     * @var ZfExtended_Log
+     */
+    protected $log;
+    
+    public function __construct() {
+        $this->log = ZfExtended_Factory::get('ZfExtended_Log');
+    }
     
     /**
      * Initialize a worker and a internal worker-model 
@@ -146,7 +154,7 @@ abstract class ZfExtended_Worker_Abstract {
         }
         
         $instance->workerModel = $model;
-        $this->taskGuid = $model->getTaskGuid();
+        $instance->taskGuid = $model->getTaskGuid();
         return $instance;
     }
     
@@ -169,6 +177,7 @@ abstract class ZfExtended_Worker_Abstract {
         $this->workerModel->save();
         
         $this->workerModel->wakeupScheduled($this->workerModel->getTaskGuid());
+        $this->startWorkerQueue();
     }
     
     
@@ -232,7 +241,14 @@ abstract class ZfExtended_Worker_Abstract {
         $this->workerModel->setPid(getmypid());
         
         $this->workerModel->save();
-        $result = $this->work();
+        try {
+            $result = $this->work();
+        } catch(Exception $workException) {
+            $this->workerModel->setState(ZfExtended_Models_Worker::STATE_DEFUNCT);
+            $this->workerModel->save();
+            $this->log->logError('Exception in processing '.get_class($this).'::work');
+            throw $workException;
+        }
         $this->workerModel->setState(ZfExtended_Models_Worker::STATE_DONE);
         $this->workerModelBeforeDelete = clone $this->workerModel;
         $this->workerModel->delete();
@@ -269,5 +285,4 @@ abstract class ZfExtended_Worker_Abstract {
     public function getResult() {
         return $this->result;
     }
-    
 }
