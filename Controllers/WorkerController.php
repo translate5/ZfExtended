@@ -51,7 +51,7 @@ class ZfExtended_WorkerController extends ZfExtended_RestController {
     }
     
     public function putAction() {
-        error_log(__CLASS__.'->'.__FUNCTION__);
+        //error_log(__CLASS__.'->'.__FUNCTION__);
         $this->entity->load($this->_getParam('id'));
         $oldWorker = clone $this->entity;
         
@@ -69,7 +69,7 @@ class ZfExtended_WorkerController extends ZfExtended_RestController {
             $worker = ZfExtended_Worker_Abstract::instanceByModel($this->entity);
             
             if (!$worker) {
-                error_log(__CLASS__.'->'.__FUNCTION__.'; worker can not be instanciated. $this->entity: '.print_r($this->entity->getDataObject(), true));
+                //error_log(__CLASS__.'->'.__FUNCTION__.'; worker can not be instanciated. $this->entity: '.print_r($this->entity->getDataObject(), true));
                 return false;
             }
             /* @var $worker editor_Worker_TermTagger */
@@ -109,9 +109,10 @@ class ZfExtended_WorkerController extends ZfExtended_RestController {
      * Interface-function to trigger the application-wide workerQueue-Process
      */
     public function queueAction () {
-        error_log(__CLASS__.'->'.__FUNCTION__);
+        $this->_helper->viewRenderer->setNoRender(false);
         $workerQueue = ZfExtended_Factory::get('ZfExtended_Worker_Queue');
         /* @var $workerQueue ZfExtended_Worker_Queue */
         $workerQueue->process();
+        exit;//since we have no output here, we will exit immediatelly
     }
 }
