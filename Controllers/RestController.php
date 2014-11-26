@@ -110,7 +110,7 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
    */
    public function preDispatch() {
       $eventName = "before".ucfirst($this->_request->getActionName())."Action";
-      $this->events->trigger($eventName, $this);
+      $this->events->trigger($eventName, $this, array('entity' => $this->entity));
    }
     
   /**
@@ -118,7 +118,7 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
    */
   public function postDispatch() {
       $eventName = "after".ucfirst($this->_request->getActionName())."Action";
-      $this->events->trigger($eventName, $this, array($this->view));
+      $this->events->trigger($eventName, $this, array('entity' => $this->entity, 'view' => $this->view));
   }
   
   /**
