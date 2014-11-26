@@ -72,7 +72,7 @@ class ZfExtended_WorkerController extends ZfExtended_RestController {
                 //error_log(__CLASS__.'->'.__FUNCTION__.'; worker can not be instanciated. $this->entity: '.print_r($this->entity->getDataObject(), true));
                 return false;
             }
-            /* @var $worker editor_Worker_TermTagger */
+            /* @var $worker ZfExtended_Worker_Abstract */
             if (!$worker->runQueued()) {
                 // TODO what to do if worker can not be runQueued (e.g. because it can not be set to mutex-save)
                 return false;
