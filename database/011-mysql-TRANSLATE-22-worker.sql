@@ -34,7 +34,6 @@
 --  */
 -- 
 
-DROP TABLE IF EXISTS `Zf_worker`;
 CREATE TABLE `Zf_worker` (
   `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `state` varchar(38) NOT NULL DEFAULT 'waiting',
