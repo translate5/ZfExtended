@@ -71,7 +71,7 @@ class ZfExtended_Worker_TriggerByHttp {
     private function triggerUrl(string $url, $postParameters = array(), $method = 'GET') {
         
         $urlParts = parse_url($url);
-        error_log(__CLASS__.' -> '.__FUNCTION__.'; $url: '.$url);
+        //error_log(__CLASS__.' -> '.__FUNCTION__.'; $url: '.$url);
         
         $host = 'localhost';
         if (!empty($urlParts['host'])) {

@@ -148,7 +148,7 @@ abstract class ZfExtended_Worker_Abstract {
         //error_log(__CLASS__.' -> '.__FUNCTION__.'; worker: '.$model->getWorker());
         $instance = ZfExtended_Factory::get($model->getWorker());
         if (!$instance->init($model->getTaskGuid(), unserialize($model->getParameters()))) {
-            error_log(__CLASS__.' -> '.__FUNCTION__.'; $model->getParameters(): '.print_r(unserialize($model->getParameters()), true));
+            $this->log->logError('Worker can not be instanciated from stored workerModel', __CLASS__.' -> '.__FUNCTION__.'; $model->getParameters(): '.print_r(unserialize($model->getParameters()), true));
             return false;
         }
         
@@ -236,7 +236,7 @@ abstract class ZfExtended_Worker_Abstract {
      * @return boolean true if $this->work() runs without errors
      */
     private function _run($resource = array()) {
-        error_log(__CLASS__.' -> '.__FUNCTION__.'; resource/slot: '.$this->workerModel->getResource().'/'.$this->workerModel->getSlot());
+        //error_log(__CLASS__.' -> '.__FUNCTION__.'; resource/slot: '.$this->workerModel->getResource().'/'.$this->workerModel->getSlot());
         $this->workerModel->setState(ZfExtended_Models_Worker::STATE_RUNNING);
         $this->workerModel->setStarttime(new Zend_Db_Expr('NOW()'));
         $this->workerModel->setMaxRuntime(new Zend_Db_Expr('NOW() + INTERVAL '.$this->workerModel->getMaxLifetime()));
