@@ -57,7 +57,6 @@ abstract class ZfExtended_Worker_Abstract {
      */
     protected $maxParallelProcesses = 1;
     
-    
     /**
      * This constant values define the different blocking-types
      * @var string
@@ -171,6 +170,7 @@ abstract class ZfExtended_Worker_Abstract {
     
     public function queue() {
         //error_log(__CLASS__.' -> '.__FUNCTION__);
+        $this->checkIsInitCalled();
         $tempSlot = $this->calculateQueuedSlot();
         $this->workerModel->setResource($tempSlot['resource']);
         $this->workerModel->setSlot($tempSlot['slot']);
@@ -205,6 +205,7 @@ abstract class ZfExtended_Worker_Abstract {
      */
     protected function run() {
         //error_log(__CLASS__.' -> '.__FUNCTION__);
+        $this->checkIsInitCalled();
         $tempSlot = $this->calculateDirectSlot();
         $this->workerModel->setResource($tempSlot['resource']);
         $this->workerModel->setSlot($tempSlot['slot']);
@@ -218,6 +219,7 @@ abstract class ZfExtended_Worker_Abstract {
      * @return boolean true if $this->work() runs without errors
      */
     public function runQueued() {
+        $this->checkIsInitCalled();
         //error_log(__CLASS__.' -> '.__FUNCTION__);
         if (!$this->workerModel->setRunningMutex())
         {
@@ -284,5 +286,15 @@ abstract class ZfExtended_Worker_Abstract {
      */
     public function getResult() {
         return $this->result;
+    }
+    
+    /**
+     * internal method to check if method init was called
+     * @throws ZfExtended_Exception
+     */
+    protected function checkIsInitCalled() {
+        if(empty($this->workerModel)) {
+            throw new ZfExtended_Exception('Please call $worker->init() method before!');
+        }
     }
 }

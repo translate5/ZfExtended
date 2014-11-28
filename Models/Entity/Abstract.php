@@ -157,7 +157,7 @@ abstract class ZfExtended_Models_Entity_Abstract {
         }
         $this->row = $this->db->fetchRow($s, $order);
         if(empty($this->row)){
-            $this->notFound('#where ', $where);
+            $this->notFound('#where '.$where, $whereValue);
         }
         return $this->row;
     }
