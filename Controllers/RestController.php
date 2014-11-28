@@ -91,6 +91,11 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
    * @var ZfExtended_EventManager
    */
   protected $events = false;
+  
+  /**
+   * @var ZfExtended_Models_Messages
+   */
+  protected $restMessages;
    
   /**
    * inits the internal entity Object, handels given limit, filter and sort parameters
@@ -103,6 +108,9 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
       $this->handleLimit();
       $this->handleFilterAndSort();
       $this->events = ZfExtended_Factory::get('ZfExtended_EventManager', array(get_class($this)));
+      
+      $this->restMessages = ZfExtended_Factory::get('ZfExtended_Models_Messages');
+      Zend_Registry::set('rest_messages', $this->restMessages);
   }
   
   /**
@@ -119,6 +127,20 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
   public function postDispatch() {
       $eventName = "after".ucfirst($this->_request->getActionName())."Action";
       $this->events->trigger($eventName, $this, array('entity' => $this->entity, 'view' => $this->view));
+      
+      //add rest Messages to the error field
+      $messages = $this->restMessages->toArray();
+      if(empty($messages)) {
+          return;
+      }
+      if(empty($this->view->errors)) {
+          $this->view->errors = $messages;
+          $this->view->message = $messages;
+          $this->view->messages = $messages;
+      }
+      else {
+          $this->view->errors = array_merge($this->view->errors, $messages);
+      }
   }
   
   /**
