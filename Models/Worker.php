@@ -42,7 +42,6 @@
  * @method void setResource() setResource(string $resource)
  * @method void setSlot() setSlot(string $slotName)
  * @method void setTaskGuid() setTaskGuid(string $taskGuid)
- * @method void setParameters() setParameters(string $serializedParameters)
  * @method void setPid() setPid(integer $pid)
  * @method void setStarttime() setStarttime(string $starttime)
  * @method void setMaxRuntime() setMaxRuntime(string $maxRuntime)
@@ -56,7 +55,6 @@
  * @method string getResource()
  * @method string getSlot()
  * @method string getTaskGuid()
- * @method string getParameters()
  * @method integer getPid()
  * @method string getStarttime()
  * @method string getMaxRuntime()
@@ -317,4 +315,17 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
         return $this->maxLifetime;
     }
     
+    /**
+     * sets the serialized parameters of the worker
+     */
+    public function setParameters($parameters) {
+        $this->set('parameters', serialize($parameters));
+    }
+    
+    /**
+     * returns the deserialized parameters of the worker
+     */
+    public function getParameters() {
+        return unserialize($this->get('parameters'));
+    }
 }

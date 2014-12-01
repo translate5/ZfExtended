@@ -111,7 +111,7 @@ abstract class ZfExtended_Worker_Abstract {
         $this->workerModel->setState(ZfExtended_Models_Worker::STATE_SCHEDULED);
         $this->workerModel->setWorker(get_class($this));
         $this->workerModel->setTaskGuid($taskGuid);
-        $this->workerModel->setParameters(serialize($parameters));
+        $this->workerModel->setParameters($parameters);
         $this->workerModel->setHash(uniqid(NULL, true));
         
         $this->workerModel->setBlockingType($this->blockingType);
@@ -147,8 +147,11 @@ abstract class ZfExtended_Worker_Abstract {
     static public function instanceByModel(ZfExtended_Models_Worker $model) {
         //error_log(__CLASS__.' -> '.__FUNCTION__.'; worker: '.$model->getWorker());
         $instance = ZfExtended_Factory::get($model->getWorker());
-        if (!$instance->init($model->getTaskGuid(), unserialize($model->getParameters()))) {
-            error_log(__CLASS__.' -> '.__FUNCTION__.'; $model->getParameters(): '.print_r(unserialize($model->getParameters()), true));
+        
+        /* @var $instance ZfExtended_Worker_Abstract */
+        
+        if (!$instance->init($model->getTaskGuid(), $model->getParameters())) {
+            error_log(__CLASS__.' -> '.__FUNCTION__.'; $model->getParameters(): '.print_r($model->getParameters(), true));
             return false;
         }
         
