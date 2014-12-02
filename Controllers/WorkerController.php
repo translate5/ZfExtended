@@ -53,6 +53,11 @@ class ZfExtended_WorkerController extends ZfExtended_RestController {
     public function putAction() {
         //error_log(__CLASS__.'->'.__FUNCTION__);
         $this->entity->load($this->_getParam('id'));
+        if (!is_object($this->entity)) {
+            error_log(__CLASS__.'->'.__FUNCTION__.'; worker with id: '.$this->_getParam('id').' can not be loaded.');
+            return;
+        }
+        
         $oldWorker = clone $this->entity;
         
         // set "default-return" = current workerModel-data from database
