@@ -31,30 +31,38 @@
   END LICENSE AND COPYRIGHT 
  */
 
-/**#@+
- * @author Marc Mittag
- * @package ZfExtended
- * @version 2.0
- *
- */
 /**
+ * provides basic functionality for plugins
  */
-/**
- * Initialize all plugins wich should be loaded.
- * They are defined in Zf_configuration-list runtimeOptions.plugins.active
- *
- */
-class ZfExtended_Resource_PluginLoader extends Zend_Application_Resource_ResourceAbstract{
+abstract class ZfExtended_Plugin_Abstract {
     
-    public function init(){
-        $config = Zend_Registry::get('config');
-        if(!isset($config->runtimeOptions->plugins)){
-            return;
+    /**
+     * @var Zend_EventManager_StaticEventManager
+     */
+    protected $eventManager;
+    
+    public function __construct() {
+        $this->eventManager = Zend_EventManager_StaticEventManager::getInstance();
+        $c = Zend_Registry::get('config');
+        $this->config = $c->runtimeOptions->plugins;
+        if(empty($this->config)) {
+            throw new ZfExtended_Exception('No Plugin Configuration found!');
         }
-        $pluginClasses = $config->runtimeOptions->plugins->active->toArray();
-        foreach ($pluginClasses as $pluginClass){
-            //error_log("Plugin-Class ".$pluginClass." initialized.");
-            ZfExtended_Factory::get($pluginClass);
+        $this->init();
+    }
+    
+    //TODO when implement Plugin Management using the following methods would a standardized way for plugins to identifdy themselves
+    //abstract function getName();
+    //abstract function getDescription();
+    
+    /**
+     * @param string $classname
+     * @throws ZfExtended_Plugin_MissingDependencyException
+     */
+    protected function dependsOn($classname) {
+        $active = $this->config->active->toArray();
+        if(!in_array($classname, $active)) {
+            throw new ZfExtended_Plugin_MissingDependencyException('A Plugin is missing or not active - plugin: '.$classname);
         }
     }
 }

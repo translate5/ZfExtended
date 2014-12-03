@@ -31,30 +31,8 @@
   END LICENSE AND COPYRIGHT 
  */
 
-/**#@+
- * @author Marc Mittag
- * @package ZfExtended
- * @version 2.0
- *
- */
 /**
+ * Plugins are throwing this exception if a dependency is not met
  */
-/**
- * Initialize all plugins wich should be loaded.
- * They are defined in Zf_configuration-list runtimeOptions.plugins.active
- *
- */
-class ZfExtended_Resource_PluginLoader extends Zend_Application_Resource_ResourceAbstract{
-    
-    public function init(){
-        $config = Zend_Registry::get('config');
-        if(!isset($config->runtimeOptions->plugins)){
-            return;
-        }
-        $pluginClasses = $config->runtimeOptions->plugins->active->toArray();
-        foreach ($pluginClasses as $pluginClass){
-            //error_log("Plugin-Class ".$pluginClass." initialized.");
-            ZfExtended_Factory::get($pluginClass);
-        }
-    }
+class ZfExtended_Plugin_MissingDependencyException extends ZfExtended_Exception {
 }
