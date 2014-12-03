@@ -178,7 +178,7 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
     /**
      * 
      * @param string $taskGuid
-     * @return array: list of queued entries in table LEK_worker which are "ready to run"
+     * @return array: list of queued entries in table Zf_worker which are "ready to run"
      */
     public function getListQueued($taskGuid = NULL) {
         $listQueued = array();

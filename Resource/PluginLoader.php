@@ -44,18 +44,15 @@
  * They are defined in Zf_configuration-list runtimeOptions.plugins.active
  *
  */
-class ZfExtended_Resource_PluginLoader extends Zend_Application_Resource_ResourceAbstract
-{
+class ZfExtended_Resource_PluginLoader extends Zend_Application_Resource_ResourceAbstract{
     
-    public function init()
-    {
+    public function init(){
         $config = Zend_Registry::get('config');
         if(!isset($config->runtimeOptions->plugins)){
             return;
         }
         $pluginClasses = $config->runtimeOptions->plugins->active->toArray();
-        foreach ($pluginClasses as $pluginClass)
-        {
+        foreach ($pluginClasses as $pluginClass){
             //error_log("Plugin-Class ".$pluginClass." initialized.");
             ZfExtended_Factory::get($pluginClass);
         }

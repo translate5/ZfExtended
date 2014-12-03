@@ -316,7 +316,6 @@ class ZfExtended_BaseIndex{
           $this->currentModule = $this->getCurrentModule();
         }
         $applicationInis = $this->getIniList();
-        //error_log(print_r($applicationInis,1));
         $result = array();
         foreach($applicationInis as $ini) {
             if(!file_exists($ini)){
@@ -324,7 +323,6 @@ class ZfExtended_BaseIndex{
             }
             $result[] = $ini;
         }
-        //error_log(print_r($result,1));
         return $result;
     }
 

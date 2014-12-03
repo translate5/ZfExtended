@@ -42,7 +42,7 @@ class ZfExtended_Worker_Queue {
         $workerModel = ZfExtended_Factory::get('ZfExtended_Models_Worker');
         /* @var $workerModel ZfExtended_Models_Worker */
         $workerListQueued = $workerModel->getListQueued();
-        //error_log(__CLASS__.' -> '.__FUNCTION__.'; $workerListQueued: '.print_r($workerListQueued, true));
+        error_log(__CLASS__.' -> '.__FUNCTION__.'; $workerListQueued: '.print_r($workerListQueued, true));
         
         $trigger = ZfExtended_Factory::get('ZfExtended_Worker_TriggerByHttp');
         /* @var $trigger ZfExtended_Worker_TriggerByHttp */

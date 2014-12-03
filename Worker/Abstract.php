@@ -170,7 +170,7 @@ abstract class ZfExtended_Worker_Abstract {
     
     
     public function queue() {
-        //error_log(__CLASS__.' -> '.__FUNCTION__);
+        error_log(__CLASS__.' -> '.__FUNCTION__);
         $tempSlot = $this->calculateQueuedSlot();
         $this->workerModel->setResource($tempSlot['resource']);
         $this->workerModel->setSlot($tempSlot['slot']);
@@ -204,7 +204,7 @@ abstract class ZfExtended_Worker_Abstract {
      * @return boolean true if $this->work() runs without errors
      */
     protected function run() {
-        //error_log(__CLASS__.' -> '.__FUNCTION__);
+        error_log(__CLASS__.' -> '.__FUNCTION__);
         $tempSlot = $this->calculateDirectSlot();
         $this->workerModel->setResource($tempSlot['resource']);
         $this->workerModel->setSlot($tempSlot['slot']);

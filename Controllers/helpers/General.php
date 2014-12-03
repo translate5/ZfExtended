@@ -346,12 +346,6 @@ class ZfExtended_Controller_Helper_General extends Zend_Controller_Action_Helper
     			$ro->forkNoRegenerateId.
     			'&uniqid='.$uniqid.'&forkHttpId='.urlencode($forkHttpId).$addParams." HTTP/1.1\r\n";
     	$cmd .= 'Host: '.$ro->server->name."\r\n\r\n";
-    	/*
-    	//DEBUG START
-    	ob_start();
-    	echo $cmd;
-    	//DEBUG END
-    	*/
     	if (!fwrite($conn, $cmd)) {
     		throw new Zend_Exception('forkHttp konnte Verbindung  aufbauen, fwrite dann aber keine Daten schreiben', 0 );
     	}
