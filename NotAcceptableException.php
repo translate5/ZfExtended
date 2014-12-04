@@ -33,6 +33,6 @@
 
 class ZfExtended_NotAcceptableException extends ZfExtended_Exception {
     protected $defaultCode = 406;
-    protected $defaultMessage = 'Anfrage kann nicht akzeptiert werden!';
+    protected $defaultMessage = 'Die an den Server gesendete Daten sind ungültig oder unvollständig!';
     protected $defaultMessageTranslate = true;
 }

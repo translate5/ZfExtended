@@ -37,4 +37,10 @@
  * @version 2.0
  *
  */
- echo $this->errors[0]->_errorMessage;
+echo $this->errors[0]->_errorMessage;
+if(isset($this->errors[0]) && isset($this->errors[0]->_errorTrace)) {
+    unset($this->errors[0]->_errorTrace);
+}
+unset($this->translate);
+unset($this->getParams);
+unset($this->errorCollect);
