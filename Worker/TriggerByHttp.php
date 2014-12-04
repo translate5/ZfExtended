@@ -103,7 +103,6 @@ class ZfExtended_Worker_TriggerByHttp {
         $fsock = fsockopen(gethostbyname($host), $port, $errno, $errstr, 30);
         if ($fsock === false) {
             error_log(__CLASS__.' -> '.__FUNCTION__.'; '.$errstr.' ('.$errno.')');
-            continue;
         }
         
         $out = $method.' '.$urlParts['path'].$getParameters.' HTTP/1.1'."\r\n";

@@ -47,7 +47,7 @@ class ZfExtended_Worker_Queue {
         $trigger = ZfExtended_Factory::get('ZfExtended_Worker_TriggerByHttp');
         /* @var $trigger ZfExtended_Worker_TriggerByHttp */
         foreach ($workerListQueued as $workerQueue) {
-            error_log(__CLASS__.' -> '.__FUNCTION__.'; trigger worker ID: '.$workerQueue['id']);
+            //error_log(__CLASS__.' -> '.__FUNCTION__.'; trigger worker ID: '.$workerQueue['id']);
             $trigger->triggerWorker($workerQueue['id'], $workerQueue['hash']);
         }
     }
