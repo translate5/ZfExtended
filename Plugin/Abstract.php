@@ -51,6 +51,8 @@ abstract class ZfExtended_Plugin_Abstract {
         $this->init();
     }
     
+    abstract public function init();
+    
     //TODO when implement Plugin Management using the following methods would a standardized way for plugins to identifdy themselves
     //abstract function getName();
     //abstract function getDescription();
