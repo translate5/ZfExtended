@@ -68,7 +68,11 @@ class ZfExtended_EventManager extends Zend_EventManager_EventManager
     {
         if ($this->logTrigger)
         {
-            error_log("event triggered: ".$event."; target: ".get_class($target));
+            $targetName = $target;
+            if (is_object($target)) {
+                $targetName = get_class($target); 
+            }
+            error_log("event triggered: ".$event."; target: ".$targetName);
         }
         return parent::trigger($event, $target, $argv, $callback);
     }
