@@ -168,13 +168,19 @@ abstract class ZfExtended_Worker_Abstract {
      */
     abstract protected function validateParameters($parameters = array());
     
-    
-    public function queue() {
+    /**
+     * 
+     * @param string $state; default NULL
+     */
+    public function queue($state = NULL) {
         //error_log(__CLASS__.' -> '.__FUNCTION__);
         $this->checkIsInitCalled();
         $tempSlot = $this->calculateQueuedSlot();
         $this->workerModel->setResource($tempSlot['resource']);
         $this->workerModel->setSlot($tempSlot['slot']);
+        if(!is_null($state)){
+            $this->workerModel->setState($state);
+        }
         $this->workerModel->save();
         
         $this->workerModel->wakeupScheduled($this->workerModel->getTaskGuid());
