@@ -251,7 +251,8 @@ abstract class ZfExtended_Worker_Abstract {
             $this->workerModel->setState(ZfExtended_Models_Worker::STATE_DEFUNCT);
             $this->workerModel->save();
             $this->log->logError('Exception in processing '.get_class($this).'::work');
-            //throw $workException;
+            $this->log->logException($workException);
+            throw $workException;
         }
         $this->workerModel->setState(ZfExtended_Models_Worker::STATE_DONE);
         $this->workerModelBeforeDelete = clone $this->workerModel;
