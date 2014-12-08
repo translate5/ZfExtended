@@ -164,13 +164,8 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
         $countRows = $this->db->update($data, $whereStatements);
         
         // workerModel can not be set to mutex because no entry with same id and hash can be found in database
-        if ($countRows < 1)
-        {
-            error_log(__CLASS__.' -> '.__FUNCTION__.' workerModel can not be set to mutex (no entry found in DB)');
-            return false;
-        }
-        
-        return true;
+        // nothing to log since this can happen often
+        return $countRows > 0;
     }
     
     /**
