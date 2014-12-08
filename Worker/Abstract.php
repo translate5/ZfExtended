@@ -49,7 +49,7 @@ abstract class ZfExtended_Worker_Abstract {
     /**
      * @var ZfExtended_Models_Worker
      */
-    protected $workerModelBeforeDelete = false;
+    protected $finishedWorker = false;
     
     /**
      * Number of allowed parallel processes for a certain worker
@@ -83,6 +83,13 @@ abstract class ZfExtended_Worker_Abstract {
      * @var ZfExtended_Log
      */
     protected $log;
+    
+    /**
+     * Contains the Exception thrown in the worker
+     * Since one worker is designed to do one job, there should be only one exception.
+     * @var array
+     */
+    protected $workerException = null;
     
     public function __construct() {
         $this->log = ZfExtended_Factory::get('ZfExtended_Log');
@@ -135,7 +142,7 @@ abstract class ZfExtended_Worker_Abstract {
      * @return ZfExtended_Models_Worker
      */
     public function getModelBeforeDelete() {
-        return $this->workerModelBeforeDelete;
+        return $this->finishedWorker;
     }
     
     /**
@@ -177,8 +184,7 @@ abstract class ZfExtended_Worker_Abstract {
         $this->workerModel->setSlot($tempSlot['slot']);
         $this->workerModel->save();
         
-        $this->workerModel->wakeupScheduled($this->workerModel->getTaskGuid());
-        $this->startWorkerQueue();
+        $this->wakeUpAndStartNextWorkers($this->workerModel->getTaskGuid());
     }
     
     
@@ -211,7 +217,15 @@ abstract class ZfExtended_Worker_Abstract {
         $this->workerModel->setResource($tempSlot['resource']);
         $this->workerModel->setSlot($tempSlot['slot']);
         
-        return $this->_run();
+        $result = $this->_run();
+        
+        if(!empty($this->workerException)) {
+            $this->log->logError('Exception logged in direct run of '.get_class($this).'::work');
+            $this->log->logException($this->workerException);
+        }
+        
+        $this->wakeUpAndStartNextWorkers($this->finishedWorker->getTaskGuid());
+        return $result;
     }
     
     /**
@@ -227,16 +241,22 @@ abstract class ZfExtended_Worker_Abstract {
             return false;
         }
         
-        return $this->_run();
+        if(!empty($this->workerException)) {
+            throw $this->workerException;
+        }
+        
+        $result = $this->_run();
+        $this->wakeUpAndStartNextWorkers($this->finishedWorker->getTaskGuid());
+        return $result;
     }
     
     
     /**
      * inner run function used by run and runQueued
-     * 
+     * @param boolean $directRun optional, is false per default
      * @return boolean true if $this->work() runs without errors
      */
-    private function _run($resource = array()) {
+    private function _run($directRun = false) {
         //error_log(__CLASS__.' -> '.__FUNCTION__.'; resource/slot: '.$this->workerModel->getResource().'/'.$this->workerModel->getSlot());
         $this->workerModel->setState(ZfExtended_Models_Worker::STATE_RUNNING);
         $this->workerModel->setStarttime(new Zend_Db_Expr('NOW()'));
@@ -246,22 +266,24 @@ abstract class ZfExtended_Worker_Abstract {
         $this->workerModel->save();
         try {
             $result = $this->work();
+            $this->workerModel->setState(ZfExtended_Models_Worker::STATE_DONE);
+            $this->finishedWorker = clone $this->workerModel;
+            //$this->workerModel->delete();
+            $this->workerModel->save();
         } catch(Exception $workException) {
             $result = false;
             $this->workerModel->setState(ZfExtended_Models_Worker::STATE_DEFUNCT);
             $this->workerModel->save();
-            $this->log->logError('Exception in processing '.get_class($this).'::work');
-            $this->log->logException($workException);
-            throw $workException;
+            $this->finishedWorker = clone $this->workerModel;
+            $this->workerException = $workException;
         }
-        $this->workerModel->setState(ZfExtended_Models_Worker::STATE_DONE);
-        $this->workerModelBeforeDelete = clone $this->workerModel;
-        $this->workerModel->delete();
-        
-        $this->workerModel->wakeupScheduled($this->workerModelBeforeDelete->getTaskGuid());
-        $this->startWorkerQueue();
         
         return $result;
+    }
+    
+    protected function wakeUpAndStartNextWorkers($taskGuid) {
+        $this->workerModel->wakeupScheduled($taskGuid);
+        $this->startWorkerQueue();
     }
     
     /**
