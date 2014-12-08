@@ -32,10 +32,10 @@ Transit (Import / FileParser Plugin)
 Enhances the default import process, so that it can deal with the special file structure of Transit files.
 Plugin Bootstrap: editor_Plugins_Transit_Bootstrap
 
-ManualStatusCheck (Post Segment Edit Plugin)
---------------------------------------------
+ManualStatusCheck (On Workflow Status Change Plugin)
+----------------------------------------------------
 
-Checks if a status is set in the segment, if not the segment can not be saved.
+Checks if a status is set in all segments, if not then the task can not be finished.
 Plugin Bootstrap: editor_Plugins_ManualStatusCheck_Bootstrap
 
 
