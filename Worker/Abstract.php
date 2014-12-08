@@ -247,11 +247,12 @@ abstract class ZfExtended_Worker_Abstract {
             return false;
         }
         
+        $result = $this->_run();
+        
         if(!empty($this->workerException)) {
             throw $this->workerException;
         }
         
-        $result = $this->_run();
         $this->wakeUpAndStartNextWorkers($this->finishedWorker->getTaskGuid());
         return $result;
     }
@@ -274,8 +275,7 @@ abstract class ZfExtended_Worker_Abstract {
             $result = $this->work();
             $this->workerModel->setState(ZfExtended_Models_Worker::STATE_DONE);
             $this->finishedWorker = clone $this->workerModel;
-            //$this->workerModel->delete();
-            $this->workerModel->save();
+            $this->workerModel->delete();
         } catch(Exception $workException) {
             $result = false;
             $this->workerModel->setState(ZfExtended_Models_Worker::STATE_DEFUNCT);

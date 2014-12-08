@@ -52,6 +52,9 @@ class ZfExtended_Resource_PluginLoader extends Zend_Application_Resource_Resourc
             return;
         }
         $pluginClasses = $config->runtimeOptions->plugins->active->toArray();
+
+        //FIXME: ensure that a plugin is only loaded once!!!
+
         foreach ($pluginClasses as $pluginClass){
             //error_log("Plugin-Class ".$pluginClass." initialized.");
             ZfExtended_Factory::get($pluginClass);
