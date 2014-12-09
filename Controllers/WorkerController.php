@@ -50,10 +50,12 @@ class ZfExtended_WorkerController extends ZfExtended_RestController {
     }
     
     public function putAction() {
-        $this->entity->load($this->_getParam('id'));
-        if (!is_object($this->entity)) {
-            error_log(__CLASS__.'->'.__FUNCTION__.'; worker with id: '.$this->_getParam('id').' can not be loaded.');
-            return;
+        try {
+            $this->entity->load($this->_getParam('id'));
+        }
+        catch (Exception $workerLoad) {
+            error_log(__CLASS__.'->'.__FUNCTION__.'; possible duplicate worker-load. worker with id: '.$this->_getParam('id').' can not be loaded.');
+            return false;
         }
         
         $oldWorker = clone $this->entity;
