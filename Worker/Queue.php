@@ -37,17 +37,13 @@
 class ZfExtended_Worker_Queue {
     
     public function process() {
-        //error_log(__CLASS__.' -> '.__FUNCTION__);
-        
         $workerModel = ZfExtended_Factory::get('ZfExtended_Models_Worker');
         /* @var $workerModel ZfExtended_Models_Worker */
         $workerListQueued = $workerModel->getListQueued();
-        //error_log(__CLASS__.' -> '.__FUNCTION__.'; $workerListQueued: '.print_r($workerListQueued, true));
         
         $trigger = ZfExtended_Factory::get('ZfExtended_Worker_TriggerByHttp');
         /* @var $trigger ZfExtended_Worker_TriggerByHttp */
         foreach ($workerListQueued as $workerQueue) {
-            //error_log(__CLASS__.' -> '.__FUNCTION__.'; trigger worker ID: '.$workerQueue['id']);
             $trigger->triggerWorker($workerQueue['id'], $workerQueue['hash']);
         }
     }
