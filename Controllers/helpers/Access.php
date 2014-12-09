@@ -99,7 +99,7 @@ class ZfExtended_Controller_Helper_Access extends Zend_Controller_Action_Helper_
                 $this->notAuthenticated();
             }
         } catch (Exception $exc) {
-            if($this->_route === 'Zend_Rest_Route'){
+            if($this->isRestRoute()){
                 $this->notAuthenticated();
             }
             $e = new ZfExtended_NotFoundException();
@@ -107,6 +107,11 @@ class ZfExtended_Controller_Helper_Access extends Zend_Controller_Action_Helper_
             throw $e;
         }
     }
+    
+    protected function isRestRoute() {
+        return $this->_route === 'Zend_Rest_Route' || $this->_route === 'ZfExtended_Controller_RestLikeRoute';
+    }
+    
     /**
      * Sets the roles 
      * 
@@ -144,7 +149,7 @@ class ZfExtended_Controller_Helper_Access extends Zend_Controller_Action_Helper_
      * @return false
      */
     private function notAuthenticated(){
-        if($this->_route === 'Zend_Rest_Route'){
+        if($this->isRestRoute()){
             throw new ZfExtended_NotAuthenticatedException();
             return false;
         }
