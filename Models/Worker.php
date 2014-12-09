@@ -116,12 +116,10 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
                 ->where('state = ?', self::STATE_SCHEDULED)
                 ->order('id ASC')
                 ->limit(1);
-        //error_log(__CLASS__.' -> '.__FUNCTION__.'; SQL: '.$sql);
         $row = $db->fetchRow($sql);
         
         // there is no scheduled worker with this taskGuid
         if (empty($row)) {
-            //error_log(__CLASS__.' -> '.__FUNCTION__.' no scheduled worker to wake up for taskGuid '.$taskGuid);
             $db->getAdapter()->commit();
             return;
         }
@@ -186,7 +184,6 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
         foreach ($listRunning as $running) {
             // stop if one running worker is of blocking-type 'GLOBAL'
             if ($running['blockingType'] == ZfExtended_Worker_Abstract::BLOCK_GLOBAL) {
-                //error_log(__CLASS__.' -> '.__FUNCTION__.'; Blocked global by '.print_r($running, true));
                 return array();
             }
             $listRunningResources[] = $running['resource'];
@@ -197,8 +194,6 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
             // check if blocking-type 'RESOURCE' blocks this waiting worker
             if ($waiting['blockingType'] == ZfExtended_Worker_Abstract::BLOCK_RESOURCE
                 && in_array($waiting['resource'], $listRunningResources)) {
-                
-                //error_log(__CLASS__.' -> '.__FUNCTION__.'; Blocked resource for '.print_r($waiting, true));
                 continue;
             }
             
@@ -207,49 +202,38 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
             $tempResourceSlotSerialized = serialize($tempResourceSlot);
             
             $countedWorkers = array_count_values($listRunningResourceSlotSerialized);
-            //error_log(__CLASS__.' -> '.__FUNCTION__.'; $countedWorkers '.print_r($countedWorkers, true));
             $countRunningSlotProcesses = 0;
             if (array_key_exists($tempResourceSlotSerialized, $countedWorkers)) {
                 $countRunningSlotProcesses = $countedWorkers[$tempResourceSlotSerialized];
-                //error_log(__CLASS__.' -> '.__FUNCTION__.'; $countRunningSlotProcesses: '.$countRunningSlotProcesses.'; $tempResourceSlot: '.print_r($tempResourceSlot, true));
             }
             
             if ($waiting['blockingType'] == ZfExtended_Worker_Abstract::BLOCK_SLOT
                 && $countRunningSlotProcesses >= $waiting['maxParallelProcesses']) {
                 
-                //error_log(__CLASS__.' -> '.__FUNCTION__.'; Blocked slot for '.print_r($tempResourceSlot, true));
                 continue;
             }
             
-            //error_log(__CLASS__.' -> '.__FUNCTION__.'; .. starten: '.print_r($tempResourceSlot, true));
             $listQueued[] = $waiting;
             $listRunning[] = $tempResourceSlot;
             $listRunningResources[] = $waiting['resource'];
             $listRunningResourceSlotSerialized[] = $tempResourceSlotSerialized;
         }
-        //error_log(__CLASS__.' -> '.__FUNCTION__.'; $listQueued: '.print_r($listQueued, true));
-        //error_log(__CLASS__.' -> '.__FUNCTION__.'; $listRunning: '.print_r($listRunning, true));
-        //error_log(__CLASS__.' -> '.__FUNCTION__.'; $listRunningResourceSlotSerialized: '.print_r($listRunningResourceSlotSerialized, true));
         
         return $listQueued;
     }
     
     private function getListWaiting($taskGuid = NULL) {
-        //error_log(__CLASS__.' -> '.__FUNCTION__.'; taskQuid = '.$taskGuid);
         $sql = $this->db->select()->where('state = ?', self::STATE_WAITING)->order('id ASC');
         
         if ($taskGuid) {
             $sql->where('taskGuid = ?', $taskGuid);
         }
         
-        //error_log(__CLASS__.' -> '.__FUNCTION__.'; SQL: '.$sql);
         $rows = $this->db->fetchAll($sql)->toArray();
-        //error_log(__CLASS__.' -> '.__FUNCTION__.'; Result: '.print_r($rows, true));
         
         return $rows;
     }
     private function getListRunning($taskGuid = NULL) {
-        //error_log(__CLASS__.' -> '.__FUNCTION__.'; taskQuid = '.$taskGuid);
         $db = $this->db;
         $sql = $db->select()
                     //->columns(array('resource', 'slot')) // this does not work :-((((
@@ -261,9 +245,7 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
             $sql->where('taskGuid = ?', $taskGuid);
         }
     
-        //error_log(__CLASS__.' -> '.__FUNCTION__.'; SQL: '.$sql);
         $rows = $db->fetchAll($sql)->toArray();
-        //error_log(__CLASS__.' -> '.__FUNCTION__.'; Result: '.print_r($rows, true));
         
         return $rows;
     }
@@ -276,7 +258,6 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
      * @return array: list of array(slot, count) for the given resource
      */
     public function getListSlotsCount($resourceName = '') {
-        //error_log(__CLASS__.' -> '.__FUNCTION__.'; $resourceName = '.$resourceName);
         $db = $this->db;
         $sql = $db->select()
                     //->columns(array('resource', 'slot')) // this does not work :-((((
@@ -285,9 +266,7 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
                     ->group(array('resource', 'slot'))
                     ->order('count ASC');
         
-        //error_log(__CLASS__.' -> '.__FUNCTION__.'; SQL: '.$sql);
         $rows = $db->fetchAll($sql)->toArray();
-        //error_log(__CLASS__.' -> '.__FUNCTION__.'; Result: '.print_r($rows, true));
         
         return $rows;
     }
@@ -296,9 +275,7 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
     public function cleanGarbage() {
         error_log(__CLASS__.' -> '.__FUNCTION__);
         $sql = $this->db->select()->where('maxRuntime < NOW()');
-        //error_log('SQL: '.$sql);
         $rows = $this->db->fetchAll($sql);
-        //error_log('Result: '.print_r($rows, true));
         
         foreach ($rows as $row) {
             $row->delete();

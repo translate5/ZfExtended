@@ -104,10 +104,7 @@ abstract class ZfExtended_Worker_Abstract {
      * @return boolean true if worker cann be initialized.
      */
     public function init($taskGuid = NULL, $parameters = array()) {
-        //error_log(__CLASS__.' -> '.__FUNCTION__);
-        
         if (!$this->validateParameters($parameters)) {
-            //error_log(__CLASS__.' -> '.__FUNCTION__.' Parameters can not be validated');
             return false;
         }
         
@@ -153,7 +150,6 @@ abstract class ZfExtended_Worker_Abstract {
      * @return mixed a concrete worker corresponding to the submittied worker-model; false if instance could not be initialized;
      */
     static public function instanceByModel(ZfExtended_Models_Worker $model) {
-        //error_log(__CLASS__.' -> '.__FUNCTION__.'; worker: '.$model->getWorker());
         $instance = ZfExtended_Factory::get($model->getWorker());
         /* @var $instance ZfExtended_Worker_Abstract */
         if (!$instance->init($model->getTaskGuid(), $model->getParameters())) {
@@ -181,7 +177,6 @@ abstract class ZfExtended_Worker_Abstract {
      * @param string $state; default NULL
      */
     public function queue($state = NULL) {
-        //error_log(__CLASS__.' -> '.__FUNCTION__);
         $this->checkIsInitCalled();
         $tempSlot = $this->calculateQueuedSlot();
         $this->workerModel->setResource($tempSlot['resource']);
@@ -218,7 +213,6 @@ abstract class ZfExtended_Worker_Abstract {
      * @return boolean true if $this->work() runs without errors
      */
     protected function run() {
-        //error_log(__CLASS__.' -> '.__FUNCTION__);
         $this->checkIsInitCalled();
         $tempSlot = $this->calculateDirectSlot();
         $this->workerModel->setResource($tempSlot['resource']);
@@ -242,7 +236,6 @@ abstract class ZfExtended_Worker_Abstract {
      */
     public function runQueued() {
         $this->checkIsInitCalled();
-        //error_log(__CLASS__.' -> '.__FUNCTION__);
         if (!$this->workerModel->setRunningMutex())
         {
             return false;
@@ -265,7 +258,6 @@ abstract class ZfExtended_Worker_Abstract {
      * @return boolean true if $this->work() runs without errors
      */
     private function _run($directRun = false) {
-        //error_log(__CLASS__.' -> '.__FUNCTION__.'; resource/slot: '.$this->workerModel->getResource().'/'.$this->workerModel->getSlot());
         $this->workerModel->setState(ZfExtended_Models_Worker::STATE_RUNNING);
         $this->workerModel->setStarttime(new Zend_Db_Expr('NOW()'));
         $this->workerModel->setMaxRuntime(new Zend_Db_Expr('NOW() + INTERVAL '.$this->workerModel->getMaxLifetime()));

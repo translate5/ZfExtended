@@ -47,11 +47,9 @@ class ZfExtended_WorkerController extends ZfExtended_RestController {
     
     
     public function postAction() {
-        error_log(__CLASS__.'->'.__FUNCTION__);
     }
     
     public function putAction() {
-        //error_log(__CLASS__.'->'.__FUNCTION__);
         $this->entity->load($this->_getParam('id'));
         if (!is_object($this->entity)) {
             error_log(__CLASS__.'->'.__FUNCTION__.'; worker with id: '.$this->_getParam('id').' can not be loaded.');
@@ -74,7 +72,6 @@ class ZfExtended_WorkerController extends ZfExtended_RestController {
             $worker = ZfExtended_Worker_Abstract::instanceByModel($this->entity);
             
             if (!$worker) {
-                //error_log(__CLASS__.'->'.__FUNCTION__.'; worker can not be instanciated. $this->entity: '.print_r($this->entity->getDataObject(), true));
                 return false;
             }
             /* @var $worker ZfExtended_Worker_Abstract */
@@ -87,7 +84,6 @@ class ZfExtended_WorkerController extends ZfExtended_RestController {
             // normaly should have state='done' if everything went well,
             $this->view->rows = $worker->getModelBeforeDelete()->getDataObject();
             
-            //error_log(__CLASS__.'->'.__FUNCTION__.'; $this->view->rows: '.print_r($this->view->rows, true));
             return;
         }
     }
@@ -102,7 +98,6 @@ class ZfExtended_WorkerController extends ZfExtended_RestController {
     public function getAction() {
         throw new ZfExtended_BadMethodCallException(__CLASS__.'->'.__FUNCTION__);
         //parent::getAction();
-        //error_log(__CLASS__.'->'.__FUNCTION__.'; $this->view->rows: '.print_r($this->view->rows, true));
     }
     
     public function deleteAction() {
