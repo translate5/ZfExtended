@@ -212,12 +212,16 @@ abstract class ZfExtended_Worker_Abstract {
      * 
      * @return boolean true if $this->work() runs without errors
      */
-    protected function run($calculateSlot = true) {
+    protected function run($slot = false) {
         $this->checkIsInitCalled();
-        if($calculateSlot){
+        if(!$slot){
             $tempSlot = $this->calculateDirectSlot();
             $this->workerModel->setResource($tempSlot['resource']);
             $this->workerModel->setSlot($tempSlot['slot']);
+        }
+        if ($slot) {
+            $this->workerModel->setResource($slot['resource']);
+            $this->workerModel->setSlot($slot['slot']);
         }
         
         $result = $this->_run();
