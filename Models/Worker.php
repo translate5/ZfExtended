@@ -251,7 +251,7 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
     }
     
     /**
-     * Get a counted list of all slots (no matter what state (running or waiting) the entry has)
+     * Get a counted list of all "hot" slots (all states (scheduled, waiting, running))
      * for the given resource $resourceName
      * 
      * @param string $resourceName
@@ -263,6 +263,7 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
                     //->columns(array('resource', 'slot')) // this does not work :-((((
                     ->from($db->info($db::NAME), array('slot', 'COUNT(*) AS count'))
                     ->where('resource = ?', $resourceName)
+                    ->where('state IN (?)', array(self::STATE_SCHEDULED, self::STATE_WAITING, self::STATE_RUNNING))
                     ->group(array('resource', 'slot'))
                     ->order('count ASC');
         
