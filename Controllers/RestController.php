@@ -212,7 +212,7 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
       //@todo Ausgabe Type anders festlegen, siehe http://www.codeinchaos.com/post/3107629294/restful-services-with-zend-framework-part-1
       // Davon ist auch die __toString Methode von ZfExtended_Models_Entity_Abstract betroffen, welche aktuell zum JSON Export genutzt wird
       // Es muss aber die Möglichkeit gegeben sein, die Ausgabe Möglichkeite zu forcen, da z.B. die Daten bereits als JSON vorliegen
-      $this->getResponse()->setHeader('Content-Type', 'application/json');
+      $this->getResponse()->setHeader('Content-Type', 'application/json', TRUE);
       $this->view->clearVars();
       try {
           parent::dispatch($action);
