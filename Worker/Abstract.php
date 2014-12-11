@@ -268,6 +268,7 @@ abstract class ZfExtended_Worker_Abstract {
             $result = $this->work();
             $this->workerModel->setState(ZfExtended_Models_Worker::STATE_DONE);
             $this->finishedWorker = clone $this->workerModel;
+            $this->workerModel->save();
             $this->workerModel->delete();
         } catch(Exception $workException) {
             $result = false;
