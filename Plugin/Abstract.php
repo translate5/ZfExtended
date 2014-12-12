@@ -58,13 +58,31 @@ abstract class ZfExtended_Plugin_Abstract {
     //abstract function getDescription();
     
     /**
+     * SubClasses of $classname are recognized as fulfilled dependency!
      * @param string $classname
      * @throws ZfExtended_Plugin_MissingDependencyException
      */
     protected function dependsOn($classname) {
         $active = $this->config->active->toArray();
-        if(!in_array($classname, $active)) {
-            throw new ZfExtended_Plugin_MissingDependencyException('A Plugin is missing or not active - plugin: '.$classname);
+        if(in_array($classname, $active)) {
+            return;
+        }
+        foreach($active as $oneActive) {
+            if(is_subclass_of($oneActive, $classname)) {
+                return;
+            }
+        }
+        throw new ZfExtended_Plugin_MissingDependencyException('A Plugin is missing or not active - plugin: '.$classname);
+    }
+    
+    /**
+     * @param string $classname
+     * @throws ZfExtended_Plugin_ExclusionException
+     */
+    protected function blocks($classname) {
+        $active = $this->config->active->toArray();
+        if(in_array($classname, $active)) {
+            throw new ZfExtended_Plugin_ExclusionException('The following Plugin Bootstraps are not allowed to be active simultaneously: '.get_class($this).' and '.$classname);
         }
     }
 }

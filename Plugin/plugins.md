@@ -17,7 +17,12 @@ SegmentStatistics (Import Plugin)
 ---------------------------------
 
 Counts several Segment Statistics, currently directly after Import.
+use only one of the available Bootstraps!
 Plugin Bootstrap: editor_Plugins_SegmentStatistics_Bootstrap
+This Bootstrap generates a statistic for all segments.
+
+Plugin Bootstrap: editor_Plugins_SegmentStatistics_BootstrapEditableOnly
+This Bootstrap generates a statistic for editable segments only. 
 
 TermTagger (Import / Post Segment Edit Plugin)
 ----------------------------------------------
@@ -53,6 +58,7 @@ Currently this is relevant for the following plugins:
 editor_Plugins_SegmentStatistics_Bootstrap                  1 (default priority of eventManager)
 editor_Plugins_MissingTargetTerminology_Bootstrap           -100
 editor_Plugins_LockSegmentsBasedOnConfig_Bootstrap          -10000
+editor_Plugins_SegmentStatistics_BootstrapEditableOnly      -11000 (only for the clean up worker)
 
 
 To enable all Plugins configure this:
