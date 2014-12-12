@@ -274,13 +274,21 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
     
     
     public function cleanGarbage() {
-        error_log(__CLASS__.' -> '.__FUNCTION__);
-        $sql = $this->db->select()->where('maxRuntime < NOW()');
-        $rows = $this->db->fetchAll($sql);
+        // first clean all 'archived' worker (state=done and endtim older than 1 HOUR)
+        $where = array();
+        $where[] = $this->db->getAdapter()->quoteInto('state = ?', self::STATE_DONE);
+        $where[] = $this->db->getAdapter()->quoteInto('endtime < ?', new Zend_Db_Expr('NOW() - INTERVAL 1 HOUR'));
+        $this->db->delete($where);
         
-        foreach ($rows as $row) {
-            $row->delete();
-        }
+        // TODO: do something with all crashed worker (maxRuntime expired)
+        // TODO: do something with all worker marked with 'defunct' 
+        return;
+        //$sql = $this->db->select()->where('maxRuntime < NOW()');
+        //$rows = $this->db->fetchAll($sql);
+        
+        //foreach ($rows as $row) {
+        //    $row->delete();
+        //}
     }
     
     

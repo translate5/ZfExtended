@@ -273,9 +273,9 @@ abstract class ZfExtended_Worker_Abstract {
         try {
             $result = $this->work();
             $this->workerModel->setState(ZfExtended_Models_Worker::STATE_DONE);
+            $this->workerModel->setEndtime(new Zend_Db_Expr('NOW()'));
             $this->finishedWorker = clone $this->workerModel;
             $this->workerModel->save();
-            $this->workerModel->delete();
         } catch(Exception $workException) {
             $result = false;
             $this->workerModel->setState(ZfExtended_Models_Worker::STATE_DEFUNCT);
@@ -283,6 +283,7 @@ abstract class ZfExtended_Worker_Abstract {
             $this->finishedWorker = clone $this->workerModel;
             $this->workerException = $workException;
         }
+        $this->workerModel->cleanGarbage();
         
         return $result;
     }
