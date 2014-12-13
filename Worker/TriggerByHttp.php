@@ -93,9 +93,9 @@ class ZfExtended_Worker_TriggerByHttp {
             $method = 'POST';
         }
         
-        $getParameters = '';
+        $getParameters = '?cleanupSessionAfterRun=1';
         if (!empty($urlParts['query'])) {
-            $getParameters = '?'.$urlParts['query'];
+            $getParameters = '&'.$urlParts['query'];
         }
         
         
