@@ -34,7 +34,8 @@
  END LICENSE AND COPYRIGHT 
  */
 /**
- *
+ * Important: putAction and queueAction are deleting their session so that no new session entry is created
+ * On futural usage of the postAction (to be used from frontend for direct calls) this indeed should not be the case! 
  */
 class ZfExtended_WorkerController extends ZfExtended_RestController {
     
@@ -63,14 +64,37 @@ class ZfExtended_WorkerController extends ZfExtended_RestController {
         $this->cleanupSessionAfterRun = $this->_getParam('cleanupSessionAfterRun');
     }
     
+    /**
+     * (non-PHPdoc)
+     * @see ZfExtended_RestController::postAction()
+     * For session handling see class head comment
+     */
     public function postAction() {
     }
     
+    /**
+     * Destroys the session for some worker actions, see class head comment
+     * (non-PHPdoc)
+     * @see ZfExtended_RestController::postDispatch()
+     */
+    //SEE TRANSLATE-349
+    //public function postDispatch() {
+        //parent::postDispatch();
+        //$action = $this->_request->getActionName();
+        //if($action == 'queue' || $action == 'put') {
+            //Zend_Session::destroy(true);
+        //}
+    //}
+    
+    /**
+     * (non-PHPdoc)
+     * @see ZfExtended_RestController::putAction()
+     */
     public function putAction() {
         try {
             $this->entity->load($this->_getParam('id'));
         }
-        catch (Exception $workerLoad) {
+        catch (ZfExtended_Models_Entity_NotFoundException $e) {
             error_log(__CLASS__.'->'.__FUNCTION__.'; possible duplicate worker-load. worker with id: '.$this->_getParam('id').' can not be loaded.');
             return false;
         }
@@ -116,7 +140,6 @@ class ZfExtended_WorkerController extends ZfExtended_RestController {
     //if using this method, it must be ensured that the caller is allowed to see the stored hash values!
     public function getAction() {
         throw new ZfExtended_BadMethodCallException(__CLASS__.'->'.__FUNCTION__);
-        //parent::getAction();
     }
     
     public function deleteAction() {
@@ -132,6 +155,7 @@ class ZfExtended_WorkerController extends ZfExtended_RestController {
         $workerQueue = ZfExtended_Factory::get('ZfExtended_Worker_Queue');
         /* @var $workerQueue ZfExtended_Worker_Queue */
         $workerQueue->process();
+        //$this->postDispatch(); needed for TRANSLATE-249
         exit;//since we have no output here, we will exit immediatelly
     }
 }
