@@ -46,9 +46,10 @@ class ZfExtended_WorkerController extends ZfExtended_RestController {
      */
     protected $entity;
     
+    
     protected $cleanupSessionAfterRun;
-
-
+    
+    
     public function __destruct() {
         if(!is_null($this->cleanupSessionAfterRun)){
             $session = new Zend_Session_Namespace();
@@ -70,6 +71,7 @@ class ZfExtended_WorkerController extends ZfExtended_RestController {
      * For session handling see class head comment
      */
     public function postAction() {
+        throw new ZfExtended_BadMethodCallException(__CLASS__.'->'.__FUNCTION__);
     }
     
     /**
@@ -94,8 +96,10 @@ class ZfExtended_WorkerController extends ZfExtended_RestController {
         try {
             $this->entity->load($this->_getParam('id'));
         }
-        catch (ZfExtended_Models_Entity_NotFoundException $e) {
-            error_log(__CLASS__.'->'.__FUNCTION__.'; possible duplicate worker-load. worker with id: '.$this->_getParam('id').' can not be loaded.');
+        catch (Exception $workerLoad) {
+            $log = ZfExtended_Factory::get('ZfExtended_Log');
+            /* @var ZfExtended_Log */
+            $log->logError(__CLASS__.'->'.__FUNCTION__.'; possible duplicate worker-load. worker with id: '.$this->_getParam('id').' can not be loaded.');
             return false;
         }
         
