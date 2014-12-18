@@ -96,10 +96,7 @@ class ZfExtended_WorkerController extends ZfExtended_RestController {
         try {
             $this->entity->load($this->_getParam('id'));
         }
-        catch (Exception $workerLoad) {
-            $log = ZfExtended_Factory::get('ZfExtended_Log');
-            /* @var ZfExtended_Log */
-            $log->logError(__CLASS__.'->'.__FUNCTION__.'; possible duplicate worker-load. worker with id: '.$this->_getParam('id').' can not be loaded.');
+        catch (ZfExtended_Models_Entity_NotFoundException $workerLoad) {
             return false;
         }
         
