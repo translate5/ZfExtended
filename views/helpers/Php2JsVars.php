@@ -120,7 +120,15 @@ class ZfExtended_View_Helper_Php2JsVars extends Zend_View_Helper_Abstract{
      * @return string
      */
     public function  __toString() {
-        $module = Zend_Controller_Front::getInstance()->getRequest()->getModuleName();
-        return ucfirst($module).'.data = '.Zend_Json::encode($this->data);
+        try {
+            $module = Zend_Controller_Front::getInstance()->getRequest()->getModuleName();
+            return ucfirst($module).'.data = '.Zend_Json::encode($this->data);
+        } catch(Exception $e) {
+            $log = ZfExtended_Factory::get('ZfExtended_Log');
+            /* @var $log ZfExtended_Log */
+            $log->logError("Exception in JSON encoding, see next Exception message.");
+            $log->logException($e);
+            return "";
+        }
     }
 }
