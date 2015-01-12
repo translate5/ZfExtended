@@ -302,7 +302,7 @@ class ErrorController extends ZfExtended_Controllers_Action
      */
     protected function isRestRoute(){
         $restRoute = 'Zend_Rest_Route';
-        if($this->route === $restRoute || $this->route === 'ZfExtended_Controller_RestLikeRoute'){
+        if($this->route === $restRoute || $this->route === 'ZfExtended_Controller_RestLikeRoute' || $this->route === 'ZfExtended_Controller_RestFakeRoute'){
             return true;
         }
         return is_subclass_of($this->route, $restRoute);
