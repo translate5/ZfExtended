@@ -109,7 +109,7 @@ class ZfExtended_Controller_Helper_Access extends Zend_Controller_Action_Helper_
     }
     
     protected function isRestRoute() {
-        return $this->_route === 'Zend_Rest_Route' || $this->_route === 'ZfExtended_Controller_RestLikeRoute';
+        return $this->_route === 'Zend_Rest_Route' || $this->_route === 'ZfExtended_Controller_RestLikeRoute' || $this->_route === 'ZfExtended_Controller_RestFakeRoute';
     }
     
     /**
