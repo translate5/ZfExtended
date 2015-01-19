@@ -191,7 +191,31 @@ abstract class ZfExtended_Models_Validator_Abstract {
   public function addDontValidateField($fieldname){
     $this->dontValidateList[] = $fieldname;
   }
-
+  
+  
+    /**
+    * Get an array of all class-constants from class $className which begin with $praefix.
+    * 
+    * @param string $className
+    * @param string $praefix
+    * 
+    * @return array of constants-names
+    */
+    public function getConstantes(string $className, string $praefix) {
+        $constants = array();
+        $class = ZfExtended_Factory::get($className);
+        /* @var $class $className */
+        
+        $classConstants = $fooClass->getConstants();
+        foreach($classConstants as $classConstant) {
+          if (strpos($classConstant, $praefix) === 0) {
+              $constants[] = $classConstant;
+          }
+        }
+        
+        return $constants;
+    }
+    
   /**
    * simple Validator Factory. Parameter "name" is looked up in internal List, or expanded to Zend_Validator_Name
    * @todo improve class searching/autoloading
