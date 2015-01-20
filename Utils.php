@@ -49,25 +49,25 @@
 class ZfExtended_Utils {
     
     /**
-     * Get an array of all class-constants from class $className which begin with $praefix.
+     * Get an array of all class-constants-names from class $className which begin with $praefix.
      *
      * @param string $className
      * @param string $praefix
      *
      * @return array of constants-names
      */
-    public static function getConstantes(string $className, string $praefix) {
+    public static function getConstants(string $className, string $praefix) {
         $constants = array();
-        $class = ZfExtended_Factory::get($className);
-        /* @var $class $className */
-    
-        $classConstants = $fooClass->getConstants();
-        foreach($classConstants as $classConstant) {
-            if (strpos($classConstant, $praefix) === 0) {
-                $constants[] = $classConstant;
+        
+        $reflectionClass = new ReflectionClass($className);
+        $classConstants = $reflectionClass->getConstants();
+        
+        foreach($classConstants as $key => $value) {
+            if (strpos($key, $praefix) === 0) {
+                $constants[] = $key;
             }
         }
-    
+        
         return $constants;
     }
     
