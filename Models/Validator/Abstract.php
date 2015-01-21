@@ -191,7 +191,8 @@ abstract class ZfExtended_Models_Validator_Abstract {
   public function addDontValidateField($fieldname){
     $this->dontValidateList[] = $fieldname;
   }
-
+  
+  
   /**
    * simple Validator Factory. Parameter "name" is looked up in internal List, or expanded to Zend_Validator_Name
    * @todo improve class searching/autoloading
