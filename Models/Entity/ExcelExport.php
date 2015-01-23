@@ -35,13 +35,43 @@ require_once('ZfExtended/ThirdParty/PHPExcel/PHPExcel.php');
 
 class ZfExtended_Models_Entity_ExcelExport extends PHPExcel {
     
+    /**
+     * @var PHPExcel
+     */
+    private $PHPExcel = false;
+    
+    
+    public function __construct() {
+        $this->PHPExcel  = ZfExtended_Factory::get('PHPExcel');
+    }
+    
     public function simpleArrayToExcel ($data) {
+        $tempSheet = $this->PHPExcel->setActiveSheetIndex(0);
+        
+        $rowCount = 1;
+        foreach ($data as $row)
+        {
+            $colCount = 0;
+            foreach ($row as $key => $value) {
+                if ($rowCount == 1) {
+                    $tempSheet->setCellValueByColumnAndRow($colCount, 1, $key);
+                }
+                $tempSheet->setCellValueByColumnAndRow($colCount, $rowCount+1, $value);
+                $colCount ++;
+            }
+            $rowCount++;
+        }
+        
+        // Set active sheet index to the first sheet, so Excel opens this as the first sheet
+        $this->PHPExcel->setActiveSheetIndex(0);
+        
+        $this->sendDownload();
         
     }
     
     public function excelDemo() {
         // Set document properties
-        $this->getProperties()->setCreator("Maarten Balliauw")
+        $this->PHPExcel->getProperties()->setCreator("Maarten Balliauw")
                               ->setLastModifiedBy("Maarten Balliauw")
                               ->setTitle("Office 2007 XLSX Test Document")
                               ->setSubject("Office 2007 XLSX Test Document")
@@ -51,28 +81,31 @@ class ZfExtended_Models_Entity_ExcelExport extends PHPExcel {
         
         
         // Add some data
-        $this->setActiveSheetIndex(0)
+        $this->PHPExcel->setActiveSheetIndex(0)
              ->setCellValue('A1', 'Hello')
              ->setCellValue('B2', 'world!')
              ->setCellValue('C1', 'Hello')
              ->setCellValue('D2', 'world!');
         
         // Miscellaneous glyphs, UTF-8
-        $this->setActiveSheetIndex(0)
+        $this->PHPExcel->setActiveSheetIndex(0)
              ->setCellValue('A4', 'Miscellaneous glyphs')
              ->setCellValue('A5', 'éàèùâêîôûëïüÿäöüç');
         
         // Rename worksheet
-        $this->getActiveSheet()->setTitle('Simple');
+        $this->PHPExcel->getActiveSheet()->setTitle('Simple');
         
         
         // Set active sheet index to the first sheet, so Excel opens this as the first sheet
-        $this->setActiveSheetIndex(0);
+        $this->PHPExcel->setActiveSheetIndex(0);
         
-        
-        // Redirect output to a client’s web browser (OpenDocument)
-        header('Content-Type: application/vnd.oasis.opendocument.spreadsheet');
-        header('Content-Disposition: attachment;filename="01simple.ods"');
+        $this->sendDownload();
+    }
+    
+    private function sendDownload () {
+        // Redirect output to a client’s web browser (Excel)
+        header('Content-Type: application/vnd.ms-excel');
+        header('Content-Disposition: attachment;filename="demo.xls"');
         header('Cache-Control: max-age=0');
         // If you're serving to IE 9, then the following may be needed
         header('Cache-Control: max-age=1');
@@ -83,8 +116,9 @@ class ZfExtended_Models_Entity_ExcelExport extends PHPExcel {
         header ('Cache-Control: cache, must-revalidate'); // HTTP/1.1
         header ('Pragma: public'); // HTTP/1.0
         
-        $objWriter = PHPExcel_IOFactory::createWriter($this, 'Excel2007');
+        $objWriter = PHPExcel_IOFactory::createWriter($this->PHPExcel, 'Excel2007');
         $objWriter->save('php://output');
         exit;
+        
     }
 }
