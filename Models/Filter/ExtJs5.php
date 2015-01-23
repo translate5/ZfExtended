@@ -36,28 +36,45 @@
  * @author Marc Mittag
  */
 class ZfExtended_Models_Filter_ExtJs5 extends ZfExtended_Models_Filter_ExtJs {
-    protected $operatorToType = array('like' => 'string');
-  /**
-   * converts the new ExtJS 5 filter format to the old ExtJS 4 format
-   * @param string $todecode
-   * @return array
-   */
-  protected function decode($todecode){
-      $filters = parent::decode($todecode);
-      foreach($filters as $key => $filter) {
-          $filters[$key] = $this->convert($filter);
-      }
-      return $filters;
-  }
-  
-  protected function convert(stdClass $filter) {
-      $filter->field = $filter->property;
-      unset($filter->property);
-      if(empty($this->operatorToType[$filter->operator])) {
-          throw new ZfExtended_Exception;
-      }
-      $filter->type = $this->operatorToType[$filter->operator];
-      unset($filter->operator);
-      return $filter;
-  }
+    /**
+     * This list contains a mapping between new ExtJS 5 operator parameters (key) 
+     * to the old ExtJS 4 type parameters (value)
+     * @var array
+     */
+    protected $operatorToType = array('like' => 'string', 'in' => 'list');
+    
+    /**
+     * converts the new ExtJS 5 filter format to the old ExtJS 4 format
+     * 
+     * @param string $todecode
+     * @return array
+     */
+    protected function decode($todecode) {
+        $filters = parent::decode ( $todecode );
+        foreach ( $filters as $key => $filter ) {
+            $filters [$key] = $this->convert ( $filter );
+        }
+        return $filters;
+    }
+    
+    /**
+     * Convertion Method
+     * @param stdClass $filter
+     * @throws ZfExtended_Exception
+     * @return stdClass
+     */
+    protected function convert(stdClass $filter) {
+        //is a sort, do nothing more here
+        if(empty($filter->operator) && isset($filter->direction)) {
+            return $filter;
+        }
+        $filter->field = $filter->property;
+        unset ($filter->property);
+        if (empty ( $this->operatorToType [$filter->operator] )) {
+            throw new ZfExtended_Exception ( 'Unkown filter operator from ExtJS 5 Grid Filter!' );
+        }
+        $filter->type = $this->operatorToType [$filter->operator];
+        unset ($filter->operator);
+        return $filter;
+    }
 }
