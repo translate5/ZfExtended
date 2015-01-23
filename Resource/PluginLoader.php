@@ -31,33 +31,37 @@
   END LICENSE AND COPYRIGHT 
  */
 
-/**#@+
+/**
+ * #@+
+ * 
  * @author Marc Mittag
  * @package ZfExtended
  * @version 2.0
- *
+ *         
  */
 /**
  */
 /**
  * Initialize all plugins wich should be loaded.
  * They are defined in Zf_configuration-list runtimeOptions.plugins.active
- *
  */
-class ZfExtended_Resource_PluginLoader extends Zend_Application_Resource_ResourceAbstract{
-    
-    public function init(){
+class ZfExtended_Resource_PluginLoader extends Zend_Application_Resource_ResourceAbstract {
+    public function init() {
         $config = Zend_Registry::get('config');
-        if(!isset($config->runtimeOptions->plugins)){
+        if (! isset($config->runtimeOptions->plugins)) {
             return;
         }
-        $pluginClasses = $config->runtimeOptions->plugins->active->toArray();
-
-        //FIXME: ensure that a plugin is only loaded once!!!
-
-        foreach ($pluginClasses as $pluginClass){
-            //error_log("Plugin-Class ".$pluginClass." initialized.");
-            ZfExtended_Factory::get($pluginClass);
+        $pluginClasses = array_unique($config->runtimeOptions->plugins->active->toArray());
+        
+        foreach ($pluginClasses as $pluginClass) {
+            // error_log("Plugin-Class ".$pluginClass." initialized.");
+            try {
+                ZfExtended_Factory::get($pluginClass);
+            }
+            catch (ReflectionException $exception) {
+                /* @var $log ZfExtended_Log */
+                error_log(__CLASS__.' -> '.__FUNCTION__.'; $exception: '. print_r($exception->getMessage(), true));
+            }
         }
     }
 }
