@@ -83,7 +83,7 @@ class ZfExtended_Models_Entity_ExcelExport extends PHPExcel {
         header ('Cache-Control: cache, must-revalidate'); // HTTP/1.1
         header ('Pragma: public'); // HTTP/1.0
         
-        $objWriter = PHPExcel_IOFactory::createWriter($this, 'OpenDocument');
+        $objWriter = PHPExcel_IOFactory::createWriter($this, 'Excel2007');
         $objWriter->save('php://output');
         exit;
     }
