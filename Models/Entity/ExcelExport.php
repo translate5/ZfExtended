@@ -31,11 +31,11 @@
   END LICENSE AND COPYRIGHT 
  */
 
-require_once('PHPExcel/Classes/PHPExcel.php');
+require_once('ZfExtended/ThirdParty/PHPExcel/PHPExcel.php');
 
 class ZfExtended_Models_Entity_ExcelExport extends PHPExcel {
     
-    public simpleArrayToExcel ($data) {
+    public function simpleArrayToExcel ($data) {
         
     }
     
