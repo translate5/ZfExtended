@@ -59,10 +59,7 @@ class ZfExtended_Resource_PluginLoader extends Zend_Application_Resource_Resourc
                 ZfExtended_Factory::get($pluginClass);
             }
             catch (ReflectionException $exception) {
-                // FIXME TRANSLATE-330
-                //$log = ZfExtended_Factory::get('ZfExtended_Log');
                 /* @var $log ZfExtended_Log */
-                //$log->logError('Can not load plugin '.$pluginClass, __CLASS__.' -> '.__FUNCTION__.'; $exception: '. print_r($exception->getMessage(), true));
                 error_log(__CLASS__.' -> '.__FUNCTION__.'; $exception: '. print_r($exception->getMessage(), true));
             }
         }

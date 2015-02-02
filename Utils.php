@@ -54,7 +54,7 @@ class ZfExtended_Utils {
      * @param string $className
      * @param string $praefix
      *
-     * @return array of constants-names
+     * @return array of constants-names (key) and its values (value)
      */
     public static function getConstants(string $className, string $praefix) {
         $constants = array();
@@ -64,7 +64,7 @@ class ZfExtended_Utils {
         
         foreach($classConstants as $key => $value) {
             if (strpos($key, $praefix) === 0) {
-                $constants[] = $key;
+                $constants[$key] = $value;
             }
         }
         
