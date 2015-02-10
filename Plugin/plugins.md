@@ -1,3 +1,13 @@
+Plugin installation and activation
+----------------------------------
+To install a translate5-plugin, put it into the folder /application/modules/editor/Plugins
+
+To activate a plugin, include its bootstrap class-name into the db-table Zf_configuration in the column "value" of the line with the name "runtimeOptions.plugins.active"
+
+To enable most of the currently available core-plugins configure this:
+["editor_Plugins_LockSegmentsBasedOnConfig_Bootstrap","editor_Plugins_NoMissingTargetTerminology_Bootstrap","editor_Plugins_SegmentStatistics_Bootstrap","editor_Plugins_TermTagger_Bootstrap","editor_Plugins_Transit_Bootstrap","editor_Plugins_ManualStatusCheck_Bootstrap"]
+
+
 Plugin List
 ===========
 
@@ -59,7 +69,3 @@ editor_Plugins_SegmentStatistics_Bootstrap                  1 (default priority 
 editor_Plugins_MissingTargetTerminology_Bootstrap           -100
 editor_Plugins_LockSegmentsBasedOnConfig_Bootstrap          -10000
 editor_Plugins_SegmentStatistics_BootstrapEditableOnly      -11000 (only for the clean up worker)
-
-
-To enable all Plugins configure this:
-["editor_Plugins_LockSegmentsBasedOnConfig_Bootstrap","editor_Plugins_NoMissingTargetTerminology_Bootstrap","editor_Plugins_SegmentStatistics_Bootstrap","editor_Plugins_TermTagger_Bootstrap","editor_Plugins_Transit_Bootstrap","editor_Plugins_ManualStatusCheck_Bootstrap"]
