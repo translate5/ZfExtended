@@ -48,7 +48,7 @@ class ZfExtended_Models_Filter_ExtJs extends ZfExtended_Models_Filter {
    * @return array
    */
   protected function decode($todecode){
-    if(empty($todecode)){
+    if(empty($todecode) || $todecode == '[]'){
       return array();
     }
     //if its a array we assume that it was already decoded
