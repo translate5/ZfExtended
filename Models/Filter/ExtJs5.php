@@ -41,7 +41,7 @@ class ZfExtended_Models_Filter_ExtJs5 extends ZfExtended_Models_Filter_ExtJs {
      * to the old ExtJS 4 type parameters (value)
      * @var array
      */
-    protected $operatorToType = array('like' => 'string', 'in' => 'list');
+    protected $operatorToType = array('like' => 'string', 'in' => 'list', 'eq' => 'numeric');
     
     /**
      * converts the new ExtJS 5 filter format to the old ExtJS 4 format
@@ -74,6 +74,9 @@ class ZfExtended_Models_Filter_ExtJs5 extends ZfExtended_Models_Filter_ExtJs {
             throw new ZfExtended_Exception ( 'Unkown filter operator from ExtJS 5 Grid Filter!' );
         }
         $filter->type = $this->operatorToType [$filter->operator];
+        if($filter->type == 'numeric') {
+            $filter->comparison = $filter->operator;
+        }
         unset ($filter->operator);
         return $filter;
     }
