@@ -1,3 +1,7 @@
+2014-11-24 - New System Requirement:
+            Please Update Zend Framework to at least 1.12 but not to the major version 2!
+            This is needed for TRANSLATE-22. 
+
 2014-11-05 - New Features:
             TRANSLATE-298: add client-specific Translations
             TRANSLATE-284: added client-specific view-path

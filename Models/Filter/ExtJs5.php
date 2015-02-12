@@ -30,21 +30,54 @@
 
   END LICENSE AND COPYRIGHT 
  */
-/**
- * does not extend ZfExtended_NotFoundException since ZfExtended_NotFoundException is
- * the message, that a route to a resource is not found and 
- * ZfExtended_Models_Entity_NotFoundException is the message that an DB-Entity is
- * not found. Both have 404-status-code but often should be handled different.
- */
 
-class ZfExtended_Models_Entity_NotFoundException extends ZfExtended_Exception {
+/**
+ * converts the given Filter and Sort String from ExtJS to an object structure appliable to a Zend Select Object
+ * @author Marc Mittag
+ */
+class ZfExtended_Models_Filter_ExtJs5 extends ZfExtended_Models_Filter_ExtJs {
     /**
-     * @var string
+     * This list contains a mapping between new ExtJS 5 operator parameters (key) 
+     * to the old ExtJS 4 type parameters (value)
+     * @var array
      */
-    protected $defaultMessage = 'Daten nicht gefunden!';
+    protected $operatorToType = array('like' => 'string', 'in' => 'list', 'eq' => 'numeric');
     
     /**
-     * @var integer
+     * converts the new ExtJS 5 filter format to the old ExtJS 4 format
+     * 
+     * @param string $todecode
+     * @return array
      */
-    protected $defaultCode = 404;
+    protected function decode($todecode) {
+        $filters = parent::decode ( $todecode );
+        foreach ( $filters as $key => $filter ) {
+            $filters [$key] = $this->convert ( $filter );
+        }
+        return $filters;
+    }
+    
+    /**
+     * Convertion Method
+     * @param stdClass $filter
+     * @throws ZfExtended_Exception
+     * @return stdClass
+     */
+    protected function convert(stdClass $filter) {
+        //is a sort, do nothing more here
+        if(empty($filter->operator) && isset($filter->direction)) {
+            return $filter;
+        }
+        $filter->field = $filter->property;
+        unset ($filter->property);
+        if (empty ( $this->operatorToType [$filter->operator] )) {
+            throw new ZfExtended_Exception ( 'Unkown filter operator from ExtJS 5 Grid Filter!' );
+        }
+        $filter->type = $this->operatorToType [$filter->operator];
+        if($filter->type == 'numeric') {
+            $filter->comparison = $filter->operator;
+        }
+        unset ($filter->operator);
+        return $filter;
+    }
 }

@@ -30,21 +30,16 @@
 
   END LICENSE AND COPYRIGHT 
  */
-/**
- * does not extend ZfExtended_NotFoundException since ZfExtended_NotFoundException is
- * the message, that a route to a resource is not found and 
- * ZfExtended_Models_Entity_NotFoundException is the message that an DB-Entity is
- * not found. Both have 404-status-code but often should be handled different.
- */
 
-class ZfExtended_Models_Entity_NotFoundException extends ZfExtended_Exception {
-    /**
-     * @var string
-     */
-    protected $defaultMessage = 'Daten nicht gefunden!';
+abstract class ZfExtended_Models_Entity_MetaAbstract extends ZfExtended_Models_Entity_Abstract {
+    const META_TYPE_STRING = 'string';
+    const META_TYPE_BOOLEAN = 'boolean';
+    const META_TYPE_INTEGER = 'integer';
+    const META_TYPE_FLOAT = 'float';
     
-    /**
-     * @var integer
-     */
-    protected $defaultCode = 404;
+    public function addMeta($name, $type, $default, $comment, $length = 0) {
+        if(! $this->hasField($name)) {
+            call_user_func_array(array($this->db, 'addColumn'), func_get_args());
+        }
+    }
 }

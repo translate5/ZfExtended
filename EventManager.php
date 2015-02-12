@@ -30,21 +30,50 @@
 
   END LICENSE AND COPYRIGHT 
  */
-/**
- * does not extend ZfExtended_NotFoundException since ZfExtended_NotFoundException is
- * the message, that a route to a resource is not found and 
- * ZfExtended_Models_Entity_NotFoundException is the message that an DB-Entity is
- * not found. Both have 404-status-code but often should be handled different.
- */
 
-class ZfExtended_Models_Entity_NotFoundException extends ZfExtended_Exception {
+/**
+ * This class extends the original Zend EventManager.
+ * 
+ * Extensions:
+ * 
+ * -    trigger(): if $this->logTrigger is set to true, every triggered event is written to error_log
+ * 
+ */
+class ZfExtended_EventManager extends Zend_EventManager_EventManager
+{
     /**
-     * @var string
+     * 
+     * @var boolean 
      */
-    protected $defaultMessage = 'Daten nicht gefunden!';
+    protected $logTrigger = false;
+    
     
     /**
-     * @var integer
+     * ZfExtended:
+     * if $this->logTrigger is set to true, all triggered events are 
+     * written to error_log wich can be used for debuging
+     * 
+     * Zend:
+     * Trigger all listeners for a given event
+     *
+     * Can emulate triggerUntil() if the last argument provided is a callback.
+     *
+     * @param  string $event
+     * @param  string|object $target Object calling emit, or symbol describing target (such as static method name)
+     * @param  array|ArrayAccess $argv Array of arguments; typically, should be associative
+     * @param  null|callback $callback
+     * @return Zend_EventManager_ResponseCollection All listener return values
      */
-    protected $defaultCode = 404;
+    public function trigger($event, $target = null, $argv = array(), $callback = null)
+    {
+        if ($this->logTrigger)
+        {
+            $targetName = $target;
+            if (is_object($target)) {
+                $targetName = get_class($target); 
+            }
+            error_log("event triggered: ".$event."; target: ".$targetName);
+        }
+        return parent::trigger($event, $target, $argv, $callback);
+    }
 }

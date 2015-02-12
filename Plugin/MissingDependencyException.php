@@ -30,21 +30,9 @@
 
   END LICENSE AND COPYRIGHT 
  */
-/**
- * does not extend ZfExtended_NotFoundException since ZfExtended_NotFoundException is
- * the message, that a route to a resource is not found and 
- * ZfExtended_Models_Entity_NotFoundException is the message that an DB-Entity is
- * not found. Both have 404-status-code but often should be handled different.
- */
 
-class ZfExtended_Models_Entity_NotFoundException extends ZfExtended_Exception {
-    /**
-     * @var string
-     */
-    protected $defaultMessage = 'Daten nicht gefunden!';
-    
-    /**
-     * @var integer
-     */
-    protected $defaultCode = 404;
+/**
+ * Plugins are throwing this exception if a dependency is not met
+ */
+class ZfExtended_Plugin_MissingDependencyException extends ZfExtended_Exception {
 }

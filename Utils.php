@@ -38,56 +38,38 @@
  *
  */
 /**
- * Abstract Class, with some general controller-methods
+ * Defines some global functions.
+ * Functions should be defines as public static function, so they can be calles as:
  * 
- * - offers the default Zend_Session_Namespace in $this->session
- * - triggers the following Zend-Events for all controllers:
- *      - "beforeIndexAction" on preDispatch
- *      - "afterIndexAction" with parameter $this->view on postDispatch
+ * ZfExtended_Utils::function()
+ * 
+ * from everywhere in the application.
+ * 
  */
-
-
-abstract class ZfExtended_Controllers_Action extends Zend_Controller_Action {
-    /**
-     * @var Zend_Session_Namespace
-     */
-    protected $_session = false;
+class ZfExtended_Utils {
     
     /**
-     * @var ZfExtended_EventManager
+     * Get an array of all class-constants-names from class $className which begin with $praefix.
+     *
+     * @param string $className
+     * @param string $praefix
+     *
+     * @return array of constants-names (key) and its values (value)
      */
-    protected $events = false;
-    
-    
-    public function __construct(Zend_Controller_Request_Abstract $request, Zend_Controller_Response_Abstract $response, array $invokeArgs = array()) {
-        parent::__construct($request, $response, $invokeArgs);
-        $this->_helper = new ZfExtended_Zendoverwrites_Controller_Action_HelperBroker($this);
-        $this->_session = new Zend_Session_Namespace();
-        $this->events = ZfExtended_Factory::get('ZfExtended_EventManager', array(get_class($this)));
-        $this->init();
+    public static function getConstants(string $className, string $praefix) {
+        $constants = array();
+        
+        $reflectionClass = new ReflectionClass($className);
+        $classConstants = $reflectionClass->getConstants();
+        
+        foreach($classConstants as $key => $value) {
+            if (strpos($key, $praefix) === 0) {
+                $constants[$key] = $value;
+            }
+        }
+        
+        return $constants;
     }
     
-    public function init() {
-        $this->view->controller = $this->_request->getControllerName();
-        $this->view->action = $this->_request->getActionName();
-    }
     
-    /**
-     * triggers event "before<Controllername>Action"
-     */
-    public function preDispatch()
-    {
-        $eventName = "before".ucfirst($this->_request->getActionName())."Action";
-        $this->events->trigger($eventName, $this);
-    }
-    
-    /**
-     * triggers event "after<Controllername>Action"
-     */
-    public function postDispatch()
-    {
-        $eventName = "after".ucfirst($this->_request->getActionName())."Action";
-        $this->events->trigger($eventName, $this, array($this->view));
-    }
 }
-

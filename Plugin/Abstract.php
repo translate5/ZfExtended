@@ -31,63 +31,58 @@
   END LICENSE AND COPYRIGHT 
  */
 
-/**#@+
- * @author Marc Mittag
- * @package ZfExtended
- * @version 2.0
- *
- */
 /**
- * Abstract Class, with some general controller-methods
- * 
- * - offers the default Zend_Session_Namespace in $this->session
- * - triggers the following Zend-Events for all controllers:
- *      - "beforeIndexAction" on preDispatch
- *      - "afterIndexAction" with parameter $this->view on postDispatch
+ * provides basic functionality for plugins
  */
-
-
-abstract class ZfExtended_Controllers_Action extends Zend_Controller_Action {
-    /**
-     * @var Zend_Session_Namespace
-     */
-    protected $_session = false;
+abstract class ZfExtended_Plugin_Abstract {
     
     /**
-     * @var ZfExtended_EventManager
+     * @var Zend_EventManager_StaticEventManager
      */
-    protected $events = false;
+    protected $eventManager;
     
-    
-    public function __construct(Zend_Controller_Request_Abstract $request, Zend_Controller_Response_Abstract $response, array $invokeArgs = array()) {
-        parent::__construct($request, $response, $invokeArgs);
-        $this->_helper = new ZfExtended_Zendoverwrites_Controller_Action_HelperBroker($this);
-        $this->_session = new Zend_Session_Namespace();
-        $this->events = ZfExtended_Factory::get('ZfExtended_EventManager', array(get_class($this)));
+    public function __construct() {
+        $this->eventManager = Zend_EventManager_StaticEventManager::getInstance();
+        $c = Zend_Registry::get('config');
+        $this->config = $c->runtimeOptions->plugins;
+        if(empty($this->config)) {
+            throw new ZfExtended_Exception('No Plugin Configuration found!');
+        }
         $this->init();
     }
     
-    public function init() {
-        $this->view->controller = $this->_request->getControllerName();
-        $this->view->action = $this->_request->getActionName();
+    abstract public function init();
+    
+    //TODO when implement Plugin Management using the following methods would a standardized way for plugins to identifdy themselves
+    //abstract function getName();
+    //abstract function getDescription();
+    
+    /**
+     * SubClasses of $classname are recognized as fulfilled dependency!
+     * @param string $classname
+     * @throws ZfExtended_Plugin_MissingDependencyException
+     */
+    protected function dependsOn($classname) {
+        $active = $this->config->active->toArray();
+        if(in_array($classname, $active)) {
+            return;
+        }
+        foreach($active as $oneActive) {
+            if(is_subclass_of($oneActive, $classname)) {
+                return;
+            }
+        }
+        throw new ZfExtended_Plugin_MissingDependencyException('A Plugin is missing or not active - plugin: '.$classname);
     }
     
     /**
-     * triggers event "before<Controllername>Action"
+     * @param string $classname
+     * @throws ZfExtended_Plugin_ExclusionException
      */
-    public function preDispatch()
-    {
-        $eventName = "before".ucfirst($this->_request->getActionName())."Action";
-        $this->events->trigger($eventName, $this);
-    }
-    
-    /**
-     * triggers event "after<Controllername>Action"
-     */
-    public function postDispatch()
-    {
-        $eventName = "after".ucfirst($this->_request->getActionName())."Action";
-        $this->events->trigger($eventName, $this, array($this->view));
+    protected function blocks($classname) {
+        $active = $this->config->active->toArray();
+        if(in_array($classname, $active)) {
+            throw new ZfExtended_Plugin_ExclusionException('The following Plugin Bootstraps are not allowed to be active simultaneously: '.get_class($this).' and '.$classname);
+        }
     }
 }
-

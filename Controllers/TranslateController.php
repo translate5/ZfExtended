@@ -54,7 +54,7 @@ class TranslateController extends ZfExtended_Controllers_Action
         $xliff = file_get_contents(APPLICATION_PATH.$this->pathToEnXliff);
         $xliff = preg_replace('"<target[^>]*>.*?(?!/target>)</target>"','',$xliff);
         $xliff = preg_replace('"(<source[^>]*>(.*?)(?!/source>)</source>)"','\\1<target>\\2</target>',$xliff);
-        header('Content-type: application/xml');
+        header('Content-type: application/xml', TRUE);
         header('Content-Disposition: attachment; filename="toTranslate.xliff"');
         echo $xliff;
     }

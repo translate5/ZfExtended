@@ -81,12 +81,28 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
    */
   protected $_filterTypeMap = array();
   
-   /**
-    * POST Blacklist
-    * Blacklisted fields for POST Requests (to ignore autoincrement values)
-    */
-   protected $postBlacklist = array();
+  /**
+   * POST Blacklist
+   * Blacklisted fields for POST Requests (to ignore autoincrement values)
+   */
+  protected $postBlacklist = array();
    
+  /**
+   * @var ZfExtended_EventManager
+   */
+  protected $events = false;
+  
+  /**
+   * @var ZfExtended_Models_Messages
+   */
+  protected $restMessages;
+  
+  /**
+   *  @var ZfExtended_Log
+   */
+  protected $log = false;
+  
+  
   /**
    * inits the internal entity Object, handels given limit, filter and sort parameters
    * @see Zend_Controller_Action::init()
@@ -97,8 +113,44 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
       $this->_helper->layout->disableLayout();
       $this->handleLimit();
       $this->handleFilterAndSort();
+      $this->events = ZfExtended_Factory::get('ZfExtended_EventManager', array(get_class($this)));
+      
+      $this->restMessages = ZfExtended_Factory::get('ZfExtended_Models_Messages');
+      Zend_Registry::set('rest_messages', $this->restMessages);
+      
+      $this->log = ZfExtended_Factory::get('ZfExtended_Log');
   }
-
+  
+  /**
+   * triggers event "before<Controllername>Action"
+   */
+   public function preDispatch() {
+      $eventName = "before".ucfirst($this->_request->getActionName())."Action";
+      $this->events->trigger($eventName, $this, array('entity' => $this->entity));
+   }
+    
+  /**
+   * triggers event "after<Controllername>Action"
+   */
+  public function postDispatch() {
+      $eventName = "after".ucfirst($this->_request->getActionName())."Action";
+      $this->events->trigger($eventName, $this, array('entity' => $this->entity, 'view' => $this->view));
+      
+      //add rest Messages to the error field
+      $messages = $this->restMessages->toArray();
+      if(empty($messages)) {
+          return;
+      }
+      if(empty($this->view->errors)) {
+          $this->view->errors = $messages;
+          $this->view->message = $messages;
+          $this->view->messages = $messages;
+      }
+      else {
+          $this->view->errors = array_merge($this->view->errors, $messages);
+      }
+  }
+  
   /**
    * 
    */
@@ -168,7 +220,7 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
       //@todo Ausgabe Type anders festlegen, siehe http://www.codeinchaos.com/post/3107629294/restful-services-with-zend-framework-part-1
       // Davon ist auch die __toString Methode von ZfExtended_Models_Entity_Abstract betroffen, welche aktuell zum JSON Export genutzt wird
       // Es muss aber die Möglichkeit gegeben sein, die Ausgabe Möglichkeite zu forcen, da z.B. die Daten bereits als JSON vorliegen
-      $this->getResponse()->setHeader('Content-Type', 'application/json');
+      $this->getResponse()->setHeader('Content-Type', 'application/json', TRUE);
       $this->view->clearVars();
       try {
           parent::dispatch($action);

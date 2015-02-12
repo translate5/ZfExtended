@@ -38,56 +38,9 @@
  *
  */
 /**
- * Abstract Class, with some general controller-methods
- * 
- * - offers the default Zend_Session_Namespace in $this->session
- * - triggers the following Zend-Events for all controllers:
- *      - "beforeIndexAction" on preDispatch
- *      - "afterIndexAction" with parameter $this->view on postDispatch
+ * Class to access worker-table
  */
-
-
-abstract class ZfExtended_Controllers_Action extends Zend_Controller_Action {
-    /**
-     * @var Zend_Session_Namespace
-     */
-    protected $_session = false;
-    
-    /**
-     * @var ZfExtended_EventManager
-     */
-    protected $events = false;
-    
-    
-    public function __construct(Zend_Controller_Request_Abstract $request, Zend_Controller_Response_Abstract $response, array $invokeArgs = array()) {
-        parent::__construct($request, $response, $invokeArgs);
-        $this->_helper = new ZfExtended_Zendoverwrites_Controller_Action_HelperBroker($this);
-        $this->_session = new Zend_Session_Namespace();
-        $this->events = ZfExtended_Factory::get('ZfExtended_EventManager', array(get_class($this)));
-        $this->init();
-    }
-    
-    public function init() {
-        $this->view->controller = $this->_request->getControllerName();
-        $this->view->action = $this->_request->getActionName();
-    }
-    
-    /**
-     * triggers event "before<Controllername>Action"
-     */
-    public function preDispatch()
-    {
-        $eventName = "before".ucfirst($this->_request->getActionName())."Action";
-        $this->events->trigger($eventName, $this);
-    }
-    
-    /**
-     * triggers event "after<Controllername>Action"
-     */
-    public function postDispatch()
-    {
-        $eventName = "after".ucfirst($this->_request->getActionName())."Action";
-        $this->events->trigger($eventName, $this, array($this->view));
-    }
+class ZfExtended_Models_Db_Worker extends Zend_Db_Table_Abstract {
+    protected $_name    = 'Zf_worker';
+    public $_primary = 'id';
 }
-

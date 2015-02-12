@@ -48,7 +48,7 @@ class ZfExtended_Models_Filter_ExtJs extends ZfExtended_Models_Filter {
    * @return array
    */
   protected function decode($todecode){
-    if(empty($todecode)){
+    if(empty($todecode) || $todecode == '[]'){
       return array();
     }
     //if its a array we assume that it was already decoded
@@ -261,28 +261,5 @@ class ZfExtended_Models_Filter_ExtJs extends ZfExtended_Models_Filter {
       }
       array_pop($where);
       $this->where(implode('', $where));
-  }
-  /**
-   * @param string $field
-   * @param integer $value
-   */
-  protected function applyBoolean($field, $value) {
-    if($value){
-      $this->where($field);
-    }
-    else {
-      $this->where('!'.$field);
-    }
-  }
-  
-  /**
-   * This methods encapsualtes Zend_Db_Select::where and orWhere
-   * @param string $cond
-   * @param mixed $value
-   * @param int $type
-   */
-  protected function where($cond, $value = null, $type = null) {
-      $where = $this->whereOp;
-      $this->select->$where($cond, $value, $type);
   }
 }

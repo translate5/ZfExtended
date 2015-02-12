@@ -30,21 +30,17 @@
 
   END LICENSE AND COPYRIGHT 
  */
-/**
- * does not extend ZfExtended_NotFoundException since ZfExtended_NotFoundException is
- * the message, that a route to a resource is not found and 
- * ZfExtended_Models_Entity_NotFoundException is the message that an DB-Entity is
- * not found. Both have 404-status-code but often should be handled different.
- */
 
-class ZfExtended_Models_Entity_NotFoundException extends ZfExtended_Exception {
-    /**
-     * @var string
-     */
-    protected $defaultMessage = 'Daten nicht gefunden!';
-    
-    /**
-     * @var integer
-     */
-    protected $defaultCode = 404;
+/**#@+ 
+ * @author Marc Mittag
+ * @package ZfExtended
+ * @version 2.0
+ * 
+ */
+/**
+ * Wrapper Class for using additional, normal routes, which fake REST-Routes 
+ * - these Routes should be treated as REST-Routes
+ * - but take care for there REST-full behaviour by themselves and not through REST_Controller_Plugin_RestHandler as ZfExtended_Controller_RestLikeRoute do)
+ */
+class ZfExtended_Controller_RestFakeRoute extends Zend_Controller_Router_Route {
 }

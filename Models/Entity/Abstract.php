@@ -87,8 +87,15 @@ abstract class ZfExtended_Models_Entity_Abstract {
      */
     protected $filter;
     
+    /**
+     * @var ZfExtended_EventManager
+     */
+    protected $events = false;
+    
+    
     public function __construct() {
         $this->db = ZfExtended_Factory::get($this->dbInstanceClass);
+        $this->events = ZfExtended_Factory::get('ZfExtended_EventManager', array(get_class($this)));
         $this->init();
     }
 
@@ -106,6 +113,15 @@ abstract class ZfExtended_Models_Entity_Abstract {
         }
     }
 
+    /**
+     * Deep Cloning of the internal data object
+     * else all cloned objects will only have a reference to the same $this->rows
+     */
+    public function __clone() {
+        $this->row = clone $this->row;
+    }
+    
+    
     /**
      * loads the Entity by Primary Key Id
      * @param integer $id
@@ -141,7 +157,7 @@ abstract class ZfExtended_Models_Entity_Abstract {
         }
         $this->row = $this->db->fetchRow($s, $order);
         if(empty($this->row)){
-            $this->notFound('#where ', $where);
+            $this->notFound('#where '.$where, $whereValue);
         }
         return $this->row;
     }
@@ -226,6 +242,7 @@ abstract class ZfExtended_Models_Entity_Abstract {
      * @return mixed  The primary key value(s), as an associative array if the key is compound, or a scalar if the key is single-column.
      */
     public function save() {
+        $this->events->trigger("beforeSave", $this, array('model' => $this));
         return $this->row->save();
     }
 

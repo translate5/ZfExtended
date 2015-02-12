@@ -138,12 +138,41 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract {
     }
     
     /**
-     * loads all entities without the passwd field
+     * loads all users without the passwd field
      * (non-PHPdoc)
      * @see ZfExtended_Models_Entity_Abstract::loadAll()
      * @return array
      */
     public function loadAll() {
+        $s = $this->_loadAll();
+        return $this->loadFilterdCustom($s);
+    }
+    
+    /**
+     * loads all users without the passwd field
+     * with role $role
+     * @return array
+     */
+    public function loadAllByRole($role) {
+        $s = $this->_loadAll();
+        
+        $adapter = $this->db->getAdapter();
+        $sLike = sprintf('roles like %s OR roles like %s OR roles like %s OR roles=%s',
+            $adapter->quote($role.',%'),
+            $adapter->quote('%,'.$role.',%'),
+            $adapter->quote('%,'.$role),
+            $adapter->quote($role)
+        );
+        $s->where($sLike);
+        
+        return $this->loadFilterdCustom($s);
+    }
+    
+    /**
+     * 
+     * @return sql-string
+     */
+    private function _loadAll() {
         $db = $this->db;
         $cols = array_flip($db->info($db::COLS));
         unset($cols['passwd']);
@@ -152,7 +181,7 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract {
         if(!$this->filter->hasSort()){
             $this->filter->addSort('login');
         }
-        return $this->loadFilterdCustom($s);
+        return $s;
     }
     
     /**

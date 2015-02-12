@@ -34,7 +34,11 @@
 /**
  * @todo bei Bedarf aus der Unterklasse ExtJS abstrahieren
  */
-abstract class ZfExtended_Models_Filter{
+abstract class ZfExtended_Models_Filter {
+    
+    const SORT_ASC = 'asc';
+    const SORT_DESC = 'desc';
+    
   /**
    * The entity the filter will be applied to
    * @var ZfExtended_Models_Entity_Abstract
@@ -98,6 +102,15 @@ abstract class ZfExtended_Models_Filter{
    */
   public function setDefaultFilter($defaultFilter){
     $this->mergeAdditionalFilters($this->decode($defaultFilter));
+  }
+  
+  
+  /**
+   * Adds an additional filter in internal defined format
+   * @param stdClass $filter
+   */
+  public function addFilter(stdClass $filter) {
+      $this->filter[] = $filter;
   }
   
   /**
@@ -194,7 +207,7 @@ abstract class ZfExtended_Models_Filter{
    */
   public function addSort($field, $desc = false, $prepend = false){
     $sort = new stdClass();
-    $sort->direction = $desc ? 'desc' : 'asc';
+    $sort->direction = $desc ? self::SORT_DESC : self::SORT_ASC;
     $sort->property = $this->mapSort($field);
     
     if($prepend){
@@ -203,6 +216,18 @@ abstract class ZfExtended_Models_Filter{
     else {
       $this->sort[] = $sort;
     }
+  }
+  
+  /**
+   * Swaps the sorting direction of the currently stored order
+   */
+  public function swapSortDirection() {
+      if(empty($this->sort)) {
+          return;
+      }
+      foreach($this->sort as $sort) {
+          $sort->direction = ($sort->direction == self::SORT_ASC ? self::SORT_DESC : self::SORT_ASC);
+      }
   }
   
   /**
@@ -248,4 +273,28 @@ abstract class ZfExtended_Models_Filter{
    * @param boolean $isOr defines if is a OR or an AND expression (if param is false)
    */
   abstract protected function applyExpression(stdClass $filter, $isOr = true);
+  
+  /**
+   * @param string $field
+   * @param integer $value
+   */
+  protected function applyBoolean($field, $value) {
+    if($value){
+      $this->where($field);
+    }
+    else {
+      $this->where('!'.$field);
+    }
+  }
+  
+  /**
+   * This methods encapsualtes Zend_Db_Select::where and orWhere
+   * @param string $cond
+   * @param mixed $value
+   * @param int $type
+   */
+  protected function where($cond, $value = null, $type = null) {
+      $where = $this->whereOp;
+      $this->select->$where($cond, $value, $type);
+  }
 }
