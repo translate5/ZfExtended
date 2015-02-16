@@ -63,19 +63,24 @@ class ZfExtended_Models_Installer_DbUpdater {
     /**
      * Forcing all available SQL files to be set as imported in the DB, regardless if the contents were really applied or not.
      * For setting up dbversioning on instances where all SQL files are already installed.
+     * @param array $toProcess
      */
-    public function assumeAllImported() {
+    public function assumeImported(array $toProcess) {
         $dbversion = ZfExtended_Factory::get('ZfExtended_Models_Db_DbVersion');
         /* @var $dbversion ZfExtended_Models_Db_DbVersion */
-        $dbversion->delete(true);
         
         foreach($this->getFoundFiles() as $file) {
+            $entryHash = $this->getEntryHash($file['origin'], $file['relativeToOrigin']);
+            if(empty($toProcess[md5($entryHash)])) {
+                continue;
+            }
             $path = $file['absolutePath'];
             if(!file_exists($path) || !is_readable($path)) {
                 $this->log('The following file does not exist or is not readable and is therefore ignored: '.$path);
                 continue;
             }
             $version = 'INITIAL'; //FIXME with TRANSLATE-131
+            //$dbversion->delete(true);
             $dbversion->insert($this->getInsertData($file, $version));
         }
     }
@@ -99,6 +104,8 @@ class ZfExtended_Models_Installer_DbUpdater {
      * loops over all configured SQL directories and find new or modified SQL files compared to the version in the DB.
      */
     public function calculateChanges() {
+        $this->sqlFilesNew = array();
+        $this->sqlFilesChanged = array();
         $dbversion = ZfExtended_Factory::get('ZfExtended_Models_Db_DbVersion');
         /* @var $dbversion ZfExtended_Models_Db_DbVersion */
         $installed = $dbversion->fetchAll();
@@ -109,6 +116,7 @@ class ZfExtended_Models_Installer_DbUpdater {
         
         foreach($this->getFoundFiles() as $file) {
             $entryHash = $this->getEntryHash($file['origin'], $file['relativeToOrigin']);
+            $file['entryHash'] = md5($entryHash);
             if(empty($installHashed[$entryHash])){
                 $this->sqlFilesNew[] = $file;
                 continue;
@@ -166,13 +174,19 @@ class ZfExtended_Models_Installer_DbUpdater {
     /**
      * all modified files are marked as up to date in the database
      * Since this should happen only on DEV systems we log it directly into the error_log
+     * @param array $toProcess
      */
-    public function updateModified() {
+    public function updateModified(array $toProcess) {
         $dbversion = ZfExtended_Factory::get('ZfExtended_Models_Db_DbVersion');
         /* @var $dbversion ZfExtended_Models_Db_DbVersion */
         //FIXME update appVersion also after TRANSLATE-131
         
         foreach($this->sqlFilesChanged as $key => $file) {
+            $entryHash = $this->getEntryHash($file['origin'], $file['relativeToOrigin']);
+            if(empty($toProcess[md5($entryHash)])) {
+                continue;
+            }
+            
             $a = $dbversion->getAdapter();
             $where= array(
                 $a->quoteInto('origin = ?', $file['origin']),
@@ -191,13 +205,18 @@ class ZfExtended_Models_Installer_DbUpdater {
     
     /**
      * Adds the new SQL files to the DB
+     * @param array $toProcess
      */
-    public function applyNew() {
+    public function applyNew(array $toProcess) {
         $cmd = $this->getDbCommand();
         $dbversion = ZfExtended_Factory::get('ZfExtended_Models_Db_DbVersion');
         /* @var $dbversion ZfExtended_Models_Db_DbVersion */
         
         foreach($this->sqlFilesNew as $key => $file) {
+            $entryHash = $this->getEntryHash($file['origin'], $file['relativeToOrigin']);
+            if(empty($toProcess[md5($entryHash)])) {
+                continue;
+            }
             $call = sprintf($cmd, escapeshellarg($file['absolutePath']));
             exec($call, $output, $result);
             if($result > 0) {

@@ -32,10 +32,11 @@
  */
 
 if($this->importStarted) {
-    echo '<h2>SQL Files were imported!</h2>';
+    echo '<h2>Choosen SQL Files were imported!</h2>';
     if(!empty($this->errors)) {
-        echo '<b>With the following errors:</b>';
+        echo '<b>With the following errors:</b><pre>';
         print_r($this->errors);
+        echo '</pre>';
     }
 }
 
@@ -44,35 +45,43 @@ if(empty($this->sqlFilesNew) && empty($this->sqlFilesChanged)) {
     return;
 }
 
-$printTable = function(array $data) {
+$printTable = function(array $data, $checkBoxCls) {
     $cellcss = ' style="border:1px solid black; padding:0 5px;"';
     echo '<table style="border:1px solid black;border-collapse: collapse;">';
-    echo '<tr><th'.$cellcss.'>Origin SQL Package</th><th'.$cellcss.'>SQL File</th></tr>';
-    $row = '<tr><td%s>%s</td><td%s>%s</td></tr>';
+    echo '<tr><th'.$cellcss.'>Origin SQL Package</th><th'.$cellcss.'>SQL File</th>';
+    echo '<th><input type="checkbox" name="checkall" onclick="toggle(this,'.$checkBoxCls.');"/></th></tr>';
+    $row = '<tr><td%1$s>%2$s</td><td%1$s>%3$s</td><td%1$s><input class="%5$s" type="checkbox" name="%4$s" value="1"></td></tr>';
     foreach($data as $file) {
-        printf($row, $cellcss, $file['origin'], $cellcss, $file['relativeToOrigin']);
+        printf($row, $cellcss, $file['origin'], $file['relativeToOrigin'], $file['entryHash'], $checkBoxCls);
     }
     echo '</table>';
 };
 
+echo '<form action="'.$_SERVER['REQUEST_URI'].'" method="post" name="toprocess">';
 if(!empty($this->sqlFilesNew)) {
     echo '<h2>New SQL files found:</h2>';
-    $printTable($this->sqlFilesNew);
+    $printTable($this->sqlFilesNew, 'checkerNew');
 }
 if(!empty($this->sqlFilesChanged)) {
     echo '<h2>Modified SQL files found:</h2>';
     echo '<p style="font-style:italic;">This files has to been applied manually to the database:</p>';
-    $printTable($this->sqlFilesChanged);
-}
-//no form anymore after successfull call. The user has to reload first!
-if($this->importStarted) {
-    return;
+    $printTable($this->sqlFilesChanged, 'checkerChanged');
 }
 ?>
 <br />
 <br />
 <br />
-<form action="<?php echo $_SERVER['REQUEST_URI'];?>" method="post">
-    <input type="hidden" name="startimport" value="true">
+    <input type="hidden" name="startimport" value="true" />
     <button type="submit">Import New Files / Update Modified in DB</button>
-</form>
+    <br />
+    <input type="checkbox" name="catchup" value="1" id="catchupbox"/>
+    <label for="catchupbox">catchup mode - WARNING: the choosen files are assumed as already imported!</label>
+</form><?php //start form above in PHP CODE! ?>
+<script type="text/javascript">
+function toggle(master) {
+    boxes = document.getElementsByClassName('checker');
+    for(var i=0; i<boxes.length;i++) {
+        boxes[i].checked = master.checked;
+    }
+}
+</script>

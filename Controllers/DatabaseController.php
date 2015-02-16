@@ -43,19 +43,25 @@ class DatabaseController extends ZfExtended_Controllers_Action {
         
         settype($_POST['startimport'], 'boolean');
         if($_POST['startimport']) {
+            $toProcess = $_POST;
+            unset($toProcess['startimport']);
             $this->view->importStarted = true;
-            $dbupdater->applyNew();
-            $dbupdater->updateModified();
-            $this->view->errors = $dbupdater->getErrors();
+            if(empty($_POST['catchup'])) {
+                $dbupdater->applyNew($toProcess);
+                $dbupdater->updateModified($toProcess);
+                $this->view->errors = $dbupdater->getErrors();
+            }
+            else {
+                $dbupdater->assumeImported($toProcess);
+            }
         }
         
+        $dbupdater->calculateChanges();
         $this->view->sqlFilesNew = $dbupdater->getNewFiles();
         $this->view->sqlFilesChanged = $dbupdater->getModifiedFiles();
     }
     
     public function catchupAction() {
-        $dbupdater = ZfExtended_Factory::get('ZfExtended_Models_Installer_DbUpdater');
-        $dbupdater->assumeAllImported();
-        echo "all files are marked as imported now!";exit;
+        throw new BadMethodCallException('This method is obsolete! It is integrated now in the import Action!');
     }
 }
