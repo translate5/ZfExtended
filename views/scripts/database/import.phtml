@@ -78,8 +78,8 @@ if(!empty($this->sqlFilesChanged)) {
     <label for="catchupbox">catchup mode - WARNING: the choosen files are assumed as already imported!</label>
 </form><?php //start form above in PHP CODE! ?>
 <script type="text/javascript">
-function toggle(master) {
-    boxes = document.getElementsByClassName('checker');
+function toggle(master, cls) {
+    boxes = document.getElementsByClassName(cls);
     for(var i=0; i<boxes.length;i++) {
         boxes[i].checked = master.checked;
     }
