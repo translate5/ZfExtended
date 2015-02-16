@@ -49,7 +49,7 @@ $printTable = function(array $data, $checkBoxCls) {
     $cellcss = ' style="border:1px solid black; padding:0 5px;"';
     echo '<table style="border:1px solid black;border-collapse: collapse;">';
     echo '<tr><th'.$cellcss.'>Origin SQL Package</th><th'.$cellcss.'>SQL File</th>';
-    echo '<th><input type="checkbox" name="checkall" onclick="toggle(this,'.$checkBoxCls.');"/></th></tr>';
+    echo '<th><input type="checkbox" name="checkall" onclick="toggle(this,\''.$checkBoxCls.'\');"/></th></tr>';
     $row = '<tr><td%1$s>%2$s</td><td%1$s>%3$s</td><td%1$s><input class="%5$s" type="checkbox" name="%4$s" value="1"></td></tr>';
     foreach($data as $file) {
         printf($row, $cellcss, $file['origin'], $file['relativeToOrigin'], $file['entryHash'], $checkBoxCls);
