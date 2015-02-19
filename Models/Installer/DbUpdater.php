@@ -204,11 +204,10 @@ class ZfExtended_Models_Installer_DbUpdater {
     }
     
     /**
-     * Adds the new SQL files to the DB
+     * Adds the new SQL files to the DB or runs the PHP script
      * @param array $toProcess
      */
     public function applyNew(array $toProcess) {
-        $cmd = $this->getDbCommand();
         $dbversion = ZfExtended_Factory::get('ZfExtended_Models_Db_DbVersion');
         /* @var $dbversion ZfExtended_Models_Db_DbVersion */
         
@@ -217,10 +216,8 @@ class ZfExtended_Models_Installer_DbUpdater {
             if(empty($toProcess[md5($entryHash)])) {
                 continue;
             }
-            $call = sprintf($cmd, escapeshellarg($file['absolutePath']));
-            exec($call, $output, $result);
-            if($result > 0) {
-                $this->errors[] = 'Error on Importing a SQL file. Called command: '.$call.".\n".'Result of Command: '.print_r($output,1);
+            
+            if(!$this->handleFile($file)) {
                 continue;
             }
             $data = array();
@@ -230,6 +227,68 @@ class ZfExtended_Models_Installer_DbUpdater {
             unset($this->sqlFilesNew[$key]);
         }
         $this->logErrors();
+    }
+    
+    /**
+     * Calls the desired File Handler selected by the file suffix
+     * returns true on handler success, false otherwise, exception if no handler found 
+     * @param array $file
+     * @throws ZfExtended_Exception
+     * @return boolean
+     */
+    protected function handleFile(array $file) {
+        $parts = explode('.', $file['relativeToOrigin']);
+        $suffix = strtolower(end($parts));
+        switch($suffix) {
+            case 'sql':
+                return $this->handleSqlFile($file);
+            case 'php':
+                return $this->handlePhpFile($file);
+        }
+        throw new ZfExtended_Exception("No Handler found for DB Import File: ".$file['relativeToOrigin']);
+    }
+    
+    /**
+     * returns null if all OK, other than null on error
+     * @param array $file
+     * @return boolean
+     */
+    protected function handleSqlFile($file) {
+        $cmd = $this->getDbCommand();
+        $call = sprintf($cmd, escapeshellarg($file['absolutePath']));
+        exec($call, $output, $result);
+        if($result > 0) {
+            $this->errors[] = 'Error on Importing a SQL file. Called command: '.$call.".\n".'Result of Command: '.print_r($output,1);
+            return false;
+        }
+        return true;
+    }
+    
+    /**
+     * Handles (includes / runs) a PHP DBUpdater Script
+     * @param array $file
+     * @return boolean
+     */
+    protected function handlePhpFile($file) {
+        try {
+            $config = Zend_Registry::get('config');
+            $db = $config->resources->db->params;
+            $argv = array();
+            $argv[] = $file['relativeToOrigin'];
+            $argv[] = $db->host;
+            $argv[] = $db->dbname;
+            $argv[] = $db->username;
+            $argv[] = $db->password;
+            ob_start();
+            require $file['absolutePath'];
+            $result = ob_get_flush();
+            error_log('Result of imported DbUpdater PHP File '.$file['relativeToOrigin'].': '.print_r($result,1));
+            return true;
+        }
+        catch (Exception $e) {
+            $this->errors[] = 'Error on Importing a PHP DB Updater file. Called file: '.$file['relativeToOrigin'].' Result of PHP Exception: '."\n\n".$e;
+        }
+        return false;
     }
     
     /**

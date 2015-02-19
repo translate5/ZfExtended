@@ -94,7 +94,7 @@ class ZfExtended_Models_Installer_DbFileFinder {
     protected function iterateThroughDirectory($path, $name) {
         foreach (new DirectoryIterator($path) as $fileInfo) {
             $filename = $fileInfo->getFilename();
-            if($fileInfo->isDot() || $fileInfo->isFile() && !$this->isSqlFile($fileInfo)){
+            if($fileInfo->isDot() || $fileInfo->isFile() && !$this->isFileToProcess($fileInfo)){
                 continue;
             }
             //if the found file is a directory, it may contain overwrites for the db origin with the given name
@@ -124,7 +124,7 @@ class ZfExtended_Models_Installer_DbFileFinder {
             $this->replacements[$targetPackage] = array();
         }
         foreach(new DirectoryIterator($pathname) as $overwrite) {
-            if(!$overwrite->isFile() || !$this->isSqlFile($overwrite)) {
+            if(!$overwrite->isFile() || !$this->isFileToProcess($overwrite)) {
                 continue;
             }
             $this->replacements[$targetPackage][$overwrite->getFilename()] = array(
@@ -136,13 +136,13 @@ class ZfExtended_Models_Installer_DbFileFinder {
     }
     
     /**
-     * returns true if given file ends to case insensitive ".sql"
+     * returns true if given file ends to case insensitive ".sql" or ".php"
      * @param SplFileInfo $file
      * @return boolean
      */
-    protected function isSqlFile(SplFileInfo $file) {
+    protected function isFileToProcess(SplFileInfo $file) {
         $suffix = strtolower(substr($file->getFilename(), -4));
-        return $suffix === '.sql';
+        return $suffix === '.sql' || $suffix === '.php';
     }
     
     /**
