@@ -47,6 +47,12 @@ class ZfExtended_Models_Entity_ExcelExport {
     private $properties = false;
     
     /**
+     * Container to hold fields that should not be shown in the excel
+     * @var stdClass
+     */
+    private $hiddenFields = false;
+    
+    /**
      * Container to hold lablenames (lablenames->label->translation)
      * @var stdClass
      */
@@ -58,6 +64,32 @@ class ZfExtended_Models_Entity_ExcelExport {
      */
     private $callbacks = array();
     
+    /**
+     * Container to hold fieldType-Definitions (like PHPExcel_Style_NumberFormat::FORMAT_DATE_YYYYMMDDSLASH)
+     * @var stdClass
+     */
+    private $fieldTypes = false;
+    
+    
+    /**
+     * Default format for date fields
+     * @var string
+     */
+    private $_defaultFieldTypeDate = PHPExcel_Style_NumberFormat::FORMAT_DATE_YYYYMMDD2;
+    
+    /**
+     * Default format for percent fields
+     * @var string
+     */
+    private $_defaultFieldTypePercent = '0.0%;[RED]-0.0%';
+    
+    /**
+     * Default format for currency fields
+     * @var string
+     */
+    private $_defaultFieldTypeCurrency = PHPExcel_Style_NumberFormat::FORMAT_CURRENCY_EUR_SIMPLE;
+    
+    
     
     
     public function __construct() {
@@ -66,23 +98,41 @@ class ZfExtended_Models_Entity_ExcelExport {
         $this->properties = new stdClass();
         $this->properties->filename = 'ERP-Export';
         
+        $this->hiddenFields = new stdClass();
         $this->labels = new stdClass();
         $this->callbacks = new stdClass();
+        $this->fieldTypes = new stdClass();
     }
     
     
     public function simpleArrayToExcel ($data) {
-        $tempSheet = $this->PHPExcel->setActiveSheetIndex(0);
+        $this->PHPExcel->setActiveSheetIndex(0);
+        $tempSheet = $this->PHPExcel->getActiveSheet();
         
         $rowCount = 1;
         foreach ($data as $row)
         {
             $colCount = 0;
             foreach ($row as $key => $value) {
+                
+                // don't show hidden fields
+                if ($this->isHiddenField($key)) {
+                    continue;
+                }
+                
+                // set labels in first row
                 if ($rowCount == 1) {
                     $tempSheet->setCellValueByColumnAndRow($colCount, 1, $this->getLabel($key));
                 }
+                
+                // if fieldtype is defined for this field, set it.
+                if ($this->getFieldType($key)) {
+                    $tempSheet->getStyleByColumnAndRow($colCount, $rowCount+1)->getNumberFormat()->setFormatCode($this->getFieldType($key));
+                }
+                
+                // set fields-value
                 $tempSheet->setCellValueByColumnAndRow($colCount, $rowCount+1, $this->getCallback($key, $value));
+                
                 $colCount ++;
             }
             $rowCount++;
@@ -113,6 +163,27 @@ class ZfExtended_Models_Entity_ExcelExport {
     public function getProperty(string $name) {
         if (property_exists($this->properties, $name)) {
             return $this->properties->$name;
+        }
+        return false;
+    }
+    
+    
+    /**
+     * Adds a field to the list of hidden fields
+     * @param string $name
+     */
+    public function setHiddenField(string $name) {
+        $this->hiddenFields->$name = true;
+    }
+    
+    /**
+     * Checks if field is hidden
+     * @param string $name
+     * @return boolean
+     */
+    public function isHiddenField(string $name) {
+        if (property_exists($this->hiddenFields, $name)) {
+            return true;
         }
         return false;
     }
@@ -150,16 +221,85 @@ class ZfExtended_Models_Entity_ExcelExport {
     }
     
     /**
-     * Get manipulated value of field $name
+     * Get manipulated value of field $name 
      * @param string $name
      * @param mixed $value
      * @return mixed
      */
     public function getCallback(string $name, $value) {
+        if (($value == 0 || empty($value)) && property_exists($this->fieldTypes, $name)) {
+            return '';
+        }
+        
         if (property_exists($this->callbacks, $name)) {
             return call_user_func($this->callbacks->$name, $value);
         }
+        
         return $value;
+    }
+    
+    
+    /**
+     * Set fieldtype used in the excelsheet to format the output in excel
+     * @param string $name
+     * @param string $fieldtype
+     */
+    public function setFieldType(string $name, $fieldtype) {
+        $this->fieldTypes->$name = $fieldtype;
+    }
+    
+    /**
+     * Get fieldtype of field $name
+     * @param string $name
+     * @return string
+     */
+    public function getFieldType(string $name) {
+        if (property_exists($this->fieldTypes, $name)) {
+            return $this->fieldTypes->$name;
+        }
+    }
+    
+    /**
+     * Set field to date field format in excel output
+     * Also sets a callback function to format field value as required
+     * 
+     * @param string $field
+     */
+    public function setFieldTypeDate($field) {
+        // for date fields the following callback must be set
+        $stringToDate = function($string) {
+            $date = strtotime($string);
+            $date = PHPExcel_Shared_Date::PHPToExcel($date);
+            return $date;
+        };
+        
+        $this->setCallback($field, $stringToDate);
+        $this->setFieldType($field, $this->_defaultFieldTypeDate);
+    }
+    
+    /**
+     * Set field to percent field format in excel output
+     * Also sets a callback function to format field value as required
+     * 
+     * @param string $field
+     */
+    public function setFieldTypePercent($field) {
+        // for date fields the following callback must be set
+        $percentToPercent = function($percent) {
+            return $percent / 100;
+        };
+        
+        $this->setCallback($field, $percentToPercent);
+        $this->setFieldType($field, $this->_defaultFieldTypePercent);
+    }
+    
+    /**
+     * Set field to currency field format in excel output
+     * 
+     * @param string $field
+     */
+    public function setFieldTypeCurrency($field) {
+        $this->setFieldType($field, $this->_defaultFieldTypeCurrency);
     }
     
     
