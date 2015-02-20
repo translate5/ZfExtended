@@ -5,13 +5,30 @@ Database maintenance will be part of the Install and Update Kit (IuK). If the Iu
 
 Current Usage
 -------------
-Currently the database updater knows two commands:
-1. /database/import/
-2. /database/catchup/
+Currently the database updater is accessible under:
 
-The first one */database/import/* is the command will print you a list of new SQL files, and provides you a button to import this files into your configured DB.
+    /database/import/
 
-The second one */database/catchup/* is only needed for the first time using the database updater. Calling this URL will mark all available SQL files as already installed. Regardless if you have applied the SQL contents of the files or not. *Use this command wisely!*
+On */database/import/* you will get a neat GUI, where you get a list of new or modified SQL files. PHP Files are also listed, since sometimes a PHP Script is needed to do complex data conversions. 
+
+The listed files can be individually selected by checkboxes, and then be processed on different ways: 
+The default way is to import SQL files into your configured DB. Selected PHP files are included, to be processed.
+
+An additional checkbox enables the "catchup mode". Catchup Mode means, that the selected files are marked as "imported", but the contents are not aplied to the DB. This is needed for the first time using the database updater, or if you have manually applied a SQL / PHP file, and you have to mark it as "done".
+Using the "catchup mode" will mark all selected SQL/PHP files as already installed! Regardless if you have applied the contents of the files or not! *Use this mode wisely!*
+
+PHP Files
+---------
+Sometimes it becomes necessary to use a PHP script for data conversion, not only a plain SQL script. In this case, a PHP file can be created instead a SQL file. For PHP files the same search paths are used, as for SQL files. See below on SQL Path configuration.
+
+The PHP files are included in the DBUpdater Scope. That means you have access to the ZfExtended Framework - with the scope from within the calling method. That means you can either use Entity or DB Models, with preconfigured DB credentials. Then the script can not be called from console! If you plan to use your script also in console, you have to implement the following Syntax:
+
+    /usr/bin/php 123-DB-MANIPULATION-SCRIPT.php DBHOST DBNAME DBUSER DBPASSWD [DBPORT [DBSOCKET]]
+    
+This should be implemented with the $argv array, since the DBUpdater fills the $argv array with the above parameters for compatibility.
+
+*Avoid "die" or "exit" calls in the PHP script, since this would break the whole DbUpdater process!* 
+Exceptions can and should be used instead!
 
 Security
 --------
