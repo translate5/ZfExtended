@@ -40,6 +40,11 @@ class DatabaseController extends ZfExtended_Controllers_Action {
         $dbupdater = ZfExtended_Factory::get('ZfExtended_Models_Installer_DbUpdater');
         /* @var $dbupdater ZfExtended_Models_Installer_DbUpdater */
         $dbupdater->calculateChanges();
+
+        if(!empty($_GET['show'])) {
+            $this->showContent($dbupdater, $_GET['show']);
+            exit;
+        }
         
         settype($_POST['startimport'], 'boolean');
         if($_POST['startimport']) {
@@ -59,6 +64,21 @@ class DatabaseController extends ZfExtended_Controllers_Action {
         $dbupdater->calculateChanges();
         $this->view->sqlFilesNew = $dbupdater->getNewFiles();
         $this->view->sqlFilesChanged = $dbupdater->getModifiedFiles();
+    }
+    
+    protected function showContent(ZfExtended_Models_Installer_DbUpdater $dbupdater, $hash) {
+        $new = $dbupdater->getNewFiles();
+        $modified = $dbupdater->getModifiedFiles();
+        $all = array_merge($new, $modified);
+        foreach($all as $file) {
+            if($file['entryHash'] !== $hash) {
+                continue;
+            }
+            echo '<pre>';
+            echo file_get_contents($file['absolutePath']);
+            echo '</pre>';
+            return;
+        }
     }
     
     public function catchupAction() {

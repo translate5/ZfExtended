@@ -50,7 +50,8 @@ $printTable = function(array $data, $checkBoxCls) {
     echo '<table style="border:1px solid black;border-collapse: collapse;">';
     echo '<tr><th'.$cellcss.'>Origin SQL Package</th><th'.$cellcss.'>SQL File</th>';
     echo '<th><input type="checkbox" name="checkall" onclick="toggle(this,\''.$checkBoxCls.'\');"/></th></tr>';
-    $row = '<tr><td%1$s>%2$s</td><td%1$s>%3$s</td><td%1$s><input class="%5$s" type="checkbox" name="%4$s" value="1"></td></tr>';
+    $row = '<tr><td%1$s>%2$s</td><td%1$s><a href="javascript:windowOpen(\'%4$s\');">%3$s</a></td>';
+    $row .= '<td%1$s><input class="%5$s" type="checkbox" name="%4$s" value="1"></td></tr>';
     
     foreach($data as $file) {
         $name = preg_replace('#\.php$#i', '<span style="color:#ff0000;">.php</span>', $file['relativeToOrigin']);
@@ -88,5 +89,9 @@ function toggle(master, cls) {
     for(var i=0; i<boxes.length;i++) {
         boxes[i].checked = master.checked;
     }
+}
+function windowOpen(hash){
+    window.open('?show='+hash, "SQL Details", "width=600,height=800,left=100,top=200");
+    return;
 }
 </script>
