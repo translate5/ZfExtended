@@ -43,8 +43,8 @@ class ZfExtended_Worker_TriggerByHttp {
     private $method = 'GET';
     private $getParameters = '?cleanupSessionAfterRun=1';
     
-    /**
-     *  @var $log ZfExtended_Log
+   /**
+    * @var ZfExtended_Log
     */
     protected $log;
     
@@ -93,7 +93,7 @@ class ZfExtended_Worker_TriggerByHttp {
         
         $fsock = fsockopen(gethostbyname($this->host), $this->port, $errno, $errstr, 30);
         if ($fsock === false) {
-            $this->log->logError(__CLASS__.' -> '.__FUNCTION__.'; '.$errstr.' ('.$errno.')');
+            $this->log->logError(__CLASS__.'->'.__FUNCTION__.'; Can not trigger url:  '.$url.' Error: '.$errstr.' ('.$errno.')');
             return false;
         }
         
@@ -125,10 +125,11 @@ class ZfExtended_Worker_TriggerByHttp {
         }
         
         fclose($fsock);
-        //error_log(__CLASS__.' -> '.__FUNCTION__.'; $header: '.$header.'; $state: '.$state);
         
         if ($state < 200 || $state >= 300) {
-            $this->log->logError(__CLASS__.'->'.__FUNCTION__.'; Can not trigger url:  '.$url, 'Method: '.$method.'; Post-Parameter: '.print_r($postParameters, true));
+            $msg = __CLASS__.'->'.__FUNCTION__.'; Worker HTTP response state was not 2XX but '.$state.'; called URL:  '.$url;
+            $longMsg = 'Method: '.$method.'; Post-Parameter: '.print_r($postParameters, true);
+            $this->log->logError($msg, $longMsg);
             return false;
         }
         
@@ -182,6 +183,7 @@ class ZfExtended_Worker_TriggerByHttp {
         $out = $this->method.' '.$this->path.$this->getParameters.' HTTP/1.1'."\r\n";
         $out .= 'Host: '.$this->host."\r\n";
         $out .= 'Accept: application/json'."\r\n"; // this is translate5-specific !!!
+        //$out .= 'Cookie: XDEBUG_SESSION=ECLIPSE_DBGP_192.168.178.31'."\r\n";
         
         if ($this->method == 'GET') {
             $out .= 'Connection: Close'."\r\n";
