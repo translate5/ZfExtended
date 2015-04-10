@@ -87,7 +87,7 @@ abstract class ZfExtended_Controllers_Action extends Zend_Controller_Action {
     public function postDispatch()
     {
         $eventName = "after".ucfirst($this->_request->getActionName())."Action";
-        $this->events->trigger($eventName, $this, array($this->view));
+        $this->events->trigger($eventName, $this, array('view' => $this->view));
     }
 }
 
