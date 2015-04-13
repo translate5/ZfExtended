@@ -1,38 +1,32 @@
 <?php
- /*
- START LICENSE AND COPYRIGHT
- 
- This file is part of Translate5 Editor PHP Serverside and build on Zend Framework
- 
- Copyright (c) 2013 Marc Mittag; MittagQI - Quality Informatics;  All rights reserved.
+/*
+START LICENSE AND COPYRIGHT
 
- Contact:  http://www.MittagQI.com/  /  service (ÄTT) MittagQI.com
+ This file is part of translate5
+ 
+ Copyright (c) 2013 - 2015 Marc Mittag; MittagQI - Quality Informatics;  All rights reserved.
 
- This file may be used under the terms of the GNU General Public License version 3.0
- as published by the Free Software Foundation and appearing in the file gpl3-license.txt 
+ Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
+
+ This file may be used under the terms of the GNU AFFERO GENERAL PUBLIC LICENSE version 3
+ as published by the Free Software Foundation and appearing in the file agpl3-license.txt 
  included in the packaging of this file.  Please review the following information 
- to ensure the GNU General Public License version 3.0 requirements will be met:
- http://www.gnu.org/copyleft/gpl.html.
+ to ensure the GNU AFFERO GENERAL PUBLIC LICENSE version 3.0 requirements will be met:
+ http://www.gnu.org/licenses/agpl.html
 
- For this file you are allowed to make use of the same FLOSS exceptions to the GNU 
- General Public License version 3.0 as specified by Sencha for Ext Js. 
- Please be aware, that Marc Mittag / MittagQI take no warranty  for any legal issue, 
- that may arise, if you use these FLOSS exceptions and recommend  to stick to GPL 3. 
- For further information regarding this topic please see the attached license.txt
- of this software package.
- 
- MittagQI would be open to release translate5 under EPL or LGPL also, if this could be
- brought in accordance with the ExtJs license scheme. You are welcome to support us
- with legal support, if you are interested in this.
- 
- 
+ There is a plugin exception available for use with this release of translate5 for
+ open source applications that are distributed under a license other than AGPL:
+ Please see Open Source License Exception for Development of Plugins for translate5
+ http://www.translate5.net/plugin-exception.txt or as plugin-exception.txt in the root
+ folder of translate5.
+  
  @copyright  Marc Mittag, MittagQI - Quality Informatics
  @author     MittagQI - Quality Informatics
- @license    GNU General Public License version 3.0 http://www.gnu.org/copyleft/gpl.html
-             with FLOSS exceptions (see floss-exception.txt and ux-exception.txt at the root level)
- 
- END LICENSE AND COPYRIGHT 
- */
+ @license    GNU AFFERO GENERAL PUBLIC LICENSE version 3 with plugin-execptions
+			 http://www.gnu.org/licenses/agpl.html http://www.translate5.net/plugin-exception.txt
+
+END LICENSE AND COPYRIGHT
+*/
 
 class ZfExtended_Worker_TriggerByHttp {
     
@@ -43,8 +37,8 @@ class ZfExtended_Worker_TriggerByHttp {
     private $method = 'GET';
     private $getParameters = '?cleanupSessionAfterRun=1';
     
-    /**
-     *  @var $log ZfExtended_Log
+   /**
+    * @var ZfExtended_Log
     */
     protected $log;
     
@@ -93,7 +87,7 @@ class ZfExtended_Worker_TriggerByHttp {
         
         $fsock = fsockopen(gethostbyname($this->host), $this->port, $errno, $errstr, 30);
         if ($fsock === false) {
-            $this->log->logError(__CLASS__.' -> '.__FUNCTION__.'; '.$errstr.' ('.$errno.')');
+            $this->log->logError(__CLASS__.'->'.__FUNCTION__.'; Can not trigger url:  '.$url.' Error: '.$errstr.' ('.$errno.')');
             return false;
         }
         
@@ -125,10 +119,11 @@ class ZfExtended_Worker_TriggerByHttp {
         }
         
         fclose($fsock);
-        //error_log(__CLASS__.' -> '.__FUNCTION__.'; $header: '.$header.'; $state: '.$state);
         
         if ($state < 200 || $state >= 300) {
-            $this->log->logError(__CLASS__.'->'.__FUNCTION__.'; Can not trigger url:  '.$url, 'Method: '.$method.'; Post-Parameter: '.print_r($postParameters, true));
+            $msg = __CLASS__.'->'.__FUNCTION__.'; Worker HTTP response state was not 2XX but '.$state.'; called URL:  '.$url;
+            $longMsg = 'Method: '.$method.'; Post-Parameter: '.print_r($postParameters, true);
+            $this->log->logError($msg, $longMsg);
             return false;
         }
         
@@ -182,6 +177,7 @@ class ZfExtended_Worker_TriggerByHttp {
         $out = $this->method.' '.$this->path.$this->getParameters.' HTTP/1.1'."\r\n";
         $out .= 'Host: '.$this->host."\r\n";
         $out .= 'Accept: application/json'."\r\n"; // this is translate5-specific !!!
+        //$out .= 'Cookie: XDEBUG_SESSION=ECLIPSE_DBGP_192.168.178.31'."\r\n";
         
         if ($this->method == 'GET') {
             $out .= 'Connection: Close'."\r\n";
