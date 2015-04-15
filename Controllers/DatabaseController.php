@@ -72,7 +72,7 @@ class DatabaseController extends ZfExtended_Controllers_Action {
                 continue;
             }
             echo '<pre>';
-            echo file_get_contents($file['absolutePath']);
+            echo htmlspecialchars(file_get_contents($file['absolutePath']));
             echo '</pre>';
             return;
         }
