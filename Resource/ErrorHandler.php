@@ -52,10 +52,6 @@ class ZfExtended_Resource_ErrorHandler extends Zend_Application_Resource_Resourc
         $bootstrap->bootstrap('ZfExtended_Resource_InitRegistry');
         $config = Zend_Registry::get('config');
         register_shutdown_function(array($this, 'handleFatalError'), $config);
-        Zend_Registry::set('showErrorsInBrowser', false);
-        if(isset($config->runtimeOptions->showErrorsInBrowser)){
-            Zend_Registry::set('showErrorsInBrowser', (boolean) $config->runtimeOptions->showErrorsInBrowser);
-        }
         Zend_Registry::set('errorCollect', false);
         if(isset($config->runtimeOptions->errorCollect)){
             Zend_Registry::set('errorCollect', (boolean) $config->runtimeOptions->errorCollect);
@@ -75,7 +71,7 @@ class ZfExtended_Resource_ErrorHandler extends Zend_Application_Resource_Resourc
         if(!headers_sent()) {
             header('HTTP/1.1 500 Internal Server Error');
         }
-        if($config->runtimeOptions->showErrorsInBrowser) {
+        if(!empty($config->runtimeOptions->showErrorsInBrowser)) {
             $out = ob_get_clean();
         }
         else {

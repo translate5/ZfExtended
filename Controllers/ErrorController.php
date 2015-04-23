@@ -140,9 +140,7 @@ class ErrorController extends ZfExtended_Controllers_Action
         $this->route = get_class(Zend_Controller_Front::getInstance()->getRouter()->getCurrentRoute());
         try {
             $config = Zend_Registry::get('config');
-            if(isset($config->runtimeOptions->showErrorsInBrowser)){
-                $this->_showErrorsInBrowser = Zend_Registry::get('showErrorsInBrowser');
-            }
+            $this->_showErrorsInBrowser = !empty($config->runtimeOptions->showErrorsInBrowser);
             if(isset($config->runtimeOptions->errorCollect)){
                 $this->_errorCollect = Zend_Registry::get('errorCollect');
             }
