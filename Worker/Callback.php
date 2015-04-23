@@ -54,7 +54,7 @@ class ZfExtended_Worker_Callback extends ZfExtended_Worker_Abstract {
      * @see ZfExtended_Worker_Abstract::work()
      */
     public function work() {
-        $parameters = $this->workerModel->getParameters(); 
+        $parameters = $this->workerModel->getParameters();
         $obj = ZfExtended_Factory::get($parameters['class']);
         return $obj->{$parameters['callback']}($this->taskGuid, $this->workerModel->getParameters());
     }

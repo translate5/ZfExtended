@@ -95,7 +95,7 @@ abstract class ZfExtended_Worker_Abstract {
      * @param string $taskGuid
      * @param array $parameters stored in the worker-model
      * 
-     * @return boolean true if worker cann be initialized.
+     * @return boolean true if worker can be initialized.
      */
     public function init($taskGuid = NULL, $parameters = array()) {
         if (!$this->validateParameters($parameters)) {
