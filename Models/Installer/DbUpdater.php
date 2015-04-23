@@ -315,7 +315,7 @@ class ZfExtended_Models_Installer_DbUpdater {
         if(!file_exists($exec) || !is_executable($exec)) {
             throw new ZfExtended_Exception("Cant find or execute mysql excecutable ".$exec);
         }
-        $cmd = array($this->mysqlBin);
+        $cmd = array(escapeshellarg($exec));
         $cmd[] = '-h';
         $cmd[] = escapeshellarg($db->host);
         $cmd[] = '-u';
