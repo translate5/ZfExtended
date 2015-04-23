@@ -58,6 +58,13 @@ class ZfExtended_Models_Installer_DbUpdater {
     protected $mysqlBin = '/usr/bin/mysql';
     
     /**
+     * This flag is mentioned to be set from within PHP alter files to false for testing.
+     * If setting this to false the file will not be marked as updated.
+     * @var boolean
+     */
+    protected $doNotSavePhpForDebugging = true;
+    
+    /**
      * Forcing all available SQL files to be set as imported in the DB, regardless if the contents were really applied or not.
      * For setting up dbversioning on instances where all SQL files are already installed.
      * @param array $toProcess
@@ -280,7 +287,8 @@ class ZfExtended_Models_Installer_DbUpdater {
             require $file['absolutePath'];
             $result = ob_get_flush();
             error_log('Result of imported DbUpdater PHP File '.$file['relativeToOrigin'].': '.print_r($result,1));
-            return true;
+            //per default true, see attribute docu for more info
+            return $this->doNotSavePhpForDebugging; 
         }
         catch (Exception $e) {
             $this->errors[] = 'Error on Importing a PHP DB Updater file. Called file: '.$file['relativeToOrigin'].' Result of PHP Exception: '."\n\n".$e;
