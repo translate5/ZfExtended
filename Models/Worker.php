@@ -86,54 +86,45 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
     /**
      * Wake up a scheduled worker (set state from scheduled to waiting)
      * if there are no other worker waiting or running with the given taskGuid
-     * 
+     * TODO implement for waking up general workers without a $taskGuid
      * @param string $taskGuid
      */
-    public function wakeupScheduled($taskGuid = NULL) {
+    public function wakeupScheduled($taskGuid) {
         // check if there are any worker waiting or running with this taskGuid
         $db = $this->db;
-        $db->getAdapter()->beginTransaction();
-        $sql = $db->select()
-                ->from($db->info($db::NAME), array('COUNT(*) AS count'))
-                ->where('taskGuid = ?', $taskGuid)
-                ->where('state IN(?)', array(self::STATE_RUNNING, self::STATE_WAITING));
-        $count = $db->fetchRow($sql)->count;
-        
-        // if no waiting/running worker was found, wake up the next scheduled worker with this taskGuid
-        if ($count != 0) {
-            $db->getAdapter()->commit();
+        $adapter = $db->getAdapter();
+
+        //SQL Explanation:
+        // set the next (limit 1 and order by) worker of the given task to waiting
+        // if no other worker are running or waiting (EXISTS)
+        // this is regardless of taskGuid, so scheduled workers of different tasks 
+        //    has to wait for a whole tasks work to be finished
+        $sql = function($withTaskGuid = false) {
+            $taskGuid = $withTaskGuid ? 'taskGuid = ? AND ' : '';
+            return 'UPDATE Zf_worker u, (
+                    SELECT id from Zf_worker 
+                    WHERE '.$taskGuid.' state = ? 
+                    AND NOT EXISTS (SELECT * 
+                                    FROM Zf_worker 
+                                    WHERE STATE IN (?, ?))
+                    ORDER BY id ASC
+                    LIMIT 1
+                ) s
+                SET u.STATE = ?
+                WHERE u.id = s.id;'; 
+        };
+        //first try to wake up scheduleds of the given task
+        $bindings = array($taskGuid, self::STATE_SCHEDULED, self::STATE_WAITING, self::STATE_RUNNING, self::STATE_WAITING);
+        $res = $adapter->query($sql(true), $bindings);
+        //if waked up one, we dont need to look for others
+        if($res->rowCount() > 0) {
             return;
         }
         
-        $sql = $db->select()
-                ->from($db->info($db::NAME), array('id'))
-                ->where('taskGuid = ?', $taskGuid)
-                ->where('state = ?', self::STATE_SCHEDULED)
-                ->order('id ASC')
-                ->limit(1);
-        $row = $db->fetchRow($sql);
-        
-        // there is no scheduled worker with this taskGuid
-        if (empty($row)) {
-            $db->getAdapter()->commit();
-            return;
-        }
-        
-        $id = $row->id;
-        $data = array('state' => self::STATE_WAITING);
-        $whereStatements = array();
-        $whereStatements[] ='id = "'.$id.'"';
-        
-        $countRows = $db->update($data, $whereStatements);
-        $db->getAdapter()->commit();
-        
-        if ($countRows < 1)
-        {
-            error_log(__CLASS__.' -> '.__FUNCTION__.' workerModel can not wake up next scheduled worker with $id='.$id);
-            return false;
-        }
+        //if no worker of given task could be waked up at all, take the next of all workers:
+        $bindings = array(self::STATE_SCHEDULED, self::STATE_WAITING, self::STATE_RUNNING, self::STATE_WAITING);
+        $adapter->query($sql(), $bindings);
     }
-    
     
     /**
      * Try to set worker into mutex-save mode
@@ -162,7 +153,7 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
     }
     
     /**
-     * 
+     * returns a list of queued workers (optional of a given taskguid)
      * @param string $taskGuid
      * @return array: list of queued entries in table Zf_worker which are "ready to run"
      */
@@ -213,11 +204,11 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
             $listRunningResources[] = $waiting['resource'];
             $listRunningResourceSlotSerialized[] = $tempResourceSlotSerialized;
         }
-        
+        //error_log("QUEUED: ".print_r($listQueued,1));
         return $listQueued;
     }
     
-    private function getListWaiting($taskGuid = NULL) {
+    private function getListWaiting($taskGuid) {
         $sql = $this->db->select()->where('state = ?', self::STATE_WAITING)->order('id ASC');
         
         if ($taskGuid) {
@@ -228,7 +219,7 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
         
         return $rows;
     }
-    private function getListRunning($taskGuid = NULL) {
+    private function getListRunning($taskGuid) {
         $db = $this->db;
         $sql = $db->select()
                     //->columns(array('resource', 'slot')) // this does not work :-((((

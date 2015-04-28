@@ -274,6 +274,8 @@ abstract class ZfExtended_Worker_Abstract {
         $this->workerModel->setStarttime(new Zend_Db_Expr('NOW()'));
         $this->workerModel->setMaxRuntime(new Zend_Db_Expr('NOW() + INTERVAL '.$this->workerModel->getMaxLifetime()));
         $this->workerModel->setPid(getmypid());
+        
+        //error_log($this->workerModel->getId().' '.get_class($this).' # '.$this->workerModel->getTaskGuid().' # '.str_replace("\n",'; ',print_r($this->workerModel->getParameters(),1)));
         $this->workerModel->save();
         try {
             $result = $this->work();
