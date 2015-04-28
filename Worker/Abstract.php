@@ -52,11 +52,22 @@ abstract class ZfExtended_Worker_Abstract {
     protected $maxParallelProcesses = 1;
     
     /**
-     * This constant values define the different blocking-types
+     * With blocking type slot, the maximum of parallel workers is defined by the available slots for this resource.
      * @var string
      */
     const BLOCK_SLOT = 'slot';
+    
+    /**
+     * If a worker with blocking type "resource" is running, no other queued worker with same resource may be started at the same time.
+     * @var string
+     */
     const BLOCK_RESOURCE = 'resource';
+    
+    /**
+     * If a worker with blocking global is running, no other queued worker may be started
+     * No other queued worker means, regardless of maxParallelProcesses and regardless of resource.
+     * @var string
+     */
     const BLOCK_GLOBAL = 'global';
     
     /**
@@ -175,6 +186,7 @@ abstract class ZfExtended_Worker_Abstract {
         $tempSlot = $this->calculateQueuedSlot();
         $this->workerModel->setResource($tempSlot['resource']);
         $this->workerModel->setSlot($tempSlot['slot']);
+        $this->workerModel->setMaxParallelProcesses($this->maxParallelProcesses);
         if(!is_null($state)){
             $this->workerModel->setState($state);
         }
@@ -262,7 +274,6 @@ abstract class ZfExtended_Worker_Abstract {
         $this->workerModel->setStarttime(new Zend_Db_Expr('NOW()'));
         $this->workerModel->setMaxRuntime(new Zend_Db_Expr('NOW() + INTERVAL '.$this->workerModel->getMaxLifetime()));
         $this->workerModel->setPid(getmypid());
-        
         $this->workerModel->save();
         try {
             $result = $this->work();
