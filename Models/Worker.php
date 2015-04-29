@@ -98,7 +98,9 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
         // set the next (limit 1 and order by) worker of the given task to waiting
         // if no other worker are running or waiting (EXISTS)
         // this is regardless of taskGuid, so scheduled workers of different tasks 
-        //    has to wait for a whole tasks work to be finished
+        //    has to wait for a whole tasks work to be finished (TRANSLATE-510)
+        //    in an older version of this SQL a taskGuid filter was also in the 
+        //    inner EXISTS SELECT to respect only tasks of this taskGuid
         $sql = function($withTaskGuid = false) {
             $taskGuid = $withTaskGuid ? 'taskGuid = ? AND ' : '';
             return 'UPDATE Zf_worker u, (
