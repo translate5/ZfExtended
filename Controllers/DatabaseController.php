@@ -1,35 +1,32 @@
 <?php
- /*
- START LICENSE AND COPYRIGHT
+/*
+START LICENSE AND COPYRIGHT
+
+ This file is part of translate5
  
- This file is part of Translate5 Editor PHP Serverside and build on Zend Framework
- 
-  Copyright (c) 2013 Marc Mittag; MittagQI - Quality Informatics;  All rights reserved.
+ Copyright (c) 2013 - 2015 Marc Mittag; MittagQI - Quality Informatics;  All rights reserved.
 
-  Contact:  http://www.MittagQI.com/  /  service (ÄTT) MittagQI.com
+ Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
 
-  This file is multi-licensed under the EPL, LGPL and GPL licenses. 
+ This file may be used under the terms of the GNU AFFERO GENERAL PUBLIC LICENSE version 3
+ as published by the Free Software Foundation and appearing in the file agpl3-license.txt 
+ included in the packaging of this file.  Please review the following information 
+ to ensure the GNU AFFERO GENERAL PUBLIC LICENSE version 3.0 requirements will be met:
+ http://www.gnu.org/licenses/agpl.html
 
-  It may be used under the terms of the Eclipse Public License - v 1.0
-  as published by the Eclipse Foundation and appearing in the file eclipse-license.txt 
-  included in the packaging of this file.  Please review the following information 
-  to ensure the Eclipse Public License - v 1.0 requirements will be met:
-  http://www.eclipse.org/legal/epl-v10.html.
-
-  Also it may be used under the terms of the GNU LESSER GENERAL PUBLIC LICENSE version 3
-  or the GNU GENERAL PUBLIC LICENSE version 3 as published by the 
-  Free Software Foundation, Inc. and appearing in the files lgpl-license.txt and gpl3-license.txt
-  included in the packaging of this file.  Please review the following information 
-  to ensure the GNU LESSER GENERAL PUBLIC LICENSE version 3 requirements or the
-  GNU GENERAL PUBLIC LICENSE version 3 requirements will be met:
-  http://www.gnu.org/licenses/lgpl.html   /  http://www.gnu.org/licenses/gpl.html
+ There is a plugin exception available for use with this release of translate5 for
+ open source applications that are distributed under a license other than AGPL:
+ Please see Open Source License Exception for Development of Plugins for translate5
+ http://www.translate5.net/plugin-exception.txt or as plugin-exception.txt in the root
+ folder of translate5.
   
-  @copyright  Marc Mittag, MittagQI - Quality Informatics
-  @author     MittagQI - Quality Informatics
-  @license    Multi-licensed under Eclipse Public License - v 1.0 http://www.eclipse.org/legal/epl-v10.html, GNU LESSER GENERAL PUBLIC LICENSE version 3 http://www.gnu.org/licenses/lgpl.html and GNU GENERAL PUBLIC LICENSE version 3 http://www.gnu.org/licenses/gpl.html
- 
- END LICENSE AND COPYRIGHT 
- */
+ @copyright  Marc Mittag, MittagQI - Quality Informatics
+ @author     MittagQI - Quality Informatics
+ @license    GNU AFFERO GENERAL PUBLIC LICENSE version 3 with plugin-execptions
+			 http://www.gnu.org/licenses/agpl.html http://www.translate5.net/plugin-exception.txt
+
+END LICENSE AND COPYRIGHT
+*/
 
 /**
  * Database Controller provides simple actions to do basic database updating
@@ -40,6 +37,11 @@ class DatabaseController extends ZfExtended_Controllers_Action {
         $dbupdater = ZfExtended_Factory::get('ZfExtended_Models_Installer_DbUpdater');
         /* @var $dbupdater ZfExtended_Models_Installer_DbUpdater */
         $dbupdater->calculateChanges();
+
+        if(!empty($_GET['show'])) {
+            $this->showContent($dbupdater, $_GET['show']);
+            exit;
+        }
         
         settype($_POST['startimport'], 'boolean');
         if($_POST['startimport']) {
@@ -59,6 +61,21 @@ class DatabaseController extends ZfExtended_Controllers_Action {
         $dbupdater->calculateChanges();
         $this->view->sqlFilesNew = $dbupdater->getNewFiles();
         $this->view->sqlFilesChanged = $dbupdater->getModifiedFiles();
+    }
+    
+    protected function showContent(ZfExtended_Models_Installer_DbUpdater $dbupdater, $hash) {
+        $new = $dbupdater->getNewFiles();
+        $modified = $dbupdater->getModifiedFiles();
+        $all = array_merge($new, $modified);
+        foreach($all as $file) {
+            if($file['entryHash'] !== $hash) {
+                continue;
+            }
+            echo '<pre>';
+            echo htmlspecialchars(file_get_contents($file['absolutePath']));
+            echo '</pre>';
+            return;
+        }
     }
     
     public function catchupAction() {

@@ -1,35 +1,32 @@
 <?php
- /*
-   START LICENSE AND COPYRIGHT
+/*
+START LICENSE AND COPYRIGHT
 
-  This file is part of the ZfExtended library and build on Zend Framework
+ This file is part of translate5
+ 
+ Copyright (c) 2013 - 2015 Marc Mittag; MittagQI - Quality Informatics;  All rights reserved.
 
-  Copyright (c) 2013 Marc Mittag; MittagQI - Quality Informatics;  All rights reserved.
+ Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
 
-  Contact:  http://www.MittagQI.com/  /  service (ÄTT) MittagQI.com
+ This file may be used under the terms of the GNU AFFERO GENERAL PUBLIC LICENSE version 3
+ as published by the Free Software Foundation and appearing in the file agpl3-license.txt 
+ included in the packaging of this file.  Please review the following information 
+ to ensure the GNU AFFERO GENERAL PUBLIC LICENSE version 3.0 requirements will be met:
+ http://www.gnu.org/licenses/agpl.html
 
-  This file is multi-licensed under the EPL, LGPL and GPL licenses. 
-
-  It may be used under the terms of the Eclipse Public License - v 1.0
-  as published by the Eclipse Foundation and appearing in the file eclipse-license.txt 
-  included in the packaging of this file.  Please review the following information 
-  to ensure the Eclipse Public License - v 1.0 requirements will be met:
-  http://www.eclipse.org/legal/epl-v10.html.
-
-  Also it may be used under the terms of the GNU LESSER GENERAL PUBLIC LICENSE version 3
-  or the GNU GENERAL PUBLIC LICENSE version 3 as published by the 
-  Free Software Foundation, Inc. and appearing in the files lgpl-license.txt and gpl3-license.txt
-  included in the packaging of this file.  Please review the following information 
-  to ensure the GNU LESSER GENERAL PUBLIC LICENSE version 3 requirements or the
-  GNU GENERAL PUBLIC LICENSE version 3 requirements will be met:
-  http://www.gnu.org/licenses/lgpl.html   /  http://www.gnu.org/licenses/gpl.html
+ There is a plugin exception available for use with this release of translate5 for
+ open source applications that are distributed under a license other than AGPL:
+ Please see Open Source License Exception for Development of Plugins for translate5
+ http://www.translate5.net/plugin-exception.txt or as plugin-exception.txt in the root
+ folder of translate5.
   
-  @copyright  Marc Mittag, MittagQI - Quality Informatics
-  @author     MittagQI - Quality Informatics
-  @license    Multi-licensed under Eclipse Public License - v 1.0 http://www.eclipse.org/legal/epl-v10.html, GNU LESSER GENERAL PUBLIC LICENSE version 3 http://www.gnu.org/licenses/lgpl.html and GNU GENERAL PUBLIC LICENSE version 3 http://www.gnu.org/licenses/gpl.html
+ @copyright  Marc Mittag, MittagQI - Quality Informatics
+ @author     MittagQI - Quality Informatics
+ @license    GNU AFFERO GENERAL PUBLIC LICENSE version 3 with plugin-execptions
+			 http://www.gnu.org/licenses/agpl.html http://www.translate5.net/plugin-exception.txt
 
-  END LICENSE AND COPYRIGHT 
- */
+END LICENSE AND COPYRIGHT
+*/
 
 /**
  * @package ZfExtended
@@ -59,6 +56,13 @@ class ZfExtended_Models_Installer_DbUpdater {
      * @var string
      */
     protected $mysqlBin = '/usr/bin/mysql';
+    
+    /**
+     * This flag is mentioned to be set from within PHP alter files to false for testing.
+     * If setting this to false the file will not be marked as updated.
+     * @var boolean
+     */
+    protected $doNotSavePhpForDebugging = true;
     
     /**
      * Forcing all available SQL files to be set as imported in the DB, regardless if the contents were really applied or not.
@@ -283,7 +287,8 @@ class ZfExtended_Models_Installer_DbUpdater {
             require $file['absolutePath'];
             $result = ob_get_flush();
             error_log('Result of imported DbUpdater PHP File '.$file['relativeToOrigin'].': '.print_r($result,1));
-            return true;
+            //per default true, see attribute docu for more info
+            return $this->doNotSavePhpForDebugging; 
         }
         catch (Exception $e) {
             $this->errors[] = 'Error on Importing a PHP DB Updater file. Called file: '.$file['relativeToOrigin'].' Result of PHP Exception: '."\n\n".$e;
@@ -318,7 +323,7 @@ class ZfExtended_Models_Installer_DbUpdater {
         if(!file_exists($exec) || !is_executable($exec)) {
             throw new ZfExtended_Exception("Cant find or execute mysql excecutable ".$exec);
         }
-        $cmd = array($this->mysqlBin);
+        $cmd = array(escapeshellarg($exec));
         $cmd[] = '-h';
         $cmd[] = escapeshellarg($db->host);
         $cmd[] = '-u';

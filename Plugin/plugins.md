@@ -64,8 +64,13 @@ Currently this is handled by setting the event-priority of the plugin when bindi
 to an event.
 
 Currently this is relevant for the following plugins:
+editor_Plugins_NoMissingTargetTerminology_Bootstrap         -100 (afterImport)
+editor_Plugins_LockSegmentsBasedOnConfig_Bootstrap          -9000 (afterImport)
+editor_Plugins_SegmentStatistics_BootstrapEditableOnly      -10000 (afterImport)
+editor_Plugins_SegmentStatistics_BootstrapEditableOnly      -11000 (clean up worker, afterImport)
+editor_Plugins_SegmentStatistics_Bootstrap                  -10000 (afterImport)
 
-editor_Plugins_SegmentStatistics_Bootstrap                  1 (default priority of eventManager)
-editor_Plugins_MissingTargetTerminology_Bootstrap           -100
-editor_Plugins_LockSegmentsBasedOnConfig_Bootstrap          -10000
-editor_Plugins_SegmentStatistics_BootstrapEditableOnly      -11000 (only for the clean up worker)
+editor_Plugins_SegmentStatistics_Bootstrap                  -10000 (afterExport)
+editor_Plugins_SegmentStatistics_BootstrapEditableOnly      -10000 (afterExport)
+editor_Plugins_SegmentStatistics_BootstrapEditableOnly      -11000 (clean up worker, afterExport)
+

@@ -1,38 +1,32 @@
 <?php
- /*
- START LICENSE AND COPYRIGHT
- 
- This file is part of Translate5 Editor PHP Serverside and build on Zend Framework
- 
- Copyright (c) 2013 Marc Mittag; MittagQI - Quality Informatics;  All rights reserved.
+/*
+START LICENSE AND COPYRIGHT
 
- Contact:  http://www.MittagQI.com/  /  service (ÄTT) MittagQI.com
+ This file is part of translate5
+ 
+ Copyright (c) 2013 - 2015 Marc Mittag; MittagQI - Quality Informatics;  All rights reserved.
 
- This file may be used under the terms of the GNU General Public License version 3.0
- as published by the Free Software Foundation and appearing in the file gpl3-license.txt 
+ Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
+
+ This file may be used under the terms of the GNU AFFERO GENERAL PUBLIC LICENSE version 3
+ as published by the Free Software Foundation and appearing in the file agpl3-license.txt 
  included in the packaging of this file.  Please review the following information 
- to ensure the GNU General Public License version 3.0 requirements will be met:
- http://www.gnu.org/copyleft/gpl.html.
+ to ensure the GNU AFFERO GENERAL PUBLIC LICENSE version 3.0 requirements will be met:
+ http://www.gnu.org/licenses/agpl.html
 
- For this file you are allowed to make use of the same FLOSS exceptions to the GNU 
- General Public License version 3.0 as specified by Sencha for Ext Js. 
- Please be aware, that Marc Mittag / MittagQI take no warranty  for any legal issue, 
- that may arise, if you use these FLOSS exceptions and recommend  to stick to GPL 3. 
- For further information regarding this topic please see the attached license.txt
- of this software package.
- 
- MittagQI would be open to release translate5 under EPL or LGPL also, if this could be
- brought in accordance with the ExtJs license scheme. You are welcome to support us
- with legal support, if you are interested in this.
- 
- 
+ There is a plugin exception available for use with this release of translate5 for
+ open source applications that are distributed under a license other than AGPL:
+ Please see Open Source License Exception for Development of Plugins for translate5
+ http://www.translate5.net/plugin-exception.txt or as plugin-exception.txt in the root
+ folder of translate5.
+  
  @copyright  Marc Mittag, MittagQI - Quality Informatics
  @author     MittagQI - Quality Informatics
- @license    GNU General Public License version 3.0 http://www.gnu.org/copyleft/gpl.html
-             with FLOSS exceptions (see floss-exception.txt and ux-exception.txt at the root level)
- 
- END LICENSE AND COPYRIGHT 
- */
+ @license    GNU AFFERO GENERAL PUBLIC LICENSE version 3 with plugin-execptions
+			 http://www.gnu.org/licenses/agpl.html http://www.translate5.net/plugin-exception.txt
+
+END LICENSE AND COPYRIGHT
+*/
 
 abstract class ZfExtended_Worker_Abstract {
     
@@ -58,11 +52,22 @@ abstract class ZfExtended_Worker_Abstract {
     protected $maxParallelProcesses = 1;
     
     /**
-     * This constant values define the different blocking-types
+     * With blocking type slot, the maximum of parallel workers is defined by the available slots for this resource.
      * @var string
      */
     const BLOCK_SLOT = 'slot';
+    
+    /**
+     * If a worker with blocking type "resource" is running, no other queued worker with same resource may be started at the same time.
+     * @var string
+     */
     const BLOCK_RESOURCE = 'resource';
+    
+    /**
+     * If a worker with blocking global is running, no other queued worker may be started
+     * No other queued worker means, regardless of maxParallelProcesses and regardless of resource.
+     * @var string
+     */
     const BLOCK_GLOBAL = 'global';
     
     /**
@@ -101,7 +106,7 @@ abstract class ZfExtended_Worker_Abstract {
      * @param string $taskGuid
      * @param array $parameters stored in the worker-model
      * 
-     * @return boolean true if worker cann be initialized.
+     * @return boolean true if worker can be initialized.
      */
     public function init($taskGuid = NULL, $parameters = array()) {
         if (!$this->validateParameters($parameters)) {
@@ -181,6 +186,7 @@ abstract class ZfExtended_Worker_Abstract {
         $tempSlot = $this->calculateQueuedSlot();
         $this->workerModel->setResource($tempSlot['resource']);
         $this->workerModel->setSlot($tempSlot['slot']);
+        $this->workerModel->setMaxParallelProcesses($this->maxParallelProcesses);
         if(!is_null($state)){
             $this->workerModel->setState($state);
         }
@@ -269,6 +275,7 @@ abstract class ZfExtended_Worker_Abstract {
         $this->workerModel->setMaxRuntime(new Zend_Db_Expr('NOW() + INTERVAL '.$this->workerModel->getMaxLifetime()));
         $this->workerModel->setPid(getmypid());
         
+        //error_log($this->workerModel->getId().' '.get_class($this).' # '.$this->workerModel->getTaskGuid().' # '.str_replace("\n",'; ',print_r($this->workerModel->getParameters(),1)));
         $this->workerModel->save();
         try {
             $result = $this->work();
