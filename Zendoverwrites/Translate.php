@@ -157,13 +157,14 @@ class  ZfExtended_Zendoverwrites_Translate extends Zend_Translate
      */
     public function getAvailableTranslations() {
         $session = new Zend_Session_Namespace();
-        $sourceLocale = $session->runtimeOptions->translation->sourceLocale;
+        $config = Zend_Registry::get('config');
+        $sourceLocale = $config->runtimeOptions->translation->sourceLocale;
         
         $generalHelper = ZfExtended_Zendoverwrites_Controller_Action_HelperBroker::getStaticHelper(
                         'General'
         );
         $locales = array();
-        $xliffFiles = scandir($session->runtimeOptions->dir->locales);
+        $xliffFiles = scandir($config->runtimeOptions->dir->locales);
         foreach ($xliffFiles as $key => &$file) {
             $pathinfo = pathinfo($file);
             if (empty($pathinfo['extension']) || $pathinfo['extension'] !== 'xliff') {
