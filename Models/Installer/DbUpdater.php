@@ -328,7 +328,9 @@ class ZfExtended_Models_Installer_DbUpdater {
         $cmd[] = escapeshellarg($db->host);
         $cmd[] = '-u';
         $cmd[] = escapeshellarg($db->username);
-        $cmd[] = '-p'.escapeshellarg($db->password);
+        if(!empty($db->password)) {
+            $cmd[] = '-p'.escapeshellarg($db->password);
+        }
         $cmd[] = escapeshellarg($db->dbname);
         $cmd[] = '< %s 2>&1';
         return join(' ', $cmd);
