@@ -317,7 +317,8 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
 
   public function getAction()
   {
-      $this->view->rows = $this->entity->load($this->_getParam('id'));
+      $this->entity->load($this->_getParam('id'));
+      $this->view->rows = $this->entity->getDataObject();
   }
 
   /**
