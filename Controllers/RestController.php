@@ -99,6 +99,12 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
    */
   protected $log = false;
   
+  /**
+   * stores the last result of validate method
+   * @var boolean
+   */
+  protected $wasValid = false;
+  
   
   /**
    * inits the internal entity Object, handels given limit, filter and sort parameters
@@ -242,18 +248,19 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
   /**
    * Validates the entity, exposes possible failures in a common (extjs known) error format
    * returns false if entity is not valid, true otherwise
+   * sets also the internal wasValid variable
    * @return boolean
    */
   protected function validate() {
       try {
           $this->entity->validate();
           $this->additionalValidations();
-          return true;
+          return $this->wasValid = true;
       }
       catch (ZfExtended_ValidateException $e) {
           $this->handleValidateException($e);
       }
-      return false;
+      return $this->wasValid = false;
   }
 
   /**
