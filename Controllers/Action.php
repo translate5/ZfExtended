@@ -42,8 +42,6 @@ END LICENSE AND COPYRIGHT
  *      - "beforeIndexAction" on preDispatch
  *      - "afterIndexAction" with parameter $this->view on postDispatch
  */
-
-
 abstract class ZfExtended_Controllers_Action extends Zend_Controller_Action {
     /**
      * @var Zend_Session_Namespace
@@ -85,6 +83,24 @@ abstract class ZfExtended_Controllers_Action extends Zend_Controller_Action {
     {
         $eventName = "after".ucfirst($this->_request->getActionName())."Action";
         $this->events->trigger($eventName, $this, array('view' => $this->view));
+    }
+    
+    /**
+     * returns the deployed version number, or "dev" if no version file exists.
+     * "invalid" is returned if version file contains invalid content.
+     * @return string
+     */
+    protected function getAppVersion() {
+        $versionFile = APPLICATION_PATH.'/../version';
+        if(!file_exists($versionFile)) {
+            return 'dev';
+        }
+        $version = file_get_contents($versionFile);
+        preg_match('/MAJOR_VER=([0-9]+).+MINOR_VER=([0-9]+).+BUILD=([0-9]+).+/s', $version, $match);
+        if(empty($match) || count($match) != 4) {
+            return 'invalid';
+        }
+        return $match[1].'.'.$match[2].'.'.$match[3];
     }
 }
 
