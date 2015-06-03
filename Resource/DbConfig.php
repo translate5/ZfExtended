@@ -47,6 +47,12 @@ class ZfExtended_Resource_DbConfig extends Zend_Application_Resource_ResourceAbs
     protected $dbOptionTree = array();
     
     /**
+     * Pointer to the current data path used
+     * @var array
+     */
+    protected $currentPath = null;
+    
+    /**
      * (non-PHPdoc)
      * @see Zend_Application_Resource_Resource::init()
      */
@@ -85,6 +91,7 @@ class ZfExtended_Resource_DbConfig extends Zend_Application_Resource_ResourceAbs
     protected function addOneEntry(array $entry){
         $recursiveSetter = null;
         $path = explode('.', $entry['name']);
+        $this->currentPath = $entry['name'];
         $this->recursiveSetter($this->dbOptionTree, $path, $entry);
     }
     
@@ -110,11 +117,20 @@ class ZfExtended_Resource_DbConfig extends Zend_Application_Resource_ResourceAbs
         switch ($type) {
             case self::TYPE_LIST:
             case self::TYPE_MAP:
-                return json_decode($value);
+                return $this->jsonDecode($value);
             case self::TYPE_ABSPATH:
                 return $this->convertFilepath($value);
         }
         return $value;
+    }
+    
+    protected function jsonDecode($value) {
+        $result = json_decode($value);
+        if(json_last_error() != JSON_ERROR_NONE) {
+            $message = __CLASS__.'::'.__FUNCTION__.' given JSON from config '.$this->currentPath.' could not be decoded, error was: ';
+            error_log($message.json_last_error_msg()); //ZfExtended_Log is not possible here, so log it manually, see TRANSLATE-354 decouple Log from Mail
+        }
+        return $result;
     }
     
     /**
