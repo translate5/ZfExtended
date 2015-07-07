@@ -88,42 +88,47 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
      * if there are no other worker waiting or running with the given taskGuid
      * TODO implement for waking up general workers without a $taskGuid
      * @param string $taskGuid
+     * @param string $resourceName resourceName of the worker, which currently runs
      */
-    public function wakeupScheduled($taskGuid) {
+    public function wakeupScheduled($taskGuid, $resourceName) {
         // check if there are any worker waiting or running with this taskGuid
         $db = $this->db;
         $adapter = $db->getAdapter();
-
+        
         //SQL Explanation:
         // set the next (limit 1 and order by) worker of the given task to waiting
-        // if no other worker are running or waiting (EXISTS)
-        // this is regardless of taskGuid, so scheduled workers of different tasks 
-        //    has to wait for a whole tasks work to be finished
-        $sql = function($withTaskGuid = false) {
-            $taskGuid = $withTaskGuid ? 'taskGuid = ? AND ' : '';
-            return 'UPDATE Zf_worker u, (
-                    SELECT id from Zf_worker 
-                    WHERE '.$taskGuid.' state = ? 
-                    AND NOT EXISTS (SELECT * 
-                                    FROM Zf_worker 
-                                    WHERE STATE IN (?, ?))
-                    ORDER BY id ASC
+        // if no other worker are running or waiting or scheduled, which 
+        //      - is from the same taskGuid as the worker which should be started 
+        //      - AND which is in dependency to the worker to be set to waiting.
+        //
+        // This way it is achieved, that task-independent the next worker in the queue 
+        // is started and that task-dependent only workers are started which have
+        // no dependency to any other workers in the queue which are not set to "done"
+        $sql = 'UPDATE Zf_worker u, (
+                    SELECT w.id from Zf_worker w
+                    WHERE w.state = ?      
+                        AND (
+                            	(NOT EXISTS (SELECT * 
+                                    FROM Zf_worker_dependencies d1
+                                    WHERE w.worker = d1.worker)
+                                )
+                            OR
+                                NOT EXISTS (SELECT * 
+                                    FROM Zf_worker ws,Zf_worker ws2, Zf_worker_dependencies d2
+                                    WHERE d2.dependency = ws.worker
+                                       AND ws2.worker = d2.worker
+                                       AND ws.taskGuid = ws2.taskGuid
+                                       AND ws.state IN (?, ?, ?)
+                                       AND ws2.id = w.id)
+                            )
+                    ORDER BY w.id ASC
                     LIMIT 1
                 ) s
-                SET u.STATE = ?
+                SET u.STATE = ?                                       
                 WHERE u.id = s.id;'; 
-        };
-        //first try to wake up scheduleds of the given task
-        $bindings = array($taskGuid, self::STATE_SCHEDULED, self::STATE_WAITING, self::STATE_RUNNING, self::STATE_WAITING);
-        $res = $adapter->query($sql(true), $bindings);
-        //if waked up one, we dont need to look for others
-        if($res->rowCount() > 0) {
-            return;
-        }
         
-        //if no worker of given task could be waked up at all, take the next of all workers:
-        $bindings = array(self::STATE_SCHEDULED, self::STATE_WAITING, self::STATE_RUNNING, self::STATE_WAITING);
-        $adapter->query($sql(), $bindings);
+        $bindings = array(self::STATE_SCHEDULED, self::STATE_WAITING,self::STATE_RUNNING,self::STATE_SCHEDULED,self::STATE_WAITING);
+        $res = $adapter->query($sql, $bindings);
     }
     
     /**
