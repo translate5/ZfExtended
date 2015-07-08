@@ -71,7 +71,7 @@ class DatabaseController extends ZfExtended_Controllers_Action {
         
         $dbupdater = ZfExtended_Factory::get('ZfExtended_Models_Installer_DbUpdater');
         /* @var $dbupdater ZfExtended_Models_Installer_DbUpdater */
-        $dbupdater->importAll();
+        $stat = $dbupdater->importAll();
         
         $errors = $dbupdater->getErrors();
         if(!empty($errors)) {
@@ -81,12 +81,9 @@ class DatabaseController extends ZfExtended_Controllers_Action {
             return;
         }
         
-        $new = $dbupdater->getNewFiles();
-        $mod = $dbupdater->getModifiedFiles();
-        
         echo "DB Import OK\n";
-        echo "  New statement files: ".count($new)."\n";
-        echo "  Modified statement files: ".count($mod)."\n";
+        echo "  New statement files: ".$stat['new']."\n";
+        echo "  Modified statement files: ".$stat['modified']."\n";
     }
     
     protected function showContent(ZfExtended_Models_Installer_DbUpdater $dbupdater, $hash) {

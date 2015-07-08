@@ -82,8 +82,8 @@ class ZfExtended_Models_Installer_Dependencies {
      */
     public function reloadNeeded() {
         $this->neededDependencies = $this->loadAndParseDepConfig(new SplFileInfo($this->paths['needed']));
-        array_map(array($this, 'prepareDepConfig'), $this->neededDependencies->dependencies);
         $this->channels = (array) $this->neededDependencies->channels;
+        array_map(array($this, 'prepareDepConfig'), $this->neededDependencies->dependencies);
         $this->neededDependencies->md5hashtable = $this->evaluateUrlChannel($this->neededDependencies->md5hashtable);
         $this->prepareDepConfig($this->neededDependencies->application);
     }

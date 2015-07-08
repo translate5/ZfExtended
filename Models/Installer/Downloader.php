@@ -99,7 +99,7 @@ class ZfExtended_Models_Installer_Downloader {
             $this->log('Could not fetch application package '.$app->name);
             return;
         }
-        if($this->install($app)) {
+        if($this->install($app, false, true)) {
             $this->dependencies->markInstalled($app);
             $this->log('Updated application '.$app->name);
             $this->dependencies->reloadNeeded();
@@ -213,13 +213,14 @@ class ZfExtended_Models_Installer_Downloader {
      * Install the package as defined in the dependency file
      * @param stdClass $dependency
      * @param boolean $cleanBefore
+     * @param boolean $overwrite
      * @return boolean
      */
-    protected function install(stdClass $dependency, $cleanBefore = false) {
+    protected function install(stdClass $dependency, $cleanBefore = false, $overwrite = false) {
         $zip = new ZipArchive;
         $targetDir = $this->applicationRoot.'/'.$dependency->target;
         
-        if(file_exists($targetDir)) {
+        if(!$overwrite && file_exists($targetDir)) {
             if(!$cleanBefore) {
                 $this->log('Could not unzip target directory for dependency package '.$dependency->name.' already exists! ZipFile:'.$dependency->targetFile);
                 return false;

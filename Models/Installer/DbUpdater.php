@@ -359,7 +359,8 @@ class ZfExtended_Models_Installer_DbUpdater {
     }
     
     /**
-     * Applies all found changed / added DB statement files.
+     * Applies all found changed / added DB statement files. Returns some statistics.
+     * @return array
      */
     public function importAll() {
         $this->calculateChanges();
@@ -376,5 +377,6 @@ class ZfExtended_Models_Installer_DbUpdater {
         
         $this->applyNew($toProcess);
         $this->updateModified($toProcess);
+        return array('new' => count($new), 'modified' => count($mod));
     }
 }
