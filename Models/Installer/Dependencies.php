@@ -50,6 +50,11 @@ class ZfExtended_Models_Installer_Dependencies {
     protected $paths = array();
     
     /**
+     * @var array
+     */
+    protected $channels = array();
+    
+    /**
      * A copy of $installedDependencies which will not be modified by the install / update process, keeped for reference
      * @var array
      */
@@ -78,6 +83,8 @@ class ZfExtended_Models_Installer_Dependencies {
     public function reloadNeeded() {
         $this->neededDependencies = $this->loadAndParseDepConfig(new SplFileInfo($this->paths['needed']));
         array_map(array($this, 'prepareDepConfig'), $this->neededDependencies->dependencies);
+        $this->channels = (array) $this->neededDependencies->channels;
+        $this->neededDependencies->md5hashtable = $this->evaluateUrlChannel($this->neededDependencies->md5hashtable);
         $this->prepareDepConfig($this->neededDependencies->application);
     }
     
@@ -137,7 +144,22 @@ class ZfExtended_Models_Installer_Dependencies {
         settype($dependency->basename, 'string');
         settype($dependency->target, 'string');
         settype($dependency->symlink, 'array');
+        
+        $dependency->url = $this->evaluateUrlChannel($dependency->url);
         $dependency->url_parsed = parse_url($dependency->url);
+    }
+    
+    /**
+     * evaluates the channel prefix in a given URL to the configured URL prefix
+     * @param string $url
+     * @return string
+     */
+    protected function evaluateUrlChannel($url) {
+        $search = array_map(function($i){
+            return '^'.$i.':'; //add trailing ':' and leading '^'
+        },array_keys($this->channels));
+        
+        return ltrim(str_replace($search, $this->channels, '^'.$url), '^');
     }
     
     /**
