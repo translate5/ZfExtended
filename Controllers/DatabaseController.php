@@ -64,33 +64,29 @@ class DatabaseController extends ZfExtended_Controllers_Action {
     }
     
     public function forceimportallAction() {
+        $this->_helper->layout->disableLayout();
+        $this->_helper->viewRenderer->setNoRender();
+        
         $this->view->importStarted = false;
+        
         $dbupdater = ZfExtended_Factory::get('ZfExtended_Models_Installer_DbUpdater');
         /* @var $dbupdater ZfExtended_Models_Installer_DbUpdater */
-        $dbupdater->calculateChanges();
-
-        $toProcess = array();
-        $new = $dbupdater->getNewFiles();
-        foreach($new as $file) {
-            $toProcess[$file['entryHash']] = 1;
-        }
-        $mod = $dbupdater->getModifiedFiles();
-        foreach($mod as $file) {
-            $toProcess[$file['entryHash']] = 1;
-        }
+        $dbupdater->importAll();
         
-        $dbupdater->applyNew($toProcess);
-        $dbupdater->updateModified($toProcess);
         $errors = $dbupdater->getErrors();
         if(!empty($errors)) {
             echo "DB Import not OK\n";
             echo "Errors: \n";
             print_r($errors);
-            exit;
+            return;
         }
         
+        $new = $dbupdater->getNewFiles();
+        $mod = $dbupdater->getModifiedFiles();
+        
         echo "DB Import OK\n";
-        exit;
+        echo "  New statement files: ".count($new)."\n";
+        echo "  Modified statement files: ".count($mod)."\n";
     }
     
     protected function showContent(ZfExtended_Models_Installer_DbUpdater $dbupdater, $hash) {

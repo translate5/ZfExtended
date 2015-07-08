@@ -323,6 +323,16 @@ class ZfExtended_Models_Installer_DbUpdater {
         if(!file_exists($exec) || !is_executable($exec)) {
             throw new ZfExtended_Exception("Cant find or execute mysql excecutable ".$exec);
         }
+        return self::makeDbCommand($exec, $db);
+    }
+    
+    /**
+     * returns a the mysql command usable in exec
+     * @param string $exec
+     * @param stdClass $db
+     * @throws ZfExtended_Exception
+     */
+    public static function makeDbCommand($exec, $db) {
         $cmd = array(escapeshellarg($exec));
         $cmd[] = '-h';
         $cmd[] = escapeshellarg($db->host);
@@ -346,5 +356,25 @@ class ZfExtended_Models_Installer_DbUpdater {
     protected function log($msg) {
         //@todo send this to a installer wide logging
         error_log($msg);
+    }
+    
+    /**
+     * Applies all found changed / added DB statement files.
+     */
+    public function importAll() {
+        $this->calculateChanges();
+
+        $toProcess = array();
+        $new = $this->getNewFiles();
+        foreach($new as $file) {
+            $toProcess[$file['entryHash']] = 1;
+        }
+        $mod = $this->getModifiedFiles();
+        foreach($mod as $file) {
+            $toProcess[$file['entryHash']] = 1;
+        }
+        
+        $this->applyNew($toProcess);
+        $this->updateModified($toProcess);
     }
 }
