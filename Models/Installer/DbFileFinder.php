@@ -56,8 +56,15 @@ class ZfExtended_Models_Installer_DbFileFinder {
      * returns all available SQL files, already in the order to be imported
      */
     public function getSqlFilesOrdered() {
-        $searchPaths = $this->getSearchPathList()->toArray();
-        
+        $this->addCoreSqlFiles();
+        $this->addPluginsSearchPathList();
+        $this->mergeReplacements();
+        //@todo implement here the additionaly resort by dependencies, which are read out from meta file!
+        return $this->flatten();
+    }
+    
+    protected function addCoreSqlFiles() {
+        $searchPaths = $this->getSearchPathList();
         foreach($searchPaths as $path) {
             $meta = $this->loadMetaInformation($path);
             $name = $this->getSqlPackageName($meta);
@@ -66,10 +73,6 @@ class ZfExtended_Models_Installer_DbFileFinder {
             //sort the loaded files by name, this is the initial natural order
             ksort($this->toImport[$name]);
         }
-        
-        $this->mergeReplacements();
-        //@todo implement here the additionaly resort by dependencies, which are read out from meta file!
-        return $this->flatten();
     }
     
     /**
@@ -97,6 +100,9 @@ class ZfExtended_Models_Installer_DbFileFinder {
             //if the found file is a directory, it may contain overwrites for the db origin with the given name
             if($fileInfo->isDir()) {
                 $this->handleReplacement($name, $filename, $fileInfo->getPathname());
+                continue;
+            }
+            if(preg_match('"^deinstall_"', $filename)){
                 continue;
             }
             if(!isset($this->toImport[$name])) {
@@ -192,6 +198,60 @@ class ZfExtended_Models_Installer_DbFileFinder {
         if(empty($res)) {
             throw new ZfExtended_Exception('No SQL search paths found in $config->sqlPaths!');
         }
-        return $res;
+        return array_merge($res->toArray());
+    }
+    
+    /**
+     * returns a list of plugin-paths where should be looked for sql files
+     * @return array ('PluginName'=>'pathToPluginDatabaseDir',...)
+     */
+    
+    protected function addPluginsSearchPathList() {
+        $moduleDirs = new DirectoryIterator(APPLICATION_PATH.'/modules/');
+        foreach ($moduleDirs as $moduleDirInfo) {
+            if (!$moduleDirInfo->isDot() && $moduleDirInfo->isDir()) {
+                //get plugins of this module
+                $pluginDirPath = $moduleDirInfo->getPathname().'/Plugins';
+                if(\is_dir($pluginDirPath)){
+                    $pluginDirs = new DirectoryIterator($pluginDirPath);
+                    foreach ($pluginDirs as $pluginDirInfo) {
+                        if (!$pluginDirInfo->isDot() && $pluginDirInfo->isDir()) {
+                            $singlePluginDbPath = $pluginDirInfo->getPathname().'/database';
+                            if(is_dir($singlePluginDbPath)){
+                                if($this->checkUnistallSQLfiles($singlePluginDbPath)){
+                                    $this->iterateThroughDirectory($singlePluginDbPath, $pluginDirInfo->getBasename());
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    /**
+     * //checks, if every sql-file of a plugin has an uninstall sql-file
+     * 
+     * @return boolean 
+     */
+    protected function checkUnistallSQLfiles(string $pluginDatabaseDir) {
+        $r = true; 
+        $files = new DirectoryIterator($pluginDatabaseDir);
+        foreach ($files as $file) {
+            if (!$file->isDot() && $file->isFile()) {
+                $filename = $file->getBasename();
+                if(!$file->isReadable()){
+                    throw new ZfExtended_NoAccessException('The file '.$file->getFilename().' is not readable.');
+                }
+                if(preg_match('"^deinstall_"', $filename)){
+                    continue;
+                }
+                $deinstallFileName = $file->getPath().'/deinstall_'.$file->getBasename();
+                if(!\file_exists($deinstallFileName)){
+                    error_log('Plugin-Installation: The file '.$deinstallFileName.' does not exist. Plugin-SQL can not be installed.');
+                    $r = false;
+                }
+            }
+        }
+        return $r;
     }
 }
