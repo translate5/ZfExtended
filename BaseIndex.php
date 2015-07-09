@@ -166,8 +166,8 @@ class ZfExtended_BaseIndex{
         require_once 'Zend/Loader/Autoloader.php';
         Zend_Loader_Autoloader::getInstance()->setFallbackAutoloader(true);
         /** Zend_Application */
-        require_once 'Zend/Application.php';
-        return new Zend_Application( APPLICATION_ENV,
+        require_once 'library/ZfExtended/Application.php';
+        return new ZfExtended_Application( APPLICATION_ENV,
                 array( 'config' => $this->applicationInis));
     }
 

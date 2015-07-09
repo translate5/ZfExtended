@@ -171,6 +171,7 @@ class ZfExtended_Models_Installer_Downloader {
         if(file_exists($target) && $cleanBefore){
             unlink($target);
         }
+        
         if(file_exists($target) && md5_file($target) === $dependency->md5){
             $this->log('Package already fetched for package '.$dependency->name.' URL:'.$dependency->url);
             return true;
