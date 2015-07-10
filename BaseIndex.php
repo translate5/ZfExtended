@@ -152,16 +152,23 @@ class ZfExtended_BaseIndex{
      * @return void
      */
     public function startApplication() {
+        $this->initApplication()->bootstrap()->run();
+    }
+    
+    /**
+     * @throws Zend_Exception
+     * @return Zend_Application
+     */
+    public function initApplication() {
         if(class_exists('Zend_Registry')){
             throw new Zend_Exception('application already started - Zend_Registry exists!');
         }
         require_once 'Zend/Loader/Autoloader.php';
         Zend_Loader_Autoloader::getInstance()->setFallbackAutoloader(true);
         /** Zend_Application */
-        require_once 'Zend/Application.php';
-        $a = new Zend_Application( APPLICATION_ENV,
+        require_once dirname(__FILE__).'/Application.php';
+        return new ZfExtended_Application( APPLICATION_ENV,
                 array( 'config' => $this->applicationInis));
-        $a->bootstrap()->run();
     }
 
     /**

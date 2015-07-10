@@ -258,11 +258,14 @@ class ZfExtended_Models_Installer_DbUpdater {
      * @return boolean
      */
     protected function handleSqlFile($file) {
-        $cmd = $this->getDbCommand();
-        $call = sprintf($cmd, escapeshellarg($file['absolutePath']));
-        exec($call, $output, $result);
-        if($result > 0) {
-            $this->errors[] = 'Error on Importing a SQL file. Called command: '.$call.".\n".'Result of Command: '.print_r($output,1);
+        $config = Zend_Registry::get('config');
+        $db = $config->resources->db->params;
+        $exec = $this->getDbExec();
+        
+        if(! $this->executeSqlFile($exec, $db, $file['absolutePath'], $output)) {
+            $msg = 'Error on Importing a SQL file. Called command: '.$exec;
+            $msg .= '; called file: '.$file['absolutePath'].".\n".'Result of Command: '.print_r($output,1);
+            $this->errors[] = $msg;
             return false;
         }
         return true;
@@ -313,9 +316,8 @@ class ZfExtended_Models_Installer_DbUpdater {
      * @throws ZfExtended_Exception
      * @return string
      */
-    protected function getDbCommand() {
+    protected function getDbExec() {
         $config = Zend_Registry::get('config');
-        $db = $config->resources->db->params;
         $exec = $config->resources->db->executable;
         if(!isset($exec)) {
             $exec = $this->mysqlBin;
@@ -323,17 +325,42 @@ class ZfExtended_Models_Installer_DbUpdater {
         if(!file_exists($exec) || !is_executable($exec)) {
             throw new ZfExtended_Exception("Cant find or execute mysql excecutable ".$exec);
         }
-        $cmd = array(escapeshellarg($exec));
+        return $exec;
+    }
+    
+    /**
+     * creates a shell exec command 
+     * @param string $mysqlExecutable
+     * @param mixed $credentials
+     * @return string
+     */
+    protected function makeSqlCmd($mysqlExecutable, $credentials) {
+        $cmd = array(escapeshellarg($mysqlExecutable));
         $cmd[] = '-h';
-        $cmd[] = escapeshellarg($db->host);
+        $cmd[] = escapeshellarg($credentials->host);
         $cmd[] = '-u';
-        $cmd[] = escapeshellarg($db->username);
-        if(!empty($db->password)) {
-            $cmd[] = '-p'.escapeshellarg($db->password);
+        $cmd[] = escapeshellarg($credentials->username);
+        if(!empty($credentials->password)) {
+            $cmd[] = '-p'.escapeshellarg($credentials->password);
         }
-        $cmd[] = escapeshellarg($db->dbname);
+        $cmd[] = escapeshellarg($credentials->dbname);
         $cmd[] = '< %s 2>&1';
         return join(' ', $cmd);
+    }
+    
+    /**
+     * executes the given SQL file with the given mysdql binary and given credentials
+     * returns false if mysql cmd exit code not was 0
+     * @param string $mysqlExecutable
+     * @param mixed $credentials
+     * @param string $file
+     * @param array $output reference where mysql result is stored as array
+     * @return boolean
+     */
+    public function executeSqlFile($mysqlExecutable, $credentials, $file, &$output) {
+        $call = sprintf($this->makeSqlCmd($mysqlExecutable, $credentials), escapeshellarg($file));
+        exec($call, $output, $result);
+        return $result === 0;
     }
     
     /**
@@ -346,5 +373,27 @@ class ZfExtended_Models_Installer_DbUpdater {
     protected function log($msg) {
         //@todo send this to a installer wide logging
         error_log($msg);
+    }
+    
+    /**
+     * Applies all found changed / added DB statement files. Returns some statistics.
+     * @return array
+     */
+    public function importAll() {
+        $this->calculateChanges();
+
+        $toProcess = array();
+        $new = $this->getNewFiles();
+        foreach($new as $file) {
+            $toProcess[$file['entryHash']] = 1;
+        }
+        $mod = $this->getModifiedFiles();
+        foreach($mod as $file) {
+            $toProcess[$file['entryHash']] = 1;
+        }
+        
+        $this->applyNew($toProcess);
+        $this->updateModified($toProcess);
+        return array('new' => count($new), 'modified' => count($mod));
     }
 }
