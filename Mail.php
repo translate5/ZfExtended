@@ -73,6 +73,12 @@ class  ZfExtended_Mail {
      * @var boolean
      */
     protected $_sendBcc = false;
+    
+    /**
+     * disable sending E-Mails completly
+     * @var boolean
+     */
+    protected $sendingDisabled = false;
 
     /**
      * initiiert das interne Mail und View Object
@@ -84,6 +90,7 @@ class  ZfExtended_Mail {
     public function __construct($initView = true) {
         try {
             $this->_session = new Zend_Session_Namespace();
+            $this->sendingDisabled = $this->_session->runtimeOptions->sendMailDisabled;
             $this->_sendMailLocally = $this->_session->runtimeOptions->sendMailLocally;
             if(isset($this->_session->runtimeOptions->mail->generalBcc)){
                 $this->_sendBcc = true;
@@ -327,6 +334,10 @@ class  ZfExtended_Mail {
      * @param string $toName
      */
     public function send($toMail, $toName) {
+        if($this->sendingDisabled){
+            return;
+        }
+        
         if(! $this->isContentSet){
             $this->setContentByTemplate();
         }
