@@ -143,6 +143,7 @@ class ZfExtended_Models_Installer_Dependencies {
         settype($dependency->url, 'string');
         settype($dependency->basename, 'string');
         settype($dependency->target, 'string');
+        settype($dependency->md5, 'string');
         settype($dependency->symlink, 'array');
         
         $dependency->url = $this->evaluateUrlChannel($dependency->url);
