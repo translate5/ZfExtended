@@ -115,7 +115,12 @@ class ZfExtended_Models_Installer_Downloader {
      */
     protected function isUpToDate(stdClass $dependency) {
         $installed = $this->dependencies->getInstalled($dependency->name);
-        return !is_null($installed) && ($this->getLiveHash($installed) === $installed->md5 && $installed->md5 === $dependency->md5);
+        if(is_null($installed)) {
+            return false;
+        }
+        $liveMatched = $this->getLiveHash($installed) === $installed->md5;
+        $depMatched = !empty($dependency->md5) && $installed->md5 === $dependency->md5;
+        return $liveMatched && $depMatched;
     }
     
     /**
