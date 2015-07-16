@@ -32,6 +32,11 @@ END LICENSE AND COPYRIGHT
  * provides basic functionality for plugins
  */
 abstract class ZfExtended_Plugin_Abstract {
+    /**
+     * Contains the Plugin Path relativ to APPLICATION_PATH or absolut if not under APPLICATION_PATH
+     * @var string
+     */
+    protected $relativePluginPath = '';
     
     /**
      * @var Zend_EventManager_StaticEventManager
@@ -45,6 +50,9 @@ abstract class ZfExtended_Plugin_Abstract {
         if(empty($this->config)) {
             throw new ZfExtended_Exception('No Plugin Configuration found!');
         }
+        $rc = new ReflectionClass($this);
+        $path = '^'.dirname($rc->getFileName());
+        $this->relativePluginPath = str_replace(rtrim('^'.APPLICATION_PATH,"/\\").'/', '', $path);
         $this->init();
     }
     
@@ -81,5 +89,12 @@ abstract class ZfExtended_Plugin_Abstract {
         if(in_array($classname, $active)) {
             throw new ZfExtended_Plugin_ExclusionException('The following Plugin Bootstraps are not allowed to be active simultaneously: '.get_class($this).' and '.$classname);
         }
+    }
+    
+    /**
+     * @return string
+     */
+    public function getPluginPath() {
+        return $this->relativePluginPath;
     }
 }
