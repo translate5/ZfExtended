@@ -2,7 +2,7 @@
 /*
 START LICENSE AND COPYRIGHT
 
- This file is part of translate5
+ This file is part of ZfExtended library
  
  Copyright (c) 2013 - 2015 Marc Mittag; MittagQI - Quality Informatics;  All rights reserved.
 
@@ -91,8 +91,8 @@ class ZfExtended_Models_Installer_Downloader {
      */
     protected function updateApplication() {
         $app = $this->dependencies->getNeeded()->application;
-        $md5 = $this->dependencies->getInstalled($app->name)->md5;
-        if($md5 === $this->getLiveHash($app)) {
+        $installed = $this->dependencies->getInstalled($app->name);
+        if(!empty($installed) && $installed->md5 === $this->getLiveHash($app)) {
             $this->log('Application '.$app->name.' is up to date!');
             return;
         }
