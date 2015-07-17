@@ -178,15 +178,9 @@ class ZfExtended_Models_Installer_Downloader {
             unlink($target);
         }
         
-        if(file_exists($target)) {
-            $fileMd5 = md5_file($target);
-            if(empty($dependency->md5)) {
-                $dependency->md5 = $fileMd5;
-            }
-            if($fileMd5 === $dependency->md5){
-                $this->log('Package already fetched for package '.$dependency->name.' URL:'.$dependency->url);
-                return true;
-            }
+        if(file_exists($target) && md5_file($target) === $this->getLiveHash($dependency)) {
+            $this->log('Package already fetched for package '.$dependency->name.' URL:'.$dependency->url);
+            return true;
         }
         
         $this->log('Downloading '.$dependency->label.' from '.$dependency->url);
