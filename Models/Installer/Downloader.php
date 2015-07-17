@@ -91,7 +91,7 @@ class ZfExtended_Models_Installer_Downloader {
      */
     protected function updateApplication() {
         $app = $this->dependencies->getNeeded()->application;
-        $md5 = $this->dependencies->getInstalled($app->name);
+        $md5 = $this->dependencies->getInstalled($app->name)->md5;
         if($md5 === $this->getLiveHash($app)) {
             $this->log('Application '.$app->name.' is up to date!');
             return;
@@ -120,7 +120,7 @@ class ZfExtended_Models_Installer_Downloader {
             return false;
         }
         $liveMatched = $this->getLiveHash($installed) === $installed->md5;
-        $depMatched = !empty($dependency->md5) && $installed->md5 === $dependency->md5;
+        $depMatched = empty($dependency->md5) || $installed->md5 === $dependency->md5;
         return $liveMatched && $depMatched;
     }
     
@@ -178,7 +178,11 @@ class ZfExtended_Models_Installer_Downloader {
             unlink($target);
         }
         
-        if(file_exists($target) && md5_file($target) === $this->getLiveHash($dependency)) {
+        $liveMd5 = $this->getLiveHash($dependency);
+        if(file_exists($target) && md5_file($target) === $liveMd5) {
+            if(empty($dependency->md5)) {
+                $dependency->md5 = $liveMd5;
+            }
             $this->log('Package already fetched for package '.$dependency->name.' URL:'.$dependency->url);
             return true;
         }
@@ -194,7 +198,7 @@ class ZfExtended_Models_Installer_Downloader {
         if(empty($dependency->md5)) {
             $dependency->md5 = $targetMd5;
         }
-        if($targetMd5 !== $this->getLiveHash($dependency)) {
+        if($targetMd5 !== $liveMd5) {
             $this->log('MD5 Hash for package '.$dependency->name.' does not match!');
             return false;
         }
