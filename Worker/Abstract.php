@@ -303,10 +303,9 @@ abstract class ZfExtended_Worker_Abstract {
     
     /**
      * inner run function used by run and runQueued
-     * @param boolean $directRun optional, is false per default
      * @return boolean true if $this->work() runs without errors
      */
-    private function _run($directRun = false) {
+    private function _run() {
         $this->workerModel->setState(ZfExtended_Models_Worker::STATE_RUNNING);
         $this->workerModel->setStarttime(new Zend_Db_Expr('NOW()'));
         $this->workerModel->setMaxRuntime(new Zend_Db_Expr('NOW() + INTERVAL '.$this->workerModel->getMaxLifetime()));
