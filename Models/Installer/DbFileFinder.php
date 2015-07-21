@@ -209,21 +209,22 @@ class ZfExtended_Models_Installer_DbFileFinder {
     protected function addPluginsSearchPathList() {
         $moduleDirs = new DirectoryIterator(APPLICATION_PATH.'/modules/');
         foreach ($moduleDirs as $moduleDirInfo) {
-            if (!$moduleDirInfo->isDot() && $moduleDirInfo->isDir()) {
-                //get plugins of this module
-                $pluginDirPath = $moduleDirInfo->getPathname().'/Plugins';
-                if(\is_dir($pluginDirPath)){
-                    $pluginDirs = new DirectoryIterator($pluginDirPath);
-                    foreach ($pluginDirs as $pluginDirInfo) {
-                        if (!$pluginDirInfo->isDot() && $pluginDirInfo->isDir()) {
-                            $singlePluginDbPath = $pluginDirInfo->getPathname().'/database';
-                            if(is_dir($singlePluginDbPath)){
-                                if($this->checkUnistallSQLfiles($singlePluginDbPath)){
-                                    $this->iterateThroughDirectory($singlePluginDbPath, $pluginDirInfo->getBasename());
-                                }
-                            }
-                        }
-                    }
+            if ($moduleDirInfo->isDot() || !$moduleDirInfo->isDir()) {
+                continue;
+            }
+            //get plugins of this module
+            $pluginDirPath = $moduleDirInfo->getPathname().'/Plugins';
+            if(!\is_dir($pluginDirPath)){
+                continue;
+            }
+            $pluginDirs = new DirectoryIterator($pluginDirPath);
+            foreach ($pluginDirs as $pluginDirInfo) {
+                if ($pluginDirInfo->isDot() || !$pluginDirInfo->isDir()) {
+                    continue;
+                }
+                $singlePluginDbPath = $pluginDirInfo->getPathname().'/database';
+                if(is_dir($singlePluginDbPath) && $this->checkUnistallSQLfiles($singlePluginDbPath)){
+                    $this->iterateThroughDirectory($singlePluginDbPath, $pluginDirInfo->getBasename());
                 }
             }
         }
@@ -237,19 +238,20 @@ class ZfExtended_Models_Installer_DbFileFinder {
         $r = true; 
         $files = new DirectoryIterator($pluginDatabaseDir);
         foreach ($files as $file) {
-            if (!$file->isDot() && $file->isFile()) {
-                $filename = $file->getBasename();
-                if(!$file->isReadable()){
-                    throw new ZfExtended_NoAccessException('The file '.$file->getFilename().' is not readable.');
-                }
-                if(preg_match('"^deinstall_"', $filename)){
-                    continue;
-                }
-                $deinstallFileName = $file->getPath().'/deinstall_'.$file->getBasename();
-                if(!\file_exists($deinstallFileName)){
-                    error_log('Plugin-Installation: The file '.$deinstallFileName.' does not exist. Plugin-SQL can not be installed.');
-                    $r = false;
-                }
+            if ($file->isDot() || !$file->isFile()) {
+                continue;
+            }
+            $filename = $file->getBasename();
+            if(!$file->isReadable()){
+                throw new ZfExtended_NoAccessException('The file '.$file->getFilename().' is not readable.');
+            }
+            if(preg_match('"^deinstall_"', $filename)){
+                continue;
+            }
+            $deinstallFileName = $file->getPath().'/deinstall_'.$file->getBasename();
+            if(!\file_exists($deinstallFileName)){
+                error_log('Plugin-Installation: The file '.$deinstallFileName.' does not exist. Plugin-SQL can not be installed.');
+                $r = false;
             }
         }
         return $r;
