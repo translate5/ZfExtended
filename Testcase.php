@@ -27,6 +27,11 @@ START LICENSE AND COPYRIGHT
 
 END LICENSE AND COPYRIGHT
 */
+//include phar archive, if installation has been done via phar
+try {
+    require_once'phpunit.phar';
+} catch (Exception $exc) {
+}
 
 abstract class ZfExtended_Testcase extends \PHPUnit_Framework_TestCase {
     public static $parentTestFolderRelativePath = 'data/testcases';
