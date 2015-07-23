@@ -29,7 +29,7 @@ END LICENSE AND COPYRIGHT
 */
 //include phar archive, if installation has been done via phar
 try {
-    require_once'phpunit.phar';
+    include_once'phpunit.phar';
 } catch (Exception $exc) {
 }
 
