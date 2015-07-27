@@ -326,7 +326,6 @@ abstract class ZfExtended_Worker_Abstract {
             $this->finishedWorker = clone $this->workerModel;
             $this->workerException = $workException;
         }
-        $this->workerModel->cleanGarbage();
         
         return $result;
     }
