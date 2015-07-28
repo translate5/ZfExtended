@@ -106,9 +106,9 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
         // no dependency to any other workers in the queue which are not set to "done"
         $sql = 'UPDATE Zf_worker u, (
                     SELECT w.id from Zf_worker w
-                    WHERE w.state = ?      
+                    WHERE w.state = ?
                         AND (
-                            	(NOT EXISTS (SELECT * 
+                                (NOT EXISTS (SELECT * 
                                     FROM Zf_worker_dependencies d1
                                     WHERE w.worker = d1.worker)
                                 )
@@ -123,11 +123,13 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
                             )
                     ORDER BY w.id ASC
                     LIMIT 1
+                    FOR UPDATE
                 ) s
-                SET u.STATE = ?                                       
+                SET u.STATE = ?
                 WHERE u.id = s.id;'; 
         
         $bindings = array(self::STATE_SCHEDULED, self::STATE_WAITING,self::STATE_RUNNING,self::STATE_SCHEDULED,self::STATE_WAITING);
+        
         $res = $adapter->query($sql, $bindings);
     }
     
