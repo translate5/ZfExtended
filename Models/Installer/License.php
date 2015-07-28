@@ -98,7 +98,9 @@ class ZfExtended_Models_Installer_License {
      */
     public function getAgreementText() {
         $text = empty($this->license->agreement) ? self::DEFAULT_AGREEMENT : $this->license->agreement;
-        return '  '.wordwrap($this->replaceVariables($text), 70, "\n  ");
+        return '  '.join(PHP_EOL, array_map(function($item) {
+            return wordwrap($item, 70, PHP_EOL."  ");
+        }, explode("\n", $this->replaceVariables($text))));
     }
     
     /**
