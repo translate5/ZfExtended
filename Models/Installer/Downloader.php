@@ -33,6 +33,8 @@ END LICENSE AND COPYRIGHT
  * @version 2.0
  */
 class ZfExtended_Models_Installer_Downloader {
+    const DEPENDENCIES_FILE = '/application/config/dependencies.json';
+    const DEPENDENCIES_INSTALLED_FILE = '/application/config/dependencies-installed.json';
     
     /**
      * @var ZfExtended_Models_Installer_Dependencies
@@ -51,21 +53,47 @@ class ZfExtended_Models_Installer_Downloader {
     
     public function __construct($applicationRoot) {
         $this->applicationRoot = $applicationRoot;
-    }
-    
-    /**
-     * @param string $neededDependencies
-     * @param string $installedDependencies
-     */
-    public function initDependencies($neededDependencies, $installedDependencies) {
+        $neededDependencies = $applicationRoot.self::DEPENDENCIES_FILE;
+        $installedDependencies = $applicationRoot.self::DEPENDENCIES_INSTALLED_FILE;
         $this->dependencies = new ZfExtended_Models_Installer_Dependencies($neededDependencies, $installedDependencies);
     }
     
-    public function pull($cleanBefore = false) {
+    /**
+     * This method checks if the application is uptodate.
+     * It assumes that the application is already listed in deps-installed.json,
+     * if not it is also marked as uptodate!
+     * This is needed for legacy applications which are not using the install-and-update script
+     * and have therefore not deps-installed.json file.
+     * The result is, that this method cannot be used in installation process,
+     * which would also be nonsense.
+     * 
+     * @return boolean
+     */
+    public function applicationIsUptodate(){
+        $app = $this->dependencies->getNeeded()->application;
+        $installed = $this->dependencies->getInstalled($app->name);
+        return is_null($installed) || $this->isUpToDate($app);
+    }
+
+    /**
+     * pulls the application from server and returns dependencies where the license has to be accepted
+     * @return array
+     */
+    public function pullApplication() {
         $this->fetchHashTable();
-        
         $this->updateApplication();
-        
+        $deps = $this->dependencies->getNeeded()->dependencies;
+        $dependenciesToAccept = array();
+        foreach($deps as $dependency) {
+            if($this->isUpToDate($dependency)) {
+                continue;
+            }
+            $dependenciesToAccept[] = $dependency;
+        }
+        return $dependenciesToAccept;
+    }
+    
+    public function pullDependencies($cleanBefore = false) {
         $deps = $this->dependencies->getNeeded()->dependencies;
         foreach($deps as $dependency) {
             if($this->isUpToDate($dependency)) {
@@ -187,7 +215,12 @@ class ZfExtended_Models_Installer_Downloader {
             return true;
         }
         
-        $this->log('Downloading '.$dependency->label.' from '.$dependency->url);
+        $msg  = 'Downloading '.$dependency->label;
+        if(!empty($dependency->version)) {
+            $msg .= ' ('.$dependency->version.')';
+        }
+        $msg .= ' from '.$dependency->url;
+        $this->log($msg);
         $data = file_get_contents($dependency->url);
         if(empty($data)) {
             $this->log('Fetched package for '.$dependency->name.' was empty! URL:'.$dependency->url);

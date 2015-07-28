@@ -145,6 +145,8 @@ class ZfExtended_Models_Installer_Dependencies {
         settype($dependency->target, 'string');
         settype($dependency->md5, 'string');
         settype($dependency->symlink, 'array');
+        settype($dependency->licenses, 'array');
+        settype($dependency->version, 'string');
         
         $dependency->url = $this->evaluateUrlChannel($dependency->url);
         $dependency->url_parsed = parse_url($dependency->url);
