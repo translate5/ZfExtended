@@ -70,6 +70,7 @@ class ZfExtended_Models_Installer_Downloader {
      * @return boolean
      */
     public function applicationIsUptodate(){
+        $this->fetchHashTable();
         $app = $this->dependencies->getNeeded()->application;
         $installed = $this->dependencies->getInstalled($app->name);
         return is_null($installed) || $this->isUpToDate($app);
