@@ -67,7 +67,9 @@ class ZfExtended_Models_Installer_Dependencies {
     public function __construct($neededDependencies, $installedDependencies) {
         $this->paths['needed'] = $neededDependencies;
         $this->paths['installed'] = $installedDependencies;
-        $this->reloadNeeded();
+        if(!$this->reloadNeeded()) {
+            return;
+        }
         $installed = new SplFileInfo($installedDependencies);
         if($installed->isReadable()) {
             $this->installedDependencies = $this->loadAndParseDepConfig($installed);
@@ -79,13 +81,21 @@ class ZfExtended_Models_Installer_Dependencies {
     
     /**
      * Reloading needed dependencies
+     * returns false if needed deps file does not exist
+     * 
+     * @return boolean
      */
     public function reloadNeeded() {
-        $this->neededDependencies = $this->loadAndParseDepConfig(new SplFileInfo($this->paths['needed']));
+        $deps = new SplFileInfo($this->paths['needed']);
+        if(!$deps->isReadable()) {
+            return false;
+        }
+        $this->neededDependencies = $this->loadAndParseDepConfig($deps);
         $this->channels = (array) $this->neededDependencies->channels;
         array_map(array($this, 'prepareDepConfig'), $this->neededDependencies->dependencies);
         $this->neededDependencies->md5hashtable = $this->evaluateUrlChannel($this->neededDependencies->md5hashtable);
         $this->prepareDepConfig($this->neededDependencies->application);
+        return true;
     }
     
     public function getNeeded() {

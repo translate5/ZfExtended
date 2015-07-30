@@ -61,7 +61,7 @@ class ZfExtended_Models_Installer_Downloader {
     /**
      * This method checks if the application is uptodate.
      * It assumes that the application is already listed in deps-installed.json,
-     * if not it is also marked as uptodate!
+     * if not or if no dep file is given it is also marked as uptodate!
      * This is needed for legacy applications which are not using the install-and-update script
      * and have therefore not deps-installed.json file.
      * The result is, that this method cannot be used in installation process,
@@ -70,8 +70,12 @@ class ZfExtended_Models_Installer_Downloader {
      * @return boolean
      */
     public function applicationIsUptodate(){
+        $needed = $this->dependencies->getNeeded();
+        if(empty($needed)) {
+            return true;
+        }
+        $app = $needed->application;
         $this->fetchHashTable();
-        $app = $this->dependencies->getNeeded()->application;
         $installed = $this->dependencies->getInstalled($app->name);
         return is_null($installed) || $this->isUpToDate($app);
     }
