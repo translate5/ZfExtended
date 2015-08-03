@@ -63,6 +63,29 @@ class DatabaseController extends ZfExtended_Controllers_Action {
         $this->view->sqlFilesChanged = $dbupdater->getModifiedFiles();
     }
     
+    public function forceimportallAction() {
+        $this->_helper->layout->disableLayout();
+        $this->_helper->viewRenderer->setNoRender();
+        
+        $this->view->importStarted = false;
+        
+        $dbupdater = ZfExtended_Factory::get('ZfExtended_Models_Installer_DbUpdater');
+        /* @var $dbupdater ZfExtended_Models_Installer_DbUpdater */
+        $stat = $dbupdater->importAll();
+        
+        $errors = $dbupdater->getErrors();
+        if(!empty($errors)) {
+            echo "DB Import not OK\n";
+            echo "Errors: \n";
+            print_r($errors);
+            return;
+        }
+        
+        echo "DB Import OK\n";
+        echo "  New statement files: ".$stat['new']."\n";
+        echo "  Modified statement files: ".$stat['modified']."\n";
+    }
+    
     protected function showContent(ZfExtended_Models_Installer_DbUpdater $dbupdater, $hash) {
         $new = $dbupdater->getNewFiles();
         $modified = $dbupdater->getModifiedFiles();

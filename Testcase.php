@@ -27,37 +27,33 @@ START LICENSE AND COPYRIGHT
 
 END LICENSE AND COPYRIGHT
 */
+//include phar archive, if installation has been done via phar
+try {
+    include_once'phpunit.phar';
+} catch (Exception $exc) {
+}
 
-/**
- * This class provides a general Worker which can be configured with a callback method which.
- * This class is designed for simple workers which dont need a own full blown worker class.
- * 
- * The following parameters are needed: 
- * class → the class which should be instanced on work. Classes with Constructor Parameters are currently not supported!
- * method → the class method which is called on work. The method receives the taskguid and the whole parameters array.
- * 
- * Be careful: This class can not be used in worker_dependencies !
- */
-class ZfExtended_Worker_Callback extends ZfExtended_Worker_Abstract {
+abstract class ZfExtended_Testcase extends \PHPUnit_Framework_TestCase {
+    public static $parentTestFolderRelativePath = 'data/testcases';
+    public static $parentTestFolderAbsolutePath;
+    public static $testSuitePath;
     /**
-     * (non-PHPdoc)
-     * @see ZfExtended_Worker_Abstract::validateParameters()
+     * @var editor_Models_Task
      */
-    protected function validateParameters($parameters = array()) {
-        if(empty($parameters['callback']) || empty($parameters['class'])) {
-            $this->log('No callback method or class given!');
-            return false;
-        }
-        return true;
-    } 
-    
+    protected static $testTask;
     /**
-     * (non-PHPdoc)
-     * @see ZfExtended_Worker_Abstract::work()
+     * @var array
      */
-    public function work() {
-        $parameters = $this->workerModel->getParameters();
-        $obj = ZfExtended_Factory::get($parameters['class']);
-        return $obj->{$parameters['callback']}($this->taskGuid, $this->workerModel->getParameters());
+    public static $messages = array();
+    /**
+     * 
+     * @param type $name
+     * @param array $data
+     * @param type $dataName
+     */
+
+    public static function setUpBeforeClass() {
+        self::$testTask = ZfExtended_Factory::get('editor_Models_Task');
+        parent::setUpBeforeClass();
     }
 }

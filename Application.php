@@ -28,36 +28,23 @@ START LICENSE AND COPYRIGHT
 END LICENSE AND COPYRIGHT
 */
 
-/**
- * This class provides a general Worker which can be configured with a callback method which.
- * This class is designed for simple workers which dont need a own full blown worker class.
- * 
- * The following parameters are needed: 
- * class → the class which should be instanced on work. Classes with Constructor Parameters are currently not supported!
- * method → the class method which is called on work. The method receives the taskguid and the whole parameters array.
- * 
- * Be careful: This class can not be used in worker_dependencies !
+/**#@+
+ * @author Marc Mittag
+ * @package portal
+ * @version 2.0
+ *
  */
-class ZfExtended_Worker_Callback extends ZfExtended_Worker_Abstract {
-    /**
-     * (non-PHPdoc)
-     * @see ZfExtended_Worker_Abstract::validateParameters()
-     */
-    protected function validateParameters($parameters = array()) {
-        if(empty($parameters['callback']) || empty($parameters['class'])) {
-            $this->log('No callback method or class given!');
-            return false;
+require_once 'Zend/Application.php';
+/**
+ * Standard Inhalt der index.php gekapselt
+ */
+class ZfExtended_Application extends Zend_Application {
+    public function setPhpSettings(array $settings, $prefix = '') {
+        //remove phpSettings.iconv.internal_encoding = "UTF-8" since this is deprecated in PHP >= 5.6.0
+        $is560 = version_compare(PHP_VERSION, '5.6.0', '>=');
+        if($is560 && isset($settings['iconv']) && isset($settings['iconv']['internal_encoding'])) {
+            unset($settings['iconv']['internal_encoding']);
         }
-        return true;
-    } 
-    
-    /**
-     * (non-PHPdoc)
-     * @see ZfExtended_Worker_Abstract::work()
-     */
-    public function work() {
-        $parameters = $this->workerModel->getParameters();
-        $obj = ZfExtended_Factory::get($parameters['class']);
-        return $obj->{$parameters['callback']}($this->taskGuid, $this->workerModel->getParameters());
+        return parent::setPhpSettings($settings, $prefix);
     }
 }

@@ -29,25 +29,17 @@ END LICENSE AND COPYRIGHT
 */
 
 /**
- * This class provides a general Worker which can be configured with a callback method which.
- * This class is designed for simple workers which dont need a own full blown worker class.
- * 
- * The following parameters are needed: 
- * class → the class which should be instanced on work. Classes with Constructor Parameters are currently not supported!
- * method → the class method which is called on work. The method receives the taskguid and the whole parameters array.
- * 
- * Be careful: This class can not be used in worker_dependencies !
+ * This class provides a garbage cleaning for the worker table.
+ * Currently this is invoked by Import Process
+ *  
+ * Be careful: This class is not used in worker_dependencies !
  */
-class ZfExtended_Worker_Callback extends ZfExtended_Worker_Abstract {
+class ZfExtended_Worker_GarbageCleaner extends ZfExtended_Worker_Abstract {
     /**
      * (non-PHPdoc)
      * @see ZfExtended_Worker_Abstract::validateParameters()
      */
     protected function validateParameters($parameters = array()) {
-        if(empty($parameters['callback']) || empty($parameters['class'])) {
-            $this->log('No callback method or class given!');
-            return false;
-        }
         return true;
     } 
     
@@ -56,8 +48,6 @@ class ZfExtended_Worker_Callback extends ZfExtended_Worker_Abstract {
      * @see ZfExtended_Worker_Abstract::work()
      */
     public function work() {
-        $parameters = $this->workerModel->getParameters();
-        $obj = ZfExtended_Factory::get($parameters['class']);
-        return $obj->{$parameters['callback']}($this->taskGuid, $this->workerModel->getParameters());
+        return $this->workerModel->cleanGarbage();
     }
 }

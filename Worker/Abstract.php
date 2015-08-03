@@ -89,6 +89,31 @@ abstract class ZfExtended_Worker_Abstract {
      */
     protected $log;
     
+     /**
+     * resourcePool for the different TermTagger-Operations;
+     * Example from TermTagger: Possible Values: $this->allowdResourcePools = array('default', 'gui', 'import');
+     * @var string
+     */
+    protected $resourcePool = 'default';
+    /**
+     * Allowd values for setting resourcePool
+     * @var array(strings)
+     */
+    protected static $allowedResourcePools = array('default');
+    
+    /**
+     * Praefix for workers resource-name
+     * @var string
+    */
+    protected static $praefixResourceName = 'default_';
+    
+    protected static $resourceName = NULL;
+    /**
+     *
+     * @var array all scheduled workers for the worker classes listed here have to be done, before this worker will be woken up. Is serialized as JSON in DB. Should be soverridden by child
+     */
+    protected $workerChainDependency = array();
+
     /**
      * Contains the Exception thrown in the worker
      * Since one worker is designed to do one job, there should be only one exception.
@@ -96,6 +121,9 @@ abstract class ZfExtended_Worker_Abstract {
      */
     protected $workerException = null;
     
+    protected $parametersToSave = array();
+
+
     public function __construct() {
         $this->log = ZfExtended_Factory::get('ZfExtended_Log');
     }
@@ -125,6 +153,15 @@ abstract class ZfExtended_Worker_Abstract {
         $this->workerModel->setHash(uniqid(NULL, true));
         
         $this->workerModel->setBlockingType($this->blockingType);
+        
+        if (isset($parameters['resourcePool'])) {
+            if (in_array($parameters['resourcePool'], self::$allowedResourcePools)) {
+                $this->resourcePool = $parameters['resourcePool'];
+                $this->parametersToSave['resourcePool'] = $this->resourcePool;
+            }
+        }
+        
+        self::$resourceName = self::$praefixResourceName.$this->resourcePool;
         
         return true;
     }
@@ -266,10 +303,9 @@ abstract class ZfExtended_Worker_Abstract {
     
     /**
      * inner run function used by run and runQueued
-     * @param boolean $directRun optional, is false per default
      * @return boolean true if $this->work() runs without errors
      */
-    private function _run($directRun = false) {
+    private function _run() {
         $this->workerModel->setState(ZfExtended_Models_Worker::STATE_RUNNING);
         $this->workerModel->setStarttime(new Zend_Db_Expr('NOW()'));
         $this->workerModel->setMaxRuntime(new Zend_Db_Expr('NOW() + INTERVAL '.$this->workerModel->getMaxLifetime()));
@@ -290,13 +326,12 @@ abstract class ZfExtended_Worker_Abstract {
             $this->finishedWorker = clone $this->workerModel;
             $this->workerException = $workException;
         }
-        $this->workerModel->cleanGarbage();
         
         return $result;
     }
     
     protected function wakeUpAndStartNextWorkers($taskGuid) {
-        $this->workerModel->wakeupScheduled($taskGuid);
+        $this->workerModel->wakeupScheduled($taskGuid,  self::$resourceName);
         $this->startWorkerQueue();
     }
     

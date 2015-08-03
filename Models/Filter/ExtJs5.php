@@ -38,7 +38,14 @@ class ZfExtended_Models_Filter_ExtJs5 extends ZfExtended_Models_Filter_ExtJs {
      * to the old ExtJS 4 type parameters (value)
      * @var array
      */
-    protected $operatorToType = array('like' => 'string', 'in' => 'list', 'eq' => 'numeric');
+    protected $operatorToType = array(
+            'like' => 'string',
+            'in' => 'list',
+            'eq' => 'numeric',
+            'gt' => 'numeric',
+            '=' => 'boolean',
+            'lt' => 'numeric'
+    );
     
     /**
      * converts the new ExtJS 5 filter format to the old ExtJS 4 format
@@ -73,6 +80,11 @@ class ZfExtended_Models_Filter_ExtJs5 extends ZfExtended_Models_Filter_ExtJs {
         $filter->type = $this->operatorToType [$filter->operator];
         if($filter->type == 'numeric') {
             $filter->comparison = $filter->operator;
+        }
+        if($filter->type == 'boolean') {
+            $filter->comparison = 'eq';
+            $filter->type = 'numeric';
+            $filter->value = ($filter->value ? 1 : 0);
         }
         unset ($filter->operator);
         return $filter;
