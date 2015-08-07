@@ -435,10 +435,13 @@ abstract class ZfExtended_Models_Entity_Abstract {
     }
     
     /**
-     * returns the value of an attribute before modified
+     * returns the value of an attribute before modified, if not modified return actual value
      */
     public function getOldValue($field) {
-        return $this->modifiedValues[$field];
+        if($this->isModified($field)) {
+            return $this->modifiedValues[$field];
+        }
+        return $this->get($field);
     }
     
     protected function validatorLazyInstatiation() {
