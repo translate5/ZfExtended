@@ -81,6 +81,8 @@ class ZfExtended_BaseIndex{
         defined('APPLICATION_RUNDIR')||
                 define('APPLICATION_RUNDIR', ( getenv('APPLICATION_RUNDIR') ? getenv('APPLICATION_RUNDIR') : ''));
 
+                
+        define('NOW_ISO', date('Y-m-d H:i:s', $_SERVER['REQUEST_TIME']));
         $this->applicationInis = $this->getApplicationInis();
     }
     /**

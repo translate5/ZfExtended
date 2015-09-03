@@ -100,7 +100,7 @@ class ZfExtended_UserController extends ZfExtended_RestController {
      */
     public function getAction() {
         parent::getAction();
-        if($this->entity->getLogin() == 'system') {
+        if($this->entity->getLogin() == ZfExtended_Models_User::SYSTEM_LOGIN) {
             $e = new ZfExtended_Models_Entity_NotFoundException();
             $e->setMessage("System Benutzer wurde versucht zu erreichen",true);
             throw $e;

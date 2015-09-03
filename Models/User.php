@@ -57,6 +57,9 @@ END LICENSE AND COPYRIGHT
  * @method string getLocale() getLocale()
  */
 class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract {
+    const SYSTEM_LOGIN = 'system';
+    const SYSTEM_GUID = '{00000000-0000-0000-0000-000000000000}';
+    
   protected $dbInstanceClass = 'ZfExtended_Models_Db_User';
   protected $validatorInstanceClass = 'ZfExtended_Models_Validator_User';
     /**
@@ -174,7 +177,7 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract {
         $cols = array_flip($db->info($db::COLS));
         unset($cols['passwd']);
         $s = $db->select()->from($db->info($db::NAME), array_flip($cols));
-        $s->where('login != ?', 'system'); //filter out the system user
+        $s->where('login != ?', self::SYSTEM_LOGIN); //filter out the system user
         if(!$this->filter->hasSort()){
             $this->filter->addSort('login');
         }
@@ -186,7 +189,7 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract {
      */
     public function getTotalCount(){
         $s = $this->db->select();
-        $s->where('login != ?', 'system'); //filter out the system user
+        $s->where('login != ?', self::SYSTEM_LOGIN); //filter out the system user
         return $this->computeTotalCount($s);
     }
     

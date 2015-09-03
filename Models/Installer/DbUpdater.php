@@ -34,6 +34,12 @@ END LICENSE AND COPYRIGHT
  */
 class ZfExtended_Models_Installer_DbUpdater {
     /**
+     * default executable of the mysql command, can be overwritten by config
+     * @var string
+     */
+    const MYSQL_BIN = '/usr/bin/mysql';
+    
+    /**
      * contains errors on importing to DB
      * @var array
      */
@@ -50,12 +56,6 @@ class ZfExtended_Models_Installer_DbUpdater {
      * @var array
      */
     protected $sqlFilesChanged = array();
-    
-    /**
-     * default executable of the mysql command, can be overwritten by config
-     * @var string
-     */
-    protected $mysqlBin = '/usr/bin/mysql';
     
     /**
      * This flag is mentioned to be set from within PHP alter files to false for testing.
@@ -320,7 +320,7 @@ class ZfExtended_Models_Installer_DbUpdater {
         $config = Zend_Registry::get('config');
         $exec = $config->resources->db->executable;
         if(!isset($exec)) {
-            $exec = $this->mysqlBin;
+            $exec = self::MYSQL_BIN;
         }
         if(!file_exists($exec) || !is_executable($exec)) {
             throw new ZfExtended_Exception("Cant find or execute mysql excecutable ".$exec);
