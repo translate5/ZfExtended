@@ -52,13 +52,26 @@ class ZfExtended_Resource_PluginLoader extends Zend_Application_Resource_Resourc
         
         foreach ($pluginClasses as $pluginClass) {
             // error_log("Plugin-Class ".$pluginClass." initialized.");
+            if(!$this->isPluginOfModule($pluginClass)){
+                continue;
+            }
             try {
                 ZfExtended_Factory::get($pluginClass);
-            }
+                }
             catch (ReflectionException $exception) {
                 /* @var $log ZfExtended_Log */
                 error_log(__CLASS__.' -> '.__FUNCTION__.'; $exception: '. print_r($exception->getMessage(), true));
             }
         }
+    }
+    
+    protected function isPluginOfModule($pluginClass) {
+        $module = Zend_Registry::get('module');
+        $isDefaultPlugin = $module === 'default' && preg_match('"^Plugins_"', $pluginClass)===1;
+        $isModulePlugin = $module !== 'default' && preg_match('"^'.$module.'_"', $pluginClass)===1;
+        if(!($isDefaultPlugin || $isModulePlugin)){
+            return false;
+        }
+        return true;
     }
 }

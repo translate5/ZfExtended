@@ -280,9 +280,11 @@ class ZfExtended_Acl extends Zend_Acl {
         $module = Zend_Registry::get('module');
         $controllerDirs = Zend_Controller_Front::getInstance()->getControllerDirectory();
         $path = $controllerDirs[$module];
-        foreach (scandir($path) as $file) {
+        
+        $objects = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($path,FilesystemIterator::CURRENT_AS_FILEINFO|FilesystemIterator::SKIP_DOTS));
+        foreach($objects as $file => $object){
             if (strstr($file, "Controller.php") !== false) {
-                include_once $path . DIRECTORY_SEPARATOR . $file;
+                include_once $file;
             }
         }
         foreach (get_declared_classes() as $class) {
