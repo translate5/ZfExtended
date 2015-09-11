@@ -50,6 +50,9 @@ class ZfExtended_Plugin_Manager {
         
         foreach ($pluginClasses as $pluginClass) {
             // error_log("Plugin-Class ".$pluginClass." initialized.");
+            if(!$this->isPluginOfModule($pluginClass)){
+                continue;
+            }
             try {
                 $this->pluginNames[$pluginClass] = $name = $this->classToName($pluginClass);
                 $this->pluginInstances[$pluginClass] = $plugin = ZfExtended_Factory::get($pluginClass, array($name));
@@ -61,6 +64,17 @@ class ZfExtended_Plugin_Manager {
                 error_log(__CLASS__.' -> '.__FUNCTION__.'; $exception: '. print_r($exception->getMessage(), true));
             }
         }
+    }
+    
+    /**
+     * @param string $pluginClass
+     * @return boolean
+     */
+    protected function isPluginOfModule($pluginClass) {
+        $module = Zend_Registry::get('module');
+        $isDefaultPlugin = $module === 'default' && preg_match('"^Plugins_"', $pluginClass)===1;
+        $isModulePlugin = $module !== 'default' && preg_match('"^'.$module.'_"', $pluginClass)===1;
+        return $isDefaultPlugin || $isModulePlugin;
     }
     
     /**
