@@ -39,4 +39,35 @@ abstract class ZfExtended_Models_Entity_MetaAbstract extends ZfExtended_Models_E
             call_user_func_array(array($this->db, 'addColumn'), func_get_args());
         }
     }
+    
+    /**
+     * Adds an empty meta data rowset to the DB.
+     */
+    abstract public function initEmptyRowset();
+    
+    /**
+     * Updates the given field in a mutex manner with the given value, but only if the value was other before
+     * @param string $field
+     * @param string $value
+     * @param string $idx
+     * @param string $idxField
+     * @return boolean returns true if this call caused an update in the DB, false otherwise
+     */
+    public function updateMutexed($field, $value, $idx, $idxField) {
+        return $this->db->update(array($field => $value), array(
+                $field.' != ?' => $value,
+                $idxField.' = ?' => $idx,
+        )) !== 0;
+    }
+    
+    /**
+     * Loads all entries by a given value
+     * @param string $field
+     * @param mixed $value
+     * @return array
+     */
+    public function loadBy($field, $value) {
+        $s = $this->db->select()->where($field.' = ?', $value);
+        return $this->db->fetchAll($s)->toArray();
+    }
 }
