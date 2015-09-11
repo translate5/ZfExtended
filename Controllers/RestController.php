@@ -324,7 +324,7 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
 
   public function getAction()
   {
-      $this->entity->load($this->_getParam('id'));
+      $this->entityLoad();
       $this->view->rows = $this->entity->getDataObject();
   }
 
@@ -346,7 +346,7 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
 
   public function putAction()
   {
-    $this->entity->load($this->_getParam('id'));
+    $this->entityLoad();
     //@todo implement input check, here or in Entity??? => in Entity throws Ecxeption => HTTP 400
     $this->decodePutData();
     $this->processClientReferenceVersion();
@@ -360,6 +360,13 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
   protected function decodePutData() {
     $this->data = json_decode($this->_getParam('data'));
   }
+  
+  /**
+   * encapsulating the entity load for simpler overwritting purposes
+   */
+  protected function entityLoad() {
+      $this->entity->load($this->_getParam('id'));
+  }
 
   /**
    * sets the entity data out of given post / put data.
@@ -369,6 +376,7 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
    */
   protected function setDataInEntity(array $fields = null, $mode = self::SET_DATA_BLACKLIST) {
     settype($fields, 'array');
+    $this->events->trigger('beforeSetDataInEntity', $this, array('entity' => $this->entity, 'data' => $this->data));
     foreach($this->data as $key => $value) {
         $hasField = in_array($key, $fields);
         $modeWl = $mode === self::SET_DATA_WHITELIST;
@@ -383,11 +391,12 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
             }
         }
     }
+    $this->events->trigger('afterSetDataInEntity', $this, array('entity' => $this->entity));
   }
 
   public function deleteAction()
   {
-    $this->entity->load($this->_getParam('id'));
+    $this->entityLoad();
     $this->processClientReferenceVersion();
     $this->entity->delete();
   }
