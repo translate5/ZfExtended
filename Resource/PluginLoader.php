@@ -44,21 +44,9 @@ END LICENSE AND COPYRIGHT
  */
 class ZfExtended_Resource_PluginLoader extends Zend_Application_Resource_ResourceAbstract {
     public function init() {
-        $config = Zend_Registry::get('config');
-        if (! isset($config->runtimeOptions->plugins)) {
-            return;
-        }
-        $pluginClasses = array_unique($config->runtimeOptions->plugins->active->toArray());
-        
-        foreach ($pluginClasses as $pluginClass) {
-            // error_log("Plugin-Class ".$pluginClass." initialized.");
-            try {
-                ZfExtended_Factory::get($pluginClass);
-            }
-            catch (ReflectionException $exception) {
-                /* @var $log ZfExtended_Log */
-                error_log(__CLASS__.' -> '.__FUNCTION__.'; $exception: '. print_r($exception->getMessage(), true));
-            }
-        }
+        $pluginmanager = ZfExtended_Factory::get('ZfExtended_Plugin_Manager');
+        /* @var $pluginmanager ZfExtended_Plugin_Manager */
+        $pluginmanager->bootstrap();
+        Zend_Registry::set('PluginManager', $pluginmanager);
     }
 }

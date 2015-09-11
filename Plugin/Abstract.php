@@ -43,13 +43,31 @@ abstract class ZfExtended_Plugin_Abstract {
      */
     protected $eventManager;
     
-    public function __construct() {
+    /**
+     * @var string
+     */
+    protected $pluginName;
+    
+    /**
+     * @var array
+     */
+    protected $activePlugins;
+    
+    /**
+     * shortcut to the plugin specific config (not complete config!)
+     * @var Zend_Config
+     */
+    protected $config;
+    
+    public function __construct($pluginName) {
+        $this->pluginName = $pluginName;
         $this->eventManager = Zend_EventManager_StaticEventManager::getInstance();
         $c = Zend_Registry::get('config');
-        $this->config = $c->runtimeOptions->plugins;
-        if(empty($this->config)) {
+        if(empty($c->runtimeOptions->plugins)) {
             throw new ZfExtended_Exception('No Plugin Configuration found!');
         }
+        $this->config = $c->runtimeOptions->plugins->$pluginName;
+        $this->activePlugins = $c->runtimeOptions->plugins->active->toArray();
         $rc = new ReflectionClass($this);
         $path = '^'.dirname($rc->getFileName());
         $this->relativePluginPath = str_replace(rtrim('^'.APPLICATION_PATH,"/\\").'/', '', $path);
@@ -68,11 +86,10 @@ abstract class ZfExtended_Plugin_Abstract {
      * @throws ZfExtended_Plugin_MissingDependencyException
      */
     protected function dependsOn($classname) {
-        $active = $this->config->active->toArray();
-        if(in_array($classname, $active)) {
+        if(in_array($classname, $this->activePlugins)) {
             return;
         }
-        foreach($active as $oneActive) {
+        foreach($this->activePlugins as $oneActive) {
             if(is_subclass_of($oneActive, $classname)) {
                 return;
             }
@@ -85,8 +102,7 @@ abstract class ZfExtended_Plugin_Abstract {
      * @throws ZfExtended_Plugin_ExclusionException
      */
     protected function blocks($classname) {
-        $active = $this->config->active->toArray();
-        if(in_array($classname, $active)) {
+        if(in_array($classname, $this->activePlugins)) {
             throw new ZfExtended_Plugin_ExclusionException('The following Plugin Bootstraps are not allowed to be active simultaneously: '.get_class($this).' and '.$classname);
         }
     }
@@ -96,5 +112,19 @@ abstract class ZfExtended_Plugin_Abstract {
      */
     public function getPluginPath() {
         return $this->relativePluginPath;
+    }
+    
+    /**
+     * returns the plugin specific config
+     * @throws ZfExtended_Exception
+     * @return Zend_Config
+     */
+    public function getConfig() {
+        if(empty($this->config)) {
+            $c = Zend_Registry::get('config');
+            error_log(print_r($c->runtimeOptions->plugins->toArray(),1));
+            throw new ZfExtended_Exception('No Plugin Configuration found for plugin '.$this->pluginName);
+        }
+        return $this->config;
     }
 }
