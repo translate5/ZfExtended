@@ -39,6 +39,8 @@ class ZfExtended_Plugin_Manager {
     protected $pluginInstances = array();
     protected $pluginNames = array();
     
+    protected $allFrontendControllers = array();
+    
     public function bootstrap() {
         $config = Zend_Registry::get('config');
         if (! isset($config->runtimeOptions->plugins)) {
@@ -50,13 +52,23 @@ class ZfExtended_Plugin_Manager {
             // error_log("Plugin-Class ".$pluginClass." initialized.");
             try {
                 $this->pluginNames[$pluginClass] = $name = $this->classToName($pluginClass);
-                $this->pluginInstances[$pluginClass] = ZfExtended_Factory::get($pluginClass, array($name));
+                $this->pluginInstances[$pluginClass] = $plugin = ZfExtended_Factory::get($pluginClass, array($name));
+                /* @var $plugin ZfExtended_Plugin_Abstract */
+                $this->allFrontendControllers = array_merge($this->allFrontendControllers, $plugin->getFrontendControllers());
             }
             catch (ReflectionException $exception) {
                 /* @var $log ZfExtended_Log */
                 error_log(__CLASS__.' -> '.__FUNCTION__.'; $exception: '. print_r($exception->getMessage(), true));
             }
         }
+    }
+    
+    /**
+     * return frontend controllers for all active plugins
+     * @return array
+     */
+    public function getActiveFrontendControllers() {
+        return $this->allFrontendControllers;
     }
     
     /**

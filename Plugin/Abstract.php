@@ -59,6 +59,12 @@ abstract class ZfExtended_Plugin_Abstract {
      */
     protected $config;
     
+    /**
+     * A list of JS frontendcontrollers which has to be loaded for this plugin
+     * @var array
+     */
+    protected $frontendControllers = array();
+    
     public function __construct($pluginName) {
         $this->pluginName = $pluginName;
         $this->eventManager = Zend_EventManager_StaticEventManager::getInstance();
@@ -79,6 +85,14 @@ abstract class ZfExtended_Plugin_Abstract {
     //TODO when implement Plugin Management using the following methods would a standardized way for plugins to identifdy themselves
     //abstract function getName();
     //abstract function getDescription();
+
+    /**
+     * return the plugins frontend controllers
+     * @return array
+     */
+    public function getFrontendControllers() {
+        return $this->frontendControllers;
+    }
     
     /**
      * SubClasses of $classname are recognized as fulfilled dependency!
