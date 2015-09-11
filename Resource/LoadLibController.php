@@ -55,9 +55,6 @@ class ZfExtended_Resource_LoadLibController extends Zend_Application_Resource_Re
         $front = $bootstrap->getResource('frontController');
         /* @var $front Zend_Controller_Front */
         
-        
-        $modContrDir = $front->getModuleDirectory().DIRECTORY_SEPARATOR.
-                $front->getModuleControllerDirectoryName();
         $controllerDirs = $front->getControllerDirectory();
         if(is_string($controllerDirs)){
             $controllerDirs = array($controllerDirs);
