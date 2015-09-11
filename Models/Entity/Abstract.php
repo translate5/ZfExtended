@@ -452,14 +452,14 @@ abstract class ZfExtended_Models_Entity_Abstract {
 
     /**
      * overwrites the default validator
-     * @param ZfExtended_Models_Entity_Validator_Abstract $validator
+     * @param ZfExtended_Models_Validator_Abstract $validator
      */
-    public function setValidator(ZfExtended_Models_Entity_Validator_Abstract $validator) {
+    public function setValidator(ZfExtended_Models_Validator_Abstract $validator) {
       $this->validator = $validator;
     }
 
     /**
-     * @return ZfExtended_Models_Entity_Validator_Abstract
+     * @return ZfExtended_Models_Validator_Abstract
      */
     public function getValidator() {
       $this->validatorLazyInstatiation();
