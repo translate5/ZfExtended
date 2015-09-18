@@ -49,14 +49,4 @@ class ZfExtended_Resource_PluginLoader extends Zend_Application_Resource_Resourc
         $pluginmanager->bootstrap();
         Zend_Registry::set('PluginManager', $pluginmanager);
     }
-    
-    protected function isPluginOfModule($pluginClass) {
-        $module = Zend_Registry::get('module');
-        $isDefaultPlugin = $module === 'default' && preg_match('"^Plugins_"', $pluginClass)===1;
-        $isModulePlugin = $module !== 'default' && preg_match('"^'.$module.'_"', $pluginClass)===1;
-        if(!($isDefaultPlugin || $isModulePlugin)){
-            return false;
-        }
-        return true;
-    }
 }
