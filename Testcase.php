@@ -29,31 +29,16 @@ END LICENSE AND COPYRIGHT
 */
 //include phar archive, if installation has been done via phar
 try {
-    include_once'phpunit.phar';
+    if(class_exists('PHPUnit_Framework_TestCase', false)) {
+        require_once 'phpunit.phar';
+    }
 } catch (Exception $exc) {
+    error_log('Could not load phpunit.phar'); //On debugging only
 }
 
 abstract class ZfExtended_Testcase extends \PHPUnit_Framework_TestCase {
-    public static $parentTestFolderRelativePath = 'data/testcases';
-    public static $parentTestFolderAbsolutePath;
-    public static $testSuitePath;
-    /**
-     * @var editor_Models_Task
-     */
-    protected static $testTask;
     /**
      * @var array
      */
     public static $messages = array();
-    /**
-     * 
-     * @param type $name
-     * @param array $data
-     * @param type $dataName
-     */
-
-    public static function setUpBeforeClass() {
-        self::$testTask = ZfExtended_Factory::get('editor_Models_Task');
-        parent::setUpBeforeClass();
-    }
 }
