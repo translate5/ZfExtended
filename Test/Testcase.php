@@ -30,13 +30,13 @@ END LICENSE AND COPYRIGHT
 //include phar archive, if installation has been done via phar
 try {
     if(class_exists('PHPUnit_Framework_TestCase', false)) {
-        require_once 'phpunit.phar';
+        //require_once 'phpunit.phar';
     }
 } catch (Exception $exc) {
     error_log('Could not load phpunit.phar'); //On debugging only
 }
 
-abstract class ZfExtended_Testcase extends \PHPUnit_Framework_TestCase {
+abstract class ZfExtended_Test_Testcase extends \PHPUnit_Framework_TestCase {
     /**
      * @var array
      */
