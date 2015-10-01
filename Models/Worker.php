@@ -294,6 +294,27 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
         //}
     }
     
+    /**
+     * returns a summary of how many workers are in DB, grouped by state
+     */
+    public function getSummary() {
+        $s = $this->db->select()
+            ->from($this->db, array('cnt' => 'count(*)', 'state'))
+            ->group('state');
+        $res = $this->db->fetchAll($s);
+        
+        $result = array(
+            self::STATE_SCHEDULED => 0,
+            self::STATE_WAITING => 0,
+            self::STATE_RUNNING => 0,
+            self::STATE_DEFUNCT => 0,
+            self::STATE_DONE => 0,
+        );
+        foreach($res as $row) {
+            $result[$row['state']] = (int) $row['cnt'];
+        }
+        return $result;
+    }
     
     public function getMaxLifetime() {
         return $this->maxLifetime;
