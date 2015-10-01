@@ -99,6 +99,14 @@ class ZfExtended_Plugin_Manager {
     }
     
     /**
+     * returns a list of loaded plugins
+     * @return multitype:
+     */
+    public function getActive() {
+        return array_keys($this->pluginInstances);
+    }
+    
+    /**
      * returns the Plugin Name distilled from class name
      * @param string $class
      * @return string
