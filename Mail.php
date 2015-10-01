@@ -334,12 +334,15 @@ class  ZfExtended_Mail {
      * @param string $toName
      */
     public function send($toMail, $toName) {
-        if($this->sendingDisabled){
-            return;
-        }
-        
         if(! $this->isContentSet){
             $this->setContentByTemplate();
+        }
+        
+        if($this->sendingDisabled){
+            if(ZfExtended_Debug::hasLevel('core', 'mailing')){
+                error_log('translate5 disabled mail: '.$this->getSubject().' to '.$toName.' <'.$toMail.'>');
+            }
+            return;
         }
 
         //hack, um im lokalen development mails an lokale linux-mailadressen zu senden
