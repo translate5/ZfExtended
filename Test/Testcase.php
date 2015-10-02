@@ -27,10 +27,12 @@ START LICENSE AND COPYRIGHT
 
 END LICENSE AND COPYRIGHT
 */
+
 //include phar archive, if installation has been done via phar
 try {
-    if(class_exists('PHPUnit_Framework_TestCase', false)) {
-        //require_once 'phpunit.phar';
+    //check if class can be included by search path, if not try phpunit.phar
+    if(!class_exists('PHPUnit_Framework_TestCase', true)) {
+        include_once 'phpunit.phar';
     }
 } catch (Exception $exc) {
     error_log('Could not load phpunit.phar'); //On debugging only

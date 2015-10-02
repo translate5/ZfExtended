@@ -34,7 +34,7 @@ class ZfExtended_Test_ApiHelper {
      * enable xdebug debugger in eclipse
      * @var boolean
      */
-    protected $xdebug = false;
+    public $xdebug = false;
 
     /**
      * Authentication / session cookie
@@ -102,10 +102,9 @@ class ZfExtended_Test_ApiHelper {
      * @return Zend_Http_Response
      */
     public function request($url, $method = 'GET', $parameters = array()) {
+        global $T5_API_URL;
         $http = new Zend_Http_Client();
-        //FIXME from config:
-        //$url = $server.$rundir.$url;
-        $url = 'http://translate5.localdev/'.$url;
+        $url = $T5_API_URL.$url;
         $http->setUri($url);
         $http->setHeaders('Accept', 'application/json');
         
@@ -195,7 +194,8 @@ class ZfExtended_Test_ApiHelper {
                 return;
             }
             else {
-                $this->request('login/logout/'); //FIXME from config
+                global $T5_LOGOUT_PATH;
+                $this->request($T5_LOGOUT_PATH);
             }
         }
         
@@ -406,11 +406,10 @@ class ZfExtended_Test_ApiHelper {
      * @return string
      */
     public function getTaskDataDirectory() {
-        //FIXME from local config, no need to get it by API since data is also not available by API
-        //runtimeOptions.dir.taskData
-        $dataPath = '../data/editorImportedTasks/';
+        global $T5_DATA_DIR;
+        $dataPath = trim($T5_DATA_DIR, '/');
         $application = $this->testRoot.'/../../../../application/';
-        return $application.$dataPath.trim($this->task->taskGuid, '{}').'/';
+        return $application.$dataPath.'/'.trim($this->task->taskGuid, '{}').'/';
     }
     
     public function addImportFile($path, $mime = 'application/zip') {

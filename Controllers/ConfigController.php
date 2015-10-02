@@ -46,12 +46,35 @@ class ZfExtended_ConfigController extends ZfExtended_RestController {
      */
     public function indexAction() {
         $iniOptions = $this->getInvokeArg('bootstrap')->getApplication()->getOptions();
-        error_log(print_r($iniOptions,1));
         parent::indexAction();
         $rows = $this->view->rows;
-        //FIXME
         foreach($rows as $row) {
-            //error_log(print_r($row,1));
+            $this->mergeWithIni($iniOptions, explode('.', $row['name']), $row);
+        }
+    }
+    
+    /**
+     * Merges the ini config values into the DB result before returning by REST API
+     * @param array $root
+     * @param array $path
+     * @param array $row given as reference, the ini values are set in here
+     */
+    protected function mergeWithIni(array $root, array $path, array &$row) {
+        $row['origin'] = 'db';
+        $row['dbValue'] = null;
+        $part = array_shift($path);
+        if(!isset($root[$part])) {
+            return;
+        }
+        if(!empty($path)){
+            $this->mergeWithIni($root[$part], $path, $row);
+            return;
+        }
+        $row['origin'] = 'ini';
+        $row['overwritten'] = $row['value'];
+        $row['value'] = $root[$part];
+        if($row['type'] == ZfExtended_Resource_DbConfig::TYPE_MAP || $row['type'] == ZfExtended_Resource_DbConfig::TYPE_LIST){
+            $row['value'] = json_encode($row['value'], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
         }
     }
     
