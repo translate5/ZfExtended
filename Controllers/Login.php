@@ -145,7 +145,7 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
         if (! $this->_form->isValid($this->_request->getParams())) {
             return false;
         }
-        $login = $this->_form->getValue('login');
+        $login = trim($this->_form->getValue('login'));
         $passwd = $this->_form->getValue('passwd');
         //ensure that empty passwd can never pass, regardless of what is defined in login.ini, because passwd-default is null in db
         if($passwd == '') {
