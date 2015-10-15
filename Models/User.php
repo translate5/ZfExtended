@@ -101,6 +101,7 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract {
         $userData = $this->getDataObject();
         $userData->roles = explode(',',$userData->roles);
         $userData->userName = $userData->firstName.' '.$userData->surName;
+        $userData->loginTimeStamp = $_SERVER['REQUEST_TIME'];
         foreach ($userData as &$value) {
             if(is_numeric($value)){
                 $value = (int)$value;
