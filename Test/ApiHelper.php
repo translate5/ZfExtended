@@ -113,6 +113,9 @@ class ZfExtended_Test_ApiHelper {
             $http->setCookie('XDEBUG_SESSION','ECLIPSE_DBGP_192.168.178.31');
             $http->setConfig(array('timeout'      => 3600));
         }
+        else {
+            $http->setConfig(array('timeout'      => 30));
+        }
         
         if(!empty($this->authCookie)) {
             $http->setCookie(self::AUTH_COOKIE_KEY, $this->authCookie);
