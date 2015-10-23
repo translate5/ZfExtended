@@ -287,6 +287,8 @@ class ZfExtended_BaseIndex{
         while(isset($runDirParts[$i]) and $uriParts[$i] === $runDirParts[$i]){
             $i++;
         }
+        //FIXME some one reached here to produce an 1 not defined. 
+        //URL was:     [REQUEST_URI] => proxytest.zmap.io:80, I think someone tried to proxy direct to /editor or so.
         if(in_array($uriParts[$i], $this->moduleDirs)){
             define('APPLICATION_MODULE',  $uriParts[$i]);
             return $uriParts[$i];
