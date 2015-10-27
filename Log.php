@@ -200,9 +200,25 @@ class  ZfExtended_Log extends ZfExtended_Mail{
     }
 
     protected function sendMail (string $subject, $message=NULL) {
+        //for TRANSLATE-600 only:
         $this->setMail();
-        $this->setContent(substr($subject, 0, 120), $subject."\r\n\r\n".(string)$message);
+        $this->setContent(substr($subject, 0, 120).$this->getAffectedTaskGuid(), $subject."\r\n\r\n".(string)$message);
         $this->send($this->_config->resources->mail->defaultFrom->email,
                 $this->_config->resources->mail->defaultFrom->name);
+    }
+    
+    /**
+     * For a better debugging with a fast implementation we introduced TRANSLATE-600
+     * @return string
+     */
+    protected function getAffectedTaskGuid() {
+        $prefix = ' taskGuid: ';
+        if(isset($_SESSION) && isset($_SESSION['Default']) && isset($_SESSION['Default']['taskGuid'])) {
+            return $prefix.$_SESSION['Default']['taskGuid'];
+        }
+        if(Zend_Registry::isRegistered('affected_taskGuid')) {
+            return $prefix.Zend_Registry::get('affected_taskGuid');
+        }
+        return '';
     }
 }

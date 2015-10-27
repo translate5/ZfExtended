@@ -257,6 +257,8 @@ abstract class ZfExtended_Worker_Abstract {
      */
     protected function run($slot = false) {
         $this->checkIsInitCalled();
+        Zend_Registry::set('affected_taskGuid', $this->taskGuid); //for TRANSLATE-600 only
+        
         if(!$slot){
             $tempSlot = $this->calculateDirectSlot();
             $this->workerModel->setResource($tempSlot['resource']);
