@@ -71,5 +71,10 @@ class  ZfExtended_Zendoverwrites_Soap_Server extends Zend_Soap_Server
       ini_set('display_errors', false);
       set_error_handler(array($this, 'handlePhpErrors'));
       return $displayErrorsOriginalState;
-    }    
+    }
+    
+    public function fault($fault = null, $code = "Receiver") {
+        error_log("Error in processing SOAP request: ".$fault);
+        return parent::fault($fault, $code);
+    }
 }
