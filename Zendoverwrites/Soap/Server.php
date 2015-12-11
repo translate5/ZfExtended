@@ -74,7 +74,9 @@ class  ZfExtended_Zendoverwrites_Soap_Server extends Zend_Soap_Server
     }
     
     public function fault($fault = null, $code = "Receiver") {
-        error_log("Error in processing SOAP request: ".$fault);
+        $log = ZfExtended_Factory::get('ZfExtended_Log');
+        /* @var $log ZfExtended_Log */
+        $log->logError("Error in processing SOAP request: ".$fault);
         return parent::fault($fault, $code);
     }
 }
