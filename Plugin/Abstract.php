@@ -156,7 +156,6 @@ abstract class ZfExtended_Plugin_Abstract {
      */
     public function getConfig() {
         if(empty($this->config)) {
-            $c = Zend_Registry::get('config');
             throw new ZfExtended_Exception('No Plugin Configuration found for plugin '.$this->pluginName);
         }
         return $this->config;
