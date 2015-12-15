@@ -126,6 +126,17 @@ abstract class ZfExtended_Worker_Abstract {
 
     public function __construct() {
         $this->log = ZfExtended_Factory::get('ZfExtended_Log');
+        $this->maxParallelProcesses = $this->getMaxParallelProcesses();
+    }
+    
+    protected function getMaxParallelProcesses() {
+        $config = Zend_Registry::get('config');
+        $class = get_class($this);
+        $workerConfig = $config->runtimeOptions->worker->$class;
+        if(empty($workerConfig)) {
+            throw new ZfExtended_Exception('Missing Worker config for class '.$class.'. Please update config!'); //should be seen by developers only
+        }
+        return $workerConfig->maxParallelWorkers;
     }
     
     /**

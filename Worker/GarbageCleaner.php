@@ -44,6 +44,15 @@ class ZfExtended_Worker_GarbageCleaner extends ZfExtended_Worker_Abstract {
     } 
     
     /**
+     * Only one garbage cleaner may run at a time
+     * (non-PHPdoc)
+     * @see ZfExtended_Worker_Abstract::getMaxParallelProcesses()
+     */
+    protected function getMaxParallelProcesses() {
+        return 1;
+    }
+    
+    /**
      * (non-PHPdoc)
      * @see ZfExtended_Worker_Abstract::work()
      */
