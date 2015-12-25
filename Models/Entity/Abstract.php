@@ -89,11 +89,19 @@ abstract class ZfExtended_Models_Entity_Abstract {
      */
     protected $events = false;
     
+    /**
+     * contains the name of the relating database-table
+     * @var string
+     */
+    protected $tableName;
+    
     
     public function __construct() {
         $this->db = ZfExtended_Factory::get($this->dbInstanceClass);
         $this->events = ZfExtended_Factory::get('ZfExtended_EventManager', array(get_class($this)));
         $this->init();
+        $db = $this->db;
+        $this->tableName = $db->info($db::NAME);
     }
 
     /**
