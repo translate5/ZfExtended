@@ -384,6 +384,15 @@ class ZfExtended_Test_ApiHelper {
     }
     
     /**
+     * removes random revIds from the given XML string of changes.xml files
+     * @param string $changesXml
+     * @return string
+     */
+    public function replaceChangesXmlContent($changesXml) {
+        return preg_replace('/sdl:revid="[^"]{36}"/', 'sdl:revid="replaced-for-testing"', $changesXml);
+    }
+    
+    /**
      * returns the untestable segment fields (like id, taskGuid etc)
      * @param stdClass $segmentContent
      * @return stdClass
