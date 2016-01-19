@@ -1,7 +1,7 @@
 -- /*
 -- START LICENSE AND COPYRIGHT
 -- 
---  This file is part of translate5
+--  This file is part of ZfExtended library
 --  
 --  Copyright (c) 2013 - 2015 Marc Mittag; MittagQI - Quality Informatics;  All rights reserved.
 -- 

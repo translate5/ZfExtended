@@ -2,7 +2,7 @@
 /*
 START LICENSE AND COPYRIGHT
 
- This file is part of translate5
+ This file is part of ZfExtended library
  
  Copyright (c) 2013 - 2015 Marc Mittag; MittagQI - Quality Informatics;  All rights reserved.
 
@@ -27,6 +27,7 @@ START LICENSE AND COPYRIGHT
 
 END LICENSE AND COPYRIGHT
 */
+
 class ZfExtended_Test_ApiHelper {
     const AUTH_COOKIE_KEY = 'zfExtended';
     const SEGMENT_DUPL_SAVE_CHECK = '<img src="data:image/gif;base64,R0lGODlhAQABAID/AMDAwAAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==" class="duplicatesavecheck" data-segmentid="%s" data-fieldname="%s">';
