@@ -158,6 +158,9 @@ class ZfExtended_Test_ApiHelper {
         if(empty($this->filesToAdd) && ($method == 'POST' || $method == 'PUT')){
             $parameters = array('data' => json_encode($parameters));
         }
+        ob_start();
+        var_dump($url, $method, $parameters);
+        error_log(ob_get_clean());
         $resp = $this->request($url, $method, $parameters);
         $status = $resp->getStatus();
         
@@ -379,8 +382,8 @@ class ZfExtended_Test_ApiHelper {
         $data = file_get_contents($this->getFile($approvalFile, $class));
         if(preg_match('/\.json$/i', $approvalFile)){
             $data = json_decode($data);
+            $t::assertEquals('No error', json_last_error_msg(), 'Test file '.$approvalFile.' does not contain valid JSON!');
         }
-        $t::assertEquals('No error', json_last_error_msg(), 'Test file '.$approvalFile.' does not contain valid JSON!');
         return $data;
     }
     
