@@ -158,6 +158,9 @@ class ZfExtended_Test_ApiHelper {
         if(empty($this->filesToAdd) && ($method == 'POST' || $method == 'PUT')){
             $parameters = array('data' => json_encode($parameters));
         }
+        ob_start();
+        var_dump($url, $method, $parameters);
+        error_log(ob_get_clean());
         $resp = $this->request($url, $method, $parameters);
         $status = $resp->getStatus();
         
