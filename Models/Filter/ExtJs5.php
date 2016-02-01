@@ -40,6 +40,7 @@ class ZfExtended_Models_Filter_ExtJs5 extends ZfExtended_Models_Filter_ExtJs {
      */
     protected $operatorToType = array(
             'like' => 'string',
+            'notInList' => 'notInList',
             'in' => 'list',
             'eq' => 'numeric',
             'gt' => 'numeric',
