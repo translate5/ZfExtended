@@ -379,8 +379,8 @@ class ZfExtended_Test_ApiHelper {
         $data = file_get_contents($this->getFile($approvalFile, $class));
         if(preg_match('/\.json$/i', $approvalFile)){
             $data = json_decode($data);
+            $t::assertEquals('No error', json_last_error_msg(), 'Test file '.$approvalFile.' does not contain valid JSON!');
         }
-        $t::assertEquals('No error', json_last_error_msg(), 'Test file '.$approvalFile.' does not contain valid JSON!');
         return $data;
     }
     
