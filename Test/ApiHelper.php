@@ -158,9 +158,6 @@ class ZfExtended_Test_ApiHelper {
         if(empty($this->filesToAdd) && ($method == 'POST' || $method == 'PUT')){
             $parameters = array('data' => json_encode($parameters));
         }
-        ob_start();
-        var_dump($url, $method, $parameters);
-        error_log(ob_get_clean());
         $resp = $this->request($url, $method, $parameters);
         $status = $resp->getStatus();
         
@@ -269,7 +266,6 @@ class ZfExtended_Test_ApiHelper {
         $resp = $this->getLastResponse();
         $test::assertEquals(200, $resp->getStatus(), 'Import Request does not respond HTTP 200! Body was: '.$resp->getBody());
 
-        //error_log(__FUNCTION__.': starting importing task '.$this->task->taskName);
         while(true){
             $taskResult = $this->requestJson('editor/task/'.$this->task->id);
             if($taskResult->state == 'open') {
@@ -385,6 +381,76 @@ class ZfExtended_Test_ApiHelper {
             $t::assertEquals('No error', json_last_error_msg(), 'Test file '.$approvalFile.' does not contain valid JSON!');
         }
         return $data;
+    }
+    
+    /**
+     * 
+     * @param string $zipfile absolute file system path to zip file
+     * @param string $pathToFileInZip relative path to file inside of zip
+     */
+    public function getFileContentFromZip($zipfile,$pathToFileInZip) {
+        $pathToZip = $this->getFile($zipfile);
+        return $this->getFileContentFromZipPath($pathToZip, $pathToFileInZip);
+    }
+    
+    /**
+     * 
+     * @param string $pathToZip absolute file system path to zip file
+     * @param string $pathToFileInZip relative path to file inside of zip
+     */
+    public function getFileContentFromZipPath($pathToZip,$pathToFileInZip) {
+        $zip = new ZipArchive();
+        $zip->open($pathToZip);
+        $dir = sys_get_temp_dir().DIRECTORY_SEPARATOR.'translate5Test'.DIRECTORY_SEPARATOR;
+        $this->rmDir($dir);
+        mkdir($dir);
+        $zip->extractTo($dir);
+        $file = $dir.$pathToFileInZip;
+        $t = $this->testClass;
+        $t::assertFileExists($file);
+        $content = file_get_contents($file);
+        $this->rmDir($dir);
+        //delete exported file, so that next call can recreate it
+        return $content;
+    }
+    /**
+     * 
+     * @param type $directory
+     * @return boolean false if directory did not exist
+     * @throws Exception if directory is a file
+     */
+    public function rmDir($directory) {
+        if(!is_dir($directory)){
+            if(is_file($directory)){
+                throw new Exception($directory.' is a file.');
+            }
+            return false;
+        }
+        $iterator = new DirectoryIterator($directory);
+        foreach ($iterator as $fileinfo) {
+            if ($fileinfo->isDot()) {
+                continue;
+            }
+            if ($fileinfo->isDir()) {
+                $this->rmDir($directory . DIRECTORY_SEPARATOR . $fileinfo->getFilename());
+            }
+            if ($fileinfo->isFile()) {
+                try {
+                    unlink($directory . DIRECTORY_SEPARATOR . $fileinfo->getFilename());
+                }
+                catch (Exception $e){
+                       
+                }
+            }
+        }
+        //FIXME try catch ist nur eine übergangslösung!!!
+        try {
+            rmdir($directory);
+        }
+        catch (Exception $e){
+
+        }
+        return true;
     }
     
     /**

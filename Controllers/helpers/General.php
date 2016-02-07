@@ -346,14 +346,6 @@ class ZfExtended_Controller_Helper_General extends Zend_Controller_Action_Helper
     	if (!fwrite($conn, $cmd)) {
     		throw new Zend_Exception('forkHttp konnte Verbindung  aufbauen, fwrite dann aber keine Daten schreiben', 0 );
     	}
-    	/*
-    	//DEBUG START
-    	while (!feof($conn)) {
-    	    echo fgets($conn, 128);
-    	}
-    	error_log('888'.ob_get_clean());
-    	//DEBUG END
-    	*/
     	fclose($conn);
     
     	return true;
