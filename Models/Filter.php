@@ -233,10 +233,14 @@ abstract class ZfExtended_Models_Filter {
    * @return string sortKey
    */
   protected function mapSort(string $sortKey){
-      $defaultTable = empty($this->defaultTable) ? '' : $this->defaultTable.'.';
+      $origSortkey = $sortKey;
       if (isset($this->_sortColMap[$sortKey])) {
-          return $defaultTable.$this->_sortColMap[$sortKey];
+          $sortKey = $this->_sortColMap[$sortKey];
       }
+      if(isset($this->fieldTableMap[$origSortkey])) {
+          return $this->fieldTableMap[$origSortkey].'.'.$sortKey;
+      }
+      $defaultTable = empty($this->defaultTable) ? '' : $this->defaultTable.'.';
       return $defaultTable.$sortKey;
   }
 
