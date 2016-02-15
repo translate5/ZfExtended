@@ -42,6 +42,7 @@ class ZfExtended_Models_Filter_ExtJs5 extends ZfExtended_Models_Filter_ExtJs {
             'like' => 'string',
             'notInList' => 'notInList',
             'in' => 'list',
+            'notInList' => 'notInList', // custom filter type
             'eq' => 'numeric',
             'gt' => 'numeric',
             '=' => 'boolean',
