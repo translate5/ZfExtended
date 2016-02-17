@@ -105,6 +105,11 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
    */
   protected $wasValid = false;
   
+  /**
+   * Entity list offset as requested from client
+   * @var integer
+   */
+  protected $offset = 0;
   
   /**
    * inits the internal entity Object, handels given limit, filter and sort parameters
@@ -180,7 +185,7 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
    * handles given limit parameters and applies them to the entity
    */
   protected function handleLimit() {
-    $offset = $this->_getParam('start');
+    $offset = $this->offset = $this->_getParam('start');
     $limit = $this->_getParam('limit');
     settype($offset, 'integer');
     settype($limit, 'integer');
