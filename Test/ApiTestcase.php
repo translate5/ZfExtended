@@ -56,6 +56,32 @@ abstract class ZfExtended_Test_ApiTestcase extends \ZfExtended_Test_Testcase {
         return $state;
     }
     
+        /**
+     * creates zipfile with testfiles in tmpDir and returns the path to it
+     * @param $pathToTestFiles relative to testcases folder
+     * @param $nameOfZipFile which is created
+     * @return string path to zipfile
+     * @throws Zend_Exception
+     */
+    public static function zipTestFiles($pathToTestFiles,$nameOfZipFile) {
+        $tmpDir = sys_get_temp_dir();
+        $zipFile = $tmpDir.DIRECTORY_SEPARATOR.$nameOfZipFile;
+        $filter = ZfExtended_Factory::get('Zend_Filter_Compress',array(
+            array(
+                    'adapter' => 'Zip',
+                    'options' => array(
+                        'archive' => $zipFile
+                    ),
+                )
+            )
+        );
+        /* @var $filter Zend_Filter_Compress */
+        if(!$filter->filter($pathToTestFiles)){
+            throw new Zend_Exception('Could not create zip.');
+        }
+        return $zipFile;
+    }
+    
     /**
      * asserts that a certain user is loggedin
      * @param string $user
