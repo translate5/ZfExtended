@@ -31,6 +31,7 @@ END LICENSE AND COPYRIGHT
 class ZfExtended_Test_ApiHelper {
     const AUTH_COOKIE_KEY = 'zfExtended';
     const SEGMENT_DUPL_SAVE_CHECK = '<img src="data:image/gif;base64,R0lGODlhAQABAID/AMDAwAAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==" class="duplicatesavecheck" data-segmentid="%s" data-fieldname="%s">';
+    
     /**
      * enable xdebug debugger in eclipse
      * @var boolean
@@ -124,7 +125,17 @@ class ZfExtended_Test_ApiHelper {
         
         if(!empty($this->filesToAdd) && ($method == 'POST' || $method == 'PUT')) {
             foreach($this->filesToAdd as $file) {
-                $abs = $this->testRoot.'/'.$file['path'];
+                if(empty($file['path']) && !empty($file['data'])){
+                    $http->setFileUpload($file['filename'], $file['name'], $file['data'], $file['mime']);
+                    continue;
+                }
+                //file paths can also be absolute:
+                if(substr($file['path'], 0, 1) === '/') {
+                    $abs = $file['path'];
+                }
+                else {
+                    $abs = $this->testRoot.'/'.$file['path'];
+                }
                 $t = $this->testClass;
                 $t::assertFileExists($abs);
                 $http->setFileUpload($abs, $file['name'], file_get_contents($abs), $file['mime']);
@@ -190,6 +201,17 @@ class ZfExtended_Test_ApiHelper {
      */
     public function addFile($name, $path, $mimetype) {
         $this->filesToAdd[] = array('name' => $name, 'path' => $path, 'mime' => $mimetype);
+    }
+    
+    /**
+     * Adds a file to be uploaded on the next request.
+     * @param string $name
+     * @param string $path
+     * @param string $mimetype
+     * @param string $filename file name to be used
+     */
+    public function addFilePlain($name, $data, $mimetype, $filename) {
+        $this->filesToAdd[] = array('name' => $name, 'data' => $data, 'mime' => $mimetype, 'filename' => $filename);
     }
     
     public function login($login, $password = 'asdfasdf') {
@@ -277,6 +299,21 @@ class ZfExtended_Test_ApiHelper {
     }
     
     /**
+     * tests the config names and values in the given associated array against the REST accessible application config
+     * @param array $configsToTest
+     */
+    public function testConfig(array $configsToTest) {
+        $test = $this->testClass;
+        foreach($configsToTest as $name => $value) {
+            $config = $this->requestJson('editor/config', 'GET', array(
+                'filter' => '[{"type":"string","value":"'.$name.'","property":"name","operator":"like"}]',
+            ));
+            $test::assertCount(1, $config);
+            $test::assertEquals($value, $config[0]->value);
+        }
+    }
+    
+    /**
      * returns the current active task to test
      * @return stdClass
      */
@@ -355,15 +392,18 @@ class ZfExtended_Test_ApiHelper {
      * Returns an absolute file path to a approval file
      * @param string $approvalFile
      * @param string $class
+     * @param boolean $assert false to skip file existence check
      * @return string
      */
-    public function getFile($approvalFile, $class = null) {
+    public function getFile($approvalFile, $class = null, $assert = true) {
         if(empty($class)) {
             $class = $this->testClass;
         }
         $path = join('/', array($this->testRoot, 'editorAPI', $class, $approvalFile));
-        $t = $this->testClass;
-        $t::assertFileExists($path);
+        if($assert) {
+            $t = $this->testClass;
+            $t::assertFileExists($path);
+        }
         return $path;
     }
     
@@ -496,5 +536,53 @@ class ZfExtended_Test_ApiHelper {
     
     public function addImportFile($path, $mime = 'application/zip') {
         $this->addFile('importUpload', $path, $mime);
+    }
+    
+    /**
+     * Adds directly data to be imported instead of providing a filepath
+     * useful for creating CSV testdata direct in testcase
+     * 
+     * @param string $data
+     * @param string $mime
+     */
+    public function addImportPlain($data, $mime = 'application/csv', $filename = 'apiTest.csv') {
+        $this->addFilePlain('importUpload', $data, $mime, $filename);
+    }
+    
+    /**
+     * creates zipfile with testfiles in tmpDir and returns the path to it
+     * @param $pathToTestFiles relative to testcases folder
+     * @param $nameOfZipFile which is created
+     * @return string path to zipfile
+     * @throws Zend_Exception
+     */
+    public function zipTestFiles($pathToTestFiles, $nameOfZipFile) {
+        $dir = $this->getFile($pathToTestFiles);
+        $zipFile = $this->getFile($nameOfZipFile, null, false);
+        
+        if(file_exists($zipFile)) {
+            unlink($zipFile);
+        }
+        
+        $zip = new ZipArchive();
+
+        if ($zip->open($zipFile, ZipArchive::CREATE)!==true) {
+            throw new Zend_Exception('Could not create zip.');
+        }
+        // create recursive directory iterator
+        $files = new RecursiveIteratorIterator(
+                new RecursiveDirectoryIterator(
+                        $dir, RecursiveDirectoryIterator::SKIP_DOTS
+                ), RecursiveIteratorIterator::LEAVES_ONLY);
+
+        // let's iterate
+        foreach ($files as $name => $file) {
+            $filePath = $file->getRealPath();
+            $zip->addFile($file, str_replace('^'.$dir, '', '^'.$filePath));
+        }
+        
+        $zip->close();
+        
+        return $zipFile;
     }
 }
