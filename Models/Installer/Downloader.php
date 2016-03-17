@@ -195,6 +195,11 @@ class ZfExtended_Models_Installer_Downloader {
      * @return boolean
      */
     protected function fetch(stdClass $dependency, $cleanBefore = false) {
+        if(!$this->checkMemoryLimit()) {
+            $this->log('Not enough memory available to process downloaded file. At least 512M needed in ini setting memory_limit! The value could not be set automatically by the uploader!');
+            return false;
+        }
+        
         $url = $dependency->url_parsed;
         if(!$url || empty($url['host']) || empty($url['path'])) {
             $this->log('Configured url for package '.$dependency->name.' is invalid! URL:'.$dependency->url);
@@ -251,6 +256,35 @@ class ZfExtended_Models_Installer_Downloader {
             $this->log('Could not save downloaded package for dependency package '.$dependency->name.'! Target:'.$target);
             return false;
         }
+        return true;
+    }
+    
+    /**
+     * Checks for at leaset 512 MB memory limit, since our downloaded files are shortly kept in memory.
+     * @return boolean
+     */
+    protected function checkMemoryLimit() {
+        $bytes = function ($string) {
+            $last = strtolower(substr(trim($string), -1, 1));
+            switch($last) {
+                case 'g':
+                    $string *= 1024;
+                case 'm':
+                    $string *= 1024;
+                case 'k':
+                    $string *= 1024;
+            }
+            return $string;
+        };
+
+        if($bytes(ini_get('memory_limit')) >= 512 * 1024 * 1024) {
+            return true;
+        }
+        if(ini_set('memory_limit', '512M') === false) {
+            //could not set mem limit to 512 MB
+            return false;
+        }
+        //could increase mem limit
         return true;
     }
     
