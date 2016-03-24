@@ -103,7 +103,7 @@ abstract class ZfExtended_Models_Filter {
   
   
   /**
-   * Adds an additional filter in internal defined format
+   * Adds an additional filter in internal defined (ext4) format
    * @param stdClass $filter
    */
   public function addFilter(stdClass $filter) {
@@ -117,6 +117,14 @@ abstract class ZfExtended_Models_Filter {
   public function setSort($sort) {
       $this->sort = $this->decode($sort);
       settype($this->sort, 'array');
+  }
+  
+  /**
+   * returns the current sort
+   * @return multitype:
+   */
+  public function getSort() {
+      return $this->sort;
   }
   
   /**
@@ -190,10 +198,20 @@ abstract class ZfExtended_Models_Filter {
   
   /**
    * returns true if filter info is given
+   * @param string $fieldName optional, if given checks if a filter for the given original fieldName is set
    * @return boolean
    */
-  public function hasFilter(){
-    return !empty($this->filter);
+  public function hasFilter($fieldName = false){
+      if($fieldName === false) {
+        return !empty($this->filter);
+      }
+      //checking for a specific filtered field
+      foreach($this->filter as $filter) {
+          if($filter->field === $fieldName) {
+              return true;
+          }
+      }
+      return false;
   }
   
   /**
@@ -232,7 +250,7 @@ abstract class ZfExtended_Models_Filter {
    * @param string sortKey
    * @return string sortKey
    */
-  protected function mapSort(string $sortKey){
+  public function mapSort(string $sortKey){
       $origSortkey = $sortKey;
       if (isset($this->_sortColMap[$sortKey])) {
           $sortKey = $this->_sortColMap[$sortKey];

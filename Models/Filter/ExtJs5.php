@@ -44,8 +44,10 @@ class ZfExtended_Models_Filter_ExtJs5 extends ZfExtended_Models_Filter_ExtJs {
             'in' => 'list',
             'eq' => 'numeric',
             'gt' => 'numeric',
+            'gteq' => 'numeric',
+            'lt' => 'numeric',
+            'lteq' => 'numeric',
             '=' => 'boolean',
-            'lt' => 'numeric'
     );
     
     /**

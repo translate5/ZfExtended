@@ -179,7 +179,7 @@ class ZfExtended_Models_Filter_ExtJs extends ZfExtended_Models_Filter {
           return;
       }
       if(! preg_match('/[a-z0-9-_]+/i', $field)){
-          throw new Zend_Exception('illegal chars in field name');
+          throw new Zend_Exception('illegal chars in field name '.$field);
       }
       if(!$this->entity->hasField($field) && empty($filter->table)){
           throw new Zend_Exception('illegal field requested: '.$field);
@@ -213,6 +213,20 @@ class ZfExtended_Models_Filter_ExtJs extends ZfExtended_Models_Filter {
    */
   protected function applyNumeric_gt($field, $value) {
     $this->where($field.' > ?', $value);
+  }
+  /**
+   * @param string $field
+   * @param integer $value
+   */
+  protected function applyNumeric_lteq($field, $value) {
+    $this->where($field.' <= ?', $value);
+  }
+  /**
+   * @param string $field
+   * @param integer $value
+   */
+  protected function applyNumeric_gteq($field, $value) {
+    $this->where($field.' >= ?', $value);
   }
   /**
    * @param string $field
