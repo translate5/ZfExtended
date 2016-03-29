@@ -190,10 +190,20 @@ abstract class ZfExtended_Models_Filter {
 
   /**
    * returns true if sort info is given
+   * @param string $fieldName optional, if given checks if a sort for the given original fieldName is set
    * @return boolean
    */
-  public function hasSort(){
-    return !empty($this->sort);
+  public function hasSort($fieldName = false){
+      if($fieldName === false) {
+          return !empty($this->sort);
+      }
+      //checking for a specific sorted field
+      foreach($this->sort as $sort) {
+          if($sort->property === $fieldName) {
+              return true;
+          }
+      }
+      return false;
   }
   
   /**
