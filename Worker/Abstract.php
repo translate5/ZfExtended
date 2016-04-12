@@ -121,9 +121,6 @@ abstract class ZfExtended_Worker_Abstract {
      */
     protected $workerException = null;
     
-    protected $parametersToSave = array();
-
-
     public function __construct() {
         $this->log = ZfExtended_Factory::get('ZfExtended_Log');
         $this->maxParallelProcesses = $this->getMaxParallelProcesses();
@@ -166,9 +163,8 @@ abstract class ZfExtended_Worker_Abstract {
         $this->workerModel->setBlockingType($this->blockingType);
         
         if (isset($parameters['resourcePool'])) {
-            if (in_array($parameters['resourcePool'], self::$allowedResourcePools)) {
+            if (in_array($parameters['resourcePool'], static::$allowedResourcePools)) {
                 $this->resourcePool = $parameters['resourcePool'];
-                $this->parametersToSave['resourcePool'] = $this->resourcePool;
             }
         }
         
