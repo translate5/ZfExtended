@@ -91,6 +91,18 @@ abstract class ZfExtended_Models_Filter {
     $this->filter = $this->decode($filter);
     settype($this->filter, 'array');
   }
+  
+  /**
+   * for real cloning we have to clone our sort and filter fields (which contain objects) also
+   */
+  public function __clone() {
+      foreach ($this->sort as &$sort) { 
+          $sort = clone $sort; 
+      }
+      foreach ($this->filter as &$filter) { 
+          $filter = clone $filter; 
+      }
+  }
 
   /**
    * sets an additional filter
