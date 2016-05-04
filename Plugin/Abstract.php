@@ -122,6 +122,7 @@ abstract class ZfExtended_Plugin_Abstract {
     }
     
     /**
+     * returns the relative plugin path to APPLICATION_ROOT
      * @return string
      */
     public function getPluginPath() {

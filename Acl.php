@@ -279,21 +279,27 @@ class ZfExtended_Acl extends Zend_Acl {
         $controllers = array();
         $module = Zend_Registry::get('module');
         $controllerDirs = Zend_Controller_Front::getInstance()->getControllerDirectory();
-        $path = $controllerDirs[$module];
         
+        $this->includeController($controllerDirs[$module]);
+        if(!empty($controllerDirs['_plugins'])) {
+            $this->includeController($controllerDirs['_plugins']);
+        }
+        
+        foreach (get_declared_classes() as $class) {
+            if (is_subclass_of($class, 'Zend_Controller_Action') && preg_match("'Controller$'",$class)) {
+                $controllers[] = strtolower(substr($class, 0, strpos($class, "Controller")));
+            }
+        }
+        return $controllers;
+    }
+    
+    protected function includeController($path) {
         $objects = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($path,FilesystemIterator::CURRENT_AS_FILEINFO|FilesystemIterator::SKIP_DOTS));
         foreach($objects as $file => $object){
             if (strstr($file, "Controller.php") !== false) {
                 include_once $file;
             }
         }
-        foreach (get_declared_classes() as $class) {
-            if (is_subclass_of($class, 'Zend_Controller_Action')and preg_match("'Controller$'",$class)) {
-                $controller = strtolower(substr($class, 0, strpos($class, "Controller")));
-                $controllers[] = $controller;
-            }
-        }
-        return $controllers;
     }
     
     /**
