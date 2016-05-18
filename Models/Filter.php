@@ -221,15 +221,17 @@ abstract class ZfExtended_Models_Filter {
   /**
    * returns true if filter info is given
    * @param string $fieldName optional, if given checks if a filter for the given original fieldName is set
+   * @param object $foundFilter optional, is a reference, will be populated with the found filter (if a name was given)
    * @return boolean
    */
-  public function hasFilter($fieldName = false){
+  public function hasFilter($fieldName = false, & $foundFilter = null){
       if($fieldName === false) {
         return !empty($this->filter);
       }
       //checking for a specific filtered field
       foreach($this->filter as $filter) {
           if($filter->field === $fieldName) {
+              $foundFilter = $filter;
               return true;
           }
       }
