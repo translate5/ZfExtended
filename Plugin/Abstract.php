@@ -76,7 +76,7 @@ abstract class ZfExtended_Plugin_Abstract {
         $this->activePlugins = $c->runtimeOptions->plugins->active->toArray();
         $rc = new ReflectionClass($this);
         $path = '^'.dirname($rc->getFileName());
-        $this->relativePluginPath = str_replace(rtrim('^'.APPLICATION_PATH,"/\\").'/', '', $path);
+        $this->relativePluginPath = ltrim(str_replace(rtrim('^'.APPLICATION_PATH,"/\\"), '', $path),"/\\");
         $this->init();
     }
     
@@ -144,7 +144,7 @@ abstract class ZfExtended_Plugin_Abstract {
         $result = array();
         foreach($objects as $file) {
             if($file->isFile()) {
-                $result[] = trim(str_replace($publicDirectory, '', $file), '/');
+                $result[] = trim(str_replace(array($publicDirectory,'\\'), array('','/'), $file), '/');
             }
         }
         return $result;
