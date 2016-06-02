@@ -398,7 +398,7 @@ class ZfExtended_Test_ApiHelper {
     /**
      * Returns an absolute file path to a approval file
      * @param string $approvalFile
-     * @param string $class
+     * @param string $class The directory name in editorAPI where the testfiles are
      * @param boolean $assert false to skip file existence check
      * @return string
      */
