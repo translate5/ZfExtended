@@ -281,8 +281,10 @@ class ZfExtended_Acl extends Zend_Acl {
         $controllerDirs = Zend_Controller_Front::getInstance()->getControllerDirectory();
         
         $this->includeController($controllerDirs[$module]);
-        if(!empty($controllerDirs['_plugins'])) {
-            $this->includeController($controllerDirs['_plugins']);
+        foreach($controllerDirs as $mod => $dir) {
+            if(substr($mod, 0, 8) === '_plugins') {
+                $this->includeController($dir);
+            }
         }
         
         foreach (get_declared_classes() as $class) {
