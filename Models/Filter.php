@@ -114,12 +114,33 @@ abstract class ZfExtended_Models_Filter {
   }
   
   
-  /**
-   * Adds an additional filter in internal defined (ext4) format
+  /**           
+   * Adds an additional filter in internal defined (ext4) format <BR/>
+   * Ext4 Filter Object Example: <BR/>
+   * {<BR/>
+   *   <b>type:</b> &emsp;numeric | boolean | string | notInList | list| numeric| numeric | numeric | numeric | numeric <BR/>
+   *   <b>comparison:</b>   eq    |    =    | like   | notInList |  in |   eq   |   gt    |   gteq  |    lt   |  lteq   <BR/>
+   * }
    * @param stdClass $filter
    */
   public function addFilter(stdClass $filter) {
       $this->filter[] = $filter;
+  }
+  
+  /**
+   * Remouves filter by filter name ($filter->field)
+   * @param filterName
+   * @return boolean
+   */
+  public function deleteFilter($filterName) {
+      //checking for a specific filtered field
+      foreach($this->filter as $index => $filter) {
+          if($filter->field === $filterName) {
+              unset($this->filter[$index]);
+              return true;
+          }
+      }
+      return false;  
   }
   
   /**
