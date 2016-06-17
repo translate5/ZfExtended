@@ -65,6 +65,14 @@ abstract class ZfExtended_Plugin_Abstract {
      */
     protected $frontendControllers = array();
     
+    /**
+     * A folder relative to the plugin root which contains the plugin translations
+     * if false there are no translations added to the translation framework
+     * if used, should be by convention: "locales"
+     * @var string
+     */
+    protected $localePath = false;
+    
     public function __construct($pluginName) {
         $this->pluginName = $pluginName;
         $this->eventManager = Zend_EventManager_StaticEventManager::getInstance();
@@ -92,6 +100,17 @@ abstract class ZfExtended_Plugin_Abstract {
      */
     public function getFrontendControllers() {
         return $this->frontendControllers;
+    }
+    
+    /**
+     * return the plugins locale path
+     * @return array
+     */
+    public function getLocalePath() {
+        if(!$this->localePath) {
+            return false;
+        }
+        return $this->getPluginPath().'/'.$this->localePath;
     }
     
     /**

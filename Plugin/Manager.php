@@ -39,6 +39,7 @@ class ZfExtended_Plugin_Manager {
     protected $pluginInstances = array();
     protected $pluginNames = array();
     
+    protected $allLocalePaths = array();
     protected $allFrontendControllers = array();
     
     public function bootstrap() {
@@ -55,6 +56,10 @@ class ZfExtended_Plugin_Manager {
                 $this->pluginNames[$pluginClass] = $name = $this->classToName($pluginClass);
                 $this->pluginInstances[$pluginClass] = $plugin = ZfExtended_Factory::get($pluginClass, array($name));
                 /* @var $plugin ZfExtended_Plugin_Abstract */
+                $localePath = $plugin->getLocalePath();
+                if($localePath) {
+                    $this->allLocalePaths[$name] = $localePath;
+                }
                 $this->allFrontendControllers = array_merge($this->allFrontendControllers, $plugin->getFrontendControllers());
             }
             catch (ReflectionException $exception) {
@@ -70,6 +75,14 @@ class ZfExtended_Plugin_Manager {
      */
     public function getActiveFrontendControllers() {
         return $this->allFrontendControllers;
+    }
+    
+    /**
+     * return locale paths for all active plugins
+     * @return array
+     */
+    public function getActiveLocalePaths() {
+        return $this->allLocalePaths;
     }
     
     /**

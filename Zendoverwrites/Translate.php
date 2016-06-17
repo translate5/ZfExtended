@@ -241,35 +241,54 @@ class  ZfExtended_Zendoverwrites_Translate extends Zend_Translate
      * @return array
      */
     public function getTranslationPaths() {
-        if(empty($this->translationPaths)){
-            $session = new Zend_Session_Namespace(); 
-            $ds = DIRECTORY_SEPARATOR;
-            $xliff = $this->getTargetLang().'.xliff';
-            $this->translationPaths = array();
-            $index = ZfExtended_BaseIndex::getInstance();
-            /* @var $index ZfExtended_BaseIndex */
-            $libs = $index->getLibPaths();
-            //main locale overwrites module locale and module locale overwrites library locale
-            foreach ($libs as $lib) {
-                $this->translationPaths[] = $lib.$ds.'locales'.$ds.$xliff;
-            }
-            $this->translationPaths[] = APPLICATION_PATH.$ds.'modules'.$ds.
-                    APPLICATION_MODULE.$ds.'locales'.$ds.$xliff;
-            $this->translationPaths[] =  $session->runtimeOptions->dir->locales.
-                    $ds.$xliff; 
-            
-            // add client-specific Translations
-            $this->translationPaths[] = APPLICATION_PATH.$ds.'..'.$ds.'client-specific'.$ds.'locales'.$ds.$xliff;
-            
-            foreach ($this->translationPaths as $key => &$path) {
-                if(!file_exists($path)){
-                    unset($this->translationPaths[$key]);
-                }
+        if(!empty($this->translationPaths)){
+            return $this->translationPaths;
+        }
+        $session = new Zend_Session_Namespace(); 
+        $ds = DIRECTORY_SEPARATOR;
+        $xliff = $this->getTargetLang().'.xliff';
+        $this->translationPaths = array();
+        $index = ZfExtended_BaseIndex::getInstance();
+        /* @var $index ZfExtended_BaseIndex */
+        $libs = $index->getLibPaths();
+        //main locale overwrites module locale and module locale overwrites library locale
+        foreach ($libs as $lib) {
+            $this->translationPaths[] = $lib.$ds.'locales'.$ds.$xliff;
+        }
+        $this->translationPaths[] = APPLICATION_PATH.$ds.'modules'.$ds.
+                APPLICATION_MODULE.$ds.'locales'.$ds.$xliff;
+        $this->translationPaths[] =  $session->runtimeOptions->dir->locales.
+                $ds.$xliff; 
+        
+        $this->addPluginPaths($xliff);
+        
+        // add client-specific Translations
+        $this->translationPaths[] = APPLICATION_PATH.$ds.'..'.$ds.'client-specific'.$ds.'locales'.$ds.$xliff;
+        
+        foreach ($this->translationPaths as $key => &$path) {
+            if(!file_exists($path)){
+                unset($this->translationPaths[$key]);
             }
         }
         return $this->translationPaths;
     }
 
+    /**
+     * Adds the locales of the plugins - if any - to the locales system
+     * @param string $xliff
+     */
+    protected function addPluginPaths($xliff) {
+        $pluginmanager = Zend_Registry::get('PluginManager');
+        /* @var $pluginmanager ZfExtended_Plugin_Manager */
+        $paths = $pluginmanager->getActiveLocalePaths();
+        if(empty($paths)) {
+            return;
+        }
+        foreach($paths as $path) {
+            $this->translationPaths[] = APPLICATION_PATH.'/'.$path.'/'.$xliff;
+        }
+    }
+    
     /**
      * 
      * @return string
