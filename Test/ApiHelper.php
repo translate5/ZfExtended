@@ -169,10 +169,16 @@ class ZfExtended_Test_ApiHelper {
         if(empty($this->filesToAdd) && ($method == 'POST' || $method == 'PUT')){
             $parameters = array('data' => json_encode($parameters));
         }
-        $resp = $this->request($url, $method, $parameters);
+        return $this->decodeJsonResponse($this->request($url, $method, $parameters));
+    }
+    
+    /**
+     * Decodes a returned JSON answer from Translate5 REST API 
+     * @param Zend_Http_Response $resp
+     * @return mixed|boolean
+     */
+    public function decodeJsonResponse(Zend_Http_Response $resp) {
         $status = $resp->getStatus();
-        
-        
         if(200 <= $status && $status < 300) {
             $json = json_decode($resp->getBody());
             $t = $this->testClass;
@@ -371,6 +377,7 @@ class ZfExtended_Test_ApiHelper {
      * @param string $value
      * @param mixed $idOrObject
      * @param number $duration optional, defaults to 666
+     * @return array
      */
     public function prepareSegmentPut($field, $value, $idOrObject, $duration = 666) {
         if(is_numeric($idOrObject)) {
@@ -391,7 +398,7 @@ class ZfExtended_Test_ApiHelper {
     /**
      * Returns an absolute file path to a approval file
      * @param string $approvalFile
-     * @param string $class
+     * @param string $class The directory name in editorAPI where the testfiles are
      * @param boolean $assert false to skip file existence check
      * @return string
      */
@@ -536,6 +543,10 @@ class ZfExtended_Test_ApiHelper {
     
     public function addImportFile($path, $mime = 'application/zip') {
         $this->addFile('importUpload', $path, $mime);
+    }
+    
+    public function addImportTbx($path, $mime = 'application/xml') {
+        $this->addFile('importTbx', $path, $mime);
     }
     
     /**
