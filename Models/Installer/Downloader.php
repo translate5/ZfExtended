@@ -82,11 +82,12 @@ class ZfExtended_Models_Installer_Downloader {
 
     /**
      * pulls the application from server and returns dependencies where the license has to be accepted
+     * @param $zipOverride an own application zip can be provided for manual overrides
      * @return array
      */
-    public function pullApplication() {
+    public function pullApplication($zipOverride = null) {
         $this->fetchHashTable();
-        $this->updateApplication();
+        $this->updateApplication($zipOverride);
         $deps = $this->dependencies->getNeeded()->dependencies;
         $dependenciesToAccept = array();
         foreach($deps as $dependency) {
@@ -120,9 +121,9 @@ class ZfExtended_Models_Installer_Downloader {
     }
     
     /**
-     * @param stdClass $deps
+     * @param $zipOverride an own application zip can be provided for manual overrides
      */
-    protected function updateApplication() {
+    protected function updateApplication($zipOverride = null) {
         $app = $this->dependencies->getNeeded()->application;
         $installed = $this->dependencies->getInstalled($app->name);
         if(!empty($installed) && $installed->md5 === $this->getLiveHash($app)) {
@@ -133,6 +134,11 @@ class ZfExtended_Models_Installer_Downloader {
             $this->log('Could not fetch application package '.$app->name);
             return;
         }
+        
+        if(!empty($zipOverride)) {
+            $app->targetFile = $zipOverride;
+        }
+        
         if($this->install($app, false, true)) {
             $this->dependencies->markInstalled($app);
             $this->log('Updated application '.$app->name);
