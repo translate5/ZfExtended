@@ -226,6 +226,10 @@ class ZfExtended_Models_Installer_DbFileFinder {
                 if(is_dir($singlePluginDbPath) && $this->checkUnistallSQLfiles($singlePluginDbPath)){
                     $name = $pluginDirInfo->getBasename();
                     $this->iterateThroughDirectory($singlePluginDbPath, $name);
+                    //if the database dir exists, but is empty, then nothing can be sorted
+                    if(empty($this->toImport[$name])) {
+                        continue;
+                    }
                     //sort the loaded files by name, this is the initial natural order
                     ksort($this->toImport[$name]);
                 }
