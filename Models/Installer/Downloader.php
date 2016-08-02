@@ -126,22 +126,27 @@ class ZfExtended_Models_Installer_Downloader {
     protected function updateApplication($zipOverride = null) {
         $app = $this->dependencies->getNeeded()->application;
         $installed = $this->dependencies->getInstalled($app->name);
-        if(!empty($installed) && $installed->md5 === $this->getLiveHash($app)) {
+        $isZipOverride = !empty($zipOverride);
+        if(!$isZipOverride && !empty($installed) && $installed->md5 === $this->getLiveHash($app)) {
             $this->log('Application '.$app->name.' is up to date!');
             return;
         }
-        if(!$this->fetch($app)) {
+        if(!$isZipOverride && !$this->fetch($app)) {
             $this->log('Could not fetch application package '.$app->name);
             return;
         }
         
-        if(!empty($zipOverride)) {
+        if($isZipOverride) {
             $app->targetFile = $zipOverride;
         }
         
         if($this->install($app, false, true)) {
             $this->dependencies->markInstalled($app);
-            $this->log('Updated application '.$app->name);
+            $msg = $app->name;
+            if($isZipOverride) {
+                $msg .= ' from overriden zip '.$zipOverride;
+            }
+            $this->log('Updated application '.$msg);
             $this->dependencies->reloadNeeded();
         }
         else {
