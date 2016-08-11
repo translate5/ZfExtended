@@ -247,7 +247,10 @@ abstract class ZfExtended_Models_Entity_Abstract {
      * @return mixed  The primary key value(s), as an associative array if the key is compound, or a scalar if the key is single-column.
      */
     public function save() {
-        $this->events->trigger("beforeSave", $this, array('model' => $this));
+        $this->events->trigger("beforeSave", $this, array(
+                'model' => $this, //FIXME model usage is deprecated and should be removed in future (today 2016-08-10) 
+                'entity' => $this,
+        ));
         return $this->row->save();
     }
 
