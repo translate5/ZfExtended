@@ -201,7 +201,7 @@ class ZfExtended_Acl extends Zend_Acl {
     protected function allowOtherPrivilege(string $role,string $resource,string $privilege){
         //versuche, Klasse über Autoloader zu laden
         try {
-            new $resource;
+            class_exists($resource, true);
             if(method_exists($resource.'Controller', $privilege.'Action')
                     or method_exists($resource, $privilege)){
                 $this->allow($role, $resource, $privilege);
