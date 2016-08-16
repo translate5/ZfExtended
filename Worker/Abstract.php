@@ -76,7 +76,6 @@ abstract class ZfExtended_Worker_Abstract {
      */
     protected $blockingType = self::BLOCK_SLOT;
     
-    
     /**
      * holds the result-values of processing method $this->work()
      *  
@@ -151,6 +150,28 @@ abstract class ZfExtended_Worker_Abstract {
         
         $this->taskGuid = $taskGuid;
         
+        $this->initWorkerModel($taskGuid, $parameters);
+        
+        if (isset($parameters['resourcePool']) && in_array($parameters['resourcePool'], static::$allowedResourcePools)) {
+            $this->resourcePool = $parameters['resourcePool'];
+        }
+        
+        self::$resourceName = self::$praefixResourceName.$this->resourcePool;
+        
+        return true;
+    }
+
+    /**
+     * creates the internal worker model ready for DB storage if it not already exists.
+     * The latter case happens when using instanceByModels
+     * 
+     * @param unknown $taskGuid
+     * @param unknown $parameters
+     */
+    private function initWorkerModel($taskGuid, $parameters) {
+        if(empty($this->workerModel)) {
+            return;
+        }
         $this->workerModel = ZfExtended_Factory::get('ZfExtended_Models_Worker');
         
         $this->workerModel->setState(ZfExtended_Models_Worker::STATE_SCHEDULED);
@@ -161,18 +182,7 @@ abstract class ZfExtended_Worker_Abstract {
         $this->workerModel->setHash(uniqid(NULL, true));
         
         $this->workerModel->setBlockingType($this->blockingType);
-        
-        if (isset($parameters['resourcePool'])) {
-            if (in_array($parameters['resourcePool'], static::$allowedResourcePools)) {
-                $this->resourcePool = $parameters['resourcePool'];
-            }
-        }
-        
-        self::$resourceName = self::$praefixResourceName.$this->resourcePool;
-        
-        return true;
     }
-    
     
     /**
      * Returns the internal worker-model of this worker
@@ -201,12 +211,14 @@ abstract class ZfExtended_Worker_Abstract {
     static public function instanceByModel(ZfExtended_Models_Worker $model) {
         $instance = ZfExtended_Factory::get($model->getWorker());
         /* @var $instance ZfExtended_Worker_Abstract */
+        
+        $instance->workerModel = $model;
+        
         if (!$instance->init($model->getTaskGuid(), $model->getParameters())) {
             $this->log->logError('Worker can not be instanciated from stored workerModel', __CLASS__.' -> '.__FUNCTION__.'; $model->getParameters(): '.print_r($model->getParameters(), true));
             return false;
         }
         
-        $instance->workerModel = $model;
         $instance->taskGuid = $model->getTaskGuid();
         return $instance;
     }

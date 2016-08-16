@@ -60,6 +60,16 @@ END LICENSE AND COPYRIGHT
  */
 class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
     /**
+     * This constant values define the different worker-states
+     * @var string
+     */
+    const STATE_SCHEDULED = 'scheduled';
+    const STATE_WAITING = 'waiting';
+    const STATE_RUNNING = 'running';
+    const STATE_DEFUNCT = 'defunct';
+    const STATE_DONE    = 'done';
+    
+    /**
      * @var ZfExtended_Models_Db_Worker
      */
     protected $dbInstanceClass = 'ZfExtended_Models_Db_Worker';
@@ -73,15 +83,11 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
     protected $maxLifetime = '1 HOUR';
     
     /**
-     * This constant values define the different worker-states
-     * @var string
+     * To prevent that the serialized parameters are unserialized multiple 
+     *  times when calling get we have to cache them. 
+     * @var mixed
      */
-    const STATE_SCHEDULED = 'scheduled';
-    const STATE_WAITING = 'waiting';
-    const STATE_RUNNING = 'running';
-    const STATE_DEFUNCT = 'defunct';
-    const STATE_DONE    = 'done';
-    
+    protected $parameters = null;
     
     /**
      * Wake up a scheduled worker (set state from scheduled to waiting)
@@ -328,9 +334,13 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
     }
     
     /**
-     * returns the deserialized parameters of the worker
+     * returns the unserialized parameters of the worker
+     * stores the unserialized values internally to prevent multiple unserialization (and multiple __wakeup calls) 
      */
     public function getParameters() {
-        return unserialize($this->get('parameters'));
+        if(is_null($this->parameters)) {
+            $this->parameters = unserialize($this->get('parameters'));
+        }
+        return $this->parameters;
     }
 }
