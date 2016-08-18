@@ -34,6 +34,13 @@ END LICENSE AND COPYRIGHT
  * @version 2.0
  *
  */
+
+/**
+ * This fatal errors should be handled in our custom shutdown functions
+ * @var Integer
+ */
+define('FATAL_ERRORS_TO_HANDLE', E_ERROR | E_PARSE | E_CORE_ERROR | E_COMPILE_ERROR);
+
 /**
  * Standard Inhalt der index.php gekapselt
  */

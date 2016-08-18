@@ -33,7 +33,7 @@ abstract class ZfExtended_Worker_Abstract {
     /**
      * @var ZfExtended_Models_Worker
      */
-    protected $workerModel = false;
+    protected $workerModel;
     
     /**
      * @var string taskguid
@@ -43,7 +43,7 @@ abstract class ZfExtended_Worker_Abstract {
     /**
      * @var ZfExtended_Models_Worker
      */
-    protected $finishedWorker = false;
+    protected $finishedWorker;
     
     /**
      * Number of allowed parallel processes for a certain worker
@@ -169,7 +169,7 @@ abstract class ZfExtended_Worker_Abstract {
      * @param unknown $parameters
      */
     private function initWorkerModel($taskGuid, $parameters) {
-        if(empty($this->workerModel)) {
+        if(!empty($this->workerModel)) {
             return;
         }
         $this->workerModel = ZfExtended_Factory::get('ZfExtended_Models_Worker');
@@ -327,6 +327,8 @@ abstract class ZfExtended_Worker_Abstract {
      * @return boolean true if $this->work() runs without errors
      */
     private function _run() {
+        $this->registerShutdown();
+        
         $this->workerModel->setState(ZfExtended_Models_Worker::STATE_RUNNING);
         $this->workerModel->setStarttime(new Zend_Db_Expr('NOW()'));
         $this->workerModel->setMaxRuntime(new Zend_Db_Expr('NOW() + INTERVAL '.$this->workerModel->getMaxLifetime()));
@@ -349,6 +351,19 @@ abstract class ZfExtended_Worker_Abstract {
         }
         
         return $result;
+    }
+    
+    /**
+     * sets the worker model to defunct when a fatal error happens
+     */
+    private function registerShutdown() {
+        register_shutdown_function(function($wm) {
+            $error = error_get_last();
+            if(!is_null($error) && ($error['type'] & FATAL_ERRORS_TO_HANDLE)) {
+                $wm->setState(ZfExtended_Models_Worker::STATE_DEFUNCT);
+                $wm->save();
+            }
+        }, $this->workerModel);
     }
     
     protected function wakeUpAndStartNextWorkers($taskGuid) {
