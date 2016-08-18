@@ -73,6 +73,10 @@ class ZfExtended_BaseIndex{
      *
      */
     protected function  __construct($indexpath) {
+        if (version_compare(PHP_VERSION, '5.6.0', '<') || version_compare(PHP_VERSION, '7.0.0', '>')) {
+            throw new Exception('Please use PHP in a version > 5.6.0 and < 7.0.0!');
+        }
+        
         if(!mb_internal_encoding("UTF-8")){
             throw new Exception('mb_internal_encoding("UTF-8") could not be set!');
         }
