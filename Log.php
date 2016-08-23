@@ -81,7 +81,7 @@ class  ZfExtended_Log extends ZfExtended_Mail{
      */
     public function logError(string $message,string $longMessage=NULL){
         $viewRenderer = ZfExtended_Zendoverwrites_Controller_Action_HelperBroker::getStaticHelper('ViewRenderer');
-        $longMessage .= $this->getUrlLogMessage();
+        //$longMessage .= $this->getUrlLogMessage();
         $message = $this->addUserInfo($message);
         error_log($this->_className.': '.$message.
                 "\r\n                       ".$longMessage);
@@ -125,7 +125,7 @@ class  ZfExtended_Log extends ZfExtended_Mail{
     protected function elog(Exception $e) {
         $message = $e->getMessage();
         $trace = $e->getTraceAsString();
-        $trace .= $this->getUrlLogMessage();
+        //$trace .= $this->getUrlLogMessage();
         error_log($this->_className.': '.$message.
                 "\r\n                       Trace: \r\n".$trace);
         
@@ -183,8 +183,8 @@ class  ZfExtended_Log extends ZfExtended_Mail{
     protected function sendMailDefault(string $message){
         $ro = $this->_config->runtimeOptions;
         if($ro && $ro->disableErrorMails && $ro->disableErrorMails->default == 1){
-            error_log($this->_className.': Versand der Default-Fehlermails ohne dump deaktiviert - Subject: '.
-                    $message);
+            //error_log($this->_className.': Versand der Default-Fehlermails ohne dump deaktiviert - Subject: '.
+                    //$message);
             return;
         }
         $this->sendMail($this->_className.' - Kurzmeldung: '.$message);
@@ -192,8 +192,8 @@ class  ZfExtended_Log extends ZfExtended_Mail{
     protected function sendMailMinidump(string $message, string $data){
         $ro = $this->_config->runtimeOptions;
         if($ro && $ro->disableErrorMails && $ro->disableErrorMails->minidump == 1){
-            error_log($this->_className.': Versand der Minidump-Fehlermails deaktiviert - Subject: '.
-                    $message.' Attachment Size: '.strlen($data));
+            //error_log($this->_className.': Versand der Minidump-Fehlermails deaktiviert - Subject: '.
+                    //$message.' Attachment Size: '.strlen($data));
             return;
         }
         $this->sendMail($this->_className.': '.$message, $data);

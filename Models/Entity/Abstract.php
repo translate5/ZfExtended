@@ -143,6 +143,7 @@ abstract class ZfExtended_Models_Entity_Abstract {
         //load implies loading one Row, so use only the first row
         return $this->row = $rowset->rewind()->current();
     }
+    
     /**
      * Fetches one row in an object of type Zend_Db_Table_Row_Abstract
      *

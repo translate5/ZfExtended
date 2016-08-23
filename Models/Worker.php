@@ -32,6 +32,7 @@ END LICENSE AND COPYRIGHT
  * Abstract Worker Class
  * 
  * @method void setId() setId(integer $id)
+ * @method void setParentId() setParentId(integer $id)
  * @method void setState() setState(string $state)
  * @method void setWorker() setWorker(string $phpClassName)
  * @method void setResource() setResource(string $resource)
@@ -45,6 +46,7 @@ END LICENSE AND COPYRIGHT
  * @method void setBlockingType() setBlockingType(string $blockingType)
  * 
  * @method integer getId()
+ * @method integer getParentId() getParentId()
  * @method string getState()
  * @method string getWorker()
  * @method string getResource()
@@ -56,7 +58,7 @@ END LICENSE AND COPYRIGHT
  * @method string getHash()
  * @method integer getMaxParallelProcesses()
  * @method string getBlockingType()
- *  
+ * 
  */
 class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
     /**
@@ -254,7 +256,7 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
      * for the given resource $resourceName
      * 
      * @param string $resourceName
-     * @param string $validSlots optional array with valid Solts. All slots in the result which are not in this array of valid solts will be removed
+     * @param string $validSlots optional array with valid Slots. All slots in the result which are not in this array of valid slots will be removed
      * 
      * @return array: list of array(slot, count) for the given resource
      */
@@ -342,5 +344,12 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
             $this->parameters = unserialize($this->get('parameters'));
         }
         return $this->parameters;
+    }
+    
+    /**
+     * Returns this worker as string: Worker, id, state. 
+     */
+    public function __toString() {
+        return sprintf('%s (id: %s, state: %s, slot: %s)', $this->getWorker(), $this->getId(), $this->getState(), $this->getSlot());
     }
 }

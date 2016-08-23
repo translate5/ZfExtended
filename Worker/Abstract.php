@@ -29,6 +29,24 @@ END LICENSE AND COPYRIGHT
 */
 
 abstract class ZfExtended_Worker_Abstract {
+    /**
+     * With blocking type slot, the maximum of parallel workers is defined by the available slots for this resource.
+     * @var string
+     */
+    const BLOCK_SLOT = 'slot';
+    
+    /**
+     * If a worker with blocking type "resource" is running, no other queued worker with same resource may be started at the same time.
+     * @var string
+     */
+    const BLOCK_RESOURCE = 'resource';
+    
+    /**
+     * If a worker with blocking global is running, no other queued worker may be started
+     * No other queued worker means, regardless of maxParallelProcesses and regardless of resource.
+     * @var string
+     */
+    const BLOCK_GLOBAL = 'global';
     
     /**
      * @var ZfExtended_Models_Worker
@@ -52,29 +70,26 @@ abstract class ZfExtended_Worker_Abstract {
     protected $maxParallelProcesses = 1;
     
     /**
-     * With blocking type slot, the maximum of parallel workers is defined by the available slots for this resource.
-     * @var string
-     */
-    const BLOCK_SLOT = 'slot';
-    
-    /**
-     * If a worker with blocking type "resource" is running, no other queued worker with same resource may be started at the same time.
-     * @var string
-     */
-    const BLOCK_RESOURCE = 'resource';
-    
-    /**
-     * If a worker with blocking global is running, no other queued worker may be started
-     * No other queued worker means, regardless of maxParallelProcesses and regardless of resource.
-     * @var string
-     */
-    const BLOCK_GLOBAL = 'global';
-    
-    /**
      * Blocking-typ for this certain worker
      * @var const blocking-type BLOCK_XYZ
      */
     protected $blockingType = self::BLOCK_SLOT;
+    
+    /**
+     * switch if the queue call of the worker will block the current thread until the worker was called
+     *  per default our workers are non blocking
+     *  like block and non blocking sockets
+     * Has nothing to do with the above blocking type!
+     * see also $blockingTimeout
+     * @var string
+     */
+    protected $isBlocking = false;
+    
+    /**
+     * Per default a "socket blocking like" worker is cancelled after 3600 seconds.
+     * @var integer
+     */
+    protected $blockingTimeout = 3600;
     
     /**
      * holds the result-values of processing method $this->work()
@@ -235,13 +250,16 @@ abstract class ZfExtended_Worker_Abstract {
     
     /**
      * 
-     * @param string $state; default NULL
+     * @param number $parentId optional, defaults to 0. Should contain the workerId of the parent worker.
+     * @param state $state optional, defaults to null. Designed to queue a worker with a desired state.
+     * @return integer returns the id of the newly created worker DB entry
      */
-    public function queue($state = NULL) {
+    public function queue($parentId = 0, $state = NULL) {
         $this->checkIsInitCalled();
         $tempSlot = $this->calculateQueuedSlot();
         $this->workerModel->setResource($tempSlot['resource']);
         $this->workerModel->setSlot($tempSlot['slot']);
+        $this->workerModel->setParentId($parentId);
         $this->workerModel->setMaxParallelProcesses($this->maxParallelProcesses);
         if(!is_null($state)){
             $this->workerModel->setState($state);
@@ -249,8 +267,75 @@ abstract class ZfExtended_Worker_Abstract {
         $this->workerModel->save();
         
         $this->wakeUpAndStartNextWorkers($this->workerModel->getTaskGuid());
+        
+        $this->emulateBlocking();
+        return $this->workerModel->getId();
     }
     
+    /**
+     * Sets the queue call of this worker to blocking, 
+     *  that means the current process remains in an endless loop until the worker was called.
+     *  Like stream set blocking
+     * @param bool $blocking
+     */
+    public function setBlocking($blocking = true) {
+        $this->isBlocking = $blocking;
+    }
+    
+    /**
+     * waits until the worker with the given ID is done
+     *  defunct will trigger an exception
+     * @param string $taskGuid
+     * @param Closure $filter optional filter with the loaded ZfExtended_Models_Worker as parameter, must return true to wait for the model or false to not. 
+     * @return boolean true if something found to wait on, false if not
+     */
+    public function waitFor(string $taskGuid, Closure $filter = null) {
+        $wm = $this->workerModel = ZfExtended_Factory::get('ZfExtended_Models_Worker');
+        /* @var $wm ZfExtended_Models_Worker */
+        
+        //set a default filter if nothing given
+        is_null($filter) && $filter = function() {
+            return true;
+        };
+        
+        //TODO: getting the class name this way is not factory overwrite aware: 
+        if($wm->loadLatestOpen(get_class($this), $taskGuid) && $filter($wm)) {
+            $this->setBlocking();
+            $this->emulateBlocking();
+        }
+    }
+    
+    /**
+     * emulates a blocking worker queue call
+     * @throws ZfExtended_Exception
+     */
+    protected function emulateBlocking() {
+        if(!$this->isBlocking) {
+            return;
+        }
+        $sleep = 1;
+        $starttime = time();
+        $wm = $this->workerModel;
+        do {
+            sleep($sleep);
+            $runtime = time() - $starttime;
+            
+            // as longer we wait, as longer are getting the intervals to check for the worker.
+            if($runtime > $sleep * 10 && $sleep < 60) {
+                $sleep = $sleep * 2; //should result in a max of 64 seconds
+            }
+            
+            $wm->load($wm->getId());
+            $state = $wm->getState();
+            switch ($state) {
+                case $wm::STATE_DEFUNCT:
+                    throw new ZfExtended_Exception('Worker "'.$wm.'" is defunct!');
+                case $wm::STATE_DONE:
+                    return;
+            }
+        } while($runtime < $this->blockingTimeout);
+        throw new ZfExtended_Exception('Worker "'.$wm.'" was queued blocking and timed out!');
+    }
     
     /**
      * @return array('resource' => ResurceName, 'slot' => SlotName);
