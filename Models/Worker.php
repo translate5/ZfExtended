@@ -324,6 +324,25 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
         return $result;
     }
     
+    /**
+     * returns a summary of the workers states of the current workers group. 
+     *  grouped by state and worker
+     *  Worker group means: same taskGuid, same parent worker.
+     */
+    public function getParentSummary() {
+        $res = $this->db->getAdapter()->query('SELECT w.state, w.worker, count(w.worker) cnt
+            FROM Zf_worker w, Zf_worker me, Zf_worker_dependencies d
+            WHERE 
+            me.id = ?
+            AND (me.parentId = 0 OR me.parentId != 0 AND (w.parentId = me.parentId or w.id = me.parentId)) 
+            AND d.worker = me.worker
+            AND d.dependency = w.worker
+            AND w.taskGuid = ?
+            AND me.taskGuid = ?
+            GROUP BY w.worker, w.state', [$this->getId(), $this->getTaskGuid(), $this->getTaskGuid()]);
+        return $res->fetchAll(Zend_Db::FETCH_OBJ);
+    }
+    
     public function getMaxLifetime() {
         return $this->maxLifetime;
     }

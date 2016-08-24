@@ -86,6 +86,12 @@ abstract class ZfExtended_Worker_Abstract {
     protected $isBlocking = false;
     
     /**
+     * Setting this to false in derived classes disables the check
+     * @var string
+     */
+    protected $enableParentDefuncCheck = true;
+    
+    /**
      * Per default a "socket blocking like" worker is cancelled after 3600 seconds.
      * @var integer
      */
@@ -174,6 +180,36 @@ abstract class ZfExtended_Worker_Abstract {
         self::$resourceName = self::$praefixResourceName.$this->resourcePool;
         
         return true;
+    }
+    
+    /**
+     * Checks the parent workers if they are defunct, if yes set this worker also to defunct and return false
+     * @return boolean returns true when all is OK, false when a parent worker is defunct
+     */
+    protected function checkParentDefunc() {
+        if(! $this->enableParentDefuncCheck){
+            return true;
+        }
+        $wm = $this->workerModel;
+        $summary = $wm->getParentSummary();
+        $defunc = [];
+        foreach($summary as $result) {
+            //when a non defunc worker was found, the whole group of same workers is considered as non defunc
+            // for example multiple termtagger import calls can contain some defunc workers, 
+            // this should not set the whole worker group to defunc
+            if(isset($defunc[$result->worker]) && $defunc[$result->worker] !== false) {
+                continue;
+            }
+            $defunc[$result->worker] = $result->state == $wm::STATE_DEFUNCT;
+        }
+        $defunc = array_filter($defunc);
+        //no defunc workers found
+        if(empty($defunc)) {
+            return true;
+        }
+        $wm->setState($wm::STATE_DEFUNCT);
+        $wm->save();
+        return false;
     }
 
     /**
@@ -413,6 +449,12 @@ abstract class ZfExtended_Worker_Abstract {
      */
     private function _run() {
         $this->registerShutdown();
+        
+        // checks before parent workers before running 
+        if(! $this->checkParentDefunc()) {
+            $this->finishedWorker = clone $this->workerModel;
+            return false;
+        }
         
         $this->workerModel->setState(ZfExtended_Models_Worker::STATE_RUNNING);
         $this->workerModel->setStarttime(new Zend_Db_Expr('NOW()'));
