@@ -301,6 +301,7 @@ abstract class ZfExtended_Worker_Abstract {
             $this->workerModel->setState($state);
         }
         $this->workerModel->save();
+        $this->logit('queued with state '.$this->workerModel->getState());
         
         $this->wakeUpAndStartNextWorkers($this->workerModel->getTaskGuid());
         
@@ -352,6 +353,7 @@ abstract class ZfExtended_Worker_Abstract {
         $sleep = 1;
         $starttime = time();
         $wm = $this->workerModel;
+        $this->logit('is blocking!');
         do {
             sleep($sleep);
             $runtime = time() - $starttime;
@@ -453,6 +455,7 @@ abstract class ZfExtended_Worker_Abstract {
         // checks before parent workers before running 
         if(! $this->checkParentDefunc()) {
             $this->finishedWorker = clone $this->workerModel;
+            $this->logit(' set to defunct by parent!');
             return false;
         }
         
@@ -463,6 +466,7 @@ abstract class ZfExtended_Worker_Abstract {
         
         //error_log($this->workerModel->getId().' '.get_class($this).' # '.$this->workerModel->getTaskGuid().' # '.str_replace("\n",'; ',print_r($this->workerModel->getParameters(),1)));
         $this->workerModel->save();
+        $this->logit('set to running!');
         try {
             $result = $this->work();
             $this->workerModel->setState(ZfExtended_Models_Worker::STATE_DONE);
@@ -495,6 +499,7 @@ abstract class ZfExtended_Worker_Abstract {
     
     protected function wakeUpAndStartNextWorkers($taskGuid) {
         $this->workerModel->wakeupScheduled($taskGuid,  self::$resourceName);
+        $this->logit(__CLASS__.'::'.__FUNCTION__);
         $this->startWorkerQueue();
     }
     
@@ -504,6 +509,7 @@ abstract class ZfExtended_Worker_Abstract {
     private function startWorkerQueue() {
         $trigger = ZfExtended_Factory::get('ZfExtended_Worker_TriggerByHttp');
         /* @var $trigger ZfExtended_Worker_TriggerByHttp */
+        $this->logit(__CLASS__.'::'.__FUNCTION__);
         $trigger->triggerQueue();
     }
     
@@ -532,6 +538,18 @@ abstract class ZfExtended_Worker_Abstract {
     protected function checkIsInitCalled() {
         if(empty($this->workerModel)) {
             throw new ZfExtended_Exception('Please call $worker->init() method before!');
+        }
+    }
+    
+    protected function logit($msg) {
+        if(ZfExtended_Debug::hasLevel('core', 'worker')){
+            if(!empty($this->workerModel)){
+                $msg = 'Worker '.$this->workerModel->getWorker().' ('.$this->workerModel->getId().'): '.$msg;
+            }
+            if(ZfExtended_Debug::hasLevel('core', 'worker',2)){
+                $msg .= "\n".'    by '.$_SERVER['REQUEST_URI'];
+            }
+            error_log($msg);
         }
     }
 }
