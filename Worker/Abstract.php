@@ -76,6 +76,14 @@ abstract class ZfExtended_Worker_Abstract {
     protected $blockingType = self::BLOCK_SLOT;
     
     /**
+     * If this flag is false, multiple workers per taskGuid can be run
+     *  for example the termTagger
+     *  Should be overriden by class extension
+     * @var boolean
+     */
+    protected $onlyOncePerTask = true;
+    
+    /**
      * switch if the queue call of the worker will block the current thread until the worker was called
      *  per default our workers are non blocking
      *  like block and non blocking sockets
@@ -429,8 +437,7 @@ abstract class ZfExtended_Worker_Abstract {
      */
     public function runQueued() {
         $this->checkIsInitCalled();
-        if (!$this->workerModel->setRunningMutex())
-        {
+        if (!$this->workerModel->isMutexAccess()){
             return false;
         }
         
@@ -451,21 +458,25 @@ abstract class ZfExtended_Worker_Abstract {
      */
     private function _run() {
         $this->registerShutdown();
+        //prefilling the finishedWorker for the following return false step outs
+        $this->finishedWorker = clone $this->workerModel;
         
         // checks before parent workers before running 
         if(! $this->checkParentDefunc()) {
-            $this->finishedWorker = clone $this->workerModel;
             $this->logit(' set to defunct by parent!');
             return false;
         }
         
-        $this->workerModel->setState(ZfExtended_Models_Worker::STATE_RUNNING);
-        $this->workerModel->setStarttime(new Zend_Db_Expr('NOW()'));
-        $this->workerModel->setMaxRuntime(new Zend_Db_Expr('NOW() + INTERVAL '.$this->workerModel->getMaxLifetime()));
-        $this->workerModel->setPid(getmypid());
+        //FIXME diese set calls und save durch eine Update ersetzen, welches task bezogen auf andere runnings dieser resource prüft
+        //Dazu: checke im Model ob von außerhalb ein Hash mitgegeben wurde, wenn nein, setze ihn auf 0, damit der checkMutex (der implizit den Hash checkt) kracht.
+
+        if(!$this->workerModel->setRunning($this->onlyOncePerTask)){
+            //the worker can not set to state run, so don't perform the work
+            return false; //FIXME what is this result used for?
+        }
+        //reload, to get running state and timestamps
+        $this->workerModel->load($this->workerModel->getId()); 
         
-        //error_log($this->workerModel->getId().' '.get_class($this).' # '.$this->workerModel->getTaskGuid().' # '.str_replace("\n",'; ',print_r($this->workerModel->getParameters(),1)));
-        $this->workerModel->save();
         $this->logit('set to running!');
         try {
             $result = $this->work();

@@ -146,7 +146,7 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
      * 
      * @return boolean true if workerModel is set to mutex-save
      */
-    public function setRunningMutex() {
+    public function isMutexAccess() {
         // workerModel can not be set to mutex if it is new 
         if (!$this->getId() || !$this->getHash() || $this->getState() != self::STATE_WAITING)
         {
@@ -156,7 +156,7 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
         $data = array('hash' => uniqid(NULL, true));
         
         $whereStatements = array();
-        $whereStatements[] ='id = "'.$this->getId().'"';
+        $whereStatements[] = 'id = "'.$this->getId().'"';
         $whereStatements[] = 'hash = "'.$this->getHash().'"';
         $whereStatements[] = 'state = "'.self::STATE_WAITING.'"';
         
@@ -165,6 +165,37 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
         // workerModel can not be set to mutex because no entry with same id and hash can be found in database
         // nothing to log since this can happen often
         return $countRows > 0;
+    }
+    
+    /**
+     * Sets this workers state to running - if possible
+     * @var boolean $oncePerTaskGuid default true
+     * @return boolean true if task was set to running
+     */
+    public function setRunning($oncePerTaskGuid = true) {
+        $data = [
+            'state' => self::STATE_RUNNING,
+            'starttime' => new Zend_Db_Expr('NOW()'),
+            'maxRuntime' => new Zend_Db_Expr('NOW() + INTERVAL '.$this->getMaxLifetime()),
+            'pid' => getmypid(),
+        ];
+        
+        if(!$oncePerTaskGuid) {
+            return $this->db->update($data, ['id = ?' => $this->getId()]);
+        }
+        //$countRows = $this->db->update($data, $whereStatements);
+        //return $this->_db->update($tableSpec, $data, $where);
+        $sql = 'UPDATE `Zf_worker` w1 LEFT OUTER JOIN `Zf_worker` w2';
+        $sql .= ' ON w1.`taskGuid` = w2.`taskGuid` AND w1.`worker` = w2.`worker` AND w2.`state` = "running" AND w1.`id` != w2.`id`';
+        $sql .= ' SET `w1`.`'.join('` = ?, `w1`.`', array_keys($data)).'` = ?';
+        $sql .= ' WHERE w2.id IS NULL AND w1.id = ?';
+
+        $values = array_values($data);
+        $values[] = $this->getId();
+        
+        $stmt = $this->db->getAdapter()->query($sql, $values);
+        $result = $stmt->rowCount();
+        return $result > 0;
     }
     
     /**
@@ -208,9 +239,11 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
                 $countRunningSlotProcesses = $countedWorkers[$tempResourceSlotSerialized];
             }
             
+            //blocking by taskGuid (means only one worker of same type per taskGuid) is not possible here with less effort
+            // so we move this check into the worker startup
+            
             if ($waiting['blockingType'] == ZfExtended_Worker_Abstract::BLOCK_SLOT
                 && $countRunningSlotProcesses >= $waiting['maxParallelProcesses']) {
-                
                 continue;
             }
             
