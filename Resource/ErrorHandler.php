@@ -92,9 +92,20 @@ class ZfExtended_Resource_ErrorHandler extends Zend_Application_Resource_Resourc
      *
      */
     public static function errorHandler($errno, $errstr, $errfile, $errline ) {
-        if($errno == E_RECOVERABLE_ERROR) {
-            if(preg_match('/^Argument (\d)+ passed to (?:(\w+)::)?([\w{}]+)\(\) must be an instance of (\w+), (\w+) given/', $errstr, $match)) {
-                if($match[4] == $match[5]) return true;
+        $regex = '/^Argument (\d)+ passed to (?:(\w+)::)?([\w{}]+)\(\) must be an instance of (\w+), (\w+) given/';
+        if($errno == E_RECOVERABLE_ERROR && preg_match($regex, $errstr, $match)) {
+            
+            //ensure upwards compatibility to PHP 7 we need this mapping here!
+            switch ($match[4]) {
+                case 'bool':
+                    $match[4] = 'boolean';
+                    break;
+                case 'int':
+                    $match[4] = 'integer';
+                    break;
+            }
+            if($match[4] == $match[5]) {
+                return true;
             }
         }
         $errorCollect = Zend_Registry::get('errorCollect');
