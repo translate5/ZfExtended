@@ -169,6 +169,9 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
     
     /**
      * Sets this workers state to running - if possible
+     * If it is a direct run (empty ID) the worker will be started always,
+     *  regardless of already existing workers with the same taskGuid
+     *  
      * @var boolean $oncePerTaskGuid default true
      * @return boolean true if task was set to running
      */
@@ -180,8 +183,18 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
             'pid' => getmypid(),
         ];
         
+        $id = $this->getId();
+        //if there is no id, that means we are in a direct run and the worker should be started in any case
+        if(empty($id)) {
+            foreach($data as $k => $v) {
+                $this->set($k, $v);
+            }
+            $this->save();
+            return true;
+        }
+        
         if(!$oncePerTaskGuid) {
-            return $this->db->update($data, ['id = ?' => $this->getId()]);
+            return $this->db->update($data, ['id = ?' => $id]);
         }
         //$countRows = $this->db->update($data, $whereStatements);
         //return $this->_db->update($tableSpec, $data, $where);
