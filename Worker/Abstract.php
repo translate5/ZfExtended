@@ -274,7 +274,7 @@ abstract class ZfExtended_Worker_Abstract {
         $instance->workerModel = $model;
         
         if (!$instance->init($model->getTaskGuid(), $model->getParameters())) {
-            $this->log->logError('Worker can not be instanciated from stored workerModel', __CLASS__.' -> '.__FUNCTION__.'; $model->getParameters(): '.print_r($model->getParameters(), true));
+            $instance->log->logError('Worker can not be instanced from stored workerModel', __CLASS__.' -> '.__FUNCTION__.'; $model->getParameters(): '.print_r($model->getParameters(), true));
             return false;
         }
         
