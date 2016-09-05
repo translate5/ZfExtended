@@ -177,7 +177,9 @@ class ZfExtended_Worker_TriggerByHttp {
         $out = $this->method.' '.$this->path.$this->getParameters.' HTTP/1.1'."\r\n";
         $out .= 'Host: '.$this->host."\r\n";
         $out .= 'Accept: application/json'."\r\n"; // this is translate5-specific !!!
-        //$out .= 'Cookie: XDEBUG_SESSION=ECLIPSE_DBGP_192.168.178.31'."\r\n";
+        if(ZfExtended_Debug::hasLevel('core', 'worker')){
+            $out .= 'Cookie: XDEBUG_SESSION=ECLIPSE';
+        }
         
         if ($this->method == 'GET') {
             $out .= 'Connection: Close'."\r\n";

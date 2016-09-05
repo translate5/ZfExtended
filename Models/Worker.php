@@ -32,6 +32,7 @@ END LICENSE AND COPYRIGHT
  * Abstract Worker Class
  * 
  * @method void setId() setId(integer $id)
+ * @method void setParentId() setParentId(integer $id)
  * @method void setState() setState(string $state)
  * @method void setWorker() setWorker(string $phpClassName)
  * @method void setResource() setResource(string $resource)
@@ -45,6 +46,7 @@ END LICENSE AND COPYRIGHT
  * @method void setBlockingType() setBlockingType(string $blockingType)
  * 
  * @method integer getId()
+ * @method integer getParentId() getParentId()
  * @method string getState()
  * @method string getWorker()
  * @method string getResource()
@@ -56,9 +58,19 @@ END LICENSE AND COPYRIGHT
  * @method string getHash()
  * @method integer getMaxParallelProcesses()
  * @method string getBlockingType()
- *  
+ * 
  */
 class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
+    /**
+     * This constant values define the different worker-states
+     * @var string
+     */
+    const STATE_SCHEDULED = 'scheduled';
+    const STATE_WAITING = 'waiting';
+    const STATE_RUNNING = 'running';
+    const STATE_DEFUNCT = 'defunct';
+    const STATE_DONE    = 'done';
+    
     /**
      * @var ZfExtended_Models_Db_Worker
      */
@@ -73,15 +85,11 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
     protected $maxLifetime = '1 HOUR';
     
     /**
-     * This constant values define the different worker-states
-     * @var string
+     * To prevent that the serialized parameters are unserialized multiple 
+     *  times when calling get we have to cache them. 
+     * @var mixed
      */
-    const STATE_SCHEDULED = 'scheduled';
-    const STATE_WAITING = 'waiting';
-    const STATE_RUNNING = 'running';
-    const STATE_DEFUNCT = 'defunct';
-    const STATE_DONE    = 'done';
-    
+    protected $parameters = null;
     
     /**
      * Wake up a scheduled worker (set state from scheduled to waiting)
@@ -138,7 +146,7 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
      * 
      * @return boolean true if workerModel is set to mutex-save
      */
-    public function setRunningMutex() {
+    public function isMutexAccess() {
         // workerModel can not be set to mutex if it is new 
         if (!$this->getId() || !$this->getHash() || $this->getState() != self::STATE_WAITING)
         {
@@ -148,7 +156,7 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
         $data = array('hash' => uniqid(NULL, true));
         
         $whereStatements = array();
-        $whereStatements[] ='id = "'.$this->getId().'"';
+        $whereStatements[] = 'id = "'.$this->getId().'"';
         $whereStatements[] = 'hash = "'.$this->getHash().'"';
         $whereStatements[] = 'state = "'.self::STATE_WAITING.'"';
         
@@ -157,6 +165,50 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
         // workerModel can not be set to mutex because no entry with same id and hash can be found in database
         // nothing to log since this can happen often
         return $countRows > 0;
+    }
+    
+    /**
+     * Sets this workers state to running - if possible
+     * If it is a direct run (empty ID) the worker will be started always,
+     *  regardless of already existing workers with the same taskGuid
+     *  
+     * @var boolean $oncePerTaskGuid default true
+     * @return boolean true if task was set to running
+     */
+    public function setRunning($oncePerTaskGuid = true) {
+        $data = [
+            'state' => self::STATE_RUNNING,
+            'starttime' => new Zend_Db_Expr('NOW()'),
+            'maxRuntime' => new Zend_Db_Expr('NOW() + INTERVAL '.$this->getMaxLifetime()),
+            'pid' => getmypid(),
+        ];
+        
+        $id = $this->getId();
+        //if there is no id, that means we are in a direct run and the worker should be started in any case
+        if(empty($id)) {
+            foreach($data as $k => $v) {
+                $this->set($k, $v);
+            }
+            $this->save();
+            return true;
+        }
+        
+        if(!$oncePerTaskGuid) {
+            return $this->db->update($data, ['id = ?' => $id]);
+        }
+        //$countRows = $this->db->update($data, $whereStatements);
+        //return $this->_db->update($tableSpec, $data, $where);
+        $sql = 'UPDATE `Zf_worker` w1 LEFT OUTER JOIN `Zf_worker` w2';
+        $sql .= ' ON w1.`taskGuid` = w2.`taskGuid` AND w1.`worker` = w2.`worker` AND w2.`state` = "running" AND w1.`id` != w2.`id`';
+        $sql .= ' SET `w1`.`'.join('` = ?, `w1`.`', array_keys($data)).'` = ?';
+        $sql .= ' WHERE w2.id IS NULL AND w1.id = ?';
+
+        $values = array_values($data);
+        $values[] = $this->getId();
+        
+        $stmt = $this->db->getAdapter()->query($sql, $values);
+        $result = $stmt->rowCount();
+        return $result > 0;
     }
     
     /**
@@ -200,9 +252,11 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
                 $countRunningSlotProcesses = $countedWorkers[$tempResourceSlotSerialized];
             }
             
+            //blocking by taskGuid (means only one worker of same type per taskGuid) is not possible here with less effort
+            // so we move this check into the worker startup
+            
             if ($waiting['blockingType'] == ZfExtended_Worker_Abstract::BLOCK_SLOT
                 && $countRunningSlotProcesses >= $waiting['maxParallelProcesses']) {
-                
                 continue;
             }
             
@@ -248,7 +302,7 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
      * for the given resource $resourceName
      * 
      * @param string $resourceName
-     * @param string $validSlots optional array with valid Solts. All slots in the result which are not in this array of valid solts will be removed
+     * @param string $validSlots optional array with valid Slots. All slots in the result which are not in this array of valid slots will be removed
      * 
      * @return array: list of array(slot, count) for the given resource
      */
@@ -316,6 +370,25 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
         return $result;
     }
     
+    /**
+     * returns a summary of the workers states of the current workers group. 
+     *  grouped by state and worker
+     *  Worker group means: same taskGuid, same parent worker.
+     */
+    public function getParentSummary() {
+        $res = $this->db->getAdapter()->query('SELECT w.state, w.worker, count(w.worker) cnt
+            FROM Zf_worker w, Zf_worker me, Zf_worker_dependencies d
+            WHERE 
+            me.id = ?
+            AND (me.parentId = 0 OR me.parentId != 0 AND (w.parentId = me.parentId or w.id = me.parentId)) 
+            AND d.worker = me.worker
+            AND d.dependency = w.worker
+            AND w.taskGuid = ?
+            AND me.taskGuid = ?
+            GROUP BY w.worker, w.state', [$this->getId(), $this->getTaskGuid(), $this->getTaskGuid()]);
+        return $res->fetchAll(Zend_Db::FETCH_OBJ);
+    }
+    
     public function getMaxLifetime() {
         return $this->maxLifetime;
     }
@@ -328,9 +401,20 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
     }
     
     /**
-     * returns the deserialized parameters of the worker
+     * returns the unserialized parameters of the worker
+     * stores the unserialized values internally to prevent multiple unserialization (and multiple __wakeup calls) 
      */
     public function getParameters() {
-        return unserialize($this->get('parameters'));
+        if(is_null($this->parameters)) {
+            $this->parameters = unserialize($this->get('parameters'));
+        }
+        return $this->parameters;
+    }
+    
+    /**
+     * Returns this worker as string: Worker, id, state. 
+     */
+    public function __toString() {
+        return sprintf('%s (id: %s, state: %s, slot: %s)', $this->getWorker(), $this->getId(), $this->getState(), $this->getSlot());
     }
 }

@@ -112,7 +112,7 @@ class ZfExtended_Test_ApiHelper {
         
         //enable xdebug debugger in eclipse
         if($this->xdebug) {
-            $http->setCookie('XDEBUG_SESSION','ECLIPSE_DBGP_192.168.178.31');
+            $http->setCookie('XDEBUG_SESSION','netbeans-xdebug');
             $http->setConfig(array('timeout'      => 3600));
         }
         else {
@@ -550,6 +550,15 @@ class ZfExtended_Test_ApiHelper {
     }
     
     /**
+     * Adds the given XML file as task-template, using the importTbx way, since this works out of the box
+     * @param string $path
+     */
+    public function addImportTaskTemplate($path) {
+        $data = file_get_contents($this->testRoot.'/'.$path);
+        $this->addFilePlain('importTbx', $data, 'application/xml', 'task-template.xml');
+    }
+    
+    /**
      * Adds directly data to be imported instead of providing a filepath
      * useful for creating CSV testdata direct in testcase
      * 
@@ -558,6 +567,28 @@ class ZfExtended_Test_ApiHelper {
      */
     public function addImportPlain($data, $mime = 'application/csv', $filename = 'apiTest.csv') {
         $this->addFilePlain('importUpload', $data, $mime, $filename);
+    }
+    
+    /**
+     * Receives a two dimensional array and add it as a CSV file to the task
+     * MID col and CSV head line is added automatically
+     * 
+     * multiple targets currently not supported!
+     * 
+     * @param array $data
+     */
+    public function addImportArray(array $data) {
+        $i = 1;
+        $data = array_map(function($row) use (&$i){
+            $row = array_map(function($cell){
+                //escape " chars
+                return str_replace('"', '""', $cell);
+            },$row);
+            array_unshift($row, $i++); //add mid
+            return '"'.join('","', $row).'"';
+        }, $data);
+        array_unshift($data, '"mid", "quelle", "ziel"');
+        $this->addImportPlain(join("\n", $data));
     }
     
     /**

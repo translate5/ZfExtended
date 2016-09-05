@@ -127,15 +127,27 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
       Zend_Registry::set('rest_messages', $this->restMessages);
       
       $this->log = ZfExtended_Factory::get('ZfExtended_Log');
+      
+      //perhaps not working under windows, see comment on php.net
+      //enable simple front end interaction with fatal errors
+      register_shutdown_function(function() {
+          $error = error_get_last();
+          if(!is_null($error) && ($error['type'] & FATAL_ERRORS_TO_HANDLE)) {
+              ob_get_clean(); //to remove Internal Server Error headline
+              $res = new stdClass();
+              $res->errors = $error;
+              echo json_encode($res);
+          }
+      });
   }
   
   /**
    * triggers event "before<Controllername>Action"
    */
-   public function preDispatch() {
-      $eventName = "before".ucfirst($this->_request->getActionName())."Action";
-      $this->events->trigger($eventName, $this, array('entity' => $this->entity, 'params' => $this->getAllParams()));
-   }
+  public function preDispatch() {
+    $eventName = "before".ucfirst($this->_request->getActionName())."Action";
+    $this->events->trigger($eventName, $this, array('entity' => $this->entity, 'params' => $this->getAllParams()));
+  }
     
   /**
    * triggers event "after<Controllername>Action"

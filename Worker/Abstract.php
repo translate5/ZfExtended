@@ -29,28 +29,6 @@ END LICENSE AND COPYRIGHT
 */
 
 abstract class ZfExtended_Worker_Abstract {
-    
-    /**
-     * @var ZfExtended_Models_Worker
-     */
-    protected $workerModel = false;
-    
-    /**
-     * @var string taskguid
-     */
-    protected $taskGuid;
-    
-    /**
-     * @var ZfExtended_Models_Worker
-     */
-    protected $finishedWorker = false;
-    
-    /**
-     * Number of allowed parallel processes for a certain worker
-     * @var integer
-     */
-    protected $maxParallelProcesses = 1;
-    
     /**
      * With blocking type slot, the maximum of parallel workers is defined by the available slots for this resource.
      * @var string
@@ -71,11 +49,61 @@ abstract class ZfExtended_Worker_Abstract {
     const BLOCK_GLOBAL = 'global';
     
     /**
+     * @var ZfExtended_Models_Worker
+     */
+    protected $workerModel;
+    
+    /**
+     * @var string taskguid
+     */
+    protected $taskGuid;
+    
+    /**
+     * @var ZfExtended_Models_Worker
+     */
+    protected $finishedWorker;
+    
+    /**
+     * Number of allowed parallel processes for a certain worker
+     * @var integer
+     */
+    protected $maxParallelProcesses = 1;
+    
+    /**
      * Blocking-typ for this certain worker
      * @var const blocking-type BLOCK_XYZ
      */
     protected $blockingType = self::BLOCK_SLOT;
     
+    /**
+     * If this flag is false, multiple workers per taskGuid can be run
+     *  for example the termTagger
+     *  Should be overriden by class extension
+     * @var boolean
+     */
+    protected $onlyOncePerTask = true;
+    
+    /**
+     * switch if the queue call of the worker will block the current thread until the worker was called
+     *  per default our workers are non blocking
+     *  like block and non blocking sockets
+     * Has nothing to do with the above blocking type!
+     * see also $blockingTimeout
+     * @var string
+     */
+    protected $isBlocking = false;
+    
+    /**
+     * Setting this to false in derived classes disables the check
+     * @var string
+     */
+    protected $enableParentDefuncCheck = true;
+    
+    /**
+     * Per default a "socket blocking like" worker is cancelled after 3600 seconds.
+     * @var integer
+     */
+    protected $blockingTimeout = 3600;
     
     /**
      * holds the result-values of processing method $this->work()
@@ -151,6 +179,58 @@ abstract class ZfExtended_Worker_Abstract {
         
         $this->taskGuid = $taskGuid;
         
+        $this->initWorkerModel($taskGuid, $parameters);
+        
+        if (isset($parameters['resourcePool']) && in_array($parameters['resourcePool'], static::$allowedResourcePools)) {
+            $this->resourcePool = $parameters['resourcePool'];
+        }
+        
+        self::$resourceName = self::$praefixResourceName.$this->resourcePool;
+        
+        return true;
+    }
+    
+    /**
+     * Checks the parent workers if they are defunct, if yes set this worker also to defunct and return false
+     * @return boolean returns true when all is OK, false when a parent worker is defunct
+     */
+    protected function checkParentDefunc() {
+        if(! $this->enableParentDefuncCheck){
+            return true;
+        }
+        $wm = $this->workerModel;
+        $summary = $wm->getParentSummary();
+        $defunc = [];
+        foreach($summary as $result) {
+            //when a non defunc worker was found, the whole group of same workers is considered as non defunc
+            // for example multiple termtagger import calls can contain some defunc workers, 
+            // this should not set the whole worker group to defunc
+            if(isset($defunc[$result->worker]) && $defunc[$result->worker] !== false) {
+                continue;
+            }
+            $defunc[$result->worker] = $result->state == $wm::STATE_DEFUNCT;
+        }
+        $defunc = array_filter($defunc);
+        //no defunc workers found
+        if(empty($defunc)) {
+            return true;
+        }
+        $wm->setState($wm::STATE_DEFUNCT);
+        $wm->save();
+        return false;
+    }
+
+    /**
+     * creates the internal worker model ready for DB storage if it not already exists.
+     * The latter case happens when using instanceByModels
+     * 
+     * @param unknown $taskGuid
+     * @param unknown $parameters
+     */
+    private function initWorkerModel($taskGuid, $parameters) {
+        if(!empty($this->workerModel)) {
+            return;
+        }
         $this->workerModel = ZfExtended_Factory::get('ZfExtended_Models_Worker');
         
         $this->workerModel->setState(ZfExtended_Models_Worker::STATE_SCHEDULED);
@@ -161,18 +241,7 @@ abstract class ZfExtended_Worker_Abstract {
         $this->workerModel->setHash(uniqid(NULL, true));
         
         $this->workerModel->setBlockingType($this->blockingType);
-        
-        if (isset($parameters['resourcePool'])) {
-            if (in_array($parameters['resourcePool'], static::$allowedResourcePools)) {
-                $this->resourcePool = $parameters['resourcePool'];
-            }
-        }
-        
-        self::$resourceName = self::$praefixResourceName.$this->resourcePool;
-        
-        return true;
     }
-    
     
     /**
      * Returns the internal worker-model of this worker
@@ -201,12 +270,14 @@ abstract class ZfExtended_Worker_Abstract {
     static public function instanceByModel(ZfExtended_Models_Worker $model) {
         $instance = ZfExtended_Factory::get($model->getWorker());
         /* @var $instance ZfExtended_Worker_Abstract */
+        
+        $instance->workerModel = $model;
+        
         if (!$instance->init($model->getTaskGuid(), $model->getParameters())) {
-            $this->log->logError('Worker can not be instanciated from stored workerModel', __CLASS__.' -> '.__FUNCTION__.'; $model->getParameters(): '.print_r($model->getParameters(), true));
+            $instance->log->logError('Worker can not be instanced from stored workerModel', __CLASS__.' -> '.__FUNCTION__.'; $model->getParameters(): '.print_r($model->getParameters(), true));
             return false;
         }
         
-        $instance->workerModel = $model;
         $instance->taskGuid = $model->getTaskGuid();
         return $instance;
     }
@@ -223,22 +294,94 @@ abstract class ZfExtended_Worker_Abstract {
     
     /**
      * 
-     * @param string $state; default NULL
+     * @param number $parentId optional, defaults to 0. Should contain the workerId of the parent worker.
+     * @param state $state optional, defaults to null. Designed to queue a worker with a desired state.
+     * @return integer returns the id of the newly created worker DB entry
      */
-    public function queue($state = NULL) {
+    public function queue($parentId = 0, $state = NULL) {
         $this->checkIsInitCalled();
         $tempSlot = $this->calculateQueuedSlot();
         $this->workerModel->setResource($tempSlot['resource']);
         $this->workerModel->setSlot($tempSlot['slot']);
+        $this->workerModel->setParentId($parentId);
         $this->workerModel->setMaxParallelProcesses($this->maxParallelProcesses);
         if(!is_null($state)){
             $this->workerModel->setState($state);
         }
         $this->workerModel->save();
+        $this->logit('queued with state '.$this->workerModel->getState());
         
         $this->wakeUpAndStartNextWorkers($this->workerModel->getTaskGuid());
+        
+        $this->emulateBlocking();
+        return $this->workerModel->getId();
     }
     
+    /**
+     * Sets the queue call of this worker to blocking, 
+     *  that means the current process remains in an endless loop until the worker was called.
+     *  Like stream set blocking
+     * @param bool $blocking
+     */
+    public function setBlocking($blocking = true) {
+        $this->isBlocking = $blocking;
+    }
+    
+    /**
+     * waits until the worker with the given ID is done
+     *  defunct will trigger an exception
+     * @param string $taskGuid
+     * @param Closure $filter optional filter with the loaded ZfExtended_Models_Worker as parameter, must return true to wait for the model or false to not. 
+     * @return boolean true if something found to wait on, false if not
+     */
+    public function waitFor(string $taskGuid, Closure $filter = null) {
+        $wm = $this->workerModel = ZfExtended_Factory::get('ZfExtended_Models_Worker');
+        /* @var $wm ZfExtended_Models_Worker */
+        
+        //set a default filter if nothing given
+        is_null($filter) && $filter = function() {
+            return true;
+        };
+        
+        //TODO: getting the class name this way is not factory overwrite aware: 
+        if($wm->loadLatestOpen(get_class($this), $taskGuid) && $filter($wm)) {
+            $this->setBlocking();
+            $this->emulateBlocking();
+        }
+    }
+    
+    /**
+     * emulates a blocking worker queue call
+     * @throws ZfExtended_Exception
+     */
+    protected function emulateBlocking() {
+        if(!$this->isBlocking) {
+            return;
+        }
+        $sleep = 1;
+        $starttime = time();
+        $wm = $this->workerModel;
+        $this->logit('is blocking!');
+        do {
+            sleep($sleep);
+            $runtime = time() - $starttime;
+            
+            // as longer we wait, as longer are getting the intervals to check for the worker.
+            if($runtime > $sleep * 10 && $sleep < 60) {
+                $sleep = $sleep * 2; //should result in a max of 64 seconds
+            }
+            
+            $wm->load($wm->getId());
+            $state = $wm->getState();
+            switch ($state) {
+                case $wm::STATE_DEFUNCT:
+                    throw new ZfExtended_Exception('Worker "'.$wm.'" is defunct!');
+                case $wm::STATE_DONE:
+                    return;
+            }
+        } while($runtime < $this->blockingTimeout);
+        throw new ZfExtended_Exception('Worker "'.$wm.'" was queued blocking and timed out!');
+    }
     
     /**
      * @return array('resource' => ResurceName, 'slot' => SlotName);
@@ -294,8 +437,7 @@ abstract class ZfExtended_Worker_Abstract {
      */
     public function runQueued() {
         $this->checkIsInitCalled();
-        if (!$this->workerModel->setRunningMutex())
-        {
+        if (!$this->workerModel->isMutexAccess()){
             return false;
         }
         
@@ -315,13 +457,27 @@ abstract class ZfExtended_Worker_Abstract {
      * @return boolean true if $this->work() runs without errors
      */
     private function _run() {
-        $this->workerModel->setState(ZfExtended_Models_Worker::STATE_RUNNING);
-        $this->workerModel->setStarttime(new Zend_Db_Expr('NOW()'));
-        $this->workerModel->setMaxRuntime(new Zend_Db_Expr('NOW() + INTERVAL '.$this->workerModel->getMaxLifetime()));
-        $this->workerModel->setPid(getmypid());
+        $this->registerShutdown();
+        //prefilling the finishedWorker for the following return false step outs
+        $this->finishedWorker = clone $this->workerModel;
         
-        //error_log($this->workerModel->getId().' '.get_class($this).' # '.$this->workerModel->getTaskGuid().' # '.str_replace("\n",'; ',print_r($this->workerModel->getParameters(),1)));
-        $this->workerModel->save();
+        // checks before parent workers before running 
+        if(! $this->checkParentDefunc()) {
+            $this->logit(' set to defunct by parent!');
+            return false;
+        }
+        
+        //FIXME diese set calls und save durch eine Update ersetzen, welches task bezogen auf andere runnings dieser resource prüft
+        //Dazu: checke im Model ob von außerhalb ein Hash mitgegeben wurde, wenn nein, setze ihn auf 0, damit der checkMutex (der implizit den Hash checkt) kracht.
+
+        if(!$this->workerModel->setRunning($this->onlyOncePerTask)){
+            //the worker can not set to state run, so don't perform the work
+            return false; //FIXME what is this result used for?
+        }
+        //reload, to get running state and timestamps
+        $this->workerModel->load($this->workerModel->getId()); 
+        
+        $this->logit('set to running!');
         try {
             $result = $this->work();
             $this->workerModel->setState(ZfExtended_Models_Worker::STATE_DONE);
@@ -339,8 +495,22 @@ abstract class ZfExtended_Worker_Abstract {
         return $result;
     }
     
+    /**
+     * sets the worker model to defunct when a fatal error happens
+     */
+    private function registerShutdown() {
+        register_shutdown_function(function($wm) {
+            $error = error_get_last();
+            if(!is_null($error) && ($error['type'] & FATAL_ERRORS_TO_HANDLE)) {
+                $wm->setState(ZfExtended_Models_Worker::STATE_DEFUNCT);
+                $wm->save();
+            }
+        }, $this->workerModel);
+    }
+    
     protected function wakeUpAndStartNextWorkers($taskGuid) {
         $this->workerModel->wakeupScheduled($taskGuid,  self::$resourceName);
+        $this->logit(__CLASS__.'::'.__FUNCTION__);
         $this->startWorkerQueue();
     }
     
@@ -350,6 +520,7 @@ abstract class ZfExtended_Worker_Abstract {
     private function startWorkerQueue() {
         $trigger = ZfExtended_Factory::get('ZfExtended_Worker_TriggerByHttp');
         /* @var $trigger ZfExtended_Worker_TriggerByHttp */
+        $this->logit(__CLASS__.'::'.__FUNCTION__);
         $trigger->triggerQueue();
     }
     
@@ -378,6 +549,18 @@ abstract class ZfExtended_Worker_Abstract {
     protected function checkIsInitCalled() {
         if(empty($this->workerModel)) {
             throw new ZfExtended_Exception('Please call $worker->init() method before!');
+        }
+    }
+    
+    protected function logit($msg) {
+        if(ZfExtended_Debug::hasLevel('core', 'worker')){
+            if(!empty($this->workerModel)){
+                $msg = 'Worker '.$this->workerModel->getWorker().' ('.$this->workerModel->getId().'): '.$msg;
+            }
+            if(ZfExtended_Debug::hasLevel('core', 'worker',2)){
+                $msg .= "\n".'    by '.$_SERVER['REQUEST_URI'];
+            }
+            error_log($msg);
         }
     }
 }
