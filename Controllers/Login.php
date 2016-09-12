@@ -59,22 +59,6 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
      * @var ZfExtended_Zendoverwrites_Form
      */
     protected  $_form;
-    /**
-     * @var string the name of the table against the login is validated
-     */
-    protected $_authTableName;
-    /**
-     * @var string the identityColumn in the authTable
-     */
-    protected $_identityColumn;
-    /**
-     * @var string the credentialColumn in the authTable
-     */
-    protected $_credentialColumn;
-    /**
-     * @var string the credentialTreatment in the authTable
-     */
-    protected $_credentialTreatment;
     
     public function init(){
         parent::init();
@@ -180,9 +164,7 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
      * @param string $passwd
      */
     protected function authIsValid($login, $passwd) {
-        return $this->_helper->auth->isValid($login,$passwd,$this->_authTableName,
-                    $this->_identityColumn,$this->_credentialColumn,
-                    $this->_credentialTreatment);
+        return $this->_helper->auth->isValid($login,$passwd);
     }
     
     /**

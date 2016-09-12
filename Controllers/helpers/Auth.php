@@ -40,25 +40,23 @@ class ZfExtended_Controller_Helper_Auth extends Zend_Controller_Action_Helper_Ab
      *
      * @param  string                   $login 
      * @param  string                   $passwd in clear text
-     * @param  string                   $authTableName as taken by Zend_Auth_Adapter_DbTable
-     * @param  string                   $identityColumn as taken by Zend_Auth_Adapter_DbTable
-     * @param  string                   $credentialColumn as taken by Zend_Auth_Adapter_DbTable
-     * @param  string                   $credentialTreatment as taken by Zend_Auth_Adapter_DbTable
      * @return boolean
      */
-    public function isValid(string $login, string $passwd, string $authTableName,string $identityColumn,
-            string $credentialColumn, string $credentialTreatment) {
+    public function isValid(string $login, string $passwd, $treatment = null) {
+        $config = Zend_Registry::get('config');
+        $auth = $config->authentication;
+        
         $db = Zend_Registry::get('db');
         $authAdapter = new Zend_Auth_Adapter_DbTable(
             $db,
-            $authTableName,
-            $identityColumn,
-            $credentialColumn,
-            $credentialTreatment
+            $auth->tableName,
+            $auth->identityColumn,
+            $auth->credentialColumn,
+            is_null($treatment) ? $auth->credentialTreatment : $treatment
         );
         $authAdapter->setIdentity($login)->setCredential($passwd);
         $auth = Zend_Auth::getInstance();
         $result = $auth->authenticate($authAdapter);
-        return $result->isValid()?true:false;
+        return $result->isValid();
     }
 }
