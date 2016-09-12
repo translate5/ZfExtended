@@ -53,7 +53,6 @@ abstract class ZfExtended_Controllers_Action extends Zend_Controller_Action {
      */
     protected $events = false;
     
-    
     public function __construct(Zend_Controller_Request_Abstract $request, Zend_Controller_Response_Abstract $response, array $invokeArgs = array()) {
         parent::__construct($request, $response, $invokeArgs);
         $this->_helper = new ZfExtended_Zendoverwrites_Controller_Action_HelperBroker($this);
@@ -74,6 +73,13 @@ abstract class ZfExtended_Controllers_Action extends Zend_Controller_Action {
     {
         $eventName = "before".ucfirst($this->_request->getActionName())."Action";
         $this->events->trigger($eventName, $this);
+        
+        //seted variable from frontend who will show us if the mnt mode is active or not
+        
+        
+        //if (!$this->_response->isException()) {
+		//    throw new ZfExtended_Models_MaintenanceException();
+       // }
     }
     
     /**
@@ -103,4 +109,3 @@ abstract class ZfExtended_Controllers_Action extends Zend_Controller_Action {
         return $match[1].'.'.$match[2].'.'.$match[3];
     }
 }
-

@@ -135,6 +135,10 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
    public function preDispatch() {
       $eventName = "before".ucfirst($this->_request->getActionName())."Action";
       $this->events->trigger($eventName, $this, array('entity' => $this->entity, 'params' => $this->getAllParams()));
+      
+      if (!$this->_response->isException()) {
+      	throw new ZfExtended_Models_MaintenanceException();
+      }
    }
     
   /**

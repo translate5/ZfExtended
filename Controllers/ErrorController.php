@@ -284,6 +284,7 @@ class ErrorController extends ZfExtended_Controllers_Action
                 //FIXME wie machen dass das immer in entwicklungsumgebung??? 
                 //$this->_renderScript = 'error/errorAdmin.phtml';
             }
+            //$this->_renderScript = 'error/mainteinance.phtml';
         }
         
         if(($missingAction || $notFound || $missingController) && !$this->isRestRoute()) {
