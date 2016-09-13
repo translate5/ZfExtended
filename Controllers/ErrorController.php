@@ -284,9 +284,11 @@ class ErrorController extends ZfExtended_Controllers_Action
                 //FIXME wie machen dass das immer in entwicklungsumgebung??? 
                 //$this->_renderScript = 'error/errorAdmin.phtml';
             }
-            //$this->_renderScript = 'error/mainteinance.phtml';
         }
-        
+        if($this->_exception->getCode() == '503'){
+        	Zend_Layout::getMvcInstance()->disableLayout();
+            $this->_renderScript = 'error/maintenance.phtml';
+        }
         if(($missingAction || $notFound || $missingController) && !$this->isRestRoute()) {
             $this->_isHttp404 = true;
             $this->view->errors[0]->_errorMessage = $this->_translate->_('Seite nicht gefunden: ').$_SERVER['REQUEST_URI'].$this->_translate->_('/ Aufruf erfolgte durch IP: ').$_SERVER['REMOTE_ADDR'];
