@@ -44,7 +44,6 @@ END LICENSE AND COPYRIGHT
  * @method void setPasswd() setPassword(string $passwd)
  * @method void setGender() setGender(string $gender)
  * @method void setLogin() setLogin(string $login)
- * @method void setLocale() setLocale(string $locale)
  * @method integer getId() getId()
  * @method string getUserGuid() getUserGuid()
  * @method string getFirstName() getFirstName()
@@ -56,7 +55,7 @@ END LICENSE AND COPYRIGHT
  * @method string getLogin() getLogin()
  * @method string getLocale() getLocale()
  */
-class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract {
+class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implements ZfExtended_Models_SessionUserInterface {
     const SYSTEM_LOGIN = 'system';
     const SYSTEM_GUID = '{00000000-0000-0000-0000-000000000000}';
     
@@ -102,12 +101,22 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract {
         $userData->roles = explode(',',$userData->roles);
         $userData->userName = $userData->firstName.' '.$userData->surName;
         $userData->loginTimeStamp = $_SERVER['REQUEST_TIME'];
+        $userData->passwd = '********'; // We don't need and don't want the PW hash in the session
         foreach ($userData as &$value) {
             if(is_numeric($value)){
                 $value = (int)$value;
             }
         }
         $userSession->data = $userData;
+    }
+    
+    /**
+     * {@inheritDoc}
+     * @see ZfExtended_Models_SessionUserInterface::setLocale()
+     */
+    public function setLocale(string $locale) {
+        //piping the method to __call, declaration is needed for interface
+        $this->__call('setLocale', [$arguments]);
     }
     
     /**
