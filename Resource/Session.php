@@ -35,6 +35,8 @@ END LICENSE AND COPYRIGHT
  *   Session-Namespace fest. Sie wird nur intern in der Programmierung und für
  *   Flag-Files verwendet und darf aus Sicherheitsgründen nicht nicht in Cookies
  *   gesetzt werden. Sie ist persistent über die gesamte Session
+ *   It is also used as sessionToken for setting the session from external (API auth), 
+ *      to keep security internalSessionUniqId is new generated after setting a session by the token
  * - hinterlegt in der Tabelle sessionMapInternalUniqId ein Mapping zwischen der
  *   session_id (die durch ZfExtended_Controllers_Plugins_SessionRegenerate bei
  *   jedem Aufruf neu gesetzt wird) und der $session->internalSessionUniqId
@@ -76,11 +78,57 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
         if (isset($_POST[$resconf['name']])) {
             Zend_Session::setId($_POST[$resconf['name']]);
         }
+        
         Zend_Session::setSaveHandler(new Zend_Session_SaveHandler_DbTable($this->_sessionConfig));
 
+        $this->handleAuthToken(); //makes a redirect if successfull!
+        
+        //default handling
         Zend_Session::start();
         $this->setInternalSessionUniqId();
     }
+    
+    private function reload() {
+        Zend_Session::writeClose();
+        if(empty($_SERVER['HTTPS']) || empty($_SERVER['HTTPS']) == 'off'){
+            $url = 'http://';
+        }
+        else {
+            $url = 'https://';
+        }
+        $url .= $_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
+        $url = explode('?', $url);
+        header('Location: '.$url[0]);
+        exit;
+    }
+    
+    /**
+     * returns the session_id to be used when a valid sessionToken was provided
+     * @return string|NULL
+     */
+    private function handleAuthToken() {
+        if(empty($_REQUEST['sessionToken']) || !preg_match('/[a-zA-Z0-9]{32}/', $_REQUEST['sessionToken'])) {
+            return;
+        }
+        $sessionUniq = ZfExtended_Factory::get('ZfExtended_Models_Db_SessionMapInternalUniqId');
+        /* @var $sessionUniq ZfExtended_Models_Db_SessionMapInternalUniqId */
+        $row = $sessionUniq->fetchRow(['internalSessionUniqId = ?' => $_REQUEST['sessionToken']]);
+        if(empty($row) || empty($row->session_id)) {
+            $this->reload(); //making exit
+        }
+        $sessionId = $row->session_id;
+        $row->delete(); //delete this internalSessionUniqId and create later a new one
+        Zend_Session::setId($sessionId);
+        Zend_Session::start();
+        $session = new Zend_Session_Namespace();
+        //after using the internalUniqId as sessionToken we throw it away and trigger creating a new one here
+        unset($session->internalSessionUniqId); 
+        $this->setInternalSessionUniqId();
+        //reload redirect to remove authToken from parameter
+        //or doing this in access plugin because there are several helpers?
+        $this->reload(); //making exit
+    }
+    
     /**
      * Setzt internalSessionUniqId wie im Klassenkopf beschrieben
      */
