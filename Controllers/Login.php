@@ -87,23 +87,13 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
     }
     
     /**
+     * @deprecated
      * returns a REST like login status information.
      * HTTP 200 and a JSON Representation of the user if authenticated
      * HTTP 404 (!=200) if not authenticated
      */
     public function statusAction() {
-        $this->_helper->viewRenderer->setNoRender();
-        $this->_helper->layout->disableLayout();
-        $this->_response->setHeader('Content-Type', 'application/json', true);
-        if(!$this->isAuthenticated()) {
-            $this->_response->setHttpResponseCode(404);
-            echo '{}';
-            return;
-        }
-        $result = new stdClass();
-        $result->state = 'authenticated';
-        $result->user = $this->_user->data;
-        echo json_encode($result);
+        throw new BadMethodCallException('"API login/status" is deprecated use "API session/SESSIONID" instead.');
     }
     
     /**

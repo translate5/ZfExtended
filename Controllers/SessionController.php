@@ -29,6 +29,9 @@ END LICENSE AND COPYRIGHT
 */
 
 class ZfExtended_SessionController extends ZfExtended_RestController {
+    
+    const STATE_AUTHENTICATED = 'authenticated';
+    const STATE_NOT_AUTHENTICATED = 'not authenticated';
 
     /**
      * inits the internal entity Object, handels given limit, filter and sort parameters
@@ -41,9 +44,21 @@ class ZfExtended_SessionController extends ZfExtended_RestController {
     /**
      * (non-PHPdoc)
      * @see ZfExtended_RestController::indexAction()
+     * returns a REST like login status information.
+     * HTTP 200 and a JSON Representation of the user if authenticated
+     * HTTP 404 (!=200) if not authenticated
      */
-    public function indexAction () {
-        throw new ZfExtended_BadMethodCallException(__CLASS__.'->index');
+    public function getAction () {
+        $user = new Zend_Session_Namespace('user');
+        if(empty($user->data->userGuid)) {
+            $this->_response->setHttpResponseCode(404);
+            $this->view->state = self::STATE_NOT_AUTHENTICATED;
+            $this->view->user = null;
+            return;
+        }
+        $this->view->state = self::STATE_AUTHENTICATED;
+        $this->view->user = clone $user->data;
+        $this->view->user->passwd = '********';
     }
     
     /**
@@ -54,13 +69,52 @@ class ZfExtended_SessionController extends ZfExtended_RestController {
         throw new ZfExtended_BadMethodCallException(__CLASS__.'->put');
     }
     
+    public function indexAction() {
+        throw new ZfExtended_BadMethodCallException(__CLASS__.'->index');
+    }
+    
     /**
      * (non-PHPdoc)
      * @see ZfExtended_RestController::postAction()
      */
     public function postAction() {
+        $this->decodePutData();
+        settype($this->data->login, 'string');
+        settype($this->data->passwd, 'string');
+        //enabling passing credentials by plain form requests or given data object
+        $login = $this->getParam('login', $this->data->login);
+        $passwd = $this->getParam('passwd', $this->data->passwd);
+        $errors = [];
+        $t = ZfExtended_Zendoverwrites_Translate::getInstance();
+        /* @var $t ZfExtended_Zendoverwrites_Translate */;;
+        if(empty($login)) {
+             $errors['login'] = $t->_('Kein Benutzername angegeben.');
+        }
+        
+        if(empty($passwd)) {
+             $errors['passwd'] = $t->_('Kein Passwort angegeben.');
+        }
+        if(!empty($errors)) {
+            $e = new ZfExtended_ValidateException();
+            $e->setErrors($errors);
+            $this->handleValidateException($e);
+            return;
+        }
+        
         //$this->_userModel = ZfExtended_Factory::get('ZfExtended_Models_User');
-        $this->_helper->auth->isValid($login,$passwd);
+        if($this->_helper->auth->isValid($login, $passwd)) {
+            $userModel = ZfExtended_Factory::get(Zend_Registry::get('config')->authentication->userEntityClass);
+            /* @var $userModel ZfExtended_Models_SessionUserInterface */
+            $userModel->setUserSessionNamespaceWithPwCheck($login, $passwd);
+            
+            $session = new Zend_Session_Namespace();
+            $this->view->sessionId = session_id();
+            $this->view->sessionToken = $session->internalSessionUniqId;
+            return;
+        }
+        //throwing a 403 on the authentication request means: 
+        //  hey guy you could not be authenticated with the given credentials!
+        throw new ZfExtended_NoAccessException();
     }
     
     /**
@@ -70,66 +124,5 @@ class ZfExtended_SessionController extends ZfExtended_RestController {
     public function deleteAction() {
         $this->_getParam('id');
         //DELETE session and ID given in above id
-    }
-    
-    /**
-     * decodes the put data and filters them to values the logged in user is allowed to change on himself
-     */
-    protected function filterDataForAuthenticated() {
-        $allowed = array('passwd');
-        $this->decodePutData();
-        $data = get_object_vars($this->data);
-        $keys = array_keys($data);
-        $this->data = new stdClass();
-        foreach($allowed as $allow) {
-            if(in_array($allow, $keys)){
-                $this->data->$allow = $data[$allow];
-            }
-        }
-    }
-    
-    /**
-     * remove password hashes from output
-     */
-    protected function credentialCleanup() {
-        if(is_object($this->view->rows) && property_exists($this->view->rows, 'passwd')) {
-            unset($this->view->rows->passwd);
-        }
-        if(is_array($this->view->rows) && isset($this->view->rows['passwd'])) {
-            unset($this->view->rows['passwd']);
-        }
-    }
-    
-    /**
-     * overridden to prepare data on user creation
-     * (non-PHPdoc)
-     * @see ZfExtended_RestController::decodePutData()
-     */
-    protected function decodePutData() {
-        if($this->alreadyDecoded) {
-            return;
-        }
-        $this->alreadyDecoded = true;
-        $this->_request->isPost() || $this->checkIsEditable(); //checkEditable only if not POST
-        parent::decodePutData();
-        if($this->_request->isPost()) {
-            unset($this->data->id);
-            $this->data->userGuid = $this->_helper->guid->create(true);
-        }
-    }
-
-    /**
-     * overridden to save the user password not unencrypted and to reset passwd if requested
-     * (non-PHPdoc)
-     * @see ZfExtended_RestController::setDataInEntity()
-     */
-    protected function setDataInEntity(array $fields = null, $mode = self::SET_DATA_BLACKLIST){
-        parent::setDataInEntity($fields, $mode);
-        if(isset($this->data->passwd)) {
-            if($this->data->passwd===''||  is_null($this->data->passwd)) {//convention for passwd being reset; 
-                $this->data->passwd = null;
-            }
-            $this->entity->setNewPasswd($this->data->passwd,false);
-        }
     }
 }
