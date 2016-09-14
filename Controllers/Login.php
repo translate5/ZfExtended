@@ -39,8 +39,8 @@ END LICENSE AND COPYRIGHT
  *
  */
 abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Action {
-        /**
-     * @var stdclass
+    /**
+     * @var ZfExtended_Models_SessionUserInterface
      */
     protected  $_userModel;
     /**
@@ -65,6 +65,7 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
         $this->_translate = ZfExtended_Zendoverwrites_Translate::getInstance();
         $this->_session = new Zend_Session_Namespace();
         $this->_user = new Zend_Session_Namespace('user');
+        $this->_userModel = ZfExtended_Factory::get(Zend_Registry::get('config')->authentication->userEntityClass);
     }
 
     /**
