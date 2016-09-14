@@ -62,7 +62,8 @@ abstract class ZfExtended_Test_ApiTestcase extends \ZfExtended_Test_Testcase {
      * @return the login/status JSON for further processing
      */
     public static function assertLogin($user) {
-        $json = self::$api->requestJson('login/status');
+        $json = self::$api->requestJson('editor/session/'.self::$api->getAuthCookie());
+        
         self::assertTrue(is_object($json), 'User "'.$user.'" is not authenticated!');
         self::assertEquals('authenticated', $json->state, 'User "'.$user.'" is not authenticated!');
         self::assertEquals($user, $json->user->login);
