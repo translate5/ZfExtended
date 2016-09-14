@@ -34,29 +34,30 @@ END LICENSE AND COPYRIGHT
  * @version 2.0
  *
  */
-class ZfExtended_Controller_Helper_Auth extends Zend_Controller_Action_Helper_Abstract {
+/**
+ * defines the methods needed by a user object to be usable in the session
+ */
+interface ZfExtended_Models_SessionUserInterface {
     /**
-     * authenticates a user
+     * sets the user in Zend_Session_Namespace('user')
      *
-     * @param  string                   $login 
-     * @param  string                   $passwd in clear text
-     * @return boolean
+     * @param string login
+     * @return void
      */
-    public function isValid(string $login, string $passwd, $treatment = null) {
-        $config = Zend_Registry::get('config');
-        $auth = $config->authentication;
-        
-        $db = Zend_Registry::get('db');
-        $authAdapter = new Zend_Auth_Adapter_DbTable(
-            $db,
-            $auth->tableName,
-            $auth->identityColumn,
-            $auth->credentialColumn,
-            is_null($treatment) ? $auth->credentialTreatment : $treatment
-        );
-        $authAdapter->setIdentity($login)->setCredential($passwd);
-        $auth = Zend_Auth::getInstance();
-        $result = $auth->authenticate($authAdapter);
-        return $result->isValid();
-    }
+    public function setUserSessionNamespaceWithoutPwCheck(string $login);
+    
+    /**
+     * sets the user in the session
+     *
+     * @param string login
+     * @param string passwd unverschlüsseltes Passwort, wie vom Benutzer eingegeben
+     * @return void
+     */
+    public function setUserSessionNamespaceWithPwCheck(string $login, string $passwd);
+    
+    /**
+     * sets the locale of the user
+     * @param string $locale
+     */
+    public function setLocale(string $locale);
 }

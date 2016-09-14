@@ -49,10 +49,11 @@ END LICENSE AND COPYRIGHT
  */
 class ZfExtended_Controllers_Plugins_SessionRegenerate extends Zend_Controller_Plugin_Abstract {
 
-    /*
+    /**
      * @var Zend_Session_Namespace
      */
     protected $_session = NULL;
+    
     /**
      * Wird vor dem Start des Dispatcher Laufes ausgeführt
      *

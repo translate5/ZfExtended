@@ -117,10 +117,14 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
    */
   public function init() {
       $this->entity = ZfExtended_Factory::get($this->entityClass);
-      $this->_helper->viewRenderer->setNoRender(true);
-      $this->_helper->layout->disableLayout();
       $this->handleLimit();
       $this->handleFilterAndSort();
+      $this->initRestControllerSpecific();
+  }
+  
+  protected function initRestControllerSpecific() {
+      $this->_helper->viewRenderer->setNoRender(true);
+      $this->_helper->layout->disableLayout();
       $this->events = ZfExtended_Factory::get('ZfExtended_EventManager', array(get_class($this)));
       
       $this->restMessages = ZfExtended_Factory::get('ZfExtended_Models_Messages');

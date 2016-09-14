@@ -97,6 +97,13 @@ class ZfExtended_Test_ApiHelper {
     }
     
     /**
+     * @return string
+     */
+    public function getAuthCookie() {
+        return $this->authCookie;
+    }
+    
+    /**
      * requests the REST API, can handle file uploads, add file methods must be called first
      * @param string $url
      * @param string $method GET;POST;PUT;DELETE must be POST or PUT to transfer added files
@@ -231,42 +238,22 @@ class ZfExtended_Test_ApiHelper {
             }
         }
         
-        $response = $this->request('editor/');
+        $response = $this->requestJson('editor/session', 'POST', [
+            'login' => $login, 
+            'passwd' => $password,
+        ]);
+        
+        
+        $plainResponse = $this->getLastResponse();
         
         $t = $this->testClass;
-        $t::assertEquals(200, $response->getStatus(), 'Server did not respond HTTP 200');
-        
-        $cookies = $response->getHeader('Set-Cookie');
-        if(!is_array($cookies)) {
-            $cookies = array($cookies);
-        }
-        $t::assertTrue(count($cookies) > 0, 'Server did not send a Cookie.');
-        
-        $sessionId = null;
-        foreach($cookies as $cookie) {
-            if(preg_match('/'.self::AUTH_COOKIE_KEY.'=([^;]+)/', $cookie, $matches)) {
-                $sessionId = $matches[1];
-            }
-        }
-        $t::assertNotEmpty($sessionId, 'No session ID given from server as Cookie.');
-        $this->authCookie = $sessionId;
+        /* @var $t \ZfExtended_Test_ApiTestcase */
+        $t::assertEquals(200, $plainResponse->getStatus(), 'Server did not respond HTTP 200');
+        $t::assertNotFalse($response, 'JSON Login request was not successfull!');
+        $t::assertRegExp('/[a-zA-Z0-9]{26}/', $response->sessionId, 'Login call does not return a valid sessionId!');
+
+        $this->authCookie = $response->sessionId;
         $this->authLogin = $login;
-        
-        $body = $response->getBody();
-        $noCsrf = null;
-        if(preg_match('#<input\s+type="hidden"\s+name="noCsrf"\s+value="([^"]+)"\s+id="noCsrf"\s+/>#', $body, $matches)) {
-            $noCsrf = $matches[1];
-        }
-        $t::assertNotEmpty($noCsrf, 'No "noCsrf" key found in server response.');
-        
-        $response = $this->request('login/', 'POST', array(
-            'noCsrf' => $noCsrf,
-            'login' => $login,
-            'passwd' => $password,
-        ));
-        if(preg_match('#<ul class="errors">(.+)</ul>#s', $response->getBody(), $matches)) {
-            $t::fail('Could not login to server, message was: '.$matches[1]);
-        }
     }
     
     /**
