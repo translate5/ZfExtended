@@ -101,8 +101,13 @@ class ZfExtended_Models_Entity_ExcelExport {
         $this->fieldTypes = new stdClass();
     }
     
-    
-    public function simpleArrayToExcel ($data) {
+    /**
+     * The callback is called before the file is sent for download and after all cells are initialized.
+	 * In the callback we can do cell resizing,change its value etc...
+     * @param array $data
+     * @param Closure $callback
+     */
+    public function simpleArrayToExcel ($data, Closure $callback = null) {
         $this->PHPExcel->setActiveSheetIndex(0);
         $tempSheet = $this->PHPExcel->getActiveSheet();
         
@@ -111,7 +116,6 @@ class ZfExtended_Models_Entity_ExcelExport {
         {
             $colCount = 0;
             foreach ($row as $key => $value) {
-                
                 // don't show hidden fields
                 if ($this->isHiddenField($key)) {
                     continue;
@@ -137,6 +141,10 @@ class ZfExtended_Models_Entity_ExcelExport {
         
         // Set active sheet index to the first sheet, so Excel opens this as the first sheet
         $this->PHPExcel->setActiveSheetIndex(0);
+        
+        if($callback!==null){
+        	$callback($this->PHPExcel);
+        }
         
         $this->sendDownload();
         
@@ -303,7 +311,7 @@ class ZfExtended_Models_Entity_ExcelExport {
     /**
      * Redirect output to a client's web browser (Excel)
      */
-    private function sendDownload () {
+    public function sendDownload () {
         $fileName = $this->getProperty('filename').date('-Y-d-m');
         
         // XLS Excel5 output
@@ -328,5 +336,8 @@ class ZfExtended_Models_Entity_ExcelExport {
         
         $objWriter->save('php://output');
         exit;
+    }
+    public function getPhpExcel(){
+    	return $this->PHPExcel;
     }
 }

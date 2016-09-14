@@ -162,7 +162,15 @@ class ZfExtended_Acl extends Zend_Acl {
                 if($resource == 'frontend' && !$this->isFrontendRight()){
                     throw new Zend_Exception('For the resource "frontend" no rights are registered');
                 }
-                $this->allow($role, $resource);
+                if($this->has($resource)) {
+                    $this->allow($role, $resource);
+                }
+                else {
+                    //FIXME convert this debug statement to a error log with warning level 
+                    if(ZfExtended_Debug::hasLevel('core', 'acl')) {
+                        error_log("Trying to add not existing ACL resource ".$resource);
+                    }
+                }
                 continue;
             }
             if($this->allowFrontendPrivilege($role, $resource, $right)){

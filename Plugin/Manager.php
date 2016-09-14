@@ -60,12 +60,16 @@ class ZfExtended_Plugin_Manager {
                 if($localePath) {
                     $this->allLocalePaths[$name] = $localePath;
                 }
-                $this->allFrontendControllers = array_merge($this->allFrontendControllers, $plugin->getFrontendControllers());
             }
             catch (ReflectionException $exception) {
                 /* @var $log ZfExtended_Log */
                 error_log(__CLASS__.' -> '.__FUNCTION__.'; $exception: '. print_r($exception->getMessage(), true));
             }
+        }
+        
+        //due to ACL restrictions we have first load all plugins, then we can call getFrontendControllers 
+        foreach($this->pluginInstances as $plugin) {
+            $this->allFrontendControllers = array_merge($this->allFrontendControllers, $plugin->getFrontendControllers());
         }
     }
     
