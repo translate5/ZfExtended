@@ -98,6 +98,7 @@ class ZfExtended_SessionController extends ZfExtended_RestController {
             $e = new ZfExtended_ValidateException();
             $e->setErrors($errors);
             $this->handleValidateException($e);
+            $this->log('User authentication by API failed with error: '.print_r($errors, 1));
             return;
         }
         
@@ -110,10 +111,12 @@ class ZfExtended_SessionController extends ZfExtended_RestController {
             $session = new Zend_Session_Namespace();
             $this->view->sessionId = session_id();
             $this->view->sessionToken = $session->internalSessionUniqId;
+            $this->log('User authentication by API successful for '.$login);
             return;
         }
         //throwing a 403 on the authentication request means: 
         //  hey guy you could not be authenticated with the given credentials!
+        $this->log('User authentication by API failed for '.$login);
         throw new ZfExtended_NoAccessException();
     }
     
@@ -124,5 +127,11 @@ class ZfExtended_SessionController extends ZfExtended_RestController {
     public function deleteAction() {
         $this->_getParam('id');
         //DELETE session and ID given in above id
+    }
+    
+    protected function log($msg) {
+        if(ZfExtended_Debug::hasLevel('core', 'apiLogin')) {
+            error_log($msg);
+        }
     }
 }

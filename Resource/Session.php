@@ -114,6 +114,7 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
         /* @var $sessionUniq ZfExtended_Models_Db_SessionMapInternalUniqId */
         $row = $sessionUniq->fetchRow(['internalSessionUniqId = ?' => $_REQUEST['sessionToken']]);
         if(empty($row) || empty($row->session_id)) {
+            $this->authTokenLog('No matching sessionToken found in DB: '.$_REQUEST['sessionToken']);
             $this->reload(); //making exit
         }
         $sessionId = $row->session_id;
@@ -123,10 +124,18 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
         $session = new Zend_Session_Namespace();
         //after using the internalUniqId as sessionToken we throw it away and trigger creating a new one here
         unset($session->internalSessionUniqId); 
+        $user = new Zend_Session_Namespace('user');
+        $this->authTokenLog('Spawning session for sessionToken '.$_REQUEST['sessionToken'].' user: '.print_r($user->data,1));
         $this->setInternalSessionUniqId();
         //reload redirect to remove authToken from parameter
         //or doing this in access plugin because there are several helpers?
         $this->reload(); //making exit
+    }
+    
+    private function authTokenLog($msg) {
+        if(ZfExtended_Debug::hasLevel('core', 'apiLogin')) {
+            error_log($msg);
+        }
     }
     
     /**
