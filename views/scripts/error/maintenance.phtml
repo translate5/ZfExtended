@@ -1,0 +1,86 @@
+<?php
+/*
+START LICENSE AND COPYRIGHT
+
+ This file is part of translate5
+ 
+ Copyright (c) 2013 - 2015 Marc Mittag; MittagQI - Quality Informatics;  All rights reserved.
+
+ Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
+
+ This file may be used under the terms of the GNU AFFERO GENERAL PUBLIC LICENSE version 3
+ as published by the Free Software Foundation and appearing in the file agpl3-license.txt 
+ included in the packaging of this file.  Please review the following information 
+ to ensure the GNU AFFERO GENERAL PUBLIC LICENSE version 3.0 requirements will be met:
+ http://www.gnu.org/licenses/agpl.html
+
+ There is a plugin exception available for use with this release of translate5 for
+ open source applications that are distributed under a license other than AGPL:
+ Please see Open Source License Exception for Development of Plugins for translate5
+ http://www.translate5.net/plugin-exception.txt or as plugin-exception.txt in the root
+ folder of translate5.
+  
+ @copyright  Marc Mittag, MittagQI - Quality Informatics
+ @author     MittagQI - Quality Informatics
+ @license    GNU AFFERO GENERAL PUBLIC LICENSE version 3 with plugin-execptions
+			 http://www.gnu.org/licenses/agpl.html http://www.translate5.net/plugin-exception.txt
+
+END LICENSE AND COPYRIGHT
+*/
+
+/**#@+
+ * @author Marc Mittag
+ * @package portal
+ * @version 2.0
+ *
+ */
+/**
+ * Generiert das allgemeine Layout
+ *
+ * - Achtung: Bei Hinzufügen weiterer Layoutelemente darauf achten, dass diese
+ *   im Viewhelper View_Helper_DisableBodyLayout deaktiviert werden
+ */
+$session = new Zend_Session_Namespace();
+$this->translate =  ZfExtended_Zendoverwrites_Translate::getInstance();
+
+$config = Zend_Registry::get('config');
+$mntStartDate=$config->runtimeOptions->mntStartDate;
+
+echo $this->doctype() ?>
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <?php echo $this->headTitle() ?>
+        <?php   echo $this->headMeta() ?>
+        <?php   echo $this->headLink() ?>
+        <?php echo $this->headStyle() ?>
+        <link rel="shortcut icon" href="<?php echo APPLICATION_RUNDIR.$config->runtimeOptions->server->pathToIMAGES; ?>/favicon.ico" type="image/x-icon"/>
+        <?php echo $this->headScript() ?>
+        
+        <style>
+		  body { text-align: center; padding: 150px; }
+		  h1 { font-size: 50px; }
+		  body { font: 20px Helvetica, sans-serif; color: #333; }
+		  article { display: block; text-align: left; width: 650px; margin: 0 auto; }
+		</style>
+    </head>
+    <body>
+        
+    <article>
+	    <h1>We&rsquo;ll be back soon!</h1>
+	    <div>
+	        <p>Maintenance is in progres.You will be available to work after the maintenance is finished.We will be back online shortly!</p>
+	        <p>&mdash; MittagQi team</p>
+        <div id="header">
+            <img src="/images/translate5.png?v=1" alt="<?php echo 'translate5'; ?>">
+        </div>
+	    </div>
+	</article>
+	<script>
+	
+		setInterval(function(){
+			  window.location.href = '/login';
+		}, 30000);
+	
+	</script>
+  </body>
+</html>
