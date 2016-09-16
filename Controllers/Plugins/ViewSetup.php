@@ -100,6 +100,16 @@ class ZfExtended_Controllers_Plugins_ViewSetup extends Zend_Controller_Plugin_Ab
         //setting the locale is must be done dispatchLoopStartup
         $view = $this->_viewRenderer->view;
         $view->php2JsVars()->set('locale', $this->_session->locale);
+        
+        
+        $config = Zend_Registry::get('config');
+        $rop = $config->runtimeOptions;
+        //maintenance start date
+        $view->Php2JsVars()->set('mntStartDate',$rop->mntStartDate);
+        //maintenance warning panel is showed
+        $view->Php2JsVars()->set('mntCountdown',$rop->mntCountdown);
+        //minutes before the point in time of the update the application is locked for new log-ins
+        $view->Php2JsVars()->set('mntLoginBlock',$rop->mntLoginBlock);
     }
     
      /**

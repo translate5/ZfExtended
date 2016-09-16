@@ -67,6 +67,33 @@ abstract class ZfExtended_Controllers_Action extends Zend_Controller_Action {
         $this->view->action = $this->_request->getActionName();
     }
     
+    public function displayMaintenance() {
+    	if($this->_response->isException()){
+    		return;
+    	}
+    	$config = Zend_Registry::get('config');
+    	$mntStartDate=$config->runtimeOptions->mntStartDate;
+    	//$mntStartDate = time() + 30;
+    	
+    	if(!$mntStartDate || !(strtotime($mntStartDate)<= (time()+ 86400))){//if there is no date and the start date is not in the next 24H
+    		return;
+    	}
+    	
+    	if(new DateTime() >=  new DateTime($mntStartDate)){
+    		throw new ZfExtended_Models_MaintenanceException();
+    	}
+    	$mntCountdown=$config->runtimeOptions->mntCountdown;
+    	 
+    	$time = strtotime($mntStartDate);
+    	$time = $time - ($mntCountdown * 60);
+    	$date = new DateTime(date("Y-m-d H:i:s", $time));
+    	
+    	
+    	if(new DateTime() >= $date ){
+    		$this->_response->setHeader('x-translate5-shownotice', 'true');
+    	}
+    }
+    
     /**
      * triggers event "before<Controllername>Action"
      */
