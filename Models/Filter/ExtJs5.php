@@ -75,6 +75,9 @@ class ZfExtended_Models_Filter_ExtJs5 extends ZfExtended_Models_Filter_ExtJs {
         if(empty($filter->operator) && isset($filter->direction)) {
             return $filter;
         }
+        if(!isset($filter->property)){
+            return $filter;
+        }
         $filter->field = $filter->property;
         unset ($filter->property);
         if (empty ( $this->operatorToType [$filter->operator] )) {
@@ -87,7 +90,7 @@ class ZfExtended_Models_Filter_ExtJs5 extends ZfExtended_Models_Filter_ExtJs {
         if($filter->type == 'boolean') {
             $filter->comparison = 'eq';
             $filter->type = 'numeric';
-            $filter->value = ($filter->value ? 1 : 0);
+            $filter->value = (isset($filter->value) && $filter->value ? 1 : 0);
         }
         unset ($filter->operator);
         return $filter;
