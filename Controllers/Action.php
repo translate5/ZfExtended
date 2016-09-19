@@ -43,6 +43,7 @@ END LICENSE AND COPYRIGHT
  *      - "afterIndexAction" with parameter $this->view on postDispatch
  */
 abstract class ZfExtended_Controllers_Action extends Zend_Controller_Action {
+    use ZfExtended_Controllers_MaintenanceTrait;
     /**
      * @var Zend_Session_Namespace
      */
@@ -64,33 +65,6 @@ abstract class ZfExtended_Controllers_Action extends Zend_Controller_Action {
     public function init() {
         $this->view->controller = $this->_request->getControllerName();
         $this->view->action = $this->_request->getActionName();
-    }
-    
-    public function displayMaintenance() {
-    	if($this->_response->isException()){
-    		return;
-    	}
-    	$config = Zend_Registry::get('config');
-    	$maintenanceStartDate=$config->runtimeOptions->maintenance->startDate;
-    	//$mntStartDate = time() + 30;
-    	
-    	if(!$maintenanceStartDate || !(strtotime($maintenanceStartDate)<= (time()+ 86400))){//if there is no date and the start date is not in the next 24H
-    		return;
-    	}
-    	
-    	if(new DateTime() >=  new DateTime($maintenanceStartDate)){
-    		throw new ZfExtended_Models_MaintenanceException();
-    	}
-    	$maintenanceTimeToNotify=$config->runtimeOptions->maintenance->timeToNotify;
-    	 
-    	$time = strtotime($maintenanceStartDate);
-    	$time = $time - ($maintenanceTimeToNotify * 60);
-    	$date = new DateTime(date("Y-m-d H:i:s", $time));
-    	
-    	
-    	if(new DateTime() >= $date ){
-    		$this->_response->setHeader('x-translate5-shownotice', $maintenanceStartDate);
-    	}
     }
     
     /**

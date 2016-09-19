@@ -39,6 +39,7 @@ END LICENSE AND COPYRIGHT
  *
  */
 abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Action {
+    use ZfExtended_Controllers_MaintenanceTrait;
     /**
      * @var ZfExtended_Models_SessionUserInterface
      */
@@ -77,8 +78,6 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
      */
     public function indexAction() {
         if($this->isMaintenanceLoginLock()){
-            $this->_form->addErrorMessage("Maintenance mode !");
-            $this->view->form = $this->_form;
             return;
         }
         if($this->isLoginRequest() && $this->isValidLogin()){
@@ -92,29 +91,6 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
         $this->view->form = $this->_form;
     }
     
-    /***
-     * Locks the login (configurable minutes) before the mainteance mode
-     * @return boolean
-     */
-    private function isMaintenanceLoginLock(){
-        /* @var $config Zend_Config */
-        $config = Zend_Registry::get('config');
-        $rop = $config->runtimeOptions;
-
-        $maintenanceStartDate=$rop->maintenance->startDate;
-        if(!$maintenanceStartDate || !(strtotime($maintenanceStartDate)<= (time()+ 86400))){//if there is no date and the start date is not in the next 24H
-            return false;
-        }
-        
-        $time = strtotime($maintenanceStartDate);
-        $time = $time - ($rop->maintenance->timeToLoginLock * 60);
-        $date = new DateTime(date("Y-m-d H:i:s", $time));
-
-        if(new DateTime() >= $date ){
-            return true;
-        }
-        return false;
-    }
     /**
      * @deprecated
      * returns a REST like login status information.

@@ -29,6 +29,7 @@ END LICENSE AND COPYRIGHT
 */
 
 abstract class ZfExtended_RestController extends Zend_Rest_Controller {
+    use ZfExtended_Controllers_MaintenanceTrait;
 
     const SET_DATA_WHITELIST = true;
     const SET_DATA_BLACKLIST = false;
@@ -153,33 +154,6 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
       $eventName = "before".ucfirst($this->_request->getActionName())."Action";
       $this->events->trigger($eventName, $this, array('entity' => $this->entity, 'params' => $this->getAllParams()));
 
-   }
-    
-   public function displayMaintenance() {
-    	if($this->_response->isException()){
-    		return;
-    	}
-    	$config = Zend_Registry::get('config');
-    	$maintenanceStartDate=$config->runtimeOptions->maintenance->startDate;
-    	
-    	if(!$maintenanceStartDate  || !(strtotime($maintenanceStartDate)<= (time()+ 86400))){//if there is no date and the start date is not in the next 24H
-    		return;
-    	}
-    	
-    	if(new DateTime() >=  new DateTime($maintenanceStartDate)){
-    		throw new ZfExtended_Models_MaintenanceException();
-    	}
-    	
-    	$maintenanceTimeToNotify=$config->runtimeOptions->maintenance->timeToNotify;
-    	 
-    	$time = strtotime($maintenanceStartDate);
-    	$time = $time - ($maintenanceTimeToNotify * 60);
-    	$date = new DateTime(date("Y-m-d H:i:s", $time));
-    	
-    	
-    	if(new DateTime() >= $date ){
-    		$this->_response->setHeader('x-translate5-shownotice', $maintenanceStartDate);
-    	}
    }
    
   /**
