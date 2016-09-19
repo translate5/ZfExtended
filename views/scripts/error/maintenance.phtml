@@ -40,10 +40,10 @@ END LICENSE AND COPYRIGHT
  * - Achtung: Bei Hinzufügen weiterer Layoutelemente darauf achten, dass diese
  *   im Viewhelper View_Helper_DisableBodyLayout deaktiviert werden
  */
-$session = new Zend_Session_Namespace();
 $this->translate =  ZfExtended_Zendoverwrites_Translate::getInstance();
 
 $config = Zend_Registry::get('config');
+/* @var $config Zend_Config */
 
 echo $this->doctype() ?>
 <html xmlns="http://www.w3.org/1999/xhtml">

@@ -76,6 +76,11 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
      * @return bool
      */
     public function indexAction() {
+        if($this->isMaintenanceLoginLock()){
+            $this->_form->addErrorMessage("Maintenance mode !");
+            $this->view->form = $this->_form;
+            return;
+        }
         if($this->isLoginRequest() && $this->isValidLogin()){
             return;
         }
@@ -95,6 +100,7 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
         /* @var $config Zend_Config */
         $config = Zend_Registry::get('config');
         $rop = $config->runtimeOptions;
+
         $mntStartDate=$rop->mntStartDate;
         if(!$mntStartDate || !(strtotime($mntStartDate)<= (time()+ 86400))){//if there is no date and the start date is not in the next 24H
             return false;
@@ -380,5 +386,6 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
         // set locale as Zend App default locale
         Zend_Registry::set('Zend_Locale', $Zend_Locale);
     }
+    
 }
 
