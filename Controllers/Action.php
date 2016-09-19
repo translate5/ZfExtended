@@ -89,7 +89,7 @@ abstract class ZfExtended_Controllers_Action extends Zend_Controller_Action {
     	
     	
     	if(new DateTime() >= $date ){
-    		$this->_response->setHeader('x-translate5-shownotice', 'true');
+    		$this->_response->setHeader('x-translate5-shownotice', $maintenanceStartDate);
     	}
     }
     

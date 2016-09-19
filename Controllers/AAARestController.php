@@ -178,7 +178,7 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
     	
     	
     	if(new DateTime() >= $date ){
-    		$this->_response->setHeader('x-translate5-shownotice', 'true');
+    		$this->_response->setHeader('x-translate5-shownotice', $maintenanceStartDate);
     	}
    }
    
