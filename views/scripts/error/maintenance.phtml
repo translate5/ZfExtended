@@ -40,10 +40,10 @@ END LICENSE AND COPYRIGHT
  * - Achtung: Bei Hinzufügen weiterer Layoutelemente darauf achten, dass diese
  *   im Viewhelper View_Helper_DisableBodyLayout deaktiviert werden
  */
-$session = new Zend_Session_Namespace();
 $this->translate =  ZfExtended_Zendoverwrites_Translate::getInstance();
 
 $config = Zend_Registry::get('config');
+/* @var $config Zend_Config */
 
 echo $this->doctype() ?>
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -57,27 +57,30 @@ echo $this->doctype() ?>
         
         <style>
 		  body { text-align: center; padding: 150px; }
-		  h1 { font-size: 50px; }
+		  h1 { font-size: 50px; padding-top:10px;}
+		  p { margin-bottom:10px; }
 		  body { font: 20px Helvetica, sans-serif; color: #333; }
 		  article { display: block; text-align: left; width: 650px; margin: 0 auto; }
+          #header {float:left;margin-right:30px;}
 		</style>
     </head>
     <body>
         
     <article>
-	    <h1>We&rsquo;ll be back soon!</h1>
-	    <div>
-	        <p>Maintenance is in progres.You will be available to work after the maintenance is finished.We will be back online shortly!</p>
-	        <p>&mdash; MittagQi team</p>
         <div id="header">
-            <img src="/images/translate5.png?v=1" alt="<?php echo 'translate5'; ?>">
+            <img src="<?php echo APPLICATION_RUNDIR;?>/images/translate5.png?v=1" alt="<?php echo 'translate5'; ?>">
         </div>
+	    <h1>We&rsquo;ll be back <br>soon!</h1>
+	    <div style="clear:both;">
+	        <p>Maintenance is in progress. <br>You will be available to work after the maintenance is finished.</p>
+            <p>Translate5 will be back online in a few minutes!</p>
+	        <p><?php echo $config->runtimeOptions->companyName; ?></p>
 	    </div>
 	</article>
 	<script>
 	
 		setInterval(function(){
-			  window.location.href = '/login';
+			  window.location.href = '<?php echo APPLICATION_RUNDIR;?>/login';
 		}, 30000);
 	
 	</script>

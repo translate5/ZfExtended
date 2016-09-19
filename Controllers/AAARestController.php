@@ -29,6 +29,7 @@ END LICENSE AND COPYRIGHT
 */
 
 abstract class ZfExtended_RestController extends Zend_Rest_Controller {
+    use ZfExtended_Controllers_MaintenanceTrait;
 
     const SET_DATA_WHITELIST = true;
     const SET_DATA_BLACKLIST = false;
@@ -148,11 +149,13 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
   /**
    * triggers event "before<Controllername>Action"
    */
-  public function preDispatch() {
-    $eventName = "before".ucfirst($this->_request->getActionName())."Action";
-    $this->events->trigger($eventName, $this, array('entity' => $this->entity, 'params' => $this->getAllParams()));
-  }
-    
+   public function preDispatch() {
+      $this->displayMaintenance();
+      $eventName = "before".ucfirst($this->_request->getActionName())."Action";
+      $this->events->trigger($eventName, $this, array('entity' => $this->entity, 'params' => $this->getAllParams()));
+
+   }
+   
   /**
    * triggers event "after<Controllername>Action"
    */
