@@ -75,7 +75,7 @@ trait ZfExtended_Controllers_MaintenanceTrait{
         $date = new DateTime(date("Y-m-d H:i:s", $time));
     
         if(new DateTime() >= $date ){
-            $this->_form->addErrorMessage("Maintenance mode !");
+            $this->_form->addError($this->_translate->_("Eine Wartung steht unmittelbar bevor, Sie können sich daher nicht anmelden. Bitte versuchen Sie es in Kürze erneut."));
             $this->view->form = $this->_form;
             return true;
         }
