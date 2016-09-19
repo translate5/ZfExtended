@@ -105,11 +105,11 @@ class ZfExtended_Controllers_Plugins_ViewSetup extends Zend_Controller_Plugin_Ab
         $config = Zend_Registry::get('config');
         $rop = $config->runtimeOptions;
         //maintenance start date
-        $view->Php2JsVars()->set('maintenance.startDate',$rop->maintenance->startDate);
+        $view->Php2JsVars()->set('maintenance.startDate',isset($rop->maintenance->startDate)?$rop->maintenance->startDate:'');
         //maintenance warning panel is showed
-        $view->Php2JsVars()->set('maintenance.timeToNotify',$rop->maintenance->timeToNotify);
+        $view->Php2JsVars()->set('maintenance.timeToNotify',isset($rop->maintenance->timeToNotify)?$rop->maintenance->timeToNotify:'');
         //minutes before the point in time of the update the application is locked for new log-ins
-        $view->Php2JsVars()->set('maintenance.timeToLoginLock',$rop->maintenance->timeToLoginLock);
+        $view->Php2JsVars()->set('maintenance.timeToLoginLock',isset($rop->maintenance->timeToLoginLock)?$rop->maintenance->timeToLoginLock:'');
     }
     
      /**
