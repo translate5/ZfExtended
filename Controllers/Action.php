@@ -71,20 +71,20 @@ abstract class ZfExtended_Controllers_Action extends Zend_Controller_Action {
     		return;
     	}
     	$config = Zend_Registry::get('config');
-    	$mntStartDate=$config->runtimeOptions->mntStartDate;
+    	$maintenanceStartDate=$config->runtimeOptions->maintenance->startDate;
     	//$mntStartDate = time() + 30;
     	
-    	if(!$mntStartDate || !(strtotime($mntStartDate)<= (time()+ 86400))){//if there is no date and the start date is not in the next 24H
+    	if(!$maintenanceStartDate || !(strtotime($maintenanceStartDate)<= (time()+ 86400))){//if there is no date and the start date is not in the next 24H
     		return;
     	}
     	
-    	if(new DateTime() >=  new DateTime($mntStartDate)){
+    	if(new DateTime() >=  new DateTime($maintenanceStartDate)){
     		throw new ZfExtended_Models_MaintenanceException();
     	}
-    	$mntCountdown=$config->runtimeOptions->mntCountdown;
+    	$maintenanceTimeToNotify=$config->runtimeOptions->maintenance->timeToNotify;
     	 
-    	$time = strtotime($mntStartDate);
-    	$time = $time - ($mntCountdown * 60);
+    	$time = strtotime($maintenanceStartDate);
+    	$time = $time - ($maintenanceTimeToNotify * 60);
     	$date = new DateTime(date("Y-m-d H:i:s", $time));
     	
     	

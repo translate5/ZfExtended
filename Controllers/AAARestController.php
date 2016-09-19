@@ -160,20 +160,20 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
     		return;
     	}
     	$config = Zend_Registry::get('config');
-    	$mntStartDate=$config->runtimeOptions->mntStartDate;
+    	$maintenanceStartDate=$config->runtimeOptions->maintenance->startDate;
     	
-    	if(!$mntStartDate  || !(strtotime($mntStartDate)<= (time()+ 86400))){//if there is no date and the start date is not in the next 24H
+    	if(!$maintenanceStartDate  || !(strtotime($maintenanceStartDate)<= (time()+ 86400))){//if there is no date and the start date is not in the next 24H
     		return;
     	}
     	
-    	if(new DateTime() >=  new DateTime($config->runtimeOptions->mntStartDate)){
+    	if(new DateTime() >=  new DateTime($maintenanceStartDate)){
     		throw new ZfExtended_Models_MaintenanceException();
     	}
     	
-    	$mntCountdown=$config->runtimeOptions->mntCountdown;
+    	$maintenanceTimeToNotify=$config->runtimeOptions->maintenance->timeToNotify;
     	 
-    	$time = strtotime($mntStartDate);
-    	$time = $time - ($mntCountdown * 60);
+    	$time = strtotime($maintenanceStartDate);
+    	$time = $time - ($maintenanceTimeToNotify * 60);
     	$date = new DateTime(date("Y-m-d H:i:s", $time));
     	
     	

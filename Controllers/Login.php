@@ -101,13 +101,13 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
         $config = Zend_Registry::get('config');
         $rop = $config->runtimeOptions;
 
-        $mntStartDate=$rop->mntStartDate;
-        if(!$mntStartDate || !(strtotime($mntStartDate)<= (time()+ 86400))){//if there is no date and the start date is not in the next 24H
+        $maintenanceStartDate=$rop->maintenance->startDate;
+        if(!$maintenanceStartDate || !(strtotime($maintenanceStartDate)<= (time()+ 86400))){//if there is no date and the start date is not in the next 24H
             return false;
         }
         
-        $time = strtotime($mntStartDate);
-        $time = $time - ($rop->mntLoginBlock * 60);
+        $time = strtotime($maintenanceStartDate);
+        $time = $time - ($rop->maintenance->timeToLoginLock * 60);
         $date = new DateTime(date("Y-m-d H:i:s", $time));
 
         if(new DateTime() >= $date ){
