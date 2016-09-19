@@ -65,13 +65,15 @@ trait ZfExtended_Controllers_MaintenanceTrait{
         $config = Zend_Registry::get('config');
         $rop = $config->runtimeOptions;
     
-        $maintenanceStartDate=$rop->maintenance->startDate;
+        $maintenanceStartDate=isset($rop->maintenance->startDate)?$rop->maintenance->startDate:'';
         if(!$maintenanceStartDate || !(strtotime($maintenanceStartDate)<= (time()+ 86400))){//if there is no date and the start date is not in the next 24H
             return false;
         }
     
+        $timeToLoginLock=isset($rop->maintenance->timeToLoginLock)?$rop->maintenance->timeToLoginLock:1;
+        
         $time = strtotime($maintenanceStartDate);
-        $time = $time - ($rop->maintenance->timeToLoginLock * 60);
+        $time = $time - ($timeToLoginLock * 60);
         $date = new DateTime(date("Y-m-d H:i:s", $time));
     
         if(new DateTime() >= $date ){
