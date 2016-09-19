@@ -31,30 +31,29 @@ END LICENSE AND COPYRIGHT
 trait ZfExtended_Controllers_MaintenanceTrait{
     
     public function displayMaintenance() {
-    	if($this->_response->isException()){
-    		return;
-    	}
-    	$config = Zend_Registry::get('config');
-    	$maintenanceStartDate=$config->runtimeOptions->maintenance->startDate;
-    	//$mntStartDate = time() + 30;
-    	
-    	if(!$maintenanceStartDate || !(strtotime($maintenanceStartDate)<= (time()+ 86400))){//if there is no date and the start date is not in the next 24H
-    		return;
-    	}
-    	
-    	if(new DateTime() >=  new DateTime($maintenanceStartDate)){
-    		throw new ZfExtended_Models_MaintenanceException();
-    	}
-    	$maintenanceTimeToNotify=$config->runtimeOptions->maintenance->timeToNotify;
-    	 
-    	$time = strtotime($maintenanceStartDate);
-    	$time = $time - ($maintenanceTimeToNotify * 60);
-    	$date = new DateTime(date("Y-m-d H:i:s", $time));
-    	
-    	
-    	if(new DateTime() >= $date ){
-    		$this->_response->setHeader('x-translate5-shownotice', $maintenanceStartDate);
-    	}
+        if($this->_response->isException()){
+            return;
+        }
+        $config = Zend_Registry::get('config');
+        $directMaintenance = ZfExtended_Debug::hasLevel('core', 'maintenance');
+        $maintenanceStartDate=$config->runtimeOptions->maintenance->startDate;
+        
+        if(!$directMaintenance && (!$maintenanceStartDate || !(strtotime($maintenanceStartDate)<= (time()+ 86400)))){//if there is no date and the start date is not in the next 24H
+            return;
+        }
+        
+        if($directMaintenance || new DateTime() >= new DateTime($maintenanceStartDate)){
+            throw new ZfExtended_Models_MaintenanceException();
+        }
+        $maintenanceTimeToNotify=$config->runtimeOptions->maintenance->timeToNotify;
+     
+        $time = strtotime($maintenanceStartDate);
+        $time = $time - ($maintenanceTimeToNotify * 60);
+        $date = new DateTime(date("Y-m-d H:i:s", $time));
+        
+        if(new DateTime() >= $date ){
+            $this->_response->setHeader('x-translate5-shownotice', $maintenanceStartDate);
+        }
     }
 
     /***

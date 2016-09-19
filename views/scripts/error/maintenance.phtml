@@ -67,17 +67,18 @@ echo $this->doctype() ?>
     <article>
 	    <h1>We&rsquo;ll be back soon!</h1>
 	    <div>
-	        <p>Maintenance is in progres.You will be available to work after the maintenance is finished.We will be back online shortly!</p>
-	        <p>&mdash; MittagQi team</p>
+	        <p>Maintenance is in progress. You will be available to work after the maintenance is finished.</p>
+            <p>Translate5 will be back online in a few minutes!</p>
+	        <p><?php echo $config->runtimeOptions->companyName; ?></p>
         <div id="header">
-            <img src="/images/translate5.png?v=1" alt="<?php echo 'translate5'; ?>">
+            <img src="<?php echo APPLICATION_RUNDIR;?>/images/translate5.png?v=1" alt="<?php echo 'translate5'; ?>">
         </div>
 	    </div>
 	</article>
 	<script>
 	
 		setInterval(function(){
-			  window.location.href = '/login';
+			  window.location.href = '<?php echo APPLICATION_RUNDIR;?>/login';
 		}, 30000);
 	
 	</script>
