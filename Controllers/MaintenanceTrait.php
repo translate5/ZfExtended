@@ -53,6 +53,7 @@ trait ZfExtended_Controllers_MaintenanceTrait{
         
         if(new DateTime() >= $date ){
             $this->_response->setHeader('x-translate5-shownotice', $maintenanceStartDate);
+            $this->view->displayMaintenancePanel = true;
         }
     }
 
