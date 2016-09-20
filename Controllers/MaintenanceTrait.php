@@ -35,8 +35,11 @@ trait ZfExtended_Controllers_MaintenanceTrait{
             return;
         }
         $config = Zend_Registry::get('config');
+        if(!isset($config->runtimeOptions->maintenance)){
+            return;
+        }
         $directMaintenance = ZfExtended_Debug::hasLevel('core', 'maintenance');
-        $maintenanceStartDate=isset($config->runtimeOptions->maintenance->startDate)?$config->runtimeOptions->maintenance->startDate:'';
+        $maintenanceStartDate=$config->runtimeOptions->maintenance->startDate;
         
         if(!$directMaintenance && (!$maintenanceStartDate || !(strtotime($maintenanceStartDate)<= (time()+ 86400)))){//if there is no date and the start date is not in the next 24H
             return;
@@ -45,7 +48,7 @@ trait ZfExtended_Controllers_MaintenanceTrait{
         if($directMaintenance || new DateTime() >= new DateTime($maintenanceStartDate)){
             throw new ZfExtended_Models_MaintenanceException();
         }
-        $maintenanceTimeToNotify=isset($config->runtimeOptions->maintenance->timeToNotify)?$config->runtimeOptions->maintenance->timeToNotify:'';
+        $maintenanceTimeToNotify= max(1, (int) $config->runtimeOptions->maintenance->timeToNotify);
      
         $time = strtotime($maintenanceStartDate);
         $time = $time - ($maintenanceTimeToNotify * 60);
@@ -65,13 +68,16 @@ trait ZfExtended_Controllers_MaintenanceTrait{
         /* @var $config Zend_Config */
         $config = Zend_Registry::get('config');
         $rop = $config->runtimeOptions;
-    
-        $maintenanceStartDate=isset($rop->maintenance->startDate)?$rop->maintenance->startDate:'';
+        if(!isset($rop->maintenance)){
+            return;
+        }
+        
+        $maintenanceStartDate=$rop->maintenance->startDate;
         if(!$maintenanceStartDate || !(strtotime($maintenanceStartDate)<= (time()+ 86400))){//if there is no date and the start date is not in the next 24H
             return false;
         }
     
-        $timeToLoginLock=isset($rop->maintenance->timeToLoginLock)?$rop->maintenance->timeToLoginLock:1;
+        $timeToLoginLock = max(1, (int) $rop->maintenance->timeToLoginLock);
         
         $time = strtotime($maintenanceStartDate);
         $time = $time - ($timeToLoginLock * 60);
