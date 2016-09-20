@@ -219,9 +219,9 @@ class ZfExtended_Acl extends Zend_Acl {
             }
         }
         catch (Exception $exc) {
-            throw new Zend_Exception('Das in aclConfig.ini genannte Privileg '.
-                    $privilege.' entspricht keiner Methode '.$privilege.
-                    'Action or '.$privilege.' der Resource '.$resource , 0 );
+            if(ZfExtended_Debug::hasLevel('core', 'acl')) {
+                error_log("Trying to add not existing ACL resource and privilege: ".$resource.'; '.$privilege);
+            }
         }
     }
     /**
