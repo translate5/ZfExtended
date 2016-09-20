@@ -177,10 +177,10 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
      */
     public function setRunning($oncePerTaskGuid = true) {
         $data = [
-            'state' => self::STATE_RUNNING,
+            'state' => $this->db->getAdapter()->quote(self::STATE_RUNNING),
             'starttime' => new Zend_Db_Expr('NOW()'),
             'maxRuntime' => new Zend_Db_Expr('NOW() + INTERVAL '.$this->getMaxLifetime()),
-            'pid' => getmypid(),
+            'pid' => $this->db->getAdapter()->quote(getmypid(), Zend_Db::INT_TYPE),
         ];
         
         $id = $this->getId();
@@ -193,18 +193,27 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
             return true;
         }
         
-        if(!$oncePerTaskGuid) {
-            return $this->db->update($data, ['id = ?' => $id]);
+        $sets = function($prefix) use ($data) {
+            foreach($data as $k => $v) {
+                $this->set($k, $v);
+                $sets[] = $prefix.'`'.$k.'` = '.$v;
+            }
+            return ' SET '.join(', ', $sets);
+        };
+        
+        if($oncePerTaskGuid) {
+            $sql = 'UPDATE `Zf_worker` w1 LEFT OUTER JOIN `Zf_worker` w2';
+            $sql .= ' ON w1.`taskGuid` = w2.`taskGuid` AND w1.`worker` = w2.`worker` AND w2.`state` = "running" AND w1.`id` != w2.`id`';
+            $sql .= $sets('`w1`.');
+            $sql .= ' WHERE w2.id IS NULL AND w1.id = ?';
         }
-        //$countRows = $this->db->update($data, $whereStatements);
-        //return $this->_db->update($tableSpec, $data, $where);
-        $sql = 'UPDATE `Zf_worker` w1 LEFT OUTER JOIN `Zf_worker` w2';
-        $sql .= ' ON w1.`taskGuid` = w2.`taskGuid` AND w1.`worker` = w2.`worker` AND w2.`state` = "running" AND w1.`id` != w2.`id`';
-        $sql .= ' SET `w1`.`'.join('` = ?, `w1`.`', array_keys($data)).'` = ?';
-        $sql .= ' WHERE w2.id IS NULL AND w1.id = ?';
+        else {
+            $sql = 'UPDATE `Zf_worker`';
+            $sql .= $sets('');
+            $sql .= ' WHERE id = ?';
+        }
 
-        $values = array_values($data);
-        $values[] = $this->getId();
+        $values = [$this->getId()];
         
         $stmt = $this->db->getAdapter()->query($sql, $values);
         $result = $stmt->rowCount();
