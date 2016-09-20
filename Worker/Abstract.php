@@ -443,11 +443,12 @@ abstract class ZfExtended_Worker_Abstract {
         
         $result = $this->_run();
         
+        $this->wakeUpAndStartNextWorkers($this->finishedWorker->getTaskGuid());
+        
         if(!empty($this->workerException)) {
             throw $this->workerException;
         }
         
-        $this->wakeUpAndStartNextWorkers($this->finishedWorker->getTaskGuid());
         return $result;
     }
     
