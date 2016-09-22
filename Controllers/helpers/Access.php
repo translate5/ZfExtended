@@ -118,7 +118,7 @@ class ZfExtended_Controller_Helper_Access extends Zend_Controller_Action_Helper_
      * 
      */
     protected function setRoles() {
-        
+        //normally basic and noRights are already set by login, but we keep this code here 
         $roles2add = Zend_Auth::getInstance()->hasIdentity() ? array('basic','noRights') : $this->_roles;
         $user = new Zend_Session_Namespace('user');
         settype($user->data->roles, 'array');

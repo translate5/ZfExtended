@@ -99,6 +99,9 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implement
         $this->loadRowBySelect($s);
         $userData = $this->getDataObject();
         $userData->roles = explode(',',$userData->roles);
+        $userData->roles[] = 'basic';
+        $userData->roles[] = 'noRights'; //the user always has this roles
+        $userData->roles = array_unique($userData->roles);
         $userData->userName = $userData->firstName.' '.$userData->surName;
         $userData->loginTimeStamp = $_SERVER['REQUEST_TIME'];
         $userData->passwd = '********'; // We don't need and don't want the PW hash in the session
