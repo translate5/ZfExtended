@@ -37,19 +37,19 @@ END LICENSE AND COPYRIGHT
  */
 class ZfExtended_Controller_Helper_Access extends Zend_Controller_Action_Helper_Abstract implements ZfExtended_Controllers_helpers_IAccess {
     /**
-     * Zend_Controller_Front
+     * @var Zend_Controller_Front
      */
     protected $_front = NULL;
     /**
-     * Zend_Controller_Router_Route_Interface
+     * @var Zend_Controller_Router_Route_Abstract
      */
     protected $_route = NULL;
     /**
-     * Zend_Controller_Request_Abstract
+     * @var Zend_Controller_Request_Abstract
      */
     protected $_request = NULL;
     /**
-     * array
+     * @var array
      */
     protected $_roles = array('noRights');
     /**
@@ -72,7 +72,7 @@ class ZfExtended_Controller_Helper_Access extends Zend_Controller_Action_Helper_
     public function isAuthenticated(){
         $this->_front = $this->getFrontController();
         $this->_request = $this->_front->getRequest();
-        $this->_route = get_class($this->_front->getRouter()->getCurrentRoute());
+        $this->_route = $this->_front->getRouter()->getCurrentRoute();
         $this->_acl = ZfExtended_Acl::getInstance();
         
         $this->setRoles();
@@ -105,8 +105,20 @@ class ZfExtended_Controller_Helper_Access extends Zend_Controller_Action_Helper_
         }
     }
     
+    /**
+     * returns true when the used router is a REST Router and when a path was given.
+     * When path is empty, thats the default controller which is surly not REST like 
+     * @return boolean
+     */
     protected function isRestRoute() {
-        return $this->_route === 'Zend_Rest_Route' || $this->_route === 'ZfExtended_Controller_RestLikeRoute' || $this->_route === 'ZfExtended_Controller_RestFakeRoute';
+        $routeInst = $this->_route;
+        $route = get_class($this->_route);
+        $restRoutes = ['Zend_Rest_Route', 'ZfExtended_Controller_RestLikeRoute', 'ZfExtended_Controller_RestFakeRoute'];
+        
+        $path = $this->_request->getPathInfo();
+        $path = trim($path, $routeInst::URI_DELIMITER);
+        $emptyPath = empty($path);
+        return !$emptyPath && in_array($route, $restRoutes);
     }
     
     /**
