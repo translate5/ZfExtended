@@ -30,6 +30,8 @@ END LICENSE AND COPYRIGHT
 
 trait ZfExtended_Controllers_MaintenanceTrait{
     
+    protected $enableMaintenanceHeader = true;
+    
     public function displayMaintenance() {
         if($this->_response->isException()){
             return;
@@ -45,6 +47,11 @@ trait ZfExtended_Controllers_MaintenanceTrait{
             return;
         }
         
+        //since database maintenance is also part of maintenance, its controller should be able to run
+        if($this->_request->getControllerName() === 'database') {
+            return;
+        }
+        
         if($directMaintenance || new DateTime() >= new DateTime($maintenanceStartDate)){
             throw new ZfExtended_Models_MaintenanceException();
         }
@@ -55,7 +62,9 @@ trait ZfExtended_Controllers_MaintenanceTrait{
         $date = new DateTime(date("Y-m-d H:i:s", $time));
         
         if(new DateTime() >= $date ){
-            $this->_response->setHeader('x-translate5-shownotice', $maintenanceStartDate);
+            if($this->enableMaintenanceHeader) {
+                $this->_response->setHeader('x-translate5-shownotice', $maintenanceStartDate);
+            }
             $this->view->displayMaintenancePanel = true;
         }
     }
