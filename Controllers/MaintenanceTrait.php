@@ -57,13 +57,14 @@ trait ZfExtended_Controllers_MaintenanceTrait{
         }
         $maintenanceTimeToNotify= max(1, (int) $config->runtimeOptions->maintenance->timeToNotify);
      
-        $time = strtotime($maintenanceStartDate);
-        $time = $time - ($maintenanceTimeToNotify * 60);
+        $maintenanceStartDate = strtotime($maintenanceStartDate);
+        $time = $maintenanceStartDate - ($maintenanceTimeToNotify * 60);
+        
         $date = new DateTime(date("Y-m-d H:i:s", $time));
         
         if(new DateTime() >= $date ){
             if($this->enableMaintenanceHeader) {
-                $this->_response->setHeader('x-translate5-shownotice', $maintenanceStartDate);
+                $this->_response->setHeader('x-translate5-shownotice', date("Y-m-d H:i:s", $maintenanceStartDate));
             }
             $this->view->displayMaintenancePanel = true;
         }
