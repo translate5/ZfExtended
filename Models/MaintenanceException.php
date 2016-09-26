@@ -38,4 +38,10 @@ class ZfExtended_Models_MaintenanceException extends ZfExtended_Exception {
      * @var integer
      */
     protected $defaultCode = 503;
+    
+    /**
+     * Flag if logging for this exception is enabled / disabled
+     * @var boolean
+     */
+    protected $loggingEnabled = false;
 }
