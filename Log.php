@@ -126,8 +126,7 @@ class  ZfExtended_Log extends ZfExtended_Mail{
         $message = $e->getMessage();
         $trace = $e->getTraceAsString();
         $trace .= $this->getUrlLogMessage();
-        error_log($this->_className.': '.$message.
-                "\r\n                       Trace: \r\n".$trace);
+        error_log($this->_className.":\r\nException: ".$e->__toString());
         
         return $trace;
     }
