@@ -53,7 +53,6 @@ END LICENSE AND COPYRIGHT
  * @method string getPasswd() getPasswd()
  * @method string getGender() getGender()
  * @method string getLogin() getLogin()
- * @method string getLocale() getLocale()
  */
 class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implements ZfExtended_Models_SessionUserInterface {
     const SYSTEM_LOGIN = 'system';
@@ -120,6 +119,15 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implement
     public function setLocale(string $locale) {
         //piping the method to __call, declaration is needed for interface
         $this->__call('setLocale', [$locale]);
+    }
+    
+    /**
+     * {@inheritDoc}
+     * @see ZfExtended_Models_SessionUserInterface::getLocale()
+     */
+    public function getLocale() {
+        //piping the method to __call, declaration is needed for interface
+        $this->__call('getLocale', []);
     }
     
     /**

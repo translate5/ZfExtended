@@ -107,8 +107,8 @@ class ZfExtended_SessionController extends ZfExtended_RestController {
             $userModel = ZfExtended_Factory::get(Zend_Registry::get('config')->authentication->userEntityClass);
             /* @var $userModel ZfExtended_Models_SessionUserInterface */
             $userModel->setUserSessionNamespaceWithPwCheck($login, $passwd);
-            
             $session = new Zend_Session_Namespace();
+            $this->setLocale($session, $userModel);
             $this->view->sessionId = session_id();
             $this->view->sessionToken = $session->internalSessionUniqId;
             $this->log('User authentication by API successful for '.$login);
@@ -118,6 +118,19 @@ class ZfExtended_SessionController extends ZfExtended_RestController {
         //  hey guy you could not be authenticated with the given credentials!
         $this->log('User authentication by API failed for '.$login);
         throw new ZfExtended_NoAccessException();
+    }
+    
+    /**
+     * Sets the locale in the session
+     * @param Zend_Session_Namespace $session
+     * @param ZfExtended_Models_SessionUserInterface $userModel
+     */
+    protected function setLocale(Zend_Session_Namespace $session, ZfExtended_Models_SessionUserInterface $userModel) {
+        $locale = $userModel->getLocale();
+        if(!Zend_Locale::isLocale($locale)){
+            $locale = 'de'; //default locale?
+        }
+        $session->locale = $locale;
     }
     
     /**

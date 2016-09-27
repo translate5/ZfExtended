@@ -60,4 +60,10 @@ interface ZfExtended_Models_SessionUserInterface {
      * @param string $locale
      */
     public function setLocale(string $locale);
+    
+    /**
+     * gets the locale of the user
+     * @return string
+     */
+    public function getLocale();
 }
