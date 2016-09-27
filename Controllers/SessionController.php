@@ -128,7 +128,7 @@ class ZfExtended_SessionController extends ZfExtended_RestController {
     protected function setLocale(Zend_Session_Namespace $session, ZfExtended_Models_SessionUserInterface $userModel) {
         $locale = $userModel->getLocale();
         if(!Zend_Locale::isLocale($locale)){
-            $locale = ZfExtended_Factory::get(Zend_Registry::get('config')->runtimeOptions->defaultLanguage);
+            $locale = Zend_Registry::get('config')->runtimeOptions->defaultLanguage;
         }
         $session->locale = $locale;
     }
