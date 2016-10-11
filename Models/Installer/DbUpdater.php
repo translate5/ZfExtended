@@ -380,6 +380,13 @@ class ZfExtended_Models_Installer_DbUpdater {
      * @return array
      */
     public function importAll() {
+        
+        //FIXME this "if" must be removed after some time when the installer script can check itself if it was changed while updating.
+        // This lines are faking this behaviour for the first time to solve the chicken egg problem
+        if(PHP_SAPI == 'cli' && func_num_args() == 0) {
+            die("\n\n The translate5 Updater has updated it self, please restart the install-and-update script!\n\n");
+        }
+        
         $this->calculateChanges();
 
         $toProcess = array();
