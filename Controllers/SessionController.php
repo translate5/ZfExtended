@@ -138,8 +138,15 @@ class ZfExtended_SessionController extends ZfExtended_RestController {
      * @see ZfExtended_RestController::deleteAction()
      */
     public function deleteAction() {
-        $this->_getParam('id');
-        //DELETE session and ID given in above id
+        $sessionId = $this->_getParam('id');
+        
+        $sessionTable = ZfExtended_Factory::get('ZfExtended_Models_Db_Session');
+        /* @var $sessionTable ZfExtended_Models_Db_Session */
+        $sessionTable->delete(array("session_id = ?" => $sessionId));
+        
+        $SessionMapInternalUniqIdTable = ZfExtended_Factory::get('ZfExtended_Models_Db_SessionMapInternalUniqId');
+        /* @var $SessionMapInternalUniqIdTable ZfExtended_Models_Db_SessionMapInternalUniqId */
+        $SessionMapInternalUniqIdTable->delete(array("session_id = ?" => $sessionId));
     }
     
     protected function log($msg) {
