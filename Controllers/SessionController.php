@@ -76,6 +76,7 @@ class ZfExtended_SessionController extends ZfExtended_RestController {
     /**
      * (non-PHPdoc)
      * @see ZfExtended_RestController::postAction()
+     * @return boolean true if login was successful, false otherwise
      */
     public function postAction() {
         $this->decodePutData();
@@ -99,7 +100,7 @@ class ZfExtended_SessionController extends ZfExtended_RestController {
             $e->setErrors($errors);
             $this->handleValidateException($e);
             $this->log('User authentication by API failed with error: '.print_r($errors, 1));
-            return;
+            return false;
         }
         
         //$this->_userModel = ZfExtended_Factory::get('ZfExtended_Models_User');
@@ -112,7 +113,7 @@ class ZfExtended_SessionController extends ZfExtended_RestController {
             $this->view->sessionId = session_id();
             $this->view->sessionToken = $session->internalSessionUniqId;
             $this->log('User authentication by API successful for '.$login);
-            return;
+            return true;
         }
         //throwing a 403 on the authentication request means: 
         //  hey guy you could not be authenticated with the given credentials!
@@ -138,8 +139,15 @@ class ZfExtended_SessionController extends ZfExtended_RestController {
      * @see ZfExtended_RestController::deleteAction()
      */
     public function deleteAction() {
-        $this->_getParam('id');
-        //DELETE session and ID given in above id
+        $sessionId = $this->_getParam('id');
+        
+        $sessionTable = ZfExtended_Factory::get('ZfExtended_Models_Db_Session');
+        /* @var $sessionTable ZfExtended_Models_Db_Session */
+        $sessionTable->delete(array("session_id = ?" => $sessionId));
+        
+        $SessionMapInternalUniqIdTable = ZfExtended_Factory::get('ZfExtended_Models_Db_SessionMapInternalUniqId');
+        /* @var $SessionMapInternalUniqIdTable ZfExtended_Models_Db_SessionMapInternalUniqId */
+        $SessionMapInternalUniqIdTable->delete(array("session_id = ?" => $sessionId));
     }
     
     protected function log($msg) {
