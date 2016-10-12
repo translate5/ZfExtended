@@ -44,11 +44,6 @@ $this->translate =  ZfExtended_Zendoverwrites_Translate::getInstance();
 
 $config = Zend_Registry::get('config');
 /* @var $config Zend_Config */
-$session = new Zend_Session_Namespace();
-$this->translate =  ZfExtended_Zendoverwrites_Translate::getInstance();
-
-$config = Zend_Registry::get('config');
-$mntStartDate=$config->runtimeOptions->mntStartDate;
 
 echo $this->doctype() ?>
 <html xmlns="http://www.w3.org/1999/xhtml">
