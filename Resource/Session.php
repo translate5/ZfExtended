@@ -98,7 +98,7 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
         }
         $url .= $_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
         $url = explode('?', $url);
-        header('Location: '.$url[0]);
+        header('Location: '.rtrim($url[0], '/'));
         exit;
     }
     
