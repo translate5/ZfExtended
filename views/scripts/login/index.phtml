@@ -34,7 +34,7 @@ END LICENSE AND COPYRIGHT
  * @version 2.0
  *
  */
-?><h1><?php echo $this->translate->_('Login'); ?></h1><?php
+?><div class="login-wrapper"><h1><?php echo $this->translate->_('Login'); ?></h1><?php
 if(isset($this->message)): ?><p class="message"><?php echo $this->message;  ?></p><?php endif;
 if(count($this->form->getErrorMessages())>0){ ?>
     <ul class="errors">
@@ -48,3 +48,4 @@ if(count($this->form->getErrorMessages())>0){ ?>
 }
 echo $this->form->__toString(); ?>
 <p><a href="<?php echo APPLICATION_RUNDIR; ?>/login/passwdreset"><?php echo $this->translate->_('Passwort neu setzen'); ?></a></p>
+</div>
