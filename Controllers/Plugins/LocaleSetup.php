@@ -69,7 +69,9 @@ class ZfExtended_Controllers_Plugins_LocaleSetup extends Zend_Controller_Plugin_
     {
         // Initialisiere Sprachschlüssel
         $session = new Zend_Session_Namespace();
-        // Prüfe auf Sprachschlüssel in URL
+        $config = Zend_Registry::get('config');
+        
+        // when locale is given as parameter, this overrides all other locale calculation 
         if ($request->getParam('locale')) {
             // Hole locale
             $session->locale = $request->getParam('locale');
@@ -79,27 +81,59 @@ class ZfExtended_Controllers_Plugins_LocaleSetup extends Zend_Controller_Plugin_
             }
             
             $this->updateUserLocale($session->locale);
+            $this->registerLocale($session->locale);
+            return;
         }
-        elseif (!isset($session->locale)) {
-            $localeObj = new Zend_Locale();
-            $userPrefLangs = array_keys($localeObj->getBrowser());
-            if(count($userPrefLangs)>0){
-                //Prüfe, ob für jede locale, ob eine xliff-Datei vorhanden ist - wenn nicht fallback
-                foreach($userPrefLangs as $testLocale){
-                    $testLocaleObj = new Zend_Locale($testLocale);
-                    $testLang = $testLocaleObj->getLanguage();
-                    if(file_exists($session->runtimeOptions->dir->locales.DIRECTORY_SEPARATOR.$testLang.'.xliff')){
-                        $session->locale = $testLang;
-                        break;
-                    }
+        
+        $fallback = $config->runtimeOptions->translation->sourceCodeLocale;
+        
+        //check for application configuration
+        if($appLocale = $config->runtimeOptions->translation->applicationLocale) {
+            if (!Zend_Locale::isLocale($appLocale)) {
+                error_log('Configured runtimeOptions.translation.applicationLocale is no valid locale, using '.$fallback);
+                $appLocale = $fallback;
+            }
+            $session->locale = $appLocale;
+        }
+        
+        //use browser language as fallback
+        if (!isset($session->locale)) {
+            $session->locale = $this->getLocaleFromBrowser();
+            //fallback
+            if(!$session->locale){
+                $session->locale = $fallback;
+            }
+        }
+        $this->registerLocale($session->locale);
+    }
+    
+    /**
+     * gets locale from browser
+     * @return string
+     */
+    protected function getLocaleFromBrowser() {
+        $config = Zend_Registry::get('config');
+        $localeObj = new Zend_Locale();
+        $userPrefLangs = array_keys($localeObj->getBrowser());
+        if(count($userPrefLangs)>0){
+            //Prüfe, ob für jede locale, ob eine xliff-Datei vorhanden ist - wenn nicht fallback
+            foreach($userPrefLangs as $testLocale){
+                $testLocaleObj = new Zend_Locale($testLocale);
+                $testLang = $testLocaleObj->getLanguage();
+                if(file_exists($config->runtimeOptions->dir->locales.DIRECTORY_SEPARATOR.$testLang.'.xliff')){
+                    return $testLang;
                 }
             }
-            if(!$session->locale){
-                $session->locale = $session->runtimeOptions->translation->sourceCodeLocale;
-            }
         }
+    }
+    
+    /**
+     * registers the given locale in the application as locale to be used
+     * @param unknown $locale
+     */
+    protected function registerLocale($locale) {
         // Speicher locale und translation-object in Registry - so gilt sie für alle locale und
-        $localeRegObj = new Zend_Locale($session->locale);
+        $localeRegObj = new Zend_Locale($locale);
         
         //Prüfe, ob für die locale eine xliff-Datei vorhanden ist - wenn nicht fallback
         Zend_Registry::set('Zend_Locale', $localeRegObj);
