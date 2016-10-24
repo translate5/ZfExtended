@@ -77,6 +77,7 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
      * @return bool
      */
     public function indexAction() {
+        $this->_form->setTranslator($this->_translate);
         if($this->isMaintenanceLoginLock()){
             return;
         }
@@ -259,6 +260,8 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
      */
     public function passwdresetAction() {
         $this->_form = new ZfExtended_Zendoverwrites_Form('loginPasswdreset.ini');
+        $this->_form->setTranslator($this->_translate);
+        
         if($this->getRequest()->getParam('login')
                 && $this->_form->isValid($this->_request->getParams())){
             $passwdreset = ZfExtended_Factory::get('ZfExtended_Models_Passwdreset');
@@ -287,6 +290,7 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
         $this->view->passwdResetInfo = false;
         if($this->getRequest()->getParam('resetHash',false)){
             $this->_form = new ZfExtended_Zendoverwrites_Form('loginPasswdnew.ini');
+            $this->_form->setTranslator($this->_translate);
             $md5Validator = new ZfExtended_Validate_Md5();
             if(!$md5Validator->isValid($this->getRequest()->getParam('resetHash'))){
                 $this->passwdResetHashNotValid();
@@ -318,6 +322,7 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
                 $invalidLogin->resetCounter();
                 
                 $this->_form = new ZfExtended_Zendoverwrites_Form('loginIndex.ini');
+                $this->_form->setTranslator($this->_translate);
                 $this->view->heading = $this->_translate->_('Login');
                 $this->view->message = $this->_translate->_('Ihr Passwort wurde neu gesetzt. Sie können sich nun einloggen.');
             }
@@ -332,6 +337,7 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
      */
     protected function passwdResetHashNotValid() {
         $this->_form = new ZfExtended_Zendoverwrites_Form('loginPasswdreset.ini');
+        $this->_form->setTranslator($this->_translate);
         $this->view->errors = true;
         $this->_form->addError('Der ResetHash oder die Browsersitzung ist nicht (mehr) gültig. Bitte fordern Sie über das nebenstehende Formular eine E-Mail mit einem neuen Link an.');
         $this->view->form = $this->_form;
