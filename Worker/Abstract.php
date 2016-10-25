@@ -274,7 +274,10 @@ abstract class ZfExtended_Worker_Abstract {
         $instance->workerModel = $model;
         
         if (!$instance->init($model->getTaskGuid(), $model->getParameters())) {
-            $instance->log->logError('Worker can not be instanced from stored workerModel', __CLASS__.' -> '.__FUNCTION__.'; $model->getParameters(): '.print_r($model->getParameters(), true));
+            $msg = get_called_class().' -> '.__FUNCTION__;
+            $msg .= ' Model: '.get_class($instance);
+            $msg .= '; $model->getParameters(): '.print_r($model->getParameters(), true);
+            $instance->log->logError('Worker can not be instanced from stored workerModel', $msg);
             return false;
         }
         
@@ -446,6 +449,10 @@ abstract class ZfExtended_Worker_Abstract {
         $this->wakeUpAndStartNextWorkers($this->finishedWorker->getTaskGuid());
         
         if(!empty($this->workerException)) {
+            if($this->workerException instanceof  Zend_Exception) {
+                //when a worker runs into an exception we want to have always a log
+                $this->workerException->setLogging(true);
+            }
             throw $this->workerException;
         }
         
