@@ -43,6 +43,12 @@ class DatabaseController extends ZfExtended_Controllers_Action {
             exit;
         }
         
+        $errors = $dbupdater->getErrors(); //check for credential errors
+        if(!empty($errors)) {
+            $this->view->errors = $dbupdater->getErrors();
+            return;
+        }
+        
         settype($_POST['startimport'], 'boolean');
         if($_POST['startimport']) {
             $toProcess = $_POST;

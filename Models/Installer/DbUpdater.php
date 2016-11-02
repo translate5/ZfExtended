@@ -64,6 +64,10 @@ class ZfExtended_Models_Installer_DbUpdater {
      */
     protected $doNotSavePhpForDebugging = true;
     
+    public function __construct() {
+        $this->checkCredentials();
+    }
+    
     /**
      * Forcing all available SQL files to be set as imported in the DB, regardless if the contents were really applied or not.
      * For setting up dbversioning on instances where all SQL files are already installed.
@@ -332,9 +336,10 @@ class ZfExtended_Models_Installer_DbUpdater {
      * creates a shell exec command 
      * @param string $mysqlExecutable
      * @param mixed $credentials
+     * @param boolean $addFileParam optional, default true. If false the file to import is omitted
      * @return string
      */
-    protected function makeSqlCmd($mysqlExecutable, $credentials) {
+    protected function makeSqlCmd($mysqlExecutable, $credentials, $addFileParam = true) {
         $cmd = array(escapeshellarg($mysqlExecutable));
         $cmd[] = '-h';
         $cmd[] = escapeshellarg($credentials->host);
@@ -344,7 +349,10 @@ class ZfExtended_Models_Installer_DbUpdater {
             $cmd[] = '-p'.escapeshellarg($credentials->password);
         }
         $cmd[] = escapeshellarg($credentials->dbname);
-        $cmd[] = '< %s 2>&1';
+        if($addFileParam) {
+            $cmd[] = '< %s';
+        }
+        $cmd[] = '2>&1';
         return join(' ', $cmd);
     }
     
@@ -380,7 +388,9 @@ class ZfExtended_Models_Installer_DbUpdater {
      * @return array
      */
     public function importAll() {
-        
+        if(!empty($this->errors)) {
+            return;
+        }
         //FIXME this "if" must be removed after some time when the installer script can check itself if it was changed while updating.
         // This lines are faking this behaviour for the first time to solve the chicken egg problem
         if(PHP_SAPI == 'cli' && func_num_args() == 0) {
@@ -402,5 +412,47 @@ class ZfExtended_Models_Installer_DbUpdater {
         $this->applyNew($toProcess);
         $this->updateModified($toProcess);
         return array('new' => count($new), 'modified' => count($mod));
+    }
+    
+    protected function checkCredentials() {
+        $config = Zend_Registry::get('config');
+        /* @var $config Zend_Config */
+        $db = $config->resources->db->params;
+        $exec = $this->getDbExec();
+        $call = $this->makeSqlCmd($exec, $db, false);
+        exec($call, $output, $result);
+        if($result === 0) {
+            return;
+        }
+        $msg = 'No connection to MySQL server through commandline. Called command: '.$exec.".\n";
+        if(stripos(join("\n", $output), 'Access denied for user') === false) {
+            $msg .= 'Result of Command: '.print_r($output,1);
+            $this->errors[] = $msg;
+            return;
+        }
+        $msg .= 'You could not be authenticated at the MySQL Server.';
+        
+        $tocheck = array(
+            'host' => $db->host,
+            'username' => $db->username,
+            'password' => $db->password,
+            'dbname' => $db->dbname,
+        );
+        
+        $hasSpecialCharacters = false;
+        foreach($tocheck as $key => $value) {
+            if (!empty($value) && !preg_match('/^[A-Z0-9]+$/i', $value)) {
+                $msg .= "\n".'  Your DB '.$key.' contains the following special characters: '.preg_replace('/[A-Z0-9]/i', '', $value);
+                $hasSpecialCharacters = true;
+            }
+        }
+        if($hasSpecialCharacters) {
+            $msg .= "\n".'This special characters can be the reason for the problems, ';
+            $msg .= "\n".'since the command-line can not deal with them properly. ';
+            $msg .= "\n".'Please try to change the above mentioned values to a value without special characters, and try it again. ';
+        } else {
+            $msg .= "\n".'Please verify the DB credentials in the configuration file installation.ini.';
+        }
+        $this->errors[] = $msg;
     }
 }
