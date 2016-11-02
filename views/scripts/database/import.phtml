@@ -36,6 +36,14 @@ if($this->importStarted) {
         echo '</pre>';
     }
 }
+else {
+    if(!empty($this->errors)) {
+        echo '<b>The following MySQL connection errors have occurred:</b><pre>';
+        print_r($this->errors);
+        echo '</pre>';
+        return;
+    }
+}
 
 if(empty($this->sqlFilesNew) && empty($this->sqlFilesChanged)) {
     echo "<h2>No modified / new SQL files found!</h2><br /><br />";
