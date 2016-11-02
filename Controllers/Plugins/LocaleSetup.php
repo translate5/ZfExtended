@@ -88,7 +88,7 @@ class ZfExtended_Controllers_Plugins_LocaleSetup extends Zend_Controller_Plugin_
         $fallback = $config->runtimeOptions->translation->sourceCodeLocale;
         
         //check for application configuration
-        if($appLocale = $config->runtimeOptions->translation->applicationLocale) {
+        if(!isset($session->locale) && $appLocale = $config->runtimeOptions->translation->applicationLocale) {
             if (!Zend_Locale::isLocale($appLocale)) {
                 error_log('Configured runtimeOptions.translation.applicationLocale is no valid locale, using '.$fallback);
                 $appLocale = $fallback;
