@@ -178,7 +178,7 @@ abstract class ZfExtended_Models_Entity_Abstract {
     public function loadRowBySelect(Zend_Db_Table_Select $s) {
         $this->row = $this->db->fetchRow($s);
         if(empty($this->row)){
-            $this->notFound('#bySelect');
+            $this->notFound('#bySelect', $s);
         }
         return $this->row;
     }
