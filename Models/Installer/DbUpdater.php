@@ -419,9 +419,8 @@ class ZfExtended_Models_Installer_DbUpdater {
         /* @var $config Zend_Config */
         $db = $config->resources->db->params;
         $exec = $this->getDbExec();
-        $call = $this->makeSqlCmd($exec, $db, false);
-        exec($call, $output, $result);
-        if($result === 0) {
+        $exitFile = APPLICATION_PATH."/../library/ZfExtended/database/000-exit";
+        if($this->executeSqlFile($exec, $db, $exitFile, $output)) {
             return;
         }
         $msg = 'No connection to MySQL server through commandline. Called command: '.$exec.".\n";
