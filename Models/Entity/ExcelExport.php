@@ -274,7 +274,7 @@ class ZfExtended_Models_Entity_ExcelExport {
         // for date fields the following callback must be set
         $stringToDate = function($string) {
             $date = strtotime($string);
-            $date = PHPExcel_Shared_Date::PHPToExcel($date);
+            $date = PHPExcel_Shared_Date::PHPToExcel($date,true);
             return $date;
         };
         
