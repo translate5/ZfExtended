@@ -60,6 +60,6 @@ class ZfExtended_Controllers_Plugins_AddGeneralTitle extends Zend_Controller_Plu
         $translate = ZfExtended_Zendoverwrites_Translate::getInstance();
         /* @var $translate ZfExtended_Zendoverwrites_Translate */;
         $this->_viewRenderer->view->headTitle()->setSeparator(' - ')
-                ->append('TMOps');
+                ->append($translate->_('GeneralMetatagTitleSuffix'));
     }
 }
