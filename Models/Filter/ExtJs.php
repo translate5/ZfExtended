@@ -273,4 +273,46 @@ class ZfExtended_Models_Filter_ExtJs extends ZfExtended_Models_Filter {
       array_pop($where);
       $this->where(implode('', $where));
   }
+  /***
+   * Return all filters as object array
+   */
+  public function getFilters(){
+      return $this->filter;
+  }
+  
+  /**
+   * Remouves filter by filter name ($filter->field)
+   * @param filterName
+   * @return boolean
+   */
+  public function deleteFilter($filterName) {
+      //checking for a specific filtered field
+      foreach($this->filter as $index => $filter) {
+          if($filter->field === $filterName) {
+              unset($this->filter[$index]);
+              return true;
+          }
+      }
+      return false;
+  }
+  
+  /**
+   * returns true if filter info is given
+   * @param string $fieldName optional, if given checks if a filter for the given original fieldName is set
+   * @param object $foundFilter optional, is a reference, will be populated with the found filter (if a name was given)
+   * @return boolean
+   */
+  public function hasFilter($fieldName = false, & $foundFilter = null){
+      if($fieldName === false) {
+          return !empty($this->filter);
+      }
+      //checking for a specific filtered field
+      foreach($this->filter as $filter) {
+          if($filter->field === $fieldName) {
+              $foundFilter = $filter;
+              return true;
+          }
+      }
+      return false;
+  }
 }
