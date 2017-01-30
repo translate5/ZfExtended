@@ -295,7 +295,15 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
       $this->view->errors = $this->transformErrors($e->getErrors());
       $this->view->message = "NOT OK";
       $this->view->success = false;
-      $this->getResponse()->setHttpResponseCode($e->getCode());
+      $httpStatus = $e->getCode();
+      
+      //ExtJS does not parse the HTTP Status well on file uploads. 
+      // In this case we deliver the status as additional information
+      if(!empty($_FILES)) {
+          $this->view->httpStatus = $httpStatus;
+      }
+      
+      $this->getResponse()->setHttpResponseCode($httpStatus);
   }
   
   /**

@@ -328,6 +328,11 @@ class ErrorController extends ZfExtended_Controllers_Action
             $this->_log->logException($this->_exception);
         }
         $this->getResponse()->setHttpResponseCode($highestError->_errorCode);
+        //ExtJS does not parse the HTTP Status well on file uploads. 
+        // In this case we deliver the status as additional information
+        if($this->isRestRoute() && !empty($_FILES)) {
+            $this->view->httpStatus = $highestError->_errorCode;
+        }
         $this->renderScript($this->_renderScript);
     }
 

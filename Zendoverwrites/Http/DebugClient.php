@@ -34,11 +34,25 @@ END LICENSE AND COPYRIGHT
  * @version 2.0
  *
  */
-/* @var $this Zend_View */
-echo $this->errors[0]->_errorMessage;
-if(isset($this->errors[0]) && isset($this->errors[0]->_errorTrace)) {
-    unset($this->errors[0]->_errorTrace);
+/**
+ * Debug Mockup of Zend_Http_Client class
+ * Can be invoked with factory overwrite mechanisms
+ * Logs communication to the PHP log
+ */
+class  ZfExtended_Zendoverwrites_Http_DebugClient extends Zend_Http_Client {
+    public function request($method = null){
+        $category = 'plugin';
+        $section = 'MatchResource';
+        
+        if(ZfExtended_Debug::hasLevel($category, $section, 2)) {
+            error_log("URL: ".$this->getUri(true));
+            error_log("\n\nDATA: \n".$this->raw_post_data."\n\n");
+        }
+        $response = parent::request($method);
+        if(ZfExtended_Debug::hasLevel($category, $section, 2)) {
+            error_log("Status: ".print_r($response->getStatus(),1));
+            error_log("Raw Body: ".print_r($response->getRawBody(),1));
+        }
+        return $response;
+    }
 }
-unset($this->translate);
-unset($this->getParams);
-unset($this->errorCollect);
