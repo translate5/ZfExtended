@@ -127,6 +127,13 @@ abstract class ZfExtended_Models_Filter {
       $this->filter[] = $filter;
   }
   
+  /***
+   * Return all filters as object array
+   */
+  public function getFilters(){
+      return $this->filter;
+  }
+  
   /**
    * Remouves filter by filter name ($filter->field)
    * @param filterName
