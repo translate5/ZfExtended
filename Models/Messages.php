@@ -50,6 +50,13 @@ class ZfExtended_Models_Messages {
      */
     protected function add(array $data, $type) {
         $data['type'] = $type;
+        if(empty($data['id'])) {
+            //we have to remove the null id here, since ExtJSs markInvalids findField will evaluate 
+            // this to the first segment with an empty dataIndex (which is nearly every formfield!)
+            // same when unsetting it, so the only solution is to init it with a JS non bool value 
+            // which does not evaluate to any field, this is -1
+            $data['id'] = -1; 
+        }
         if(!empty($data['msg'])) {
             $translate = ZfExtended_Zendoverwrites_Translate::getInstance();
             $data['msg'] = $translate->_($data['msg']);
@@ -58,34 +65,37 @@ class ZfExtended_Models_Messages {
     }
     
     /**
-     * adds a notice msg, origin is core or the pluginname
+     * adds a notice msg, origin is core or the pluginname, data will be added untranslated
      * 
      * @param string $msg
      * @param string $origin
      * @param string $id
+     * @param string $data
      */
-    public function addNotice($msg, $origin = 'core', $id = null) {
-        $this->add(compact('origin', 'msg', 'id'), self::TYPE_NOTICE);
+    public function addNotice($msg, $origin = 'core', $id = null, $data = null) {
+        $this->add(compact('origin', 'msg', 'id', 'data'), self::TYPE_NOTICE);
     }
     
     /**
-     * adds a error msg, origin is core or the pluginname
+     * adds a error msg, origin is core or the pluginname, data will be added untranslated
      * @param string $msg
      * @param string $origin
      * @param string $id
+     * @param string $data
      */
-    public function addError($msg, $origin = 'core', $id = null) {
-        $this->add(compact('origin', 'msg', 'id'), self::TYPE_ERROR);
+    public function addError($msg, $origin = 'core', $id = null, $data = null) {
+        $this->add(compact('origin', 'msg', 'id', 'data'), self::TYPE_ERROR);
     }
     
     /**
-     * adds a warning msg, origin is core or the pluginname
+     * adds a warning msg, origin is core or the pluginname, data will be added untranslated
      * @param string $msg
      * @param string $origin
      * @param string $id
+     * @param string $data
      */
-    public function addWarning($msg, $origin = 'core', $id = null) {
-        $this->add(compact('origin', 'msg', 'id'), self::TYPE_WARNING);
+    public function addWarning($msg, $origin = 'core', $id = null, $data = null) {
+        $this->add(compact('origin', 'msg', 'id', 'data'), self::TYPE_WARNING);
     }
     
     /**

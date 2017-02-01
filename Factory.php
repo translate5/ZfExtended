@@ -37,7 +37,9 @@ END LICENSE AND COPYRIGHT
  * Factory implements the factory pattern  
  * to overwrite classes this has to be configured in the factoryOverwrites part of the app.ini
  */
-class  ZfExtended_Factory {
+class ZfExtended_Factory {
+    public static $overwrites = null;
+    
     /**
      * returns a $className instance, currently only for models
      * ControllerHelper are loaded automagicly by ZfExtended_Zendoverwrites_Controller_Action_HelperBroker
@@ -47,12 +49,37 @@ class  ZfExtended_Factory {
      * @return mixed
      */
     public static function get(string $className, array $params = array()){
-        $config = Zend_Registry::get('config');
-        $fo = $config->factoryOverwrites;
-        if(isset($fo->models->$className)){
-            $className = $fo->models->$className;
+        self::initOverwrites();
+        if(isset(self::$overwrites[$className])){
+            $className = self::$overwrites[$className];
         }
         $rc = new ReflectionClass($className);
         return $rc->newInstanceArgs($params);
+    }
+    
+    /**
+     * Adds a new class overwrite, first parameter is the class to overwrite, second parameter the new class
+     * @param string $toOverwrite
+     * @param string $newClass
+     */
+    public static function addOverwrite($toOverwrite, $newClass) {
+        self::$overwrites[$toOverwrite] = $newClass;
+    }
+    
+    /**
+     * inits the internal overwrite array
+     */
+    protected static function initOverwrites() {
+        if(self::$overwrites !== null) {
+            return;
+        }
+        $config = Zend_Registry::get('config');
+        /* @var $config Zend_Config */
+        $fo = $config->factoryOverwrites;
+        if(!isset($fo->models)) {
+            self::$overwrites = array();
+            return;
+        }
+        self::$overwrites = $fo->models->toArray();
     }
 }
