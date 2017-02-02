@@ -116,6 +116,7 @@ class ZfExtended_Models_Filter_ExtJs extends ZfExtended_Models_Filter {
         case 'list':
         case 'notInList':
         case 'listAsString':
+        case 'listCommaSeparated':
         case 'string':
         case 'boolean':
             $this->$method($field, $filter->value);
@@ -269,6 +270,16 @@ class ZfExtended_Models_Filter_ExtJs extends ZfExtended_Models_Filter {
       foreach($values as $value){
         $where[] = $db->quoteInto($field.' like ?', '%'.$value.'%');
         $where[] = ' OR ';
+      }
+      array_pop($where);
+      $this->where(implode('', $where));
+  }
+  protected function applyListCommaSeparated(string $field, array $values){
+      $db = Zend_Registry::get('db');
+      $where = array();
+      foreach($values as $value){
+          $where[] = $db->quoteInto($field.' like ?', '%,'.$value.'%,');
+          $where[] = ' OR ';
       }
       array_pop($where);
       $this->where(implode('', $where));
