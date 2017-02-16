@@ -265,24 +265,37 @@ class ZfExtended_Models_Filter_ExtJs extends ZfExtended_Models_Filter {
    * @param array $values
    */
   protected function applyListAsString(string $field, array $values) {
-      $db = Zend_Registry::get('db');
-      $where = array();
-      foreach($values as $value){
-        $where[] = $db->quoteInto($field.' like ?', '%'.$value.'%');
-        $where[] = ' OR ';
-      }
-      array_pop($where);
-      $this->where(implode('', $where));
+      $this->applayListAsString($field,$values);
   }
+  /**
+  * Converts a list filter based on a string search, 
+  * where the search values are surrounded with comma
+  * 
+  * - Filter type does not come from native ExtJs
+  * - Filter type is set by mapping
+  * @param string $field
+  * @param array  $values
+  */
   protected function applyListCommaSeparated(string $field, array $values){
+      $this->applayListAsString($field,$values,true);
+  }
+
+  /**
+  * Converts a list filter based on a string search, 
+  * where the search values are surrounded with comma if $addcoma parametar is true
+  * 
+  * - Filter type does not come from native ExtJs
+  * - Filter type is set by mapping
+  * @param string $field
+  * @param array  $values
+  * @param bool   $addcoma
+  */
+  private function applayListAsString(string $field, array $values,$addcoma = false){
       $db = Zend_Registry::get('db');
       $where = array();
       foreach($values as $value){
-          $where[] = $db->quoteInto($field.' like ?', '%,'.$value.'%,');
-          $where[] = ' OR ';
+          $where[] = $db->quoteInto($field.' like ?', '%'.($addcoma ? ',':'').$value.($addcoma ? ',':'').'%');
       }
-      array_pop($where);
-      $this->where(implode('', $where));
+      $this->where(implode(' OR ', $where));
   }
-  
 }
