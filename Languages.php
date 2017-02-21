@@ -44,7 +44,6 @@ END LICENSE AND COPYRIGHT
 * @method int getId() getId()
 */
 class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract {
-    protected $dbInstanceClass = 'erp_Models_Db_Languages';
 
     const LANG_TYPE_ID = 'id';
     const LANG_TYPE_RFC5646 = 'rfc5646';
