@@ -179,23 +179,23 @@ class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract {
     /***
      * Order languages based on the zf config languages order (ex. DE,FR,IT,MK ...)
      * @param array $languages
-     * @param string $zfcongiglangs
+     * @param string $zfconfiglangs
      * @return array
      */
-    public function orderLanguages($languages,$zfcongiglangs){
-        if(!isset($zfcongiglangs)){
+    public function orderLanguages($languages,$zfconfiglangs){
+        if(!isset($zfconfiglangs)){
             return $languages;
         }
-        $zfcongiglangs=$zfcongiglangs->toArray();
-        if(empty($zfcongiglangs)){
+        $zfconfiglangs=$zfconfiglangs->toArray();
+        if(empty($zfconfiglangs)){
             return $languages;
         }
-        foreach ($zfcongiglangs as $lng){
+        foreach ($zfconfiglangs as $lng){
             $oldIndex = array_search($lng, array_column($languages, 1));
             if(!$oldIndex){
                 continue;
             }
-            $newIndex =array_search($lng, $zfcongiglangs);
+            $newIndex =array_search($lng, $zfconfiglangs);
             $tmp = $languages[$newIndex];
             $languages[$newIndex] =$languages[$oldIndex];
             $languages[$oldIndex] = $tmp;
