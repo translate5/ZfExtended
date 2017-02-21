@@ -45,6 +45,7 @@ class  ZfExtended_Zendoverwrites_Http_DebugClient extends Zend_Http_Client {
         $section = 'MatchResource';
         
         if(ZfExtended_Debug::hasLevel($category, $section, 2)) {
+            error_log("Method: ".$method);
             error_log("URL: ".$this->getUri(true));
             error_log("\n\nDATA: \n".$this->raw_post_data."\n\n");
         }
