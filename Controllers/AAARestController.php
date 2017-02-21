@@ -297,7 +297,7 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
    */
   protected function handleValidateException(ZfExtended_ValidateException $e) {
       $this->view->errors = $this->transformErrors($e->getErrors());
-      $this->handleErrorResponse();
+      $this->handleErrorResponse($e->getCode());
   }
   
   /**
@@ -307,7 +307,7 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
   protected function handleException(ZfExtended_Exception $e) {
       $this->log->logException($e);
       $this->restMessages->addException($e);
-      $this->handleErrorResponse();
+      $this->handleErrorResponse($e->getCode());
       //this postDispatch and notifyPostDispatch calls are needed to finish 
       // the request properly and render the error messages properly
       $this->postDispatch();
@@ -316,11 +316,11 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
   
   /**
    * prepares the result in case of an error
+   * @param integer $httpStatus
    */
-  protected function handleErrorResponse() {
+  protected function handleErrorResponse($httpStatus) {
       $this->view->message = "NOT OK";
       $this->view->success = false;
-      $httpStatus = $e->getCode();
           
       //ExtJS does not parse the HTTP Status well on file uploads. 
       // In this case we deliver the status as additional information
