@@ -42,6 +42,12 @@ class ZfExtended_Exception extends Zend_Exception {
     protected $errors;
     
     /**
+     * internal origin store
+     * @var string
+     */
+    protected $origin = 'core';
+    
+    /**
      * Flag if logging for this exception is enabled / disabled
      * @var boolean
      */
@@ -69,9 +75,10 @@ class ZfExtended_Exception extends Zend_Exception {
      * @param  string $msg (Message gets translated by ZfExtended_Exception)
      * @param  int $code
      * @param  Exception $previous
+     * @param  string $origin optional, defaults to core. Can be the plugin name, or another system identifier
      * @return void
      */
-    public function __construct($msg = '', $code = 0, Exception $previous = null)
+    public function __construct($msg = '', $code = 0, Exception $previous = null, $origin = 'core')
     {
         if((int)$code === 0){
             $code = $this->defaultCode;
@@ -82,6 +89,7 @@ class ZfExtended_Exception extends Zend_Exception {
         else {
             $this->setMessage($msg);
         }
+        $this->setOrigin($origin);
         parent::__construct($this->message, (int) $code, $previous);
     }
     
@@ -112,6 +120,22 @@ class ZfExtended_Exception extends Zend_Exception {
      */
     public function getErrors() {
         return $this->errors;
+    }
+    
+    /**
+     * stores the origin of the exception (plugin name, etc), defaults to core
+     * @param string $origin
+     */
+    public function setOrigin(string $origin) {
+        $this->origin = $origin;
+    }
+
+    /**
+     * return the internally stored origin
+     * @return array
+     */
+    public function getOrigin() {
+        return $this->origin;
     }
     
     /**

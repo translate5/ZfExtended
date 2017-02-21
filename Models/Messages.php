@@ -88,6 +88,26 @@ class ZfExtended_Models_Messages {
     }
     
     /**
+     * adds a error msg, origin is core or the pluginname, data will be added untranslated
+     * @param string $msg
+     * @param string $origin
+     * @param string $id
+     * @param string $data
+     */
+    public function addException(ZfExtended_Exception $e) {
+        $msg = $e->getMessage();
+        $data = $e->getErrors();
+        if(method_exists($e, 'getOrigin')) {
+            $origin = $e->getOrigin();
+        }
+        else {
+            $origin = 'core';
+        }
+        $id = null;
+        $this->add(compact('origin', 'msg', 'id', 'data'), self::TYPE_ERROR);
+    }
+    
+    /**
      * adds a warning msg, origin is core or the pluginname, data will be added untranslated
      * @param string $msg
      * @param string $origin
