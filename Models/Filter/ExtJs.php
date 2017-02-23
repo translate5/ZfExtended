@@ -116,6 +116,7 @@ class ZfExtended_Models_Filter_ExtJs extends ZfExtended_Models_Filter {
         case 'list':
         case 'notInList':
         case 'listAsString':
+        case 'listCommaSeparated':
         case 'string':
         case 'boolean':
             $this->$method($field, $filter->value);
@@ -264,55 +265,37 @@ class ZfExtended_Models_Filter_ExtJs extends ZfExtended_Models_Filter {
    * @param array $values
    */
   protected function applyListAsString(string $field, array $values) {
+      $this->applayListAsString($field,$values);
+  }
+  /**
+  * Converts a list filter based on a string search, 
+  * where the search values are surrounded with comma
+  * 
+  * - Filter type does not come from native ExtJs
+  * - Filter type is set by mapping
+  * @param string $field
+  * @param array  $values
+  */
+  protected function applyListCommaSeparated(string $field, array $values){
+      $this->applayListAsString($field,$values,true);
+  }
+
+  /**
+  * Converts a list filter based on a string search, 
+  * where the search values are surrounded with comma if $addcoma parametar is true
+  * 
+  * - Filter type does not come from native ExtJs
+  * - Filter type is set by mapping
+  * @param string $field
+  * @param array  $values
+  * @param bool   $addcoma
+  */
+  private function applayListAsString(string $field, array $values,$addcoma = false){
       $db = Zend_Registry::get('db');
       $where = array();
       foreach($values as $value){
-        $where[] = $db->quoteInto($field.' like ?', '%'.$value.'%');
-        $where[] = ' OR ';
+          $where[] = $db->quoteInto($field.' like ?', '%'.($addcoma ? ',':'').$value.($addcoma ? ',':'').'%');
       }
-      array_pop($where);
-      $this->where(implode('', $where));
-  }
-  /***
-   * Return all filters as object array
-   */
-  public function getFilters(){
-      return $this->filter;
-  }
-  
-  /**
-   * Remouves filter by filter name ($filter->field)
-   * @param filterName
-   * @return boolean
-   */
-  public function deleteFilter($filterName) {
-      //checking for a specific filtered field
-      foreach($this->filter as $index => $filter) {
-          if($filter->field === $filterName) {
-              unset($this->filter[$index]);
-              return true;
-          }
-      }
-      return false;
-  }
-  
-  /**
-   * returns true if filter info is given
-   * @param string $fieldName optional, if given checks if a filter for the given original fieldName is set
-   * @param object $foundFilter optional, is a reference, will be populated with the found filter (if a name was given)
-   * @return boolean
-   */
-  public function hasFilter($fieldName = false, & $foundFilter = null){
-      if($fieldName === false) {
-          return !empty($this->filter);
-      }
-      //checking for a specific filtered field
-      foreach($this->filter as $filter) {
-          if($filter->field === $fieldName) {
-              $foundFilter = $filter;
-              return true;
-          }
-      }
-      return false;
+      $this->where(implode(' OR ', $where));
   }
 }
