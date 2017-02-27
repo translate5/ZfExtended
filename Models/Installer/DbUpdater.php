@@ -64,8 +64,23 @@ class ZfExtended_Models_Installer_DbUpdater {
      */
     protected $doNotSavePhpForDebugging = true;
     
-    public function __construct() {
-        $this->checkCredentials();
+    /**
+     * DB credentials, exec and base path must be given as parameter in usage of a non Zend Environment
+     * @param stdClass $db optional
+     * @param string $exec optional
+     * @param string $path optional
+     */
+    public function __construct(stdClass $db = null, $exec = null, $path = null) {
+        if(class_exists('Zend_Registry')) {
+            $config = Zend_Registry::get('config');
+            /* @var $config Zend_Config */
+            $db = (object) $config->resources->db->params->toArray();
+            $exec = $this->getDbExec();
+            $path = APPLICATION_PATH.'/..';
+        }
+        if(!empty($db)) {
+            $this->checkCredentials($db, $exec, $path);
+        }
     }
     
     /**
@@ -414,13 +429,17 @@ class ZfExtended_Models_Installer_DbUpdater {
         return array('new' => count($new), 'modified' => count($mod));
     }
     
-    protected function checkCredentials() {
-        $config = Zend_Registry::get('config');
-        /* @var $config Zend_Config */
-        $db = $config->resources->db->params;
-        $exec = $this->getDbExec();
-        $exitFile = APPLICATION_PATH."/../library/ZfExtended/database/000-exit";
-        if($this->executeSqlFile($exec, $db, $exitFile, $output)) {
+    /**
+     * Not all environments can deal with all characters in the DB credentials.
+     * This is checked here. 
+     * 
+     * @param stdClass $credentials
+     * @param string $exec
+     * @param string $path
+     */
+    protected function checkCredentials(stdClass $credentials, $exec, $path) {
+        $exitFile = $path."/library/ZfExtended/database/000-exit";
+        if($this->executeSqlFile($exec, $credentials, $exitFile, $output)) {
             return;
         }
         $msg = 'No connection to MySQL server through commandline. Called command: '.$exec.".\n";
@@ -432,10 +451,10 @@ class ZfExtended_Models_Installer_DbUpdater {
         $msg .= 'You could not be authenticated at the MySQL Server.';
         
         $tocheck = array(
-            'host' => $db->host,
-            'username' => $db->username,
-            'password' => $db->password,
-            'dbname' => $db->dbname,
+            'host' => $credentials->host,
+            'username' => $credentials->username,
+            'password' => $credentials->password,
+            'dbname' => $credentials->dbname,
         );
         
         $hasSpecialCharacters = false;
@@ -450,7 +469,7 @@ class ZfExtended_Models_Installer_DbUpdater {
             $msg .= "\n".'since the command-line can not deal with them properly. ';
             $msg .= "\n".'Please try to change the above mentioned values to a value without special characters, and try it again. ';
         } else {
-            $msg .= "\n".'Please verify the DB credentials in the configuration file installation.ini.';
+            $msg .= "\n".'Please verify the DB credentials in the configuration file installation.ini or entered in installation process.';
         }
         $this->errors[] = $msg;
     }
