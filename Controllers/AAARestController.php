@@ -261,6 +261,10 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
           }
           throw $e;
       }
+      catch(ZfExtended_BadGateway $e) {
+          $this->handleException($e);
+          return;
+      }
 
       if(empty($this->view->message) && empty($this->view->success)) {
           $this->view->message = "OK";
@@ -293,10 +297,31 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
    */
   protected function handleValidateException(ZfExtended_ValidateException $e) {
       $this->view->errors = $this->transformErrors($e->getErrors());
+      $this->handleErrorResponse($e->getCode());
+  }
+  
+  /**
+   * handles a general ZfExtended_Exception
+   * @param ZfExtended_Exception $e
+   */
+  protected function handleException(ZfExtended_Exception $e) {
+      $this->log->logException($e);
+      $this->restMessages->addException($e);
+      $this->handleErrorResponse($e->getCode());
+      //this postDispatch and notifyPostDispatch calls are needed to finish 
+      // the request properly and render the error messages properly
+      $this->postDispatch();
+      $this->_helper->notifyPostDispatch();
+  }
+  
+  /**
+   * prepares the result in case of an error
+   * @param integer $httpStatus
+   */
+  protected function handleErrorResponse($httpStatus) {
       $this->view->message = "NOT OK";
       $this->view->success = false;
-      $httpStatus = $e->getCode();
-      
+          
       //ExtJS does not parse the HTTP Status well on file uploads. 
       // In this case we deliver the status as additional information
       if(!empty($_FILES)) {

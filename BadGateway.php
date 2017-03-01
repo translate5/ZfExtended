@@ -28,32 +28,19 @@ START LICENSE AND COPYRIGHT
 END LICENSE AND COPYRIGHT
 */
 
-/**#@+
- * @author Marc Mittag
- * @package ZfExtended
- * @version 2.0
- *
- */
 /**
- * Debug Mockup of Zend_Http_Client class
- * Can be invoked with factory overwrite mechanisms
- * Logs communication to the PHP log
+ * Bad Gateway means: Our System is OK, but the requested third party systems gives an error.
  */
-class  ZfExtended_Zendoverwrites_Http_DebugClient extends Zend_Http_Client {
-    public function request($method = null){
-        $category = 'plugin';
-        $section = 'MatchResource';
-        
-        if(ZfExtended_Debug::hasLevel($category, $section, 2)) {
-            error_log("Method: ".$method);
-            error_log("URL: ".$this->getUri(true));
-            error_log("\n\nDATA: \n".$this->raw_post_data."\n\n");
-        }
-        $response = parent::request($method);
-        if(ZfExtended_Debug::hasLevel($category, $section, 2)) {
-            error_log("Status: ".print_r($response->getStatus(),1));
-            error_log("Raw Body: ".print_r($response->getRawBody(),1));
-        }
-        return $response;
+class ZfExtended_BadGateway extends ZfExtended_Exception {
+    protected $defaultCode = 502;
+    protected $defaultMessage = 'Das angefragte Zielsystem antwortete mit einem Fehler. Fehlermeldung des Zielsystems:';
+    protected $defaultMessageTranslate = true;
+    
+    public function __toString(){
+        $msg = $this->message;
+        $this->message .= "\n".print_r($this->errors,1);
+        $res = parent::__toString();
+        $this->message = $msg;
+        return $res;
     }
 }

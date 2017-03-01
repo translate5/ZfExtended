@@ -306,7 +306,7 @@ class ZfExtended_Acl extends Zend_Acl {
     protected function includeController($path) {
         $objects = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($path,FilesystemIterator::CURRENT_AS_FILEINFO|FilesystemIterator::SKIP_DOTS));
         foreach($objects as $file => $object){
-            if (strstr($file, "Controller.php") !== false) {
+            if (strstr($file.'#', "Controller.php#") !== false) {
                 include_once $file;
             }
         }
