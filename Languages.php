@@ -77,6 +77,15 @@ class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract {
     }
 
     /**
+     * loads the languages by the given DB ID's
+     * @param string $id's
+     * @return Zend_Db_Table_Row_Abstract | null
+     */
+    public function loadByIds($ids){
+        return $this->loaderByIds($ids, 'id');
+    }
+
+    /**
      * @param mixed $lang
      * @param string $field
      * @return Zend_Db_Table_Row_Abstract | null
@@ -91,6 +100,21 @@ class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract {
         return $this->row;
     }
 
+    /**
+     * @param mixed $lang
+     * @param string $field
+     * @return Zend_Db_Table_Row_Abstract | null
+     */
+    protected function loaderByIds($langs, $field) {
+        $s = $this->db->select();
+        $s->where(''.$field.' IN('.$langs.')');
+        $retval = $this->db->fetchAll($s)->toArray();
+        if(empty($retval)){
+            $this->notFound('#by'.ucfirst($field), $langs);
+        }
+        return $retval;
+    }
+    
     /**
      * Returns all configured languages in an array for displaying in frontend
      * in format  [Mazedonisch] => Array
