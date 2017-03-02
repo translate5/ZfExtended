@@ -77,6 +77,15 @@ class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract {
     }
 
     /**
+     * loads the languages by the given DB ID's
+     * @param string $id's
+     * @return Zend_Db_Table_Row_Abstract | null
+     */
+    public function loadByIds($ids){
+        return $this->loaderByIds($ids, 'id');
+    }
+
+    /**
      * @param mixed $lang
      * @param string $field
      * @return Zend_Db_Table_Row_Abstract | null
@@ -91,6 +100,21 @@ class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract {
         return $this->row;
     }
 
+    /**
+     * @param mixed $lang
+     * @param string $field
+     * @return Zend_Db_Table_Row_Abstract | null
+     */
+    protected function loaderByIds($langs, $field) {
+        $s = $this->db->select();
+        $s->where(''.$field.' IN('.$langs.')');
+        $retval = $this->db->fetchAll($s)->toArray();
+        if(empty($retval)){
+            $this->notFound('#by'.ucfirst($field), $langs);
+        }
+        return $retval;
+    }
+    
     /**
      * Returns all configured languages in an array for displaying in frontend
      * in format  [Mazedonisch] => Array
@@ -176,25 +200,21 @@ class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract {
     }
 
     /***
-     * Order languages based on the zf config languages order (ex. DE,FR,IT,MK ...)
+     * Reorders a RFC5646 language list based to the order given in $preordered (ex. DE,FR,IT,MK ...)
      * @param array $languages
-     * @param string $zfconfiglangs
+     * @param array $preorderd
      * @return array
      */
-    public function orderLanguages($languages,$zfconfiglangs){
-        if(!isset($zfconfiglangs)){
+    public function orderLanguages($languages, array $preorderd){
+        if(empty($preorderd)){
             return $languages;
         }
-        $zfconfiglangs=$zfconfiglangs->toArray();
-        if(empty($zfconfiglangs)){
-            return $languages;
-        }
-        foreach ($zfconfiglangs as $lng){
+        foreach ($preorderd as $lng){
             $oldIndex = array_search($lng, array_column($languages, 1));
             if(!$oldIndex){
                 continue;
             }
-            $newIndex =array_search($lng, $zfconfiglangs);
+            $newIndex =array_search($lng, $preorderd);
             $tmp = $languages[$newIndex];
             $languages[$newIndex] =$languages[$oldIndex];
             $languages[$oldIndex] = $tmp;
