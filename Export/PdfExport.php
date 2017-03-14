@@ -28,9 +28,8 @@ http://www.gnu.org/licenses/agpl.html http://www.translate5.net/plugin-exception
 END LICENSE AND COPYRIGHT
 */
 
-require_once('fpdf181/fpdf.php');
-require_once('FPDI-1.6.1/fpdi.php');
-
-class ZfExtended_Export_PdfExport extends FPDI{
-
+//require_once('fpdf181/fpdf.php');
+//require_once('FPDI-1.6.1/fpdi.php');
+require_once('tfpdf/tfpdf.php');
+class ZfExtended_Export_PdfExport extends tFPDF{
 }
