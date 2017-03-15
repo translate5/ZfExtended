@@ -71,4 +71,5 @@ class ZfExtended_FileUploadException extends ZfExtended_Exception {
             case UPLOAD_ERR_EXTENSION:
                 return 'Eine PHP Erweiterung hat den Upload der Datei gestoppt. PHP bietet keine Möglichkeit an, um festzustellen welche Erweiterung das Hochladen der Datei gestoppt hat. Überprüfung aller geladenen Erweiterungen mittels phpinfo() könnte helfen.';
         }
+    }
 }
