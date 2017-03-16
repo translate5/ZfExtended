@@ -395,4 +395,8 @@ class  ZfExtended_Mail {
         $this->view->addScriptPath(APPLICATION_PATH . '/modules/'.Zend_Registry::get('module') . self::MAIL_TEMPLATE_BASEPATH.$employee->companyGUID.'/');
         $this->send($employee->eMail, $employee->firstname.' '.$employee->surname);
     }
+
+    public function addBcc($bcc){
+        $this->mail->addBcc($bcc);
+    }
 }
