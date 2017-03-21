@@ -120,7 +120,7 @@ class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract {
      * in format  [Mazedonisch] => Array
      *               (
      *                  [0] => 301
-     *                  [1] => MK
+     *                  [1] => mk
      *                  [2] => Mazedonisch (mk)
      *                )
      */
@@ -129,7 +129,7 @@ class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract {
         $result = array();
         foreach ($langs as $lang) {
             $name =$lang['langName'];
-            $result[$name] = array($lang['id'],strtoupper($lang['rfc5646']), $name.' ('.$lang['rfc5646'].')');
+            $result[$name] = array($lang['id'],$lang['rfc5646'], $name.' ('.$lang['rfc5646'].')');
         }
         ksort($result); //sort by name of language
         if(empty($result)){
