@@ -363,6 +363,7 @@ class ZfExtended_Models_Installer_DbUpdater {
         if(!empty($credentials->password)) {
             $cmd[] = '-p'.escapeshellarg($credentials->password);
         }
+        $cmd[] = '--default-character-set=utf8';
         $cmd[] = escapeshellarg($credentials->dbname);
         if($addFileParam) {
             $cmd[] = '< %s';
