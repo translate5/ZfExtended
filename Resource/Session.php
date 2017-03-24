@@ -98,7 +98,12 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
         }
         $url .= $_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
         $url = explode('?', $url);
-        header('Location: '.rtrim($url[0], '/'));
+        $url = rtrim($url[0], '/');
+        //preserve a redirect parameter if existing
+        if(!empty($_REQUEST['redirect'])){
+            $url .= '?redirect='.$_REQUEST['redirect'];
+        }
+        header('Location: '.$url);
         exit;
     }
     

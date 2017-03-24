@@ -46,7 +46,7 @@ END LICENSE AND COPYRIGHT
 class ZfExtended_Utils {
     
     /**
-     * Get an array of all class-constants-names from class $className which begin with $praefix.
+     * Get an array of all class-constants-names from class $className which begin with $prefix.
      *
      * @param string $className
      * @param string $praefix
