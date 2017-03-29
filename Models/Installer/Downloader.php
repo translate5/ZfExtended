@@ -315,8 +315,16 @@ class ZfExtended_Models_Installer_Downloader {
      */
     protected function install(stdClass $dependency, $cleanBefore = false, $overwrite = false) {
         $zip = new ZipArchive;
+
+        //FIXME before commit: target Änderung im Updater passt das mit Henne Ei Problem??
+        if(empty($dependency->target)) {
+            //nothing to extract since no target is given
+            // for example if the downloaded file is no zip file
+            return true; 
+        }
+
         $targetDir = $this->applicationRoot.'/'.$dependency->target;
-        
+
         if(!$overwrite && file_exists($targetDir)) {
             if(!$cleanBefore) {
                 $this->log('Could not unzip target directory for dependency package '.$dependency->name.' already exists! ZipFile:'.$dependency->targetFile);
