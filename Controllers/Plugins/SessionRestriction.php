@@ -78,7 +78,7 @@ class ZfExtended_Controllers_Plugins_SessionRestriction extends Zend_Controller_
      */
     protected function validateBrowser() {
         settype($_SERVER['HTTP_USER_AGENT'], 'string');
-        $isFlash = (strpos($_SERVER['HTTP_USER_AGENT'], 'Flash')!== false?true:false);
+        $isFlash = strpos($_SERVER['HTTP_USER_AGENT'], 'Flash')!== false;
         if($isFlash and empty($this->storage->flash)){
             $this->storage->flash = $_SERVER['HTTP_USER_AGENT'];
             return;
@@ -114,6 +114,14 @@ class ZfExtended_Controllers_Plugins_SessionRestriction extends Zend_Controller_
         }
     }
 
+    /**
+     * resets the stored values to compare against
+     */
+    public function reset() {
+        $storage = new Zend_Session_Namespace('sessionRestrictionStorage');
+        unset ($storage->address, $storage->flash, $storage->browser);
+    }
+    
     /**
      * Mit Selenium lassen sich die Rahmenparamter REMOTE_ADDR und HTTP_USER_AGENT nicht ändern
      * Um das Verhalten des Plugins dennoch testen zu können, wird ein entsprechender Parameter gesetzt

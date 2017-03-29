@@ -110,10 +110,8 @@ class ZfExtended_SessionController extends ZfExtended_RestController {
         /* @var $invalidLoginCounter ZfExtended_Models_Invalidlogin */
         
         if($this->_helper->auth->isValid($login, $passwd)) {
-            $userModel = ZfExtended_Factory::get('ZfExtended_Models_User');
-            //session auth currently works only with default user model!
-            //using Zend_Registry::get('config')->authentication->userEntityClass 
-            //would be the generic way
+            $userClass = Zend_Registry::get('config')->authentication->userEntityClass;
+            $userModel = ZfExtended_Factory::get($userClass);
             /* @var $userModel ZfExtended_Models_SessionUserInterface */
             $userModel->setUserSessionNamespaceWithPwCheck($login, $passwd);
             $session = new Zend_Session_Namespace();
@@ -122,6 +120,7 @@ class ZfExtended_SessionController extends ZfExtended_RestController {
             $this->view->sessionToken = $session->internalSessionUniqId;
             $this->log('User authentication by API successful for '.$login);
             $invalidLoginCounter->resetCounter();
+            $this->bypassInterferingFeatures();
             return true;
         }
         $invalidLoginCounter->increment();
@@ -129,6 +128,19 @@ class ZfExtended_SessionController extends ZfExtended_RestController {
         //  hey guy you could not be authenticated with the given credentials!
         $this->log('User authentication by API failed for '.$login);
         throw new ZfExtended_NoAccessException();
+    }
+    
+    /**
+     * disable other login / security features which won't work with session API login
+     * currently only the SessionRestriction plugin
+     */
+    protected function bypassInterferingFeatures() {
+        $frontController = $this->getFrontController();
+        $plugin = $frontController->getPlugin('ZfExtended_Controllers_Plugins_SessionRestriction');
+        /* @var $plugin ZfExtended_Controllers_Plugins_SessionRestriction */
+        if(!empty($plugin)) {
+            $plugin->reset();
+        }
     }
     
     /**
