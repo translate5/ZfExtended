@@ -324,9 +324,7 @@ class ZfExtended_Models_Installer_Downloader {
                 $this->log('Could not unzip target directory for dependency package '.$dependency->name.' already exists! ZipFile:'.$dependency->targetFile);
                 return false;
             }
-            else {
-                $this->removeRecursive($targetDir);
-            }
+            $this->removeRecursive($targetDir);
         }
         if (!$zip->open($dependency->targetFile)) {
             $this->log('Could not find downloaded zip file for dependency package '.$dependency->name.'! ZipFile:'.$dependency->targetFile);
