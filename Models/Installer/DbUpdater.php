@@ -211,7 +211,8 @@ class ZfExtended_Models_Installer_DbUpdater {
             );
         
             $count = $dbversion->update(array('md5' => $this->filehash($file['absolutePath'])), $where);
-            if($count === 1){
+            //the file must be changed at least one time in db, multiple times is also possible for example for php files
+            if($count > 0){
                 unset($this->sqlFilesChanged[$key]);
                 continue;
             }
