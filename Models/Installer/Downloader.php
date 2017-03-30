@@ -310,7 +310,8 @@ class ZfExtended_Models_Installer_Downloader {
     protected function install(stdClass $dependency, $cleanBefore = false, $overwrite = false) {
         $zip = new ZipArchive;
 
-        if(empty($dependency->target)) {
+        //cleaning is only allowed with target given!
+        if($cleanBefore && empty($dependency->target)) {
             //nothing to extract since no target is given
             // for example if the downloaded file is no zip file
             return true; 
