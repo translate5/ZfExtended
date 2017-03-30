@@ -310,7 +310,6 @@ class ZfExtended_Models_Installer_Downloader {
     protected function install(stdClass $dependency, $cleanBefore = false, $overwrite = false) {
         $zip = new ZipArchive;
 
-        //FIXME before commit: target Änderung im Updater passt das mit Henne Ei Problem??
         if(empty($dependency->target)) {
             //nothing to extract since no target is given
             // for example if the downloaded file is no zip file
