@@ -117,11 +117,13 @@ class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract {
     
     /**
      * Returns all configured languages in an array for displaying in frontend
-     * in format  [Mazedonisch] => Array
+     * in format :  
+     * 
+     * [Mazedonisch] => Array
      *               (
-     *                  [0] => 301
-     *                  [1] => mk
-     *                  [2] => Mazedonisch (mk)
+     *                  [id] => 301
+     *                  [value] => mk
+     *                  [text] => Mazedonisch (mk)
      *                )
      */
     public function getAvailableLanguages() {
@@ -129,7 +131,10 @@ class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract {
         $result = array();
         foreach ($langs as $lang) {
             $name =$lang['langName'];
-            $result[$name] = array($lang['id'],$lang['rfc5646'], $name.' ('.$lang['rfc5646'].')');
+            $result[$name] = array(
+                    'id'=>$lang['id'],
+                    'value'=>$lang['rfc5646'], 
+                    'text'=>$name.' ('.$lang['rfc5646'].')');
         }
         ksort($result); //sort by name of language
         if(empty($result)){
@@ -200,7 +205,7 @@ class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract {
     }
 
     /***
-     * Reorders a RFC5646 language list based to the order given in $preordered (ex. DE,FR,IT,MK ...)
+     * Reorders a RFC5646 language list based to the order given in $preordered (ex. de-De,fr-fr,it,mk ...)
      * @param array $languages
      * @param array $preorderd
      * @return array
@@ -210,7 +215,7 @@ class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract {
             return $languages;
         }
         foreach ($preorderd as $lng){
-            $oldIndex = array_search($lng, array_column($languages, 1));
+            $oldIndex = array_search($lng, array_column($languages, 'value'));
             if(!$oldIndex){
                 continue;
             }
