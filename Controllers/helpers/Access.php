@@ -153,8 +153,12 @@ class ZfExtended_Controller_Helper_Access extends Zend_Controller_Action_Helper_
      */
     private function notAuthenticated(){
         if($this->isRestRoute()){
-            throw new ZfExtended_NotAuthenticatedException();
-            return false;
+            //setting the message to empty here, since a textual message would break the JSON decoding
+            // Exceptions in this early stage of the application would not be converted correctly to JSON
+            // since RestContext is done in shutdown of the dispatching
+            $e = new ZfExtended_NotAuthenticatedException();
+            $e->setMessage("");
+            throw $e;
         }
         $redirector = ZfExtended_Zendoverwrites_Controller_Action_HelperBroker::getStaticHelper(
             'Redirector'
