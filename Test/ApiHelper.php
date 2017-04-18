@@ -487,6 +487,8 @@ class ZfExtended_Test_ApiHelper {
      * @return string
      */
     public function replaceChangesXmlContent($changesXml) {
+        $guid = htmlspecialchars($this->task->taskGuid);
+        $changesXml = str_replace(' translate5:taskguid="'.$guid.'"', ' translate5:taskguid="TASKGUID"', $changesXml);
         return preg_replace('/sdl:revid="[^"]{36}"/', 'sdl:revid="replaced-for-testing"', $changesXml);
     }
     
