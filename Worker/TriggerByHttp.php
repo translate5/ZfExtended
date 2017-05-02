@@ -25,7 +25,7 @@ END LICENSE AND COPYRIGHT
 class ZfExtended_Worker_TriggerByHttp {
     
     private $host = 'localhost';
-    private $port = 80;
+    private $port = 80; //attention the port alone does not define if SSL is used or no by fsockopent! 
     private $path = '';
     private $postParameters = array();
     private $method = 'GET';
@@ -49,18 +49,11 @@ class ZfExtended_Worker_TriggerByHttp {
      * @param string $hash
      */
     public function triggerWorker($id, string $hash) {
-        $config = Zend_Registry::get('config');
-        $serverName = $config->runtimeOptions->server->name;
-        $serverProtocol =  $config->runtimeOptions->server->protocol;
-        //$this->triggerUrl('http://test.local/editor/worker/'.$id, array('state' => 'running', 'hash' => $hash), 'PUT');
-        return $this->triggerUrl($serverProtocol.$serverName.APPLICATION_RUNDIR.'/editor/worker/'.$id, array('state' => 'running', 'hash' => $hash), 'PUT');
+        return $this->triggerUrl(APPLICATION_RUNDIR.'/editor/worker/'.$id, array('state' => 'running', 'hash' => $hash), 'PUT');
     }
     
     public function triggerQueue() {
-        $config = Zend_Registry::get('config');
-        $serverName = $config->runtimeOptions->server->name;
-        $serverProtocol =  $config->runtimeOptions->server->protocol;
-        return $this->triggerUrl($serverProtocol.$serverName.APPLICATION_RUNDIR.'/editor/worker/queue');
+        return $this->triggerUrl(APPLICATION_RUNDIR.'/editor/worker/queue');
     }
     
     /**
@@ -77,11 +70,11 @@ class ZfExtended_Worker_TriggerByHttp {
      */
     public function triggerUrl(string $url, $postParameters = array(), $method = 'GET') {
         
-        $this->triggerInit($url, $postParameters, $method);
+        $host = $this->triggerInit($url, $postParameters, $method);
         
-        $fsock = fsockopen(gethostbyname($this->host), $this->port, $errno, $errstr, 30);
+        $fsock = fsockopen($host, $this->port, $errno, $errstr, 30);
         if ($fsock === false) {
-            $this->log->logError(__CLASS__.'->'.__FUNCTION__.'; Can not trigger url:  '.$url.' Error: '.$errstr.' ('.$errno.')');
+            $this->log->logError(__CLASS__.'->'.__FUNCTION__.'; Can not trigger url:  '.$host.':'.$this->port.' Error: '.$errstr.' ('.$errno.')');
             return false;
         }
         
@@ -89,7 +82,6 @@ class ZfExtended_Worker_TriggerByHttp {
         fwrite($fsock, $out);
         
         stream_set_timeout($fsock, 5); // max readtime = 5 sec.
-        $timeout = false;
         
         $header = '';
         $state = 0;
@@ -104,18 +96,27 @@ class ZfExtended_Worker_TriggerByHttp {
             }
         }
         
-        // $header will be empty if fsock-connection runs into stream_set_timeout()
-        // longtime-execution normaly indicates that everything is OK.
-        if (empty($header)) {
-            $timeout = true;
+        $info = stream_get_meta_data($fsock);
+
+        // $header will be empty if fsock-connection runs into stream_set_timeout() 
+        //  or if the configured Worker URL is not accessible (due HTTPS / gateway / proxy reasons) 
+        // a timeout normally indicates that everything is OK, since worker are intended to have a long execution time
+        if (empty($header) || $info['timed_out']) {
             fclose($fsock);
-            return true; 
+            if($info['timed_out']) {
+                return true; //a real timeout is mostly OK. 
+                //TODO can we identify timeouts because of target does not exist?
+            }
+            $this->log->logError(__CLASS__.'->'.__FUNCTION__.'; Worker URL result is no HTTP answer!: '.$host.':'.$this->port);
+            // if not (URL responds immediately with an empty result) this means the called URL is not properly configured!
+            // → make a dedicated log entry, since the log below would be bogus for this situation
+            return false; 
         }
         
         fclose($fsock);
         
         if ($state < 200 || $state >= 300) {
-            $msg = __CLASS__.'->'.__FUNCTION__.'; Worker HTTP response state was not 2XX but '.$state.'; called URL:  '.$url;
+            $msg = __CLASS__.'->'.__FUNCTION__.'; Worker HTTP response state was not 2XX but '.$state.'; called URL:  '.$host.':'.$this->port;
             $longMsg = 'Method: '.$method.'; Post-Parameter: '.print_r($postParameters, true);
             $this->log->logError($msg, $longMsg);
             return false;
@@ -124,18 +125,34 @@ class ZfExtended_Worker_TriggerByHttp {
         return true;
     }
     
-    
-    private function triggerInit(string $url, $postParameters = array(), $method = 'GET') {
+    /**
+     * Initializes the worker URL parts
+     * @param string $path
+     * @param array $postParameters
+     * @param string $method
+     * @return string the host which should be used by fsockopen
+     */
+    private function triggerInit(string $path, $postParameters = array(), $method = 'GET') {
+        $config = Zend_Registry::get('config');
+        $rop = $config->runtimeOptions;
         
-        $urlParts = parse_url($url);
+        $workerServer = $rop->worker->server;
+        if(empty($workerServer)) {
+            $workerServer = $rop->server->protocol.$rop->server->name;
+        }
+            
+        $urlParts = parse_url($workerServer.$path);
         
         if (!empty($urlParts['host'])) {
             $this->host = $urlParts['host'];
         }
+        $host = $this->host;
     
         if (!empty($urlParts['scheme'])) {
             switch ($urlParts['scheme']) {
                 case 'https':
+                    //fsockopen needs ssl:// scheme when using https
+                    $host = 'ssl://'.$host;
                     $this->port = 443;
                     break;
             }
@@ -164,6 +181,9 @@ class ZfExtended_Worker_TriggerByHttp {
         if (!empty($urlParts['query'])) {
             $this->getParameters = '&'.$urlParts['query'];
         }
+        
+        //return the hostname dedicated for fsockopen
+        return $host;
     }
     
     
