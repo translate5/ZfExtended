@@ -97,6 +97,30 @@ abstract class ZfExtended_Plugin_Abstract {
     }
     
     /**
+     * reusable function to filter frontend controlles by ACL
+     * This is not used by default.
+     * @return unknown[]
+     */
+    protected function getFrontendControllersFromAcl() {
+        $result = array();
+        $userSession = new Zend_Session_Namespace('user');
+        if(empty($userSession) || empty($userSession->data)) {
+            return $result;
+        }
+        $acl = ZfExtended_Acl::getInstance();
+        /* @var $acl ZfExtended_Acl */
+        if(!$acl->has('frontend')) {
+            return $result;
+        }
+        foreach($this->frontendControllers as $right => $controller) {
+            if($acl->isInAllowedRoles($userSession->data->roles, 'frontend', $right)) {
+                $result[] = $controller;
+            }
+        }
+        return $result;
+    }
+    
+    /**
      * return the plugins locale path
      * @return array
      */
