@@ -36,7 +36,7 @@ END LICENSE AND COPYRIGHT
 class  ZfExtended_Zendoverwrites_Http_DebugClient extends Zend_Http_Client {
     public function request($method = null){
         $category = 'plugin';
-        $section = 'MatchResource';
+        $section = 'GlobalesePreTranslation';
         $randKey = substr(md5(rand()), 0, 7);
         
         if(ZfExtended_Debug::hasLevel($category, $section, 2)) {
