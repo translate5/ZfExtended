@@ -90,8 +90,8 @@ class  ZfExtended_Log extends ZfExtended_Mail{
     public function logException(Exception $exception){
         $message = $this->addUserInfo($exception->getMessage());
         $trace = $this->elog($exception);
-        $this->sendMailDefault($message);
-        $this->sendMailMinidump($message, $trace);
+        $this->sendMailDefault((string) $exception);
+        $this->sendMailMinidump((string) $exception, $trace);
         $prev = $exception->getPrevious();
         if(! empty($prev)) { //FIXME this only if debugging enabled → da gabs doch schon ein flag???
             $this->elog($prev);
@@ -118,8 +118,7 @@ class  ZfExtended_Log extends ZfExtended_Mail{
      */
     protected function elog(Exception $e) {
         $message = $e->getMessage();
-        $trace = $e->getTraceAsString();
-        $trace .= $this->getUrlLogMessage();
+        $trace = $this->getUrlLogMessage();
         error_log($this->_className.":\r\nException: ".$e->__toString());
         
         return $trace;
