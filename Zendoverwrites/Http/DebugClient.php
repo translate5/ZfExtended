@@ -35,22 +35,16 @@ END LICENSE AND COPYRIGHT
  */
 class  ZfExtended_Zendoverwrites_Http_DebugClient extends Zend_Http_Client {
     public function request($method = null){
-        $category = 'plugin';
-        $section = 'GlobalesePreTranslation';
         $randKey = substr(md5(rand()), 0, 7);
         
-        if(ZfExtended_Debug::hasLevel($category, $section, 2)) {
-            error_log("Method ($randKey): ".(empty($method) ? $this->method : $method));
-            error_log("URL ($randKey):".$this->getUri(true));
-            //error_log("\n\nDATA ($randKey): \n".$this->raw_post_data."\n\n");
-            error_log("Bytes ($randKey):".mb_strlen($this->raw_post_data));
-        }
+        error_log("Method ($randKey): ".(empty($method) ? $this->method : $method));
+        error_log("URL ($randKey):".$this->getUri(true));
+        //error_log("\n\nDATA ($randKey): \n".$this->raw_post_data."\n\n");
+        error_log("Bytes ($randKey):".mb_strlen($this->raw_post_data));
         $response = parent::request($method);
-        if(ZfExtended_Debug::hasLevel($category, $section, 2)) {
-            error_log("Status ($randKey): ".print_r($response->getStatus(),1));
-            error_log("Raw Body ($randKey):".print_r($response->getRawBody(),1));
-            error_log("Headers ($randKey):".($response->getHeadersAsString()));
-        }
+        error_log("Status ($randKey): ".print_r($response->getStatus(),1));
+        error_log("Raw Body ($randKey):".print_r($response->getRawBody(),1));
+        error_log("Headers ($randKey):".($response->getHeadersAsString()));
         return $response;
     }
 }
