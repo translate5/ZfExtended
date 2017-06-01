@@ -37,7 +37,7 @@ END LICENSE AND COPYRIGHT
 * @method int getLcid() getLcid()
 * @method int getId() getId()
 */
-class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract {
+abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract {
 
     const LANG_TYPE_ID = 'id';
     const LANG_TYPE_RFC5646 = 'rfc5646';
@@ -219,5 +219,14 @@ class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract {
             $languages[$oldIndex] = $tmp;
         }
         return $languages;
+    }
+    /***
+     * Return language rfc5646 value for given language id
+     * @param int $langId
+     * @return string
+     */
+    protected function loadLangRfc5646($langId){
+        $this->loadById($langId);
+        return $this->getRfc5646();
     }
 }
