@@ -292,10 +292,11 @@ abstract class ZfExtended_Worker_Abstract {
     /**
      * 
      * @param number $parentId optional, defaults to 0. Should contain the workerId of the parent worker.
-     * @param state $state optional, defaults to null. Designed to queue a worker with a desired state.
+     * @param string $state optional, defaults to null. Designed to queue a worker with a desired state.
+     * @param boolean $startNext defaults to true, if true starts directly the queued worker. False to prevent this.
      * @return integer returns the id of the newly created worker DB entry
      */
-    public function queue($parentId = 0, $state = NULL) {
+    public function queue($parentId = 0, $state = NULL, $startNext = true) {
         $this->checkIsInitCalled();
         $tempSlot = $this->calculateQueuedSlot();
         $this->workerModel->setResource($tempSlot['resource']);
@@ -308,9 +309,11 @@ abstract class ZfExtended_Worker_Abstract {
         $this->workerModel->save();
         $this->logit('queued with state '.$this->workerModel->getState());
         
-        $this->wakeUpAndStartNextWorkers($this->workerModel->getTaskGuid());
+        if($startNext) {
+            $this->wakeUpAndStartNextWorkers($this->workerModel->getTaskGuid());
+            $this->emulateBlocking();
+        }
         
-        $this->emulateBlocking();
         return $this->workerModel->getId();
     }
     
