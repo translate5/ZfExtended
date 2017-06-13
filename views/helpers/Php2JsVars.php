@@ -93,7 +93,9 @@ class ZfExtended_View_Helper_Php2JsVars extends Zend_View_Helper_Abstract{
      * @return mixed
      */
     public function get($name) {
-        if(isset($this->data->{$name}))return $this->data->{$name};
+        if(isset($this->data->{$name})){
+            return $this->data->{$name};
+        }
         return new stdClass();
     }
 
