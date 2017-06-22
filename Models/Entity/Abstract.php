@@ -198,6 +198,10 @@ abstract class ZfExtended_Models_Entity_Abstract {
     }
 
 
+    /**
+     * @param Zend_Db_Select $s
+     * @return array
+     */
     protected function loadFilterdCustom(Zend_Db_Select $s){
       if(!empty($this->filter)) {
         $this->filter->applyToSelect($s);
