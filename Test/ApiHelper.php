@@ -278,6 +278,7 @@ class ZfExtended_Test_ApiHelper {
         while(true){
             $taskResult = $this->requestJson('editor/task/'.$this->task->id);
             if($taskResult->state == 'open') {
+                $this->task = $taskResult;
                 break;
             }
             sleep(5);
