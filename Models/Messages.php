@@ -61,7 +61,7 @@ class ZfExtended_Models_Messages {
     /**
      * adds a notice msg, origin is core or the pluginname, data will be added untranslated
      * 
-     * @param string $msg
+     * @param string $msg untranslated string
      * @param string $origin
      * @param string $id
      * @param string $data
@@ -72,7 +72,7 @@ class ZfExtended_Models_Messages {
     
     /**
      * adds a error msg, origin is core or the pluginname, data will be added untranslated
-     * @param string $msg
+     * @param string $msg untranslated string
      * @param string $origin
      * @param string $id
      * @param string $data
@@ -83,7 +83,7 @@ class ZfExtended_Models_Messages {
     
     /**
      * adds a error msg, origin is core or the pluginname, data will be added untranslated
-     * @param string $msg
+     * @param string $msg untranslated string
      * @param string $origin
      * @param string $id
      * @param string $data
@@ -103,7 +103,7 @@ class ZfExtended_Models_Messages {
     
     /**
      * adds a warning msg, origin is core or the pluginname, data will be added untranslated
-     * @param string $msg
+     * @param string $msg untranslated string
      * @param string $origin
      * @param string $id
      * @param string $data
