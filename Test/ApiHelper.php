@@ -264,8 +264,10 @@ class ZfExtended_Test_ApiHelper {
         );
      * 
      * @param array $task
+     * @param boolean $failOnError default true
+     * @return boolean;
      */
-    public function import(array $task) {
+    public function import(array $task, $failOnError = true) {
         $this->initTaskPostData($task);
         
         $test = $this->testClass;
@@ -279,7 +281,13 @@ class ZfExtended_Test_ApiHelper {
             $taskResult = $this->requestJson('editor/task/'.$this->task->id);
             if($taskResult->state == 'open') {
                 $this->task = $taskResult;
-                break;
+                return true;
+            }
+            if($taskResult->state == 'error') {
+                if($failOnError) {
+                    $test::fail('Task Import stopped. Task has state error.');
+                }
+                return false;
             }
             sleep(5);
         }
