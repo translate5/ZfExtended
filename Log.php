@@ -56,7 +56,9 @@ class  ZfExtended_Log extends ZfExtended_Mail{
         parent::__construct($initView);
         $this->_config = Zend_Registry::get('config');
         $this->_className = get_class($this);
-        $this->_className .= ' on '.$_SERVER['HTTP_HOST'];
+        if(!empty($_SERVER['HTTP_HOST'])) {
+            $this->_className .= ' on '.$_SERVER['HTTP_HOST'];
+        }
         try {
             $session = new Zend_Session_Namespace();
             $this->_isFork = $session->isFork;
