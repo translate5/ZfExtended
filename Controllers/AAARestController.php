@@ -185,7 +185,7 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
       
       $version = $this->_request->getHeader(self::ENTITY_VERSION_HEADER);
       if($version === false) {
-          $data = get_object_vars($this->data);
+          $data = get_object_vars((object) $this->data);
           if(! isset($data[$entity::VERSION_FIELD])) {
               return; //no version is set either in header nor in given data
           }
