@@ -209,4 +209,8 @@ abstract class ZfExtended_Plugin_Abstract {
     public function getPublicFileTypes(){
         return $this->publicFileTypes;
     }
+    
+    public function isPublicFileType($requestedType) {
+        return in_array($requestedType, $this->getPublicFileTypes());
+    }
 }
