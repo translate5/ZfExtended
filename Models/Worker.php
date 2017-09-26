@@ -171,10 +171,10 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
      */
     public function setRunning($oncePerTaskGuid = true) {
         $data = [
-            'state' => $this->db->getAdapter()->quote(self::STATE_RUNNING),
+            'state' => self::STATE_RUNNING,
             'starttime' => new Zend_Db_Expr('NOW()'),
             'maxRuntime' => new Zend_Db_Expr('NOW() + INTERVAL '.$this->getMaxLifetime()),
-            'pid' => $this->db->getAdapter()->quote(getmypid(), Zend_Db::INT_TYPE),
+            'pid' => getmypid(),
         ];
         
         $id = $this->getId();
@@ -190,7 +190,7 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
         $sets = function($prefix) use ($data) {
             foreach($data as $k => $v) {
                 $this->set($k, $v);
-                $sets[] = $prefix.'`'.$k.'` = '.$v;
+                $sets[] = $prefix.'`'.$k.'` = '.$this->db->getAdapter()->quote($v);
             }
             return ' SET '.join(', ', $sets);
         };
