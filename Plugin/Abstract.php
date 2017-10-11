@@ -96,7 +96,7 @@ abstract class ZfExtended_Plugin_Abstract {
      * @return array
      */
     public function getFrontendControllers() {
-        return $this->frontendControllers;
+        return array_values($this->frontendControllers);
     }
     
     /**
