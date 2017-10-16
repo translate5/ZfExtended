@@ -127,6 +127,16 @@ class  ZfExtended_Log extends ZfExtended_Mail{
     }
     
     /**
+     * logs a message
+     * @param string $subject
+     * @param string $message
+     */
+    public function log($subject, $message) {
+        error_log($subject."\n".$message);
+        $this->sendMail($subject, $message);
+    }
+    
+    /**
      * loggs a fatal error
      * @param array $error
      */
