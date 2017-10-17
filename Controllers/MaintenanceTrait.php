@@ -68,7 +68,7 @@ trait ZfExtended_Controllers_MaintenanceTrait{
      * Locks the login (configurable minutes) before the mainteance mode
      * @return boolean
      */
-    private function isMaintenanceLoginLock(){
+    protected function isMaintenanceLoginLock(){
         /* @var $config Zend_Config */
         $config = Zend_Registry::get('config');
         $rop = $config->runtimeOptions;

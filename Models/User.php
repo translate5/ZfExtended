@@ -121,7 +121,7 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implement
      */
     public function getLocale() {
         //piping the method to __call, declaration is needed for interface
-        $this->__call('getLocale', []);
+        return $this->__call('getLocale', []);
     }
     
     /**
