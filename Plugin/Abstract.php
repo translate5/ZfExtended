@@ -67,6 +67,9 @@ abstract class ZfExtended_Plugin_Abstract {
      */
     protected $localePath = false;
     
+    
+    protected $publicFileTypes=array('js', 'resources');
+    
     public function __construct($pluginName) {
         $this->pluginName = $pluginName;
         $this->eventManager = Zend_EventManager_StaticEventManager::getInstance();
@@ -93,7 +96,7 @@ abstract class ZfExtended_Plugin_Abstract {
      * @return array
      */
     public function getFrontendControllers() {
-        return $this->frontendControllers;
+        return array_values($this->frontendControllers);
     }
     
     /**
@@ -197,5 +200,17 @@ abstract class ZfExtended_Plugin_Abstract {
             throw new ZfExtended_Exception('No Plugin Configuration found for plugin '.$this->pluginName);
         }
         return $this->config;
+    }
+    
+    public function addPublicFileTypes($newType){
+        array_push($this->publicFileTypes, $newType);
+    }
+    
+    public function getPublicFileTypes(){
+        return $this->publicFileTypes;
+    }
+    
+    public function isPublicFileType($requestedType) {
+        return in_array($requestedType, $this->getPublicFileTypes());
     }
 }

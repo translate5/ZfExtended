@@ -133,6 +133,19 @@ class ZfExtended_Exception extends Zend_Exception {
     }
     
     /**
+     * Adds the additional not translated error information to the log output
+     * {@inheritDoc}
+     * @see Zend_Exception::__toString()
+     */
+    public function __toString() {
+        $errors = '';
+        if(!empty($this->errors)) {
+            $errors = "\n\n Additional error data: ".print_r($this->errors,1);
+        }
+        return parent::__toString().$errors;
+    }
+    
+    /**
      * returns true if logging should be done for this exception
      * We can force to enable the logging even if the exception was coded not to log by setting this in the config:
      * runtimeOptions.logging.default.delete.index.ZfExtended_BadMethodCallException = true 

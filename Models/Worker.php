@@ -392,6 +392,16 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
         return $res->fetchAll(Zend_Db::FETCH_OBJ);
     }
     
+    /**
+     * Sets all remaining scheduled and waiting workers of that worker group (same parent and same taskGuid) to defunc 
+     */
+    public function defuncRemainingOfGroup() {
+        $res = $this->db->getAdapter()->query('UPDATE Zf_worker SET state = "'.self::STATE_DEFUNCT.'"
+            WHERE (parentId = 0 AND id = ?) OR (parentId != 0 AND parentId = ?) 
+            AND state in ("'.self::STATE_WAITING.'", "'.self::STATE_SCHEDULED.'")
+            AND taskGuid = ?', [$this->getId(), $this->getParentId(), $this->getTaskGuid()]);
+    }
+    
     public function getMaxLifetime() {
         return $this->maxLifetime;
     }
