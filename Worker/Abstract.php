@@ -462,6 +462,8 @@ abstract class ZfExtended_Worker_Abstract {
      * @return boolean true if $this->work() runs without errors
      */
     private function _run() {
+        //code in the worker can check now if we are in a worker thread or not
+        define('ZFEXTENDED_IS_WORKER_THREAD', true);
         $this->registerShutdown();
         //prefilling the finishedWorker for the following return false step outs
         $this->finishedWorker = clone $this->workerModel;
