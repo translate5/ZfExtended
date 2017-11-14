@@ -37,6 +37,18 @@ class ZfExtended_UserController extends ZfExtended_RestController {
      */
     protected $alreadyDecoded = false;
     
+    public function init() {
+        //add filter type for languages
+        $this->_filterTypeMap = array(
+                array(
+                'sourceLanguage' => array('list' => 'listCommaSeparated')
+                ),
+                array(
+                'targetLanguage' => array('list' => 'listCommaSeparated'))
+        );
+        parent::init();
+    }
+    
     /**
      * (non-PHPdoc)
      * @see ZfExtended_RestController::indexAction()
@@ -44,7 +56,7 @@ class ZfExtended_UserController extends ZfExtended_RestController {
      * FIXME Sicherstellen, dass für nicht PMs diese Methode nur die User liefert, die gemeinsam mit dem aktuellen User an Tasks arbeiten.
      * FIXME Generell werden nur User mit der Rolle "editor" angezeigt, alle anderen haben eh keinen Zugriff auf T5
      */
-    public function indexAction () {
+    public function indexAction() {
         return parent::indexAction();
     }
     

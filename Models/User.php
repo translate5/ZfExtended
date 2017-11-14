@@ -37,6 +37,9 @@ END LICENSE AND COPYRIGHT
  * @method void setRoles() setRoles(string $roles)
  * @method void setPasswd() setPassword(string $passwd)
  * @method void setGender() setGender(string $gender)
+ * @method void setSourceLanguage() setSourceLanguage(string $sourceLanguage)
+ * @method void setTargetLanguage() setTargetLanguage(string $targetLanguage)
+ * 
  * @method void setLogin() setLogin(string $login)
  * @method integer getId() getId()
  * @method string getUserGuid() getUserGuid()
@@ -47,6 +50,8 @@ END LICENSE AND COPYRIGHT
  * @method string getPasswd() getPasswd()
  * @method string getGender() getGender()
  * @method string getLogin() getLogin()
+ * @method void getSourceLanguage() getSourceLanguage()
+ * @method void getTargetLanguage() getTargetLanguage() 
  */
 class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implements ZfExtended_Models_SessionUserInterface {
     const SYSTEM_LOGIN = 'system';
