@@ -57,7 +57,8 @@ class ZfExtended_UserController extends ZfExtended_RestController {
      * FIXME Generell werden nur User mit der Rolle "editor" angezeigt, alle anderen haben eh keinen Zugriff auf T5
      */
     public function indexAction() {
-        return parent::indexAction();
+        parent::indexAction();
+        $this->languagesCommaSeparatedToArray();
     }
     
     /**
@@ -67,6 +68,7 @@ class ZfExtended_UserController extends ZfExtended_RestController {
     {
         $this->view->rows = $this->entity->loadAllByRole('pm');
         $this->view->total = $this->entity->getTotalCount();
+        $this->languagesCommaSeparatedToArray();
     }
     
     
@@ -79,6 +81,7 @@ class ZfExtended_UserController extends ZfExtended_RestController {
             parent::putAction();
             $this->handlePasswdMail();
             $this->credentialCleanup();
+            $this->languagesCommaSeparatedToArray();
         }
         catch(Zend_Db_Statement_Exception $e) {
             $this->handleLoginDuplicates($e);
@@ -94,6 +97,7 @@ class ZfExtended_UserController extends ZfExtended_RestController {
             parent::postAction();
             $this->handlePasswdMail();
             $this->credentialCleanup();
+            $this->languagesCommaSeparatedToArray();
         }
         catch(Zend_Db_Statement_Exception $e) {
             $this->handleLoginDuplicates($e);
@@ -106,6 +110,7 @@ class ZfExtended_UserController extends ZfExtended_RestController {
      */
     public function getAction() {
         parent::getAction();
+        $this->languagesCommaSeparatedToArray();
         if($this->entity->getLogin() == ZfExtended_Models_User::SYSTEM_LOGIN) {
             $e = new ZfExtended_Models_Entity_NotFoundException();
             $e->setMessage("System Benutzer wurde versucht zu erreichen",true);
@@ -143,6 +148,55 @@ class ZfExtended_UserController extends ZfExtended_RestController {
             return $this->getAction();
         }
         throw new ZfExtended_BadMethodCallException();
+    }
+    
+    /***
+     * converts the source and target comma separated language ids to array.
+     * Frontend/api use array, in the database we save comma separated values.
+     */
+    protected function languagesCommaSeparatedToArray(){
+        $callback=function($row){
+            if($row!==null && $row!==""){
+                $row=substr($row, 1,-1);
+                $row=explode(',', $row);
+            }
+            return $row;
+        };
+        //if the row is an array, loop over its elements, and explode the source/target language
+        if(is_array($this->view->rows)){
+            foreach ($this->view->rows as &$singleRow){
+                $singleRow['sourceLanguage']=$callback($singleRow['sourceLanguage']);
+                $singleRow['targetLanguage']=$callback($singleRow['targetLanguage']);
+            }
+            return;
+        }
+        
+        $this->view->rows->sourceLanguage=$callback($this->view->rows->sourceLanguage);
+        $this->view->rows->targetLanguage=$callback($this->view->rows->targetLanguage);
+    }
+    
+    /***
+     * Convert the language array to comma separated values.
+     * Frontend/api use array, in the database we save comma separated values.
+     */
+    protected function languagesArrayToCommaSeparated(){
+        $this->arrayToCommaSeparated('sourceLanguage');
+        $this->arrayToCommaSeparated('targetLanguage');
+    }
+    
+    /***
+     * If the language array exist in the request data, it will be converted to comma separated value
+     * @param string $language
+     */
+    private function arrayToCommaSeparated($language){
+        if(isset($this->data->$language) && is_array($this->data->$language)) {
+            $this->data->$language=implode(',', $this->data->$language);
+            if(empty($this->data->$language)){
+                $this->data->$language=null;
+            }else{
+                $this->data->$language=','.$this->data->$language.',';
+            }
+        }
     }
     
     /**
@@ -185,6 +239,7 @@ class ZfExtended_UserController extends ZfExtended_RestController {
         $this->alreadyDecoded = true;
         $this->_request->isPost() || $this->checkIsEditable(); //checkEditable only if not POST
         parent::decodePutData();
+        $this->languagesArrayToCommaSeparated();
         if($this->_request->isPost()) {
             unset($this->data->id);
             $this->data->userGuid = $this->_helper->guid->create(true);
