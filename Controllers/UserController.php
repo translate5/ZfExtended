@@ -40,11 +40,8 @@ class ZfExtended_UserController extends ZfExtended_RestController {
     public function init() {
         //add filter type for languages
         $this->_filterTypeMap = array(
-                array(
-                'sourceLanguage' => array('list' => 'listCommaSeparated')
-                ),
-                array(
-                'targetLanguage' => array('list' => 'listCommaSeparated'))
+                array('sourceLanguage' => array('list' => 'listCommaSeparated')),
+                array('targetLanguage' => array('list' => 'listCommaSeparated'))
         );
         parent::init();
     }
@@ -57,7 +54,16 @@ class ZfExtended_UserController extends ZfExtended_RestController {
      * FIXME Generell werden nur User mit der Rolle "editor" angezeigt, alle anderen haben eh keinen Zugriff auf T5
      */
     public function indexAction() {
-        parent::indexAction();
+        $isAllowed=$this->entity->isAllowed("backend","seeAllUsers");
+        if($isAllowed){
+            $rows= $this->entity->loadAll();
+            $count= $this->entity->getTotalCount();
+        }else{
+            $rows= $this->entity->loadAllOfHierarchy();
+            $count= $this->entity->getTotalCountHierarchy();
+        }
+        $this->view->rows=$rows;
+        $this->view->total=$count;
         $this->languagesCommaSeparatedToArray();
     }
     
@@ -110,6 +116,7 @@ class ZfExtended_UserController extends ZfExtended_RestController {
      */
     public function getAction() {
         parent::getAction();
+        $this->handleUserParentId();
         $this->languagesCommaSeparatedToArray();
         if($this->entity->getLogin() == ZfExtended_Models_User::SYSTEM_LOGIN) {
             $e = new ZfExtended_Models_Entity_NotFoundException();
@@ -126,7 +133,7 @@ class ZfExtended_UserController extends ZfExtended_RestController {
     public function deleteAction() {
         $this->entity->load($this->_getParam('id'));
         $this->checkIsEditable();
-        
+        $this->handleUserParentId();
         $this->entity->delete();
     }
     
@@ -244,6 +251,7 @@ class ZfExtended_UserController extends ZfExtended_RestController {
             unset($this->data->id);
             $this->data->userGuid = $this->_helper->guid->create(true);
         }
+        $this->handleUserParentId();
     }
 
     /**
@@ -314,5 +322,47 @@ class ZfExtended_UserController extends ZfExtended_RestController {
         if(! $this->entity->getEditable()){
             throw new Zend_Exception('Tryied to manipulate a not editable user'); 
         }
+    }
+    
+    /***
+     * Check in get/put/delete actions if the current loged in user is parent of the data(user)
+     * which needs to be modefyed
+     * @throws ZfExtended_NoAccessException
+     */
+    protected function handleUserParentId(){
+        $userSession = new Zend_Session_Namespace('user');
+        //check if logged in user is able to modefy the data
+        if($this->_request->isDelete() || $this->_request->isGet()) {
+            $userModel=ZfExtended_Factory::get('ZfExtended_Models_User');
+            /* @var $userModel ZfExtended_Models_User */
+            
+            if(empty($this->entity->getParentIds())){
+                return;
+            }
+            
+            $hasParent=$userModel->hasParent($this->entity->getUserGuid(), $userSession->data->id);
+            if(!$hasParent && $this->entity->getId()!=$userSession->data->id){
+                throw new ZfExtended_NoAccessException();
+            }
+            
+        }else{
+            $sameId=false;
+            if($this->_request->isPut()) {
+                $sameId=$userSession->data->id===$this->data->id;
+            }
+            //if the same user is modified do not update the parentId
+            if($sameId){
+                return;
+            }
+                
+            $parentIds=$userSession->data->parentIds;
+            if($parentIds){
+                $parentIds.=$userSession->data->id.',';
+            }else{
+                $parentIds=','.$parentIds.$userSession->data->id.',';
+            }
+            $this->data->parentIds=$parentIds;
+        }
+        
     }
 }
