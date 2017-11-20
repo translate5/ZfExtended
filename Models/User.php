@@ -189,6 +189,20 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implement
     }
     
     /**
+     * Load all users which have a specific source and target language (rfc5646 value)
+     *  load all users matching for a specific task
+     * @param string $sourceLang given as rfc5646 value!
+     * @param string $targetLang given as rfc5646 value!
+     */
+    public function loadAllByLanguages($sourceLang, $targetLang) {
+        //FIXME add here user hierarchy too?
+        $s = $this->db->select();
+        $s->where('sourceLanguage like ?', '%,'.$sourceLang.',%');
+        $s->where('targetLanguage like ?', '%,'.$targetLang.',%');
+        return $this->db->fetchAll($s)->toArray();
+    }
+    
+    /**
      * 
      * @return sql-string
      */
