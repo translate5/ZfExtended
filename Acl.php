@@ -178,7 +178,11 @@ class ZfExtended_Acl extends Zend_Acl {
     }
     
     protected function addRoles(){
-       foreach ($this->_aclConfigObject->roles as $role) {
+        foreach ($this->_aclConfigObject->roles as $role) {
+            $const = 'ACL_ROLE_'.strtoupper($role);
+            if(!defined($const)) {
+                define($const, $role);
+            }
             $this->addRole(new Zend_Acl_Role($role));
         }
     }
