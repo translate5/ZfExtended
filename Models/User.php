@@ -177,8 +177,14 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implement
     public function loadAllOfHierarchy(){
         $userSession = new Zend_Session_Namespace('user');
         $userData=$userSession->data;
+        $adapter=$this->db->getAdapter();
         $s=$this->_loadAll();
-        $s->where('parentIds like "%,?,%" OR id=?', $userData->id,$userData->id);
+        //NOTE:the where must be in one row because of the brackets
+        //$s->where( parentIds like "%,4,5,6,%" OR id=2 )  sql=> WHERE (parentIds like "%,4,5,6,%" OR id=2)
+        //$s->where( parentIds like)
+        //$s->where( id=2 ) sql=> WHERE (parentIds like "%,4,5,6,%") OR id=2
+        //this with combination of the filters will provide different result
+        $s->where('parentIds like "%,'.$adapter->quote($userData->id).',%" OR id='.$adapter->quote($userData->id));
         return $this->loadFilterdCustom($s);
     }
     
@@ -248,12 +254,10 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implement
     public function getTotalCountHierarchy(){
         $userSession = new Zend_Session_Namespace('user');
         $userData=$userSession->data;
+        $adapter=$this->db->getAdapter();
         $s = $this->db->select();
         $s->where('login != ?', self::SYSTEM_LOGIN); //filter out the system user
-        if($userData->parentIds && $userData->parentIds!=""){
-            $s->where('parentIds like "%,?,%"', $userData->id);
-            $s->orWhere('id = ?', $userData->id);
-        }
+        $s->where('parentIds like "%,'.$adapter->quote($userData->id).',%" OR id='.$adapter->quote($userData->id));
         return $this->computeTotalCount($s);
     }
     
