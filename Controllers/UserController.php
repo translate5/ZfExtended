@@ -73,7 +73,14 @@ class ZfExtended_UserController extends ZfExtended_RestController {
      */
     public function pmAction()
     {
-        $this->view->rows = $this->entity->loadAllByRole('pm');
+        $userSession = new Zend_Session_Namespace('user');
+        $userRoles=$userSession->data->roles;
+        $parentId=false;
+        //check if the user is allowed to see all users
+        if($this->isAllowed($userSession->data->roles,"backend","seeAllUsers")){
+            $parentId=$userSession->data->id;
+        }
+        $this->view->rows = $this->entity->loadAllByRole('pm',$parentId);
         $this->view->total = $this->entity->getTotalCount();
         $this->languagesCommaSeparatedToArray();
     }
@@ -378,6 +385,10 @@ class ZfExtended_UserController extends ZfExtended_RestController {
         $isPost=$this->_request->isPost();
         $isPut=$this->_request->isPut();
         if($isPost || $isPut) {
+            
+            if(!isset($this->data->roles)){
+                return;
+            }
             
             $requestAcls=$this->data->roles;
             

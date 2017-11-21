@@ -147,12 +147,6 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implement
     public function loadByGuid(string $userGuid) {
         try {
             $s = $this->db->select()->where('userGuid = ?', $userGuid);
-            if(!$this->isAllowed("backend", "seeAllUsers")){
-                $adapter=$this->db->getAdapter();
-                $userSession = new Zend_Session_Namespace('user');
-                $userData=$userSession->data;
-                $s->where('parentIds like "%,'.$adapter->quote($userData->id).',%" OR id='.$adapter->quote($userData->id));
-            }
             $row = $this->db->fetchRow($s);
         } catch (Exception $e) {
             $this->notFound('NotFound after other Error', $e);
@@ -173,12 +167,6 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implement
      */
     public function loadAll() {
         $s = $this->_loadAll();
-        if(!$this->isAllowed("backend", "seeAllUsers")){
-            $adapter=$this->db->getAdapter();
-            $userSession = new Zend_Session_Namespace('user');
-            $userData=$userSession->data;
-            $s->where('parentIds like "%,'.$adapter->quote($userData->id).',%" OR id='.$adapter->quote($userData->id));
-        }
         return $this->loadFilterdCustom($s);
     }
     
@@ -203,9 +191,11 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implement
     /**
      * loads all users without the passwd field
      * with role $role
+     * @param string - acl role
+     * @param id - the parent id which the select should check
      * @return array
      */
-    public function loadAllByRole($role) {
+    public function loadAllByRole($role,$parendIdFilter=false) {
         $s = $this->_loadAll();
         
         $adapter = $this->db->getAdapter();
@@ -215,10 +205,8 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implement
             $adapter->quote('%,'.$role),
             $adapter->quote($role)
         );
-        if(!$this->isAllowed("backend", "seeAllUsers")){
-            $userSession = new Zend_Session_Namespace('user');
-            $userData=$userSession->data;
-            $s->where('parentIds like "%,'.$adapter->quote($userData->id).',%" OR id='.$adapter->quote($userData->id));
+        if($parendIdFilter !== false){
+            $s->where('parentIds like "%,'.$parendIdFilter.',%" OR id='.$adapter->quote($parendIdFilter));
         }
         $s->where($sLike);
         
