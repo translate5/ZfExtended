@@ -386,7 +386,7 @@ class ZfExtended_UserController extends ZfExtended_RestController {
         $isPut=$this->_request->isPut();
         if($isPost || $isPut) {
             
-            if(!isset($this->data->roles)){
+            if(empty($this->data->roles)){
                 return;
             }
             
