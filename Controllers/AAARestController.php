@@ -459,15 +459,15 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
   }
   
   /**
-   * checks if one of the passed roles allows the resource / privelege
+   * checks if authenticated user is allowed to use the resource / privelege
    *
-   * @param  array     $roles
    * @param  Zend_Acl_Resource_Interface|string $resource
    * @param  string                             $privilege
    * @return boolean
    */
-  protected function isAllowed($roles,$resource = null, $privilege = null) {
-      return $this->acl->isInAllowedRoles($roles, $resource,$privilege);
+  protected function isAllowed($resource = null, $privilege = null) {
+      $userSession = new Zend_Session_Namespace('user');
+      return $this->acl->isInAllowedRoles($userSession->data->roles, $resource, $privilege);
   }
 
   public function deleteAction()

@@ -54,8 +54,7 @@ class ZfExtended_UserController extends ZfExtended_RestController {
      * FIXME Generell werden nur User mit der Rolle "editor" angezeigt, alle anderen haben eh keinen Zugriff auf T5
      */
     public function indexAction() {
-        $userSession = new Zend_Session_Namespace('user');
-        $isAllowed=$this->isAllowed($userSession->data->roles,"backend","seeAllUsers");
+        $isAllowed=$this->isAllowed("backend","seeAllUsers");
         if($isAllowed){
             $rows= $this->entity->loadAll();
             $count= $this->entity->getTotalCount();
@@ -73,14 +72,14 @@ class ZfExtended_UserController extends ZfExtended_RestController {
      */
     public function pmAction()
     {
-        $userSession = new Zend_Session_Namespace('user');
-        $userRoles=$userSession->data->roles;
-        $parentId=false;
         //check if the user is allowed to see all users
-        if($this->isAllowed($userSession->data->roles,"backend","seeAllUsers")){
-            $parentId=$userSession->data->id;
+        if($this->isAllowed("backend","seeAllUsers")){
+            $parentId = false;
         }
-        $this->view->rows = $this->entity->loadAllByRole('pm',$parentId);
+        else {
+            $parentId = $userSession->data->id;
+        }
+        $this->view->rows = $this->entity->loadAllByRole('pm', $parentId);
         $this->view->total = $this->entity->getTotalCount();
         $this->languagesCommaSeparatedToArray();
     }
@@ -381,31 +380,28 @@ class ZfExtended_UserController extends ZfExtended_RestController {
      * @throws ZfExtended_NoAccessException
      */
     protected function handleUserSetAclRole(){
-        $userSession = new Zend_Session_Namespace('user');
         $isPost=$this->_request->isPost();
         $isPut=$this->_request->isPut();
-        if($isPost || $isPut) {
+        if(!$isPost && !$isPut) {
+            return;
+        }
             
-            if(empty($this->data->roles)){
-                return;
-            }
-            
-            $requestAcls=$this->data->roles;
-            
-            $userRoles=$userSession->data->roles;
-            $requestAclsArray=explode(',',$requestAcls);
-            
-            if(empty($requestAclsArray)){
-                return;
-            }
-            
-            foreach ($requestAclsArray as $acl){
-                $isAllowed=$this->isAllowed($userRoles,'setaclrole',$acl);
-                if(!$isAllowed){
-                    throw new ZfExtended_NoAccessException("User is not allowed to modefy this type of role.");
-                }
-            }
+        if(empty($this->data->roles)){
+            return;
         }
         
+        $requestAcls=$this->data->roles;
+        $requestAclsArray=explode(',',$requestAcls);
+        
+        if(empty($requestAclsArray)){
+            return;
+        }
+        
+        foreach ($requestAclsArray as $role){
+            $isAllowed=$this->isAllowed('setaclrole', $role);
+            if(!$isAllowed){
+                throw new ZfExtended_NoAccessException("Authenticated User is not allowed to modify role ".$role);
+            }
+        }
     }
 }
