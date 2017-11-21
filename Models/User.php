@@ -147,6 +147,12 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implement
     public function loadByGuid(string $userGuid) {
         try {
             $s = $this->db->select()->where('userGuid = ?', $userGuid);
+            if(!$this->isAllowed("backend", "seeAllUsers")){
+                $adapter=$this->db->getAdapter();
+                $userSession = new Zend_Session_Namespace('user');
+                $userData=$userSession->data;
+                $s->where('parentIds like "%,'.$adapter->quote($userData->id).',%" OR id='.$adapter->quote($userData->id));
+            }
             $row = $this->db->fetchRow($s);
         } catch (Exception $e) {
             $this->notFound('NotFound after other Error', $e);
@@ -167,6 +173,12 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implement
      */
     public function loadAll() {
         $s = $this->_loadAll();
+        if(!$this->isAllowed("backend", "seeAllUsers")){
+            $adapter=$this->db->getAdapter();
+            $userSession = new Zend_Session_Namespace('user');
+            $userData=$userSession->data;
+            $s->where('parentIds like "%,'.$adapter->quote($userData->id).',%" OR id='.$adapter->quote($userData->id));
+        }
         return $this->loadFilterdCustom($s);
     }
     
@@ -203,6 +215,11 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implement
             $adapter->quote('%,'.$role),
             $adapter->quote($role)
         );
+        if(!$this->isAllowed("backend", "seeAllUsers")){
+            $userSession = new Zend_Session_Namespace('user');
+            $userData=$userSession->data;
+            $s->where('parentIds like "%,'.$adapter->quote($userData->id).',%" OR id='.$adapter->quote($userData->id));
+        }
         $s->where($sLike);
         
         return $this->loadFilterdCustom($s);
@@ -214,11 +231,13 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implement
      * @param string $sourceLang given as rfc5646 value!
      * @param string $targetLang given as rfc5646 value!
      */
-    public function loadAllByLanguages($sourceLang, $targetLang) {
-        //FIXME add here user hierarchy too?
+    public function loadAllByLanguages($sourceLang, $targetLang, $parendIdFilter = false) {
         $s = $this->db->select();
         $s->where('sourceLanguage like ?', '%,'.$sourceLang.',%');
         $s->where('targetLanguage like ?', '%,'.$targetLang.',%');
+        if($parendIdFilter !== false){
+            $s->where('parentIds like "%,'.$parendIdFilter.',%" OR id='.$adapter->quote($parendIdFilter));
+        }
         return $this->db->fetchAll($s)->toArray();
     }
     

@@ -167,10 +167,13 @@ class ZfExtended_Acl extends Zend_Acl {
                 }
                 continue;
             }
-            if($this->allowFrontendPrivilege($role, $resource, $right)){
+            if($this->allowApplicationPrivilege($role, $resource, $right)){
                 continue;
             }
             if($this->allowControllerPrivilege($role, $resource, $right)){
+                continue;
+            }
+            if($this->allowSetAclRolePrivilege($role, $resource, $right)){
                 continue;
             }
             $this->allowOtherPrivilege($role, $resource, $right);
@@ -244,7 +247,7 @@ class ZfExtended_Acl extends Zend_Acl {
         }
     }
     /**
-     * checks, if $privilege is frontendRight and if yes allows it if applicable
+     * checks, if $privilege is frontend or backend right and if yes allows it if applicable
      *
      * @param string $role
      * @param string $resource
@@ -252,13 +255,31 @@ class ZfExtended_Acl extends Zend_Acl {
      * @return boolean true if resource is frontend, false if not
      * @throws Zend_Exception if resource is frontend, but $privilege is not defined as frontendRight
      */
-    protected function allowFrontendPrivilege(string $role,string $resource,string $privilege){
-        if($resource != 'frontend'){
+    protected function allowApplicationPrivilege(string $role,string $resource,string $privilege){
+        if($resource != 'frontend' && $resource != 'backend'){
             return false;
         }
         $this->allow($role, $resource, $privilege);
         return true;
     }
+    
+    /**
+     * checks, if $privilege is setaclrole if yes allows it if applicable
+     *
+     * @param string $role
+     * @param string $resource
+     * @param string $privilege
+     * @return boolean true if resource is frontend, false if not
+     * @throws Zend_Exception if resource is frontend, but $privilege is not defined as frontendRight
+     */
+    protected function allowSetAclRolePrivilege(string $role,string $resource,string $privilege){
+        if($resource != 'setaclrole'){
+            return false;
+        }
+        $this->allow($role, $resource, $privilege);
+        return true;
+    }
+    
     /**
      * check, if given frontendright exists (is listed in [frontendRights] in aclConfig.ini
      *

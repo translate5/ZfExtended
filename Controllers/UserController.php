@@ -54,7 +54,8 @@ class ZfExtended_UserController extends ZfExtended_RestController {
      * FIXME Generell werden nur User mit der Rolle "editor" angezeigt, alle anderen haben eh keinen Zugriff auf T5
      */
     public function indexAction() {
-        $isAllowed=$this->entity->isAllowed("backend","seeAllUsers");
+        $userSession = new Zend_Session_Namespace('user');
+        $isAllowed=$this->isAllowed($userSession->data->roles,"backend","seeAllUsers");
         if($isAllowed){
             $rows= $this->entity->loadAll();
             $count= $this->entity->getTotalCount();
@@ -252,6 +253,7 @@ class ZfExtended_UserController extends ZfExtended_RestController {
             $this->data->userGuid = $this->_helper->guid->create(true);
         }
         $this->handleUserParentId();
+        $this->handleUserSetAclRole();
     }
 
     /**
@@ -362,6 +364,36 @@ class ZfExtended_UserController extends ZfExtended_RestController {
                 $parentIds=','.$parentIds.$userSession->data->id.',';
             }
             $this->data->parentIds=$parentIds;
+        }
+        
+    }
+    
+    /***
+     * Check if the current user is allowed co set/modefy the post/put selected acl roles
+     * 
+     * @throws ZfExtended_NoAccessException
+     */
+    protected function handleUserSetAclRole(){
+        $userSession = new Zend_Session_Namespace('user');
+        $isPost=$this->_request->isPost();
+        $isPut=$this->_request->isPut();
+        if($isPost || $isPut) {
+            
+            $requestAcls=$this->data->roles;
+            
+            $userRoles=$userSession->data->roles;
+            $requestAclsArray=explode(',',$requestAcls);
+            
+            if(empty($requestAclsArray)){
+                return;
+            }
+            
+            foreach ($requestAclsArray as $acl){
+                $isAllowed=$this->isAllowed($userRoles,'setaclrole',$acl);
+                if(!$isAllowed){
+                    throw new ZfExtended_NoAccessException("User is not allowed to modefy this type of role.");
+                }
+            }
         }
         
     }
