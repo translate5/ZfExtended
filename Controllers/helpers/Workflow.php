@@ -44,11 +44,15 @@ class ZfExtended_Controller_Helper_Workflow extends Zend_Controller_Action_Helpe
             $userGuid = $su->data->userGuid;
         }
         if(empty($workflow)) {
-            //FIXME implementation sketch for TRANSLATE-113
-            //$wfm = ZfExtended_Factory::get('editor_Workflow_Manager');
-            //$workflow = $wfm->get($session->taskWorkflow);
-            $workflow = ZfExtended_Factory::get('editor_Workflow_Default');
-            /* @var $w editor_Workflow_Abstract */
+            $task = ZfExtended_Factory::get('editor_Models_Task');
+            /* @var $task editor_Models_Task */
+            $task->loadByTaskGuid($taskGuid);
+            
+            $wfm = ZfExtended_Factory::get('editor_Workflow_Manager');
+            /* @var $wfm editor_Workflow_Manager */
+            
+            $workflow = $wfm->getByTask($task);
+            /* @var $workflow editor_Workflow_Abstract */
         }
         $tua = $workflow->getTaskUserAssoc($taskGuid, $userGuid);
         if(! $workflow->isWritingAllowedForState($tua->getUsedState())) {
