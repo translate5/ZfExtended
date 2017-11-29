@@ -36,10 +36,6 @@ END LICENSE AND COPYRIGHT
  * - if there are different libs and in 2 or more libs a controller of the same
  *   name exists, the controller of the same name in the controller-dir-list 
  *   in application.ini will be loaded
- * 
- *
- *
- *
  */
 class ZfExtended_Resource_LoadLibController extends Zend_Application_Resource_ResourceAbstract {
     public function init()

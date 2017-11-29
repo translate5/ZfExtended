@@ -43,12 +43,6 @@ class ZfExtended_Acl extends Zend_Acl {
      * @var array _instances enthalten ACL Objekte
      */
     protected static $_instance = null;
-    /**
-     * Singleton Instanzen
-     *
-     * @var Zend_Config enthält die acl-Config aller Module bereits gemergt
-     */
-    public $_aclConfigObject = null;
 
     /**
      * Singleton Instanz - Hole Acl-Instanz
@@ -76,46 +70,24 @@ class ZfExtended_Acl extends Zend_Acl {
     }
 
     /**
-     * Erstellt ACL mit Rollen, Ressourcen und Rechten
-     * - erwartet bei mindestens einem Modul im Unterverzeichnis configs eine aclConfig.ini
-     * - Deklaration als protected verhindert, dass mehrere Acl-Objekte erstellt werden können,
-     *   da Acl nur mittels der statischen Methode getInstance erstellt und in Zend_Registry abgelegt werden kann
-     * - Es werden nur "allow"-Regeln gesetzt, da alle Privilegien auf eine Resource,
-     *   die nicht explizit erlaubt sind durch Zend_Acl denied werden.
+     * Creates a ACL with roles, resources and rights/privileges
+     * - must be used as singleton (getInstance())
+     * - only allow rules are set, default is deny
      */
     protected function __construct() {
-        $this->_aclConfigObject = $this->getAclConfig();
+        $db = ZfExtended_Factory::get('ZfExtended_Models_Db_AclRules');
+        /* @var $db ZfExtended_Models_Db_AclRules */
         
-        $this->addRoles();
+        $roles = $db->loadRoles(Zend_Registry::get('module'));
+        $this->addRoles($roles);
         
-        $this->addResources();
+        $resources = $db->loadResources(Zend_Registry::get('module'));
+        $this->addResources($resources);
 
-        $this->addRules();
+        $rules = $db->loadByModule(Zend_Registry::get('module'));
+        $this->addRules($rules);
     }
     
-    /**
-     * erstellt aus der acl_config.ini des aktuellen Moduls ein Zend_Config-Objekt
-     *
-     * - erlaubt Überschreibung durch /iniOverwrites/'.APPLICATION_AGENCY.'/'.
-                Zend_Registry::get('module').'AclConfig.ini'
-     *
-     * @return Zend_Config_Ini
-     */
-    public function getAclConfig(){
-        $overwriteFile = APPLICATION_PATH .'/iniOverwrites/'.APPLICATION_AGENCY.'/'.
-                Zend_Registry::get('module').'AclConfig.ini';
-        $file = APPLICATION_PATH.'/modules/'.Zend_Registry::get('module').'/configs/aclConfig.ini';
-        if(file_exists($overwriteFile)){
-            $path = $overwriteFile;
-        }
-        elseif(file_exists($file)){
-            $path = $file;
-        }
-        else{
-            throw new Zend_Exception('Keine aclConfig.ini gefunden', 0);
-        }
-        return new Zend_Config_Ini($path,NULL,$options = array( 'allowModifications' => true));;
-    }
     /**
      * checks if one of the passed roles allows the resource / privelege
      *
@@ -132,56 +104,83 @@ class ZfExtended_Acl extends Zend_Acl {
                     $allowed = true;
                 }
             } catch (Zend_Acl_Role_Registry_Exception $exc) {
-                //if role is not registered because it is the role of a differnt module
+                //if role is not registered because it is the role of a different module
             }
         }
         return $allowed;
     }
-
-    protected function addRules(){
-        if(isset($this->_aclConfigObject->rules)) {
-            throw new ZfExtended_Exception("There are ACL rules loaded from ini config, this should not be: ".print_r($this->_aclConfigObject->rules->toArray()));
-        }
-        $rules = ZfExtended_Factory::get('ZfExtended_Models_Db_AclRules');
-        /* @var $rules ZfExtended_Models_Db_AclRules */
-        $loaded = $rules->loadByModule(Zend_Registry::get('module'))->toArray();
-        if(empty($loaded)) {
+    
+    /**
+     * Checks if the configured rights were valid
+     */
+    public function checkRights() {
+        if(!ZfExtended_Debug::hasLevel('core', 'acl')) {
             return;
         }
-        foreach($loaded as $rule) {
+        $this->getControllers();
+        $allowedResource = ['frontend', 'backend', 'setaclrole'];
+        foreach($this->_allRules as $rule) {
+            if(in_array($rule['resource'], $allowedResource)) {
+                continue;
+            }
+            $isAll = $rule['right'] == 'all';
+            $isClass = class_exists($rule['resource'], true);
+            $isController = class_exists($rule['resource'].'Controller', true);
+            //class_exists loads the class and isAll is set then its OK
+            if(($isClass || $isController) && $isAll) {
+                continue;
+            }
+            if(method_exists($rule['resource'].'Controller', $rule['right'].'Action')){
+                continue;
+            }
+            if(method_exists($rule['resource'], $rule['right'])){
+                continue;
+            }
+            error_log('The following ACL resource and privilege does not exist in the Application: '.$rule['resource'].'; '.$rule['right']);
+        }
+    }
+
+    /**
+     * Add the given rules to the internal ACL instance
+     * @param array $rules
+     * @throws Zend_Exception
+     */
+    protected function addRules(array $rules){
+        if(empty($rules)) {
+            return;
+        }
+        $this->_allRules = $rules;
+        foreach($rules as $rule) {
             $role = $rule['role'];
             $right = $rule['right'];
             $resource = $rule['resource'];
             if ($right == 'all') {
-                if($resource == 'frontend' && !$this->isFrontendRight()){
-                    throw new Zend_Exception('For the resource "frontend" no rights are registered');
+                if($resource == 'frontend'){
+                    throw new Zend_Exception('For the resource "frontend" the right "all" can not be used!');
                 }
-                if($this->has($resource)) {
-                    $this->allow($role, $resource);
-                }
-                else {
-                    //FIXME convert this debug statement to a error log with warning level 
-                    if(ZfExtended_Debug::hasLevel('core', 'acl')) {
-                        error_log("Trying to add not existing ACL resource ".$resource);
-                    }
-                }
+                $this->allow($role, $resource);
                 continue;
             }
-            if($this->allowApplicationPrivilege($role, $resource, $right)){
-                continue;
-            }
-            if($this->allowControllerPrivilege($role, $resource, $right)){
-                continue;
-            }
-            if($this->allowSetAclRolePrivilege($role, $resource, $right)){
-                continue;
-            }
-            $this->allowOtherPrivilege($role, $resource, $right);
+            $this->allow($role, $resource, $right);
         }
     }
     
-    protected function addRoles(){
-        foreach ($this->_aclConfigObject->roles as $role) {
+    /**
+     * Adds the resources to the internal ACL instance
+     * @param array $resources
+     */
+    protected function addResources(array $resources){
+        foreach ($resources as $resource) {
+            $this->addResource(new Zend_Acl_Resource($resource));
+        }
+    }
+    
+    /**
+     * Adds the roles to the internal ACL instance
+     * @param array $roles
+     */
+    protected function addRoles(array $roles){
+        foreach ($roles as $role) {
             $const = 'ACL_ROLE_'.strtoupper($role);
             if(!defined($const)) {
                 define($const, $role);
@@ -190,111 +189,6 @@ class ZfExtended_Acl extends Zend_Acl {
         }
     }
     
-    protected function addResources(){
-       $controllers = $this->getControllers();
-       foreach ($controllers as $resource) {
-            $this->add(new Zend_Acl_Resource($resource));
-        }
-        foreach ($this->_aclConfigObject->resources as $resource) {
-            $this->add(new Zend_Acl_Resource($resource));
-        }
-    }
-    /**
-     * checks, if $privilege is other Privilege and if yes allows it
-     *
-     * @param string $role
-     * @param string $resource
-     * @param string $privilege
-     * @throws Zend_Exception if 
-     */
-    protected function allowOtherPrivilege(string $role,string $resource,string $privilege){
-        //versuche, Klasse über Autoloader zu laden
-        try {
-            class_exists($resource, true);
-            if(method_exists($resource.'Controller', $privilege.'Action')
-                    or method_exists($resource, $privilege)){
-                $this->allow($role, $resource, $privilege);
-            }
-            else{
-                throw new Zend_Exception();
-            }
-        }
-        catch (Exception $exc) {
-            if(ZfExtended_Debug::hasLevel('core', 'acl')) {
-                error_log("Trying to add not existing ACL resource and privilege: ".$resource.'; '.$privilege);
-            }
-        }
-    }
-    /**
-     * checks, if $privilege is ControllerPrivilege and if yes allows it
-     *
-     * @param string $role
-     * @param string $resource
-     * @param string $privilege
-     * @return boolean true if $privilege is ControllerPrivilege, false if not
-     */
-    protected function allowControllerPrivilege(string $role,string $resource,string $privilege){
-        //prüfe, ob Action überhaupt existiert - das tut Zend_Acl leider nicht von sich aus
-        try {
-            if(method_exists($resource.'Controller', $privilege.'Action')){
-                $this->allow($role, $resource, $privilege);
-                return true;
-            }
-            return false;
-        }
-        catch (Exception $exc) {
-            return false;
-        }
-    }
-    /**
-     * checks, if $privilege is frontend or backend right and if yes allows it if applicable
-     *
-     * @param string $role
-     * @param string $resource
-     * @param string $privilege
-     * @return boolean true if resource is frontend, false if not
-     * @throws Zend_Exception if resource is frontend, but $privilege is not defined as frontendRight
-     */
-    protected function allowApplicationPrivilege(string $role,string $resource,string $privilege){
-        if($resource != 'frontend' && $resource != 'backend'){
-            return false;
-        }
-        $this->allow($role, $resource, $privilege);
-        return true;
-    }
-    
-    /**
-     * checks, if $privilege is setaclrole if yes allows it if applicable
-     *
-     * @param string $role
-     * @param string $resource
-     * @param string $privilege
-     * @return boolean true if resource is frontend, false if not
-     * @throws Zend_Exception if resource is frontend, but $privilege is not defined as frontendRight
-     */
-    protected function allowSetAclRolePrivilege(string $role,string $resource,string $privilege){
-        if($resource != 'setaclrole'){
-            return false;
-        }
-        $this->allow($role, $resource, $privilege);
-        return true;
-    }
-    
-    /**
-     * check, if given frontendright exists (is listed in [frontendRights] in aclConfig.ini
-     *
-     * @param string $right, default = all; if all is given here, the method checks,
-     *      if there is at least one frontendRight defined
-     * @return boolean
-     */
-    public function isFrontendRight($right = 'all'){
-        if(!isset($this->_aclConfigObject->frontendRights)){
-            return false;
-        }
-        $rights = $this->_aclConfigObject->frontendRights->toArray();
-        
-        return count($rights) > 0 && ($right === 'all' || in_array($right, $rights));
-    }
     /**
      * Holt alle Controller aller Module
      *
