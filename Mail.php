@@ -390,7 +390,20 @@ class  ZfExtended_Mail {
         $this->send($employee->eMail, $employee->firstname.' '.$employee->surname);
     }
 
-    public function addBcc($bcc){
-        $this->mail->addBcc($bcc);
+    /**
+     * Adds BCC-recipient, $email can be an array, or a single string address
+     * @param string|array $email
+     */
+    public function addBcc($email){
+        $this->mail->addBcc($email);
+    }
+    
+    /**
+     * Adds CC-recipient, $email can be an array, or a single string address
+     * if it is an associative array the keys are used as receiver name, the value as email
+     * @param string|array $email 
+     */
+    public function addCc($email, $name=''){
+        $this->mail->addCc($email, $name='');
     }
 }
