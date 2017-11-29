@@ -58,7 +58,7 @@ trait ZfExtended_Controllers_MaintenanceTrait{
         
         if(new DateTime() >= $date ){
             if($this->enableMaintenanceHeader) {
-                $this->_response->setHeader('x-translate5-shownotice', date("Y-m-d H:i:s", $maintenanceStartDate));
+                $this->_response->setHeader('x-translate5-shownotice', date(DATE_ISO8601, $maintenanceStartDate));
             }
             $this->view->displayMaintenancePanel = true;
         }

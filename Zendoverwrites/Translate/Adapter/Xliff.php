@@ -118,6 +118,10 @@ class  ZfExtended_Zendoverwrites_Translate_Adapter_Xliff extends Zend_Translate_
 
     private function _startElement($file, $name, $attrib)
     {
+        //single tags inside the XML are not handled properly, they are converted to <br></br> instead <br/>
+        if(strtolower($name) == 'br') {
+            return; //do nothing in start, handle in end
+        }
         if ($this->_stag === true) {
             $this->_scontent .= "<".$name;
             foreach($attrib as $key => $value) {
@@ -176,8 +180,16 @@ class  ZfExtended_Zendoverwrites_Translate_Adapter_Xliff extends Zend_Translate_
     private function _endElement($file, $name)
     {
         if (($this->_stag === true) and ($name !== 'source')) {
+            if(strtolower($name) == 'br') {
+                $this->_scontent .= "<".$name."/>";
+                return;
+            }
             $this->_scontent .= "</".$name.">";
         } else if (($this->_ttag === true) and ($name !== 'target')) {
+            if(strtolower($name) == 'br') {
+                $this->_tcontent .= "<".$name."/>";
+                return;
+            }
             $this->_tcontent .= "</".$name.">";
         } else {
             switch (strtolower($name)) {

@@ -100,6 +100,7 @@ class ZfExtended_Controllers_Plugins_ViewSetup extends Zend_Controller_Plugin_Ab
         $rop = $config->runtimeOptions;
         //maintenance start date
         $maintenanceStartDate = isset($rop->maintenance->startDate)?$rop->maintenance->startDate:'';
+        $maintenanceStartDate = date(DATE_ISO8601, strtotime($maintenanceStartDate));
         $view->Php2JsVars()->set('maintenance.startDate',$maintenanceStartDate);
         //maintenance warning panel is showed
         $view->Php2JsVars()->set('maintenance.timeToNotify',isset($rop->maintenance->timeToNotify)?$rop->maintenance->timeToNotify:'');
