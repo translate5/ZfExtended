@@ -44,9 +44,18 @@ class ZfExtended_View_Helper_TemplateApply extends Zend_View_Helper_Abstract {
      * The translated template strings, array to be used as template stack
      * @var array
      */
-    protected $template = []; 
+    protected $template = [];
     
-    public function templateApply($template) {
+    /**
+     * Container for the data to be displayed, sanitized list of data which is allowed to be seen by users (since mail texts are coming from foreign XLF)
+     * @var array
+     */
+    protected $data = [];
+    
+    public function templateApply($template, array $data = null) {
+        if(!empty($data)) {
+            $this->data = array_merge($this->data, $data);
+        }
         $this->setTemplate($template);
         return $this->render();
     }
@@ -63,12 +72,13 @@ class ZfExtended_View_Helper_TemplateApply extends Zend_View_Helper_Abstract {
         return preg_replace_callback('#\{([^\}]+)\}#', function($matches){
             $placeHolder = $matches[1];
             $keys = explode('.', $placeHolder);
-            return $this->getData($this->view, $keys, $placeHolder);
+            return $this->getData($this->data, $keys, $placeHolder);
         }, array_pop($this->template));
     }
     
     /**
      * returns the data of the given placeholder or the placeHolder if nothing found
+     * data is parsed recursivly if nested arrays or objects and a "." is given in the placeholder
      */
     protected function getData($data, $keys, $placeHolder) {
         $key = array_shift($keys);
@@ -78,15 +88,8 @@ class ZfExtended_View_Helper_TemplateApply extends Zend_View_Helper_Abstract {
         if(is_array($data) && array_key_exists($key, $data)) {
             return $this->getData($data[$key], $keys, $placeHolder);
         }
-        if(is_object($data)) {
-            if(property_exists($data, $key)){
-                return $this->getData($data->{$key}, $keys, $placeHolder);
-            }
-            $isMethod = substr($key, -2) === '()';
-            $method = substr($key, 0, -2);
-            if($isMethod && is_callable([$data, $method])) {
-                return call_user_func([$data, $method]);
-            }
+        if(is_object($data) && property_exists($data, $key)){
+            return $this->getData($data->{$key}, $keys, $placeHolder);
         }
         return $placeHolder;
     }
