@@ -69,7 +69,6 @@ class ZfExtended_Utils {
      */
     public static function recursiveCopy(string $src, string $dst) {
         $dir = opendir($src);
-        error_log($dst);
         if(!file_exists($dst)) {
             @mkdir($dst);
         }
