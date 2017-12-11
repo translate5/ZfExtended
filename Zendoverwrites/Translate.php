@@ -320,8 +320,15 @@ class  ZfExtended_Zendoverwrites_Translate extends Zend_Translate
         return $this->sourceLang;
     }
     
-    public function _($s){
-        $s = parent::_($s);
+    /***
+     * 
+     * @param string $s: string to be translated
+     * @param string $locale: language locale
+     * @throws Zend_Exception
+     * @return string
+     */
+    public function _($s, $locale = null){
+        $s = parent::_($s, $locale);
         if($this->_jsonEncode){
             $s = json_encode($s,JSON_HEX_APOS);
             $length = strlen($s);
