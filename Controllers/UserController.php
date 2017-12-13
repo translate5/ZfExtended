@@ -221,19 +221,8 @@ class ZfExtended_UserController extends ZfExtended_RestController {
     protected function handlePasswdMail() {
         //convention for passwd being reset: 
         if(property_exists($this->data, 'passwd') && is_null($this->data->passwd)) {
-            $general = ZfExtended_Zendoverwrites_Controller_Action_HelperBroker::getStaticHelper(
-                'general'
-            );
-            $translate = ZfExtended_Zendoverwrites_Translate::getInstance();
-            /* @var $translate ZfExtended_Zendoverwrites_Translate */;
-            $general->mail(
-                    $this->entity->getEmail(),
-                    '',
-                    $translate->_('Passwort setzen'),
-                    array(
-                        'userEntity' =>$this->entity
-                    )
-            );
+            $mailer = new ZfExtended_Mail();
+            $mailer->sendToUser($this->entity);
         }
     }
     
@@ -245,7 +234,7 @@ class ZfExtended_UserController extends ZfExtended_RestController {
      */
     protected function checkIsEditable(){
         if(! $this->entity->getEditable()){
-            throw new Zend_Exception('Tryied to manipulate a not editable user'); 
+            throw new Zend_Exception('Tried to manipulate a not editable user'); 
         }
     }
 }

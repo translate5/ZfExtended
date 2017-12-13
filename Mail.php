@@ -73,6 +73,9 @@ class  ZfExtended_Mail {
      * @var boolean
      */
     protected $sendingDisabled = false;
+    
+    protected $initialLocale;
+    protected static $translationInstances = [];
 
     /**
      * initiiert das interne Mail und View Object
@@ -111,7 +114,13 @@ class  ZfExtended_Mail {
      */
     protected function initView() {
         $this->view = new Zend_View();
+        $this->view->config = Zend_Registry::get('config');
         $this->view->translate = ZfExtended_Zendoverwrites_Translate::getInstance();
+        $this->initialLocale = $this->view->translate->getTargetLang();
+        
+        //cache translation instance per language to be able to send the mail in the users language 
+        self::$translationInstances[$this->initialLocale] = $this->view->translate;
+        
         $config = Zend_Registry::get('config');
         $libs = array_reverse($config->runtimeOptions->libraries->order->toArray());
         foreach ($libs as $lib) {
@@ -126,6 +135,14 @@ class  ZfExtended_Mail {
                 Zend_Registry::get('module') . self::MAIL_TEMPLATE_BASEPATH);
     }
 
+    /**
+     * Stores the initialized translation instance per used language 
+     * @param ZfExtended_Zendoverwrites_Translate $translate
+     */
+    protected function storeTranslationInstance(ZfExtended_Zendoverwrites_Translate $translate) {
+        self::$translationInstances[$translate->getTargetLang()] = $translate;
+    }
+    
     /**
      * Setzt Parameter für das View Object zur Ausgabe des Mail Templates
      * @param array $params
@@ -353,6 +370,51 @@ class  ZfExtended_Mail {
             }
         }
         $this->mail->send();
+    }
+    
+    /**
+     * Sends the mail to the given user in his chosen translation
+     * if user has no translation chosen, first fallback is applicationLocale, second fallback is fallbackLocale
+     * @param ZfExtended_Models_User $user
+     */
+    public function sendToUser(ZfExtended_Models_User $user) {
+        $this->resetTranslationLanguage($this->getUserLocale($user));
+        $this->view->receiver = $user->getDataObject();
+        $this->send($user->getEmail(), $user->getUserName());
+    }
+    
+    /**
+     * Resets the internal used locale for mail translation
+     * @param string $locale
+     */
+    public function resetTranslationLanguage($locale) {
+        $this->decideIfToThrowInitViewException();
+        if(empty(self::$translationInstances[$locale])) {
+            $translation = ZfExtended_Factory::get('ZfExtended_Zendoverwrites_Translate', [$locale]);
+            /* @var $translation ZfExtended_Zendoverwrites_Translate */
+            $this->storeTranslationInstance($translation);
+        }
+        $this->view->translate = self::$translationInstances[$locale];
+    }
+    
+    /**
+     * @param ZfExtended_Models_User $user
+     * @return string
+     */
+    protected function getUserLocale(ZfExtended_Models_User $user) {
+        $locale = $user->getLocale();
+        // user has locale, use that:
+        if(!empty($locale)) {
+            return $locale;
+        }
+        $config = Zend_Registry::get('config');
+        //if an applicationLocale is configured use that
+        $locale = $config->runtimeOptions->translation->applicationLocale;
+        if(!empty($locale)) {
+            return $locale;
+        }
+        //finally use the fallback:
+        return $config->runtimeOptions->translation->fallbackLocale;
     }
 
     /**

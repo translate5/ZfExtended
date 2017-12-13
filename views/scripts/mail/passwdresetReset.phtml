@@ -29,10 +29,12 @@ END LICENSE AND COPYRIGHT
  *
  */
 
-$session = new Zend_Session_Namespace();
-echo sprintf($this->translate->_('%1$s %2$s,
+$this->render('general.phtml');
 
-Sie erhalten diese Email, weil wir eine Anfrage zur Änderung des Passwortes für Ihr Konto auf %3$s%4$s%5$s erhalten haben. 
+$this->subject = $this->translate->_('Passwort neu setzen');
+
+echo $this->templateApply($this->translate->_('{header}
+Sie erhalten diese Email, weil wir eine Anfrage zur Änderung des Passwortes für Ihr Konto auf {portalUrl} erhalten haben. 
 
 Wenn Sie Ihr Passwort ändern möchten, dann befolgen Sie bitte folgende Anweisungen:
 
@@ -41,31 +43,23 @@ Der folgende Link enthält einen für 30 Minuten gültigen Schlüssel, mit welch
 ==============================
 Link um Passwort neu zu setzen
 ------------------------------
-%3$s%4$s%5$s%6$s
+{portalUrl}{hashurl}
 ------------------------------
 ==============================
 
 Sollte Ihr Schlüssel nicht mehr gültig sein, können Sie unter jederzeit einen neuen Schlüssel anfordern.
 ------------------------------
-%3$s%4$s%5$s%7$s
+{portalUrl}{reseturl}
 ------------------------------
 
 Sollten Sie die Anfrage nicht selbst ausgelöst haben, bitten wir Sie uns darüber zu informieren.
 
-Vielen Dank und viele Grüße,
-Ihr Projektmanagement Team
-%8$s
-
-Diese Email wurde automatisch generiert. Please do not reply to this email.'),
-    $this->mailEmployeeSalutation($this->gender),
-    $this->surname,
-    $session->runtimeOptions->server->protocol,
-    $session->runtimeOptions->server->name,
-    APPLICATION_RUNDIR,
-    '/login/passwdnew?resetHash='.$this->resetHash,
-    '/login/passwdreset',
-    $session->runtimeOptions->companyName
-);
+{footer}'),[
+    'hashurl' => '/login/passwdnew?resetHash='.$this->resetHash,
+    'reseturl' => '/login/passwdreset',
+     'header' => strip_tags($this->header), //since we send plain text here, we have to remove tags
+     'footer' => strip_tags($this->footer),
+]);
 
 
 
