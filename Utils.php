@@ -62,5 +62,28 @@ class ZfExtended_Utils {
         return $constants;
     }
     
-    
+    /**
+     * does a recursive copy of the given directory
+     * @param string $src Source Directory
+     * @param string $dst Destination Directory
+     */
+    public static function recursiveCopy(string $src, string $dst) {
+        $dir = opendir($src);
+        if(!file_exists($dst)) {
+            @mkdir($dst);
+        }
+        $SEP = DIRECTORY_SEPARATOR;
+        while(false !== ( $file = readdir($dir)) ) {
+            if ($file == '.' || $file == '..') {
+                continue;
+            }
+            if (is_dir($src.$SEP.$file)) {
+                self::recursiveCopy($src.$SEP.$file, $dst.$SEP.$file);
+            }
+            else {
+                copy($src.$SEP.$file, $dst.$SEP.$file);
+            }
+        }
+        closedir($dir);
+    }
 }

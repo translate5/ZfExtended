@@ -30,6 +30,10 @@ END LICENSE AND COPYRIGHT
  */
 
 $session = new Zend_Session_Namespace();
+$userLocale=null;
+if($this->userEntity->getLocale() && $this->userEntity->getLocale()!==''){
+    $userLocale=$this->userEntity->getLocale();
+}
 echo sprintf($this->translate->_('%1$s %2$s,
 
 Sie erhalten diese Email, weil Ihr Konto auf %3$s neu angelegt oder Ihr Passwort zurückgesetzt wurde. 
@@ -50,8 +54,9 @@ Vielen Dank und viele Grüße,
 Ihr Projektmanagement Team
 %5$s
 
-Diese Email wurde automatisch generiert. Bitte antworten Sie nicht auf diese E-Mail.'),
-    $this->mailEmployeeSalutation($this->userEntity->getGender()),
+Diese Email wurde automatisch generiert. Bitte antworten Sie nicht auf diese E-Mail.',
+        $userLocale),
+        $this->mailEmployeeSalutation($this->userEntity->getGender(),$userLocale),
     $this->userEntity->getSurName(),
     $session->runtimeOptions->server->protocol.$session->runtimeOptions->server->name.APPLICATION_RUNDIR,//site-url
     '/login/passwdreset',

@@ -333,8 +333,8 @@ class ZfExtended_UserController extends ZfExtended_RestController {
     }
     
     /***
-     * Check in get/put/delete actions if the current loged in user is parent of the data(user)
-     * which needs to be modefyed
+     * Check in get/put/delete actions if the current logged in user is parent of the data(user)
+     * which needs to be modified
      * @throws ZfExtended_NoAccessException
      */
     protected function handleUserParentId(){
@@ -363,7 +363,7 @@ class ZfExtended_UserController extends ZfExtended_RestController {
                 return;
             }
                 
-            $parentIds=$userSession->data->parentIds;
+            $parentIds=empty($userSession->data->parentIds) ? false : $userSession->data->parentIds;
             if($parentIds){
                 $parentIds.=$userSession->data->id.',';
             }else{
