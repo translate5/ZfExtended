@@ -363,7 +363,7 @@ class ZfExtended_UserController extends ZfExtended_RestController {
                 return;
             }
                 
-            $parentIds=$userSession->data->parentIds;
+            $parentIds=empty($userSession->data->parentIds) ? false : $userSession->data->parentIds;
             if($parentIds){
                 $parentIds.=$userSession->data->id.',';
             }else{
