@@ -33,7 +33,7 @@ $this->render('general.phtml');
 
 $this->subject = $this->translate->_('Passwort setzen');
 
-echo $this->templateApply($this->translate->_('{header}
+echo $this->templateApply('{header}
 Sie erhalten diese Email, weil Ihr Konto auf {portalUrl} neu angelegt oder Ihr Passwort zurückgesetzt wurde. 
 
 Ihr Benutzername:
@@ -48,7 +48,7 @@ Adresse eine Link an, um Ihr Passwort neu setzen zu können.
 {portalUrl}{reseturl}
 ------------------------------
 
-{footer}'),[
+{footer}',[
     'reseturl' => '/login/passwdreset',
     'header' => strip_tags($this->header), //since we send plain text here, we have to remove tags
     'footer' => strip_tags($this->footer),
