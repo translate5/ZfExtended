@@ -33,7 +33,7 @@ $this->render('general.phtml');
 
 $this->subject = $this->translate->_('Passwort neu setzen');
 
-echo $this->templateApply($this->translate->_('{header}
+echo $this->templateApply('{header}
 Sie erhalten diese Email, weil wir eine Anfrage zur Änderung des Passwortes für Ihr Konto auf {portalUrl} erhalten haben. 
 
 Wenn Sie Ihr Passwort ändern möchten, dann befolgen Sie bitte folgende Anweisungen:
@@ -54,7 +54,7 @@ Sollte Ihr Schlüssel nicht mehr gültig sein, können Sie unter jederzeit einen
 
 Sollten Sie die Anfrage nicht selbst ausgelöst haben, bitten wir Sie uns darüber zu informieren.
 
-{footer}'),[
+{footer}',[
     'hashurl' => '/login/passwdnew?resetHash='.$this->resetHash,
     'reseturl' => '/login/passwdreset',
      'header' => strip_tags($this->header), //since we send plain text here, we have to remove tags
