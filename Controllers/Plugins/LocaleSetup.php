@@ -79,7 +79,7 @@ class ZfExtended_Controllers_Plugins_LocaleSetup extends Zend_Controller_Plugin_
             return;
         }
         
-        $fallback = $config->runtimeOptions->translation->sourceCodeLocale;
+        $fallback = $config->runtimeOptions->translation->fallbackLocale;
         
         //check for application configuration
         if(!isset($session->locale) && $appLocale = $config->runtimeOptions->translation->applicationLocale) {
@@ -98,6 +98,7 @@ class ZfExtended_Controllers_Plugins_LocaleSetup extends Zend_Controller_Plugin_
                 $session->locale = $fallback;
             }
         }
+        $this->updateUserLocale($session->locale);
         $this->registerLocale($session->locale);
     }
     

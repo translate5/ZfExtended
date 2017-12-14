@@ -41,7 +41,7 @@ END LICENSE AND COPYRIGHT
 
 class ZfExtended_View_Helper_MailEmployeeSalutation extends Zend_View_Helper_Abstract
 {
-    public function mailEmployeeSalutation($gender = false,$userLocale=false)
+    public function mailEmployeeSalutation($gender = false)
     {
         if(!$gender){
             $user = new Zend_Session_Namespace('user');
@@ -51,7 +51,7 @@ class ZfExtended_View_Helper_MailEmployeeSalutation extends Zend_View_Helper_Abs
             throw new Zend_Exception('$gender hat den nicht erwarteten Wert '.$gender, 0);
         }
         return ($gender == 'f')?
-        $this->view->translate->_('Sehr geehrte Frau',$userLocale):
-        $this->view->translate->_('Sehr geehrter Herr',$userLocale);
+        $this->view->translate->_('Sehr geehrte Frau'):
+        $this->view->translate->_('Sehr geehrter Herr');
     }
 }

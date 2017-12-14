@@ -29,40 +29,31 @@ END LICENSE AND COPYRIGHT
  *
  */
 
-$session = new Zend_Session_Namespace();
-$userLocale=null;
-if($this->userEntity->getLocale() && $this->userEntity->getLocale()!==''){
-    $userLocale=$this->userEntity->getLocale();
-}
-echo sprintf($this->translate->_('%1$s %2$s,
+$this->render('general.phtml');
 
-Sie erhalten diese Email, weil Ihr Konto auf %3$s neu angelegt oder Ihr Passwort zurückgesetzt wurde. 
+$this->subject = $this->translate->_('Passwort setzen');
+
+echo $this->templateApply('{header}
+Sie erhalten diese Email, weil Ihr Konto auf {portalUrl} neu angelegt oder Ihr Passwort zurückgesetzt wurde. 
 
 Ihr Benutzername:
 ------------------------------
-%6$s
+{login}
 ------------------------------
 
 Wenn Sie Ihr Konto künftig nutzen möchten, dann fordern Sie unter der folgenden
 Adresse eine Link an, um Ihr Passwort neu setzen zu können.
 
 ------------------------------
-%3$s%4$s
+{portalUrl}{reseturl}
 ------------------------------
 
-Vielen Dank und viele Grüße,
-Ihr Projektmanagement Team
-%5$s
-
-Diese Email wurde automatisch generiert. Bitte antworten Sie nicht auf diese E-Mail.',
-        $userLocale),
-        $this->mailEmployeeSalutation($this->userEntity->getGender(),$userLocale),
-    $this->userEntity->getSurName(),
-    $session->runtimeOptions->server->protocol.$session->runtimeOptions->server->name.APPLICATION_RUNDIR,//site-url
-    '/login/passwdreset',
-    $session->runtimeOptions->companyName,
-    $this->userEntity->getLogin()
-);
+{footer}',[
+    'reseturl' => '/login/passwdreset',
+    'header' => strip_tags($this->header), //since we send plain text here, we have to remove tags
+    'footer' => strip_tags($this->footer),
+    'login' => $this->receiver->login,
+]);
 
 
 

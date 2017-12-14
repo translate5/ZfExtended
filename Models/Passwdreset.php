@@ -97,21 +97,13 @@ class ZfExtended_Models_Passwdreset extends ZfExtended_Models_Entity_Abstract {
         
         $this->validate();
         $this->save();
-        $general = ZfExtended_Zendoverwrites_Controller_Action_HelperBroker::getStaticHelper(
-            'general'
-        );
-        $translate = ZfExtended_Zendoverwrites_Translate::getInstance();
-        /* @var $translate ZfExtended_Zendoverwrites_Translate */;
-        $general->mail(
-                $user->getEmail(),
-                '',
-                $translate->_('Passwort neu setzen'),
-                array(
-                    'gender' =>$user->getGender(),
-                    'surname' =>$user->getSurName(),
-                    'resetHash' =>$session->resetHash
-                )
-        );
+        
+        $mailer = new ZfExtended_Mail();
+        $mailer->setParameters([
+            'resetHash' => $session->resetHash,
+        ]);
+        $mailer->sendToUser($user);
+        
         return true;
     }
 }
