@@ -133,6 +133,12 @@ class  ZfExtended_Mail {
                 Zend_Registry::get('module').'/views/helpers', 'View_Helper_');
         $this->view->addScriptPath(APPLICATION_PATH.'/modules/'.
                 Zend_Registry::get('module') . self::MAIL_TEMPLATE_BASEPATH);
+        
+        $events = ZfExtended_Factory::get('ZfExtended_EventManager', array(__CLASS__));
+        /* @var $events ZfExtended_EventManager */
+        $events->trigger('afterMailViewInit', $this, [
+            'view' => $this->view
+        ]);
     }
 
     /**
