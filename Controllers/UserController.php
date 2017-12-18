@@ -77,6 +77,7 @@ class ZfExtended_UserController extends ZfExtended_RestController {
             $parentId = false;
         }
         else {
+            $userSession = new Zend_Session_Namespace('user');
             $parentId = $userSession->data->id;
         }
         $this->view->rows = $this->entity->loadAllByRole('pm', $parentId);
@@ -276,6 +277,7 @@ class ZfExtended_UserController extends ZfExtended_RestController {
         }
         //if is post add current user as "owner" of the newly created one
         if($this->_request->isPost()) {
+            $userSession = new Zend_Session_Namespace('user');
             if(empty($userSession->data->parentIds)){
                 $parentIds = [];
             }else{
