@@ -285,6 +285,7 @@ class ZfExtended_UserController extends ZfExtended_RestController {
             }
             $parentIds[] = $userSession->data->id;
             $this->data->parentIds = ','.join(',', $parentIds).',';
+            $this->entity->setParentIds($this->data->parentIds);
         }
         else {
             //on put we have to check access
