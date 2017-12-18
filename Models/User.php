@@ -278,7 +278,7 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implement
         if(empty($parentIds)){
             $parentIds = $this->getParentIds();
         }
-        $parentIds = explode(',', trim(' ,', $parentIds));
+        $parentIds = explode(',', trim($parentIds, ' ,'));
         return in_array($parentId, $parentIds);
     }
     
