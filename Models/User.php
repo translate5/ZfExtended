@@ -269,18 +269,17 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implement
     }
     
     /***
-     * Check if the user has parent with given id
-     * @param string $userGuid -> the user which needs to be checked
-     * @param string $parentId -> the parent user
+     * Check if the current user has parent user with the given id
+     * @param string $parentId -> the parent userid to be checked if it is a parent of the current one
+     * @param string $parentIds optional, if empty take the parentIds of the current user instance. A custom comma separated string can be given here
      * @return boolean
      */
-    public function hasParent($userGuid,$parentId){
-        $adapter = $this->db->getAdapter();
-        $s=$this->db->select();
-        $s->where('userGuid=?',$userGuid);
-        $s->where('parentIds like '.$adapter->quote('%,'.$parentId.',%'));
-        $hasParent=count($this->loadFilterdCustom($s))>0;
-        return $hasParent;
+    public function hasParent($parentId, $parentIds = null){
+        if(empty($parentIds)){
+            $parentIds = $this->getParentIds();
+        }
+        $parentIds = explode(',', trim(' ,', $parentIds));
+        return in_array($parentId, $parentIds);
     }
     
     /**

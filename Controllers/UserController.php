@@ -123,7 +123,7 @@ class ZfExtended_UserController extends ZfExtended_RestController {
      */
     public function getAction() {
         parent::getAction();
-        $this->handleUserParentId();
+        $this->checkUserAccessByParent();
         $this->languagesCommaSeparatedToArray();
         if($this->entity->getLogin() == ZfExtended_Models_User::SYSTEM_LOGIN) {
             $e = new ZfExtended_Models_Entity_NotFoundException();
@@ -140,7 +140,7 @@ class ZfExtended_UserController extends ZfExtended_RestController {
     public function deleteAction() {
         $this->entity->load($this->_getParam('id'));
         $this->checkIsEditable();
-        $this->handleUserParentId();
+        $this->checkUserAccessByParent();
         $this->entity->delete();
     }
     
@@ -258,7 +258,6 @@ class ZfExtended_UserController extends ZfExtended_RestController {
             unset($this->data->id);
             $this->data->userGuid = $this->_helper->guid->create(true);
         }
-        $this->handleUserParentId();
         $this->handleUserSetAclRole();
     }
 
@@ -274,6 +273,20 @@ class ZfExtended_UserController extends ZfExtended_RestController {
                 $this->data->passwd = null;
             }
             $this->entity->setNewPasswd($this->data->passwd,false);
+        }
+        //if is post add current user as "owner" of the newly created one
+        if($this->_request->isPost()) {
+            if(empty($userSession->data->parentIds)){
+                $parentIds = [];
+            }else{
+                $parentIds = explode(',', trim($userSession->data->parentIds, ' ,'));
+            }
+            $parentIds[] = $userSession->data->id;
+            $this->data->parentIds = ','.join(',', $parentIds).',';
+        }
+        else {
+            //on put we have to check access
+            $this->checkUserAccessByParent();
         }
     }
     
@@ -326,41 +339,22 @@ class ZfExtended_UserController extends ZfExtended_RestController {
      * which needs to be modified
      * @throws ZfExtended_NoAccessException
      */
-    protected function handleUserParentId(){
+    protected function checkUserAccessByParent(){
+        //if current user has right seeAllUsers everything is OK 
+        if($this->isAllowed("backend", "seeAllUsers")) {
+            return;
+        }
         $userSession = new Zend_Session_Namespace('user');
-        //check if logged in user is able to modefy the data
-        if($this->_request->isDelete() || $this->_request->isGet()) {
-            $userModel=ZfExtended_Factory::get('ZfExtended_Models_User');
-            /* @var $userModel ZfExtended_Models_User */
-            
-            if(empty($this->entity->getParentIds())){
-                return;
-            }
-            
-            $hasParent=$userModel->hasParent($this->entity->getUserGuid(), $userSession->data->id);
-            if(!$hasParent && $this->entity->getId()!=$userSession->data->id){
-                throw new ZfExtended_NoAccessException();
-            }
-            
-        }else{
-            $sameId=false;
-            if($this->_request->isPut()) {
-                $sameId=$userSession->data->id===$this->data->id;
-            }
-            //if the same user is modified do not update the parentId
-            if($sameId){
-                return;
-            }
-                
-            $parentIds=empty($userSession->data->parentIds) ? false : $userSession->data->parentIds;
-            if($parentIds){
-                $parentIds.=$userSession->data->id.',';
-            }else{
-                $parentIds=','.$parentIds.$userSession->data->id.',';
-            }
-            $this->data->parentIds=$parentIds;
+        
+        //if the edited user is the current user, also everything is OK
+        if($userSession->data->userGuid == $this->entity->getUserGuid()) {
+            return;
         }
         
+        if($this->entity->hasParent($userSession->data->id)){
+            return;
+        }
+        throw new ZfExtended_NoAccessException();
     }
     
     /***
