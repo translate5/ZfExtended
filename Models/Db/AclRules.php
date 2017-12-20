@@ -35,7 +35,38 @@ class ZfExtended_Models_Db_AclRules extends Zend_Db_Table_Abstract {
     protected $_name    = 'Zf_acl_rules';
     public $_primary = 'id';
     
+    /**
+     * Loads all rules by module
+     * @param string $module
+     * @return array
+     */
     public function loadByModule($module){
-        return $this->fetchAll($this->select()->where('module = ?', $module));
+        return $this->fetchAll($this->select()->where('module = ?', $module))->toArray();
+    }
+    
+    /**
+     * returns all available roles
+     * @param string $module
+     * @return array
+     */
+    public function loadRoles($module){
+        $s = $this->select()
+        ->from($this->info(self::NAME), 'role')
+        ->where('module = ?', $module)
+        ->distinct();
+        return array_column($this->fetchAll($s)->toArray(), 'role');
+    }
+    
+    /**
+     * returns all available resources
+     * @param string $module
+     * @return array
+     */
+    public function loadResources($module){
+        $s = $this->select()
+        ->from($this->info(self::NAME), 'resource')
+        ->where('module = ?', $module)
+        ->distinct();
+        return array_column($this->fetchAll($s)->toArray(), 'resource');
     }
 }

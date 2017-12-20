@@ -47,4 +47,9 @@ class ZfExtended_Controllers_Plugins_Access extends Zend_Controller_Plugin_Abstr
         );
         $accessHelper->isAuthenticated();
     }
+    
+    public function postDispatch(Zend_Controller_Request_Abstract $request) {
+        $acl = ZfExtended_Acl::getInstance();
+        $acl->checkRights();
+    }
 }

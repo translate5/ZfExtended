@@ -37,6 +37,10 @@ END LICENSE AND COPYRIGHT
  * @method void setRoles() setRoles(string $roles)
  * @method void setPasswd() setPassword(string $passwd)
  * @method void setGender() setGender(string $gender)
+ * @method void setSourceLanguage() setSourceLanguage(string $sourceLanguage)
+ * @method void setTargetLanguage() setTargetLanguage(string $targetLanguage)
+ * @method void setParentIds() setParentIds(string $parentIds)
+ * 
  * @method void setLogin() setLogin(string $login)
  * @method integer getId() getId()
  * @method string getUserGuid() getUserGuid()
@@ -47,6 +51,9 @@ END LICENSE AND COPYRIGHT
  * @method string getPasswd() getPasswd()
  * @method string getGender() getGender()
  * @method string getLogin() getLogin()
+ * @method void getSourceLanguage() getSourceLanguage()
+ * @method void getTargetLanguage() getTargetLanguage() 
+ * @method void getParentIds() getParentIds() 
  */
 class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implements ZfExtended_Models_SessionUserInterface {
     const SYSTEM_LOGIN = 'system';
@@ -163,12 +170,32 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implement
         return $this->loadFilterdCustom($s);
     }
     
+    /***
+     * Load users hierarchically, based on the current logged in user.
+     * @return array
+     */
+    public function loadAllOfHierarchy(){
+        $userSession = new Zend_Session_Namespace('user');
+        $userData=$userSession->data;
+        $adapter=$this->db->getAdapter();
+        $s=$this->_loadAll();
+        //NOTE:the where must be in one row because of the brackets
+        //$s->where( parentIds like "%,4,5,6,%" OR id=2 )  sql=> WHERE (parentIds like "%,4,5,6,%" OR id=2)
+        //$s->where( parentIds like)
+        //$s->where( id=2 ) sql=> WHERE (parentIds like "%,4,5,6,%") OR id=2
+        //this with combination of the filters will provide different result
+        $s->where('parentIds like "%,'.$adapter->quote($userData->id).',%" OR id='.$adapter->quote($userData->id));
+        return $this->loadFilterdCustom($s);
+    }
+    
     /**
      * loads all users without the passwd field
      * with role $role
+     * @param string - acl role
+     * @param id - the parent id which the select should check
      * @return array
      */
-    public function loadAllByRole($role) {
+    public function loadAllByRole($role,$parendIdFilter=false) {
         $s = $this->_loadAll();
         
         $adapter = $this->db->getAdapter();
@@ -178,14 +205,33 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implement
             $adapter->quote('%,'.$role),
             $adapter->quote($role)
         );
+        if($parendIdFilter !== false){
+            $s->where('parentIds like "%,'.$parendIdFilter.',%" OR id='.$adapter->quote($parendIdFilter));
+        }
         $s->where($sLike);
         
         return $this->loadFilterdCustom($s);
     }
     
     /**
+     * Load all users which have a specific source and target language (rfc5646 value)
+     *  load all users matching for a specific task
+     * @param string $sourceLang given as rfc5646 value!
+     * @param string $targetLang given as rfc5646 value!
+     */
+    public function loadAllByLanguages($sourceLang, $targetLang, $parendIdFilter = false) {
+        $s = $this->db->select();
+        $s->where('sourceLanguage like ?', '%,'.$sourceLang.',%');
+        $s->where('targetLanguage like ?', '%,'.$targetLang.',%');
+        if($parendIdFilter !== false){
+            $s->where('parentIds like "%,'.$parendIdFilter.',%" OR id='.$adapter->quote($parendIdFilter));
+        }
+        return $this->db->fetchAll($s)->toArray();
+    }
+    
+    /**
      * 
-     * @return sql-string
+     * @return Zend_Db_Table_Select
      */
     private function _loadAll() {
         $db = $this->db;
@@ -193,7 +239,7 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implement
         unset($cols['passwd']);
         $s = $db->select()->from($db->info($db::NAME), array_flip($cols));
         $s->where('login != ?', self::SYSTEM_LOGIN); //filter out the system user
-        if(!$this->filter->hasSort()){
+        if($this->filter && !$this->filter->hasSort()){
             $this->filter->addSort('login');
         }
         return $s;
@@ -208,6 +254,34 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implement
         return $this->computeTotalCount($s);
     }
     
+    /***
+     * Get total count of hierarchy users
+     * @return number
+     */
+    public function getTotalCountHierarchy(){
+        $userSession = new Zend_Session_Namespace('user');
+        $userData=$userSession->data;
+        $adapter=$this->db->getAdapter();
+        $s = $this->db->select();
+        $s->where('login != ?', self::SYSTEM_LOGIN); //filter out the system user
+        $s->where('parentIds like "%,'.$adapter->quote($userData->id).',%" OR id='.$adapter->quote($userData->id));
+        return $this->computeTotalCount($s);
+    }
+    
+    /***
+     * Check if the current user has parent user with the given id
+     * @param string $parentId -> the parent userid to be checked if it is a parent of the current one
+     * @param string $parentIds optional, if empty take the parentIds of the current user instance. A custom comma separated string can be given here
+     * @return boolean
+     */
+    public function hasParent($parentId, $parentIds = null){
+        if(empty($parentIds)){
+            $parentIds = $this->getParentIds();
+        }
+        $parentIds = explode(',', trim($parentIds, ' ,'));
+        return in_array($parentId, $parentIds);
+    }
+    
     /**
      * @param mixed $newPasswd string or null
      * @param boolean $save
@@ -220,6 +294,22 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implement
             $this->validate();
             $this->save();
         }
+    }
+    
+    /**
+     * Check if currently logged in user is allowed to access the given ressource and right
+     * 
+     * @param string $resource
+     * @param string $right
+     * 
+     * @return boolean
+     */
+    public function isAllowed($resource,$right) {
+        $userRoles=null;
+        $aclInstance = ZfExtended_Acl::getInstance();
+        $userSession = new Zend_Session_Namespace('user');
+        $userRoles=$userSession->data->roles;
+        return $aclInstance->isInAllowedRoles($userRoles,$resource,$right);
     }
     
     /**

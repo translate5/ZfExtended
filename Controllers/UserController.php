@@ -37,6 +37,15 @@ class ZfExtended_UserController extends ZfExtended_RestController {
      */
     protected $alreadyDecoded = false;
     
+    public function init() {
+        //add filter type for languages
+        $this->_filterTypeMap = array(
+                array('sourceLanguage' => array('list' => 'listCommaSeparated')),
+                array('targetLanguage' => array('list' => 'listCommaSeparated'))
+        );
+        parent::init();
+    }
+    
     /**
      * (non-PHPdoc)
      * @see ZfExtended_RestController::indexAction()
@@ -44,8 +53,18 @@ class ZfExtended_UserController extends ZfExtended_RestController {
      * FIXME Sicherstellen, dass für nicht PMs diese Methode nur die User liefert, die gemeinsam mit dem aktuellen User an Tasks arbeiten.
      * FIXME Generell werden nur User mit der Rolle "editor" angezeigt, alle anderen haben eh keinen Zugriff auf T5
      */
-    public function indexAction () {
-        return parent::indexAction();
+    public function indexAction() {
+        $isAllowed=$this->isAllowed("backend","seeAllUsers");
+        if($isAllowed){
+            $rows= $this->entity->loadAll();
+            $count= $this->entity->getTotalCount();
+        }else{
+            $rows= $this->entity->loadAllOfHierarchy();
+            $count= $this->entity->getTotalCountHierarchy();
+        }
+        $this->view->rows=$rows;
+        $this->view->total=$count;
+        $this->languagesCommaSeparatedToArray();
     }
     
     /**
@@ -53,8 +72,17 @@ class ZfExtended_UserController extends ZfExtended_RestController {
      */
     public function pmAction()
     {
-        $this->view->rows = $this->entity->loadAllByRole('pm');
+        //check if the user is allowed to see all users
+        if($this->isAllowed("backend","seeAllUsers")){
+            $parentId = false;
+        }
+        else {
+            $userSession = new Zend_Session_Namespace('user');
+            $parentId = $userSession->data->id;
+        }
+        $this->view->rows = $this->entity->loadAllByRole('pm', $parentId);
         $this->view->total = $this->entity->getTotalCount();
+        $this->languagesCommaSeparatedToArray();
     }
     
     
@@ -67,6 +95,7 @@ class ZfExtended_UserController extends ZfExtended_RestController {
             parent::putAction();
             $this->handlePasswdMail();
             $this->credentialCleanup();
+            $this->languagesCommaSeparatedToArray();
         }
         catch(Zend_Db_Statement_Exception $e) {
             $this->handleLoginDuplicates($e);
@@ -82,6 +111,7 @@ class ZfExtended_UserController extends ZfExtended_RestController {
             parent::postAction();
             $this->handlePasswdMail();
             $this->credentialCleanup();
+            $this->languagesCommaSeparatedToArray();
         }
         catch(Zend_Db_Statement_Exception $e) {
             $this->handleLoginDuplicates($e);
@@ -94,6 +124,8 @@ class ZfExtended_UserController extends ZfExtended_RestController {
      */
     public function getAction() {
         parent::getAction();
+        $this->checkUserAccessByParent();
+        $this->languagesCommaSeparatedToArray();
         if($this->entity->getLogin() == ZfExtended_Models_User::SYSTEM_LOGIN) {
             $e = new ZfExtended_Models_Entity_NotFoundException();
             $e->setMessage("System Benutzer wurde versucht zu erreichen",true);
@@ -109,7 +141,7 @@ class ZfExtended_UserController extends ZfExtended_RestController {
     public function deleteAction() {
         $this->entity->load($this->_getParam('id'));
         $this->checkIsEditable();
-        
+        $this->checkUserAccessByParent();
         $this->entity->delete();
     }
     
@@ -131,6 +163,55 @@ class ZfExtended_UserController extends ZfExtended_RestController {
             return $this->getAction();
         }
         throw new ZfExtended_BadMethodCallException();
+    }
+    
+    /***
+     * converts the source and target comma separated language ids to array.
+     * Frontend/api use array, in the database we save comma separated values.
+     */
+    protected function languagesCommaSeparatedToArray(){
+        $callback=function($row){
+            if($row!==null && $row!==""){
+                $row=substr($row, 1,-1);
+                $row=explode(',', $row);
+            }
+            return $row;
+        };
+        //if the row is an array, loop over its elements, and explode the source/target language
+        if(is_array($this->view->rows)){
+            foreach ($this->view->rows as &$singleRow){
+                $singleRow['sourceLanguage']=$callback($singleRow['sourceLanguage']);
+                $singleRow['targetLanguage']=$callback($singleRow['targetLanguage']);
+            }
+            return;
+        }
+        
+        $this->view->rows->sourceLanguage=$callback($this->view->rows->sourceLanguage);
+        $this->view->rows->targetLanguage=$callback($this->view->rows->targetLanguage);
+    }
+    
+    /***
+     * Convert the language array to comma separated values.
+     * Frontend/api use array, in the database we save comma separated values.
+     */
+    protected function languagesArrayToCommaSeparated(){
+        $this->arrayToCommaSeparated('sourceLanguage');
+        $this->arrayToCommaSeparated('targetLanguage');
+    }
+    
+    /***
+     * If the language array exist in the request data, it will be converted to comma separated value
+     * @param string $language
+     */
+    private function arrayToCommaSeparated($language){
+        if(isset($this->data->$language) && is_array($this->data->$language)) {
+            $this->data->$language=implode(',', $this->data->$language);
+            if(empty($this->data->$language)){
+                $this->data->$language=null;
+            }else{
+                $this->data->$language=','.$this->data->$language.',';
+            }
+        }
     }
     
     /**
@@ -173,10 +254,12 @@ class ZfExtended_UserController extends ZfExtended_RestController {
         $this->alreadyDecoded = true;
         $this->_request->isPost() || $this->checkIsEditable(); //checkEditable only if not POST
         parent::decodePutData();
+        $this->languagesArrayToCommaSeparated();
         if($this->_request->isPost()) {
             unset($this->data->id);
             $this->data->userGuid = $this->_helper->guid->create(true);
         }
+        $this->handleUserSetAclRole();
     }
 
     /**
@@ -191,6 +274,22 @@ class ZfExtended_UserController extends ZfExtended_RestController {
                 $this->data->passwd = null;
             }
             $this->entity->setNewPasswd($this->data->passwd,false);
+        }
+        //if is post add current user as "owner" of the newly created one
+        if($this->_request->isPost()) {
+            $userSession = new Zend_Session_Namespace('user');
+            if(empty($userSession->data->parentIds)){
+                $parentIds = [];
+            }else{
+                $parentIds = explode(',', trim($userSession->data->parentIds, ' ,'));
+            }
+            $parentIds[] = $userSession->data->id;
+            $this->data->parentIds = ','.join(',', $parentIds).',';
+            $this->entity->setParentIds($this->data->parentIds);
+        }
+        else {
+            //on put we have to check access
+            $this->checkUserAccessByParent();
         }
     }
     
@@ -235,6 +334,60 @@ class ZfExtended_UserController extends ZfExtended_RestController {
     protected function checkIsEditable(){
         if(! $this->entity->getEditable()){
             throw new Zend_Exception('Tried to manipulate a not editable user'); 
+        }
+    }
+    
+    /***
+     * Check in get/put/delete actions if the current logged in user is parent of the data(user)
+     * which needs to be modified
+     * @throws ZfExtended_NoAccessException
+     */
+    protected function checkUserAccessByParent(){
+        //if current user has right seeAllUsers everything is OK 
+        if($this->isAllowed("backend", "seeAllUsers")) {
+            return;
+        }
+        $userSession = new Zend_Session_Namespace('user');
+        
+        //if the edited user is the current user, also everything is OK
+        if($userSession->data->userGuid == $this->entity->getUserGuid()) {
+            return;
+        }
+        
+        if($this->entity->hasParent($userSession->data->id)){
+            return;
+        }
+        throw new ZfExtended_NoAccessException();
+    }
+    
+    /***
+     * Check if the current user is allowed co set/modefy the post/put selected acl roles
+     * 
+     * @throws ZfExtended_NoAccessException
+     */
+    protected function handleUserSetAclRole(){
+        $isPost=$this->_request->isPost();
+        $isPut=$this->_request->isPut();
+        if(!$isPost && !$isPut) {
+            return;
+        }
+            
+        if(empty($this->data->roles)){
+            return;
+        }
+        
+        $requestAcls=$this->data->roles;
+        $requestAclsArray=explode(',',$requestAcls);
+        
+        if(empty($requestAclsArray)){
+            return;
+        }
+        
+        foreach ($requestAclsArray as $role){
+            $isAllowed=$this->isAllowed('setaclrole', $role);
+            if(!$isAllowed){
+                throw new ZfExtended_NoAccessException("Authenticated User is not allowed to modify role ".$role);
+            }
         }
     }
 }
