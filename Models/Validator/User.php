@@ -47,6 +47,7 @@ class ZfExtended_Models_Validator_User extends ZfExtended_Models_Validator_Abstr
     $this->addValidator('locale', 'stringLength', array('min' => 2, 'max' => 3));
     $this->addValidator('roles', 'stringLength', array('min' => 0, 'max' => 255));
     $this->addValidator('parentIds', 'stringLength', array('min' => 0, 'max' => 255));
+    //FIXME make a regex here!
     $this->setEmailValidator();
     $this->setPasswdValidator();
     $this->setLanguageValidatod('sourceLanguage');

@@ -268,6 +268,7 @@ class ZfExtended_UserController extends ZfExtended_RestController {
      * @see ZfExtended_RestController::setDataInEntity()
      */
     protected function setDataInEntity(array $fields = null, $mode = self::SET_DATA_BLACKLIST){
+        $this->prepareParentIds();
         parent::setDataInEntity($fields, $mode);
         if(isset($this->data->passwd)) {
             if($this->data->passwd===''||  is_null($this->data->passwd)) {//convention for passwd being reset; 
@@ -276,23 +277,45 @@ class ZfExtended_UserController extends ZfExtended_RestController {
             $this->entity->setNewPasswd($this->data->passwd,false);
         }
         //if is post add current user as "owner" of the newly created one
-        if($this->_request->isPost()) {
-            $userSession = new Zend_Session_Namespace('user');
-            if(empty($userSession->data->parentIds)){
-                $parentIds = [];
-            }else{
-                $parentIds = explode(',', trim($userSession->data->parentIds, ' ,'));
-            }
-            $parentIds[] = $userSession->data->id;
-            $this->data->parentIds = ','.join(',', $parentIds).',';
-            $this->entity->setParentIds($this->data->parentIds);
-        }
-        else {
+        if(!$this->_request->isPost()) {
             //on put we have to check access
             $this->checkUserAccessByParent();
         }
     }
     
+    /**
+     * Prepares the parentIds field for the new entity / entity to be edited
+     */
+    protected function prepareParentIds() {
+        if($this->isAllowed("backend", "seeAllUsers") && !empty($this->data->parentIds)) {
+            $user = clone $this->entity;
+            try {
+                if(is_numeric($this->data->parentIds)) {
+                    $user->load($this->data->parentIds);
+                }
+                else {
+                    $user->loadByGuid($this->data->parentIds);
+                }
+            }catch(ZfExtended_Exception $e){
+                $e = new ZfExtended_ValidateException();
+                $e->setErrors(['parentIds' => 'The given parentIds value can not be evaluated to any user!']);
+                $this->handleValidateException($e);
+            }
+            $userData = $user->getDataObject();
+        }
+        else {
+            $userSession = new Zend_Session_Namespace('user');
+            $userData = $userSession->data;
+        }
+        
+        if(empty($userData->parentIds)){
+            $parentIds = [];
+        }else{
+            $parentIds = explode(',', trim($userData->parentIds, ' ,'));
+        }
+        $parentIds[] = $userData->id;
+        $this->data->parentIds = ','.join(',', $parentIds).',';
+    }
     
     /**
      * handles the exception if its an duplication of the login field
