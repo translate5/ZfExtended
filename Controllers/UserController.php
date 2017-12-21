@@ -394,23 +394,49 @@ class ZfExtended_UserController extends ZfExtended_RestController {
         if(!$isPost && !$isPut) {
             return;
         }
+        
+        if(!isset($this->data->roles)){
+            return;
+        }
+        
+        //get the user old roles (put only)
+        $oldRoles=[];
+        if(isset($this->data->id)){
+            $userModel=ZfExtended_Factory::get('ZfExtended_Models_User');
+            /* @var $userModel ZfExtended_Models_User */
+            $userModel->load($this->data->id);
             
-        if(empty($this->data->roles)){
-            return;
+            $oldRoles=empty($userModel->getRoles()) ? [] : $userModel->getRoles();
         }
         
-        $requestAcls=$this->data->roles;
-        $requestAclsArray=explode(',',$requestAcls);
-        
-        if(empty($requestAclsArray)){
-            return;
+        //if there are old roles, remove the roles for which the user isAllowed for setaclrole
+        if(!empty($oldRoles)){
+            $oldRoles=explode(',', $oldRoles);
+            $toRemove=[];
+            foreach ($oldRoles as $old){
+                $isAllowed=$this->isAllowed('setaclrole', $old);
+                if($isAllowed){
+                    $toRemove[]=$old;
+                }
+            }
+            //remove the roles for which the user is allowed
+            $oldRoles= array_diff($oldRoles,$toRemove);
+        }
+                
+        $requestAclsArray=[];
+        if(!empty($this->data->roles)){
+            $requestAclsArray=explode(',',$this->data->roles);
         }
         
+        //check if the user is allowed for the requested roles
         foreach ($requestAclsArray as $role){
             $isAllowed=$this->isAllowed('setaclrole', $role);
             if(!$isAllowed){
                 throw new ZfExtended_NoAccessException("Authenticated User is not allowed to modify role ".$role);
             }
         }
+        //merge the old roles and the allowed roles from the request
+        $requestAclsArray=array_merge($requestAclsArray,$oldRoles);
+        $this->data->roles=implode(',', $requestAclsArray);
     }
 }
