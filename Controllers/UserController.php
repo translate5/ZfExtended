@@ -285,6 +285,9 @@ class ZfExtended_UserController extends ZfExtended_RestController {
     
     /**
      * Prepares the parentIds field for the new entity / entity to be edited
+     * - From the GUI (via API) may only come a id or a userGuid
+     *   This is evaluated to a user, and that users id path is stored then
+     * - to change an already set parentIds value the user must have the seeAllUsers flag
      */
     protected function prepareParentIds() {
         if($this->isAllowed("backend", "seeAllUsers") && !empty($this->data->parentIds)) {
@@ -303,9 +306,18 @@ class ZfExtended_UserController extends ZfExtended_RestController {
             }
             $userData = $user->getDataObject();
         }
-        else {
+        elseif($this->_request->isPost()) {
             $userSession = new Zend_Session_Namespace('user');
             $userData = $userSession->data;
+        }
+        
+        //FIXME currently its not possible for seeAllUsers users to remove the parentIds flag by set it to null/""
+        
+        if(empty($userData)) {
+            if(property_exists($this->data, 'parentIds')){
+                unset($this->data->parentIds);
+            }
+            return;
         }
         
         if(empty($userData->parentIds)){
