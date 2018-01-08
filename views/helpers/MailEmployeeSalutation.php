@@ -51,7 +51,7 @@ class ZfExtended_View_Helper_MailEmployeeSalutation extends Zend_View_Helper_Abs
             throw new Zend_Exception('$gender hat den nicht erwarteten Wert '.$gender, 0);
         }
         return ($gender == 'f')?
-            $this->view->translate->_('Sehr geehrte Frau'):
-            $this->view->translate->_('Sehr geehrter Herr');
+        $this->view->translate->_('Sehr geehrte Frau'):
+        $this->view->translate->_('Sehr geehrter Herr');
     }
 }

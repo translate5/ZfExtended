@@ -94,6 +94,12 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
    */
   protected $log = false;
   
+  
+  /**
+   * @var ZfExtended_Acl
+   */
+  protected $acl;
+  
   /**
    * stores the last result of validate method
    * @var boolean
@@ -115,6 +121,7 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
       $this->handleLimit();
       $this->handleFilterAndSort();
       $this->initRestControllerSpecific();
+      $this->acl = ZfExtended_Acl::getInstance();
   }
   
   protected function initRestControllerSpecific() {
@@ -449,6 +456,18 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
         }
     }
     $this->events->trigger('afterSetDataInEntity', $this, array('entity' => $this->entity));
+  }
+  
+  /**
+   * checks if authenticated user is allowed to use the resource / privelege
+   *
+   * @param  Zend_Acl_Resource_Interface|string $resource
+   * @param  string                             $privilege
+   * @return boolean
+   */
+  protected function isAllowed($resource = null, $privilege = null) {
+      $userSession = new Zend_Session_Namespace('user');
+      return $this->acl->isInAllowedRoles($userSession->data->roles, $resource, $privilege);
   }
 
   public function deleteAction()

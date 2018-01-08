@@ -36,10 +36,6 @@ END LICENSE AND COPYRIGHT
  * - if there are different libs and in 2 or more libs a controller of the same
  *   name exists, the controller of the same name in the controller-dir-list 
  *   in application.ini will be loaded
- * 
- *
- *
- *
  */
 class ZfExtended_Resource_LoadLibController extends Zend_Application_Resource_ResourceAbstract {
     public function init()
@@ -67,7 +63,7 @@ class ZfExtended_Resource_LoadLibController extends Zend_Application_Resource_Re
         }
         foreach($dirs as $dir){
             foreach (scandir($dir) as $file) {
-                if (strpos($file, "Controller.php") !== false && 
+                if (strpos($file.'#', "Controller.php#") !== false && 
                         !class_exists(preg_replace('"(.*).php$"', '\\1', $file))){
                     include_once $dir . DIRECTORY_SEPARATOR . $file;
                 }

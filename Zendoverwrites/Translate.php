@@ -63,24 +63,18 @@ class  ZfExtended_Zendoverwrites_Translate extends Zend_Translate
      */
     protected $translationPaths;
     
-     public function __construct() {
-         //we can not set the construct to protected, because parents construct is public
-         //therefore check here, if construct is only called from within
-        $trace=debug_backtrace();
-        $caller=$trace[3];
-        if(!isset($caller['class']) || 
-                $caller['class']!=__CLASS__ || 
-                $caller['function'] != 'getInstance'){
-            throw new Zend_Exception('construct must only be called from getInstance');
-        }
+     public function __construct($targetLang = null) {
         //this is to have an translation adapter set if an error occurs inside translation
         //process before translation adapter is set - but errorcontroller needs one
         parent::__construct('Zend_Translate_Adapter_Array', array('' => ''), 'en');
-        Zend_Registry::set('Zend_Translate', $this);
+
+        //store translation instance only in registry if no targetLang is given and its therefore the default instance
+        if(empty($targetLang)) {
+            Zend_Registry::set('Zend_Translate', $this);
+        }
         $this->setSourceLang();
-        $this->setTargetLang();
+        $this->setTargetLang($targetLang);
         $this->getLogPath();
-        
         
         $session = new Zend_Session_Namespace();
         
@@ -320,8 +314,15 @@ class  ZfExtended_Zendoverwrites_Translate extends Zend_Translate
         return $this->sourceLang;
     }
     
-    public function _($s){
-        $s = parent::_($s);
+    /***
+     * 
+     * @param string $s: string to be translated
+     * @param string $locale: language locale
+     * @throws Zend_Exception
+     * @return string
+     */
+    public function _($s, $locale = null){
+        $s = parent::_($s, $locale);
         if($this->_jsonEncode){
             $s = json_encode($s,JSON_HEX_APOS);
             $length = strlen($s);

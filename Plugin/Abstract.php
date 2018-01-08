@@ -206,6 +206,15 @@ abstract class ZfExtended_Plugin_Abstract {
         array_push($this->publicFileTypes, $newType);
     }
     
+    /**
+     * Adds the given controller to the application
+     * Give just the Controller Name, Controller directory in Plugins is by convention "Controllers" and file must end with .php 
+     * @param string $controller
+     */
+    public function addController($controller) {
+        require_once APPLICATION_PATH.'/'.$this->getPluginPath().'/Controllers/'.$controller.'.php';
+    }
+    
     public function getPublicFileTypes(){
         return $this->publicFileTypes;
     }

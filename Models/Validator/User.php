@@ -46,8 +46,12 @@ class ZfExtended_Models_Validator_User extends ZfExtended_Models_Validator_Abstr
     $this->addValidator('gender', 'inArray', array(array('f', 'm')));
     $this->addValidator('locale', 'stringLength', array('min' => 2, 'max' => 3));
     $this->addValidator('roles', 'stringLength', array('min' => 0, 'max' => 255));
+    $this->addValidator('parentIds', 'stringLength', array('min' => 0, 'max' => 255));
+    //FIXME make a regex here!
     $this->setEmailValidator();
     $this->setPasswdValidator();
+    $this->setLanguageValidatod('sourceLanguage');
+    $this->setLanguageValidatod('targetLanguage');
   }
   
   protected function setEmailValidator() {
@@ -56,6 +60,43 @@ class ZfExtended_Models_Validator_User extends ZfExtended_Models_Validator_Abstr
           $me->addMessage('email', 'invalidEmail', 'invalidEmail');
           return filter_var($v, FILTER_VALIDATE_EMAIL) !== false;
       });
+  }
+  
+  /***
+   * Language validator. Check if the given language(id) exist in the languages table
+   * @param string $language
+   * @throws Zend_Exception
+   */
+  protected function setLanguageValidatod($language){
+      $languageModel=ZfExtended_Factory::get('editor_Models_Languages');
+      /* @var $languageModel editor_Models_Languages */
+      $langs=$languageModel->loadAll();
+      
+      if(empty($langs)){
+          throw new Zend_Exception('No languages defined. Please use /docs/003fill-LEK-languages-after-editor-sql or define them otherwhise.');
+      }
+      
+      $langIds=[];
+      foreach ($langs as $lang){
+          $langIds[]=$lang['id'];
+      }
+      
+      $me = $this;
+      $languageValidator = function($value) use($me,$langIds,$language) {
+          if(is_null($value) || empty($value)){
+              return true;
+          }
+          $value=substr($value, 1,-1);
+          $value=explode(',',$value);
+          foreach ($value as $single){
+              if(!in_array($single, $langIds)) {
+                  $me->addMessage($language, 'invalid'.ucfirst($language), 'invalid'.ucfirst($language));
+                  return false;
+              }
+          }
+          return true;
+      };
+      $this->addValidatorCustom($language, $languageValidator,true);
   }
   
   protected function setPasswdValidator() {
