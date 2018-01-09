@@ -134,4 +134,40 @@ class ZfExtended_Debug {
         error_log(__CLASS__.' #'.$key.' duration (in s): '.($stop - $start));
         unset(self::$profiler[$key]);
     }
+    
+    /**
+     * Creates a summary about the current application and returns it.
+     * @return stdClass
+     */
+    public static function applicationState() {
+        $result = new stdClass();
+        $downloader = ZfExtended_Factory::get('ZfExtended_Models_Installer_Downloader', array(APPLICATION_PATH.'/..'));
+        /* @var $downloader ZfExtended_Models_Installer_Downloader */
+        try {
+            $result->isUptodate = $downloader->applicationIsUptodate();
+        } catch (Exception $e) {
+            $result->isUptodate = -1;
+        }
+        $versionFile = APPLICATION_PATH.'../version';
+        if(file_exists($versionFile)) {
+            $result->version = file_get_contents($versionFile);
+        }
+        else {
+            $result->version = 'development';
+            $result->branch = exec('cd '.APPLICATION_PATH.'; git status -bs | head -1');
+        }
+        
+        $worker = ZfExtended_Factory::get('ZfExtended_Models_Worker');
+        /* @var $worker ZfExtended_Models_Worker */
+        $result->worker = $worker->getSummary();
+        
+        $pm = Zend_Registry::get('PluginManager');
+        /* @var $pm ZfExtended_Plugin_Manager */
+        $result->pluginsLoaded = $pm->getActive();
+        
+        $events = ZfExtended_Factory::get('ZfExtended_EventManager', array(__CLASS__));
+        /* @var $events ZfExtended_EventManager */
+        $events->trigger('applicationState', __CLASS__, array('applicationState' => $result));
+        return $result;
+    }
 }
