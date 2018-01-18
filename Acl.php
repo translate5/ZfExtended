@@ -103,6 +103,12 @@ class ZfExtended_Acl extends Zend_Acl {
                 if($this->isAllowed($role,$resource,$privilege)){
                     $allowed = true;
                 }
+            } catch (Zend_Acl_Exception $e) {
+                //if the resource is not registered access is false 
+                if(preg_match("/Resource '[^']*' not found/", $e->getMessage())) {
+                    return false;
+                }
+                throw $e;
             } catch (Zend_Acl_Role_Registry_Exception $exc) {
                 //if role is not registered because it is the role of a different module
             }
