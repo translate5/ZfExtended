@@ -117,4 +117,26 @@ class ZfExtended_Utils {
         }
         $zip->close();
     }
+    
+    /**
+     * encodes the given utf8 filepath to the configured runtimeOptions.fileSystemEncoding
+     * @param string $path
+     * @return string $path 
+     * @see ZfExtended_Utils::filesystemEncode
+     */
+    public static function filesystemEncode (string $path) {
+        $config = Zend_Registry::get('config');
+        return iconv('UTF-8', $config->runtimeOptions->fileSystemEncoding, $path);
+    }
+    
+    /**
+     * decodes the given filepath in the configured runtimeOptions.fileSystemEncoding to utf8 
+     * @param string $path
+     * @return string $path 
+     * @see ZfExtended_Utils::filesystemDecode
+     */
+    public static function filesystemDecode (string $path) {
+        $config = Zend_Registry::get('config');
+        return iconv($config->runtimeOptions->fileSystemEncoding, 'UTF-8', $path);
+    }
 }

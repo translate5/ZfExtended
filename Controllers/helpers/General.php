@@ -63,6 +63,7 @@ class ZfExtended_Controller_Helper_General extends Zend_Controller_Action_Helper
      * - funktioniert analog zu basename, allerdings unabhängig von System-Locale-Einstellungen
      *
      * @return string
+     * @deprecated This method is completly nonsense 
      */
     public function basenameLocaleIndependent(string $path) {
         $pathArr = explode(DIRECTORY_SEPARATOR, $path);
