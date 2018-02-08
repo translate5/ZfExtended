@@ -68,7 +68,7 @@ abstract class ZfExtended_Controllers_Action extends Zend_Controller_Action {
     {
         $this->displayMaintenance();
         $eventName = "before".ucfirst($this->_request->getActionName())."Action";
-        $this->events->trigger($eventName, $this);
+        $this->events->trigger($eventName, $this, array('controller' => $this));
         
         
         

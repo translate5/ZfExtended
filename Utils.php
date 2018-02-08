@@ -86,4 +86,35 @@ class ZfExtended_Utils {
         }
         closedir($dir);
     }
+    
+    /**
+     * cleans the filenames in zip containers up 
+     * @param SplFileInfo $zipFile
+     * @param string $prefixToRemove must be a directory inside the zip!
+     */
+    public static function cleanZipPaths(SplFileInfo $zipFile, $prefixToRemove) {
+        $removalLength = mb_strlen($prefixToRemove);
+        $zip = new ZipArchive();
+        $zip->open($zipFile);
+        $i = 0;
+        while (true) {
+            $name = $zip->getNameIndex($i);
+            if($name === false) {
+                break;
+            }
+            if(mb_strpos($name, $prefixToRemove) !== 0) {
+                $i++;
+                continue;
+            }
+            $newFileName = mb_substr($name, $removalLength + 1);
+            if(empty($newFileName)) {
+                $zip->deleteIndex($i); //we remove the empty directory which is stripped via prefixToRemove
+            }
+            else {
+                $zip->renameIndex($i, $newFileName); //remove also the next / or \
+            }
+            $i++;
+        }
+        $zip->close();
+    }
 }
