@@ -383,7 +383,7 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
             FROM Zf_worker w, Zf_worker me, Zf_worker_dependencies d
             WHERE 
             me.id = ?
-            AND (me.parentId = 0 OR me.parentId != 0 AND (w.parentId = me.parentId or w.id = me.parentId)) 
+            AND (me.parentId = 0 AND w.parentId = me.id OR me.parentId != 0 AND (w.parentId = me.parentId or w.id = me.parentId)) 
             AND d.worker = me.worker
             AND d.dependency = w.worker
             AND w.taskGuid = ?
