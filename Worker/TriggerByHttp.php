@@ -194,7 +194,6 @@ class ZfExtended_Worker_TriggerByHttp {
         if(ZfExtended_Debug::hasLevel('core', 'worker')){
             $out .= 'Cookie: XDEBUG_SESSION=ECLIPSE'."\r\n";
         }
-            $out .= 'Cookie: XDEBUG_SESSION=ECLIPSE'."\r\n";
         
         if ($this->method == 'GET') {
             $out .= 'Connection: Close'."\r\n";
