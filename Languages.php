@@ -198,7 +198,7 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract {
         return self::LANG_TYPE_RFC5646;
     }
 
-    /***
+    /**
      * Reorders a RFC5646 language list based to the order given in $preordered (ex. de-De,fr-fr,it,mk ...)
      * @param array $languages
      * @param array $preorderd
@@ -220,12 +220,13 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract {
         }
         return $languages;
     }
-    /***
+    
+    /**
      * Return language rfc5646 value for given language id
      * @param int $langId
      * @return string
      */
-    protected function loadLangRfc5646($langId){
+    public function loadLangRfc5646($langId){
         $this->loadById($langId);
         return $this->getRfc5646();
     }

@@ -142,10 +142,16 @@ abstract class ZfExtended_Worker_Abstract {
      * @var array
      */
     protected $workerException = null;
+
+    /**
+     * @var ZfExtended_EventManager
+     */
+    protected $events;
     
     public function __construct() {
         $this->log = ZfExtended_Factory::get('ZfExtended_Log');
         $this->maxParallelProcesses = $this->getMaxParallelProcesses();
+        $this->events = ZfExtended_Factory::get('ZfExtended_EventManager', array(get_class($this)));
     }
     
     protected function getMaxParallelProcesses() {
@@ -486,6 +492,10 @@ abstract class ZfExtended_Worker_Abstract {
         
         $this->logit('set to running!');
         try {
+            $this->events->trigger('beforeWork', $this, [
+                'worker' => $this,
+                'taskGuid' => $this->taskGuid,
+            ]);
             $result = $this->work();
             $this->workerModel->setState(ZfExtended_Models_Worker::STATE_DONE);
             $this->workerModel->setEndtime(new Zend_Db_Expr('NOW()'));

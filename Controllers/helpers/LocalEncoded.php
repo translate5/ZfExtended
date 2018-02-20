@@ -31,33 +31,26 @@ END LICENSE AND COPYRIGHT
 
 /**
  * codiert oder decodiert den übergebenen String mit $session->runtimeOptions->fileSystemEncoding ausgehend von utf-8
+ * @deprecated use ZfExtended_Utils instead
  */
 class ZfExtended_Controller_Helper_LocalEncoded extends Zend_Controller_Action_Helper_Abstract {
-    /**
-     * @var string
-     */
-    protected $_fileSystemEncoding;
-
-    public function __construct(){
-        $session = new Zend_Session_Namespace();
-        $this->_fileSystemEncoding = $session->runtimeOptions->fileSystemEncoding;
-    }
-    
     /**
      * codiert den übergebenen String mit $session->runtimeOptions->fileSystemEncoding ausgehend von utf-8
      * @param string $path
      * @return string $path 
+     * @see ZfExtended_Utils::filesystemEncode
      */
     public function encode (string $path) {
-        return iconv('UTF-8', $this->_fileSystemEncoding, $path);
+        return ZfExtended_Utils::filesystemEncode($path);
     }
     /**
      * decodiert den übergebenen String mit $session->runtimeOptions->fileSystemEncoding ausgehend von utf-8
      * 
      * @param string $path
      * @return string $path 
+     * @see ZfExtended_Utils::filesystemDecode
      */
     public function decode (string $path) {
-        return iconv($this->_fileSystemEncoding, 'UTF-8', $path);
+        return ZfExtended_Utils::filesystemDecode($path);
     }
 }
