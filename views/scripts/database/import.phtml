@@ -68,8 +68,17 @@ if(!empty($this->sqlFilesNew)) {
     $printTable($this->sqlFilesNew, 'checkerNew');
 }
 if(!empty($this->sqlFilesChanged)) {
-    echo '<h2>Modified SQL files found:</h2>';
-    echo '<p style="font-style:italic;">This files has to been applied manually to the database:</p>';
+    echo '<h2>Modified SQL files found (<a href="javascript:showModInfo()">More info about modified files.</a>):</h2>';
+    echo '<p></p>';
+    echo '<div id="mod-info" style="display:none;border:1px solid red;">';
+    echo '<p>Modified means basically, that a hash value of that file has been changed!<br>';
+    echo 'This could happen because of: ';
+    echo '<br> - A change in the license head or some other non important change to the content (whitespace etc).';
+    echo '<br> - A change in a PHP alter file - this should happen only after local modification of the file.';
+    echo '<br> - A change in the SQL content of the file.</p>';
+    echo '<p style="font-style:italic;">The latter case should happen only on development machines, the responsible developer must communicate what have been changed and which SQL should be executed manually.</p>';
+    echo '<p style="font-weight:bold;">In any case a modified file will not be imported again by this tool! If you check it here, its just getting marked as imported (the file hash is updated in the DB).</p>';
+    echo '</div>';
     $printTable($this->sqlFilesChanged, 'checkerChanged');
 }
 ?>
@@ -79,8 +88,10 @@ if(!empty($this->sqlFilesChanged)) {
     <input type="hidden" name="startimport" value="true" />
     <button type="submit">Import New Files / Update Modified in DB</button>
     <br />
+<br />
     <input type="checkbox" name="catchup" value="1" id="catchupbox"/>
-    <label for="catchupbox">catchup mode - WARNING: the choosen files are assumed as already imported!</label>
+    <label for="catchupbox">catchup mode - for NEW files needed only. </label>
+    <p>WARNING: With enabled catchup mode the selected new files won't be imported! They will be just marked as imported, so that they disappear in the new files list.</p>
 </form><?php //start form above in PHP CODE! ?>
 <script type="text/javascript">
 function toggle(master, cls) {
@@ -91,6 +102,10 @@ function toggle(master, cls) {
 }
 function windowOpen(hash){
     window.open('?show='+hash, "SQL Details", "width=600,height=800,left=100,top=200");
+    return;
+}
+function showModInfo() {
+    document.getElementById('mod-info').style.display="block";
     return;
 }
 </script>
