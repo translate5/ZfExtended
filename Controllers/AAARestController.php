@@ -151,6 +151,7 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
    * triggers event "before<Controllername>Action"
    */
    public function preDispatch() {
+       $this->displayMaintenance();
        $this->beforeActionEvent($this->_request->getActionName());
    }
    
@@ -181,7 +182,6 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
    * @param string $actionName
    */
   public function beforeActionEvent($actionName){
-      $this->displayMaintenance();
       $eventName = "before".ucfirst($actionName)."Action";
       $this->events->trigger($eventName, $this, [
               'entity' => $this->entity,
