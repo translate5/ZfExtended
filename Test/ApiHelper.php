@@ -283,6 +283,10 @@ class ZfExtended_Test_ApiHelper {
                 $this->task = $taskResult;
                 return true;
             }
+            if($taskResult->state == 'unconfirmed') {
+                //with task templates we could implement separate tests for that feature:
+                throw new Exception("runtimeOptions.import.initialTaskState = unconfirmed is not supported at the moment!");
+            }
             if($taskResult->state == 'error') {
                 if($failOnError) {
                     $test::fail('Task Import stopped. Task has state error.');
