@@ -99,6 +99,12 @@ class ZfExtended_Exception extends Zend_Exception {
             $msg = $this->_translate->_($msg);
         }
         $this->message = $msg;
+        
+        //FIXME add a flag here, to find out if it is the default message or a custom message. 
+        // bring this info (custom message or default message) to the frontend, so that we can react there better
+        
+        // Also we should differ in the excption messages for the different log levels.
+        // A Exception should contain content for each loglevel. The message ported to the frontend for example should not contain debug data.
     }
     
     /**

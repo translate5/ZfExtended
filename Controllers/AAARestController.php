@@ -243,8 +243,9 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
 
   /**
    * wraps REST Exception Handling around the called Actions
-   *
-   * - Exception werden REST-konform im Error-Controller
+   * 
+   * Warning: Only Exceptions thrown in the dispatch process are handled correctly in REST calls.
+   * Exceptions thrown before are not handled correctly, they are exposed as plain HTML exceptions!
    *
    * @see Zend_Controller_Action::dispatch()
    */

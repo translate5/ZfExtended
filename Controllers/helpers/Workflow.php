@@ -56,9 +56,10 @@ class ZfExtended_Controller_Helper_Workflow extends Zend_Controller_Action_Helpe
         }
         $tua = $workflow->getTaskUserAssoc($taskGuid, $userGuid);
         if(! $workflow->isWritingAllowedForState($tua->getUsedState())) {
-            //a ZfExtended_BadMethodCallException (405) would be correcter, 
-            //but in frontend 403s are getting different text for different HTTP methods, so we take this
-            throw new ZfExtended_NoAccessException('No Access for used state '.$tua->getUsedState());
+            $e = new ZfExtended_NoAccessException();
+            $e->setLogging(false); //TODO info level logging
+            $e->setMessage("Die Aufgabe wurde zwischenzeitlich im nur Lesemodus geöffnet.", true);
+            throw $e;
         }
     }
 }
