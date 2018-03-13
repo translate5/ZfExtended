@@ -42,6 +42,7 @@ class ZfExtended_Exception extends Zend_Exception {
     protected $origin = 'core';
     
     /**
+     * FIXME should be replaced with a loglevel based way
      * Flag if logging for this exception is enabled / disabled
      * @var boolean
      */
@@ -146,6 +147,8 @@ class ZfExtended_Exception extends Zend_Exception {
     }
     
     /**
+     * FIXME should be replaced with a loglevel based way
+     * 
      * returns true if logging should be done for this exception
      * We can force to enable the logging even if the exception was coded not to log by setting this in the config:
      * runtimeOptions.logging.default.delete.index.ZfExtended_BadMethodCallException = true 

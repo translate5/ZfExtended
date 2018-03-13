@@ -485,13 +485,17 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
    * must be present in Zend_Framework 1.12, therefore solved this way
    */
   public function headAction() {
-       throw new ZfExtended_BadMethodCallException(__CLASS__.'->head');
+       $e = new ZfExtended_BadMethodCallException(__CLASS__.'->head not implemented yet');
+       $e->setLogging(false); //in future ZfExtended_Log::LEVEL_INFO
+       throw $e;
   }
   /**
    * not implemented so far, therefore BadMethodCallException
    * must be present in Zend_Framework 1.12, therefore solved this way
    */
   public function optionsAction() {
-       throw new ZfExtended_BadMethodCallException(__CLASS__.'->head');
+       $e = new ZfExtended_BadMethodCallException(__CLASS__.'->options not implemented yet');
+       $e->setLogging(false); //in future ZfExtended_Log::LEVEL_INFO
+       throw $e;
   }
 }
