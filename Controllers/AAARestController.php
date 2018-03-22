@@ -474,6 +474,23 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
       $userSession = new Zend_Session_Namespace('user');
       return $this->acl->isInAllowedRoles($userSession->data->roles, $resource, $privilege);
   }
+  
+  /***
+   * Join array elements with a comma.
+   * The column string will start and end with comma to.
+   * 
+   * @param string $language
+   */
+  protected function arrayToCommaSeparated($columnName){
+      if(isset($this->data->$columnName) && is_array($this->data->$columnName)) {
+          $this->data->$columnName=implode(',', $this->data->$columnName);
+          if(empty($this->data->$columnName)){
+              $this->data->$columnName=null;
+          }else{
+              $this->data->$columnName=','.$this->data->$columnName.',';
+          }
+      }
+  }
 
   public function deleteAction()
   {

@@ -41,7 +41,8 @@ class ZfExtended_UserController extends ZfExtended_RestController {
         //add filter type for languages
         $this->_filterTypeMap = array(
                 array('sourceLanguage' => array('list' => 'listCommaSeparated')),
-                array('targetLanguage' => array('list' => 'listCommaSeparated'))
+                array('targetLanguage' => array('list' => 'listCommaSeparated')),
+                array('customers' => array('list' => 'listCommaSeparated')),
         );
         parent::init();
     }
@@ -191,26 +192,16 @@ class ZfExtended_UserController extends ZfExtended_RestController {
     }
     
     /***
-     * Convert the language array to comma separated values.
-     * Frontend/api use array, in the database we save comma separated values.
+     * After the fields are decoded, modify their values if needed
      */
-    protected function languagesArrayToCommaSeparated(){
+    protected function convertDecodedFields(){
+        //Convert array to comma separated values.
+        //Frontend/api use array, in the database we save comma separated values.
         $this->arrayToCommaSeparated('sourceLanguage');
         $this->arrayToCommaSeparated('targetLanguage');
-    }
-    
-    /***
-     * If the language array exist in the request data, it will be converted to comma separated value
-     * @param string $language
-     */
-    private function arrayToCommaSeparated($language){
-        if(isset($this->data->$language) && is_array($this->data->$language)) {
-            $this->data->$language=implode(',', $this->data->$language);
-            if(empty($this->data->$language)){
-                $this->data->$language=null;
-            }else{
-                $this->data->$language=','.$this->data->$language.',';
-            }
+        //add leading and trailing comma
+        if(!empty($this->data->customers)){
+            $this->data->customers=','.$this->data->customers.',';
         }
     }
     
@@ -254,7 +245,7 @@ class ZfExtended_UserController extends ZfExtended_RestController {
         $this->alreadyDecoded = true;
         $this->_request->isPost() || $this->checkIsEditable(); //checkEditable only if not POST
         parent::decodePutData();
-        $this->languagesArrayToCommaSeparated();
+        $this->convertDecodedFields();
         if($this->_request->isPost()) {
             unset($this->data->id);
             $this->data->userGuid = $this->_helper->guid->create(true);
