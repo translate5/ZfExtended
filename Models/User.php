@@ -283,6 +283,32 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implement
     }
     
     /**
+     * @todo This method is a working draft and is not tested yet!
+     * Return true if the given user is a child of the currently loaded one
+     * 
+     * @param ZfExtended_Models_User $user
+     * @return boolean
+     */
+    public function isChildOf(ZfExtended_Models_User $user) {
+        return $user->isParentOf($this);
+    }
+    
+    /**
+     * @todo This method is a working draft and is not tested yet!
+     * Return true if the given user is a parent of the currently loaded one
+     * 
+     * @param ZfExtended_Models_User $user
+     * @return boolean
+     */
+    public function isParentOf(ZfExtended_Models_User $user) {
+        $parentIds = explode(',', trim($user->getParentIds(), ' ,'));
+        $toCheck = explode(',', trim($this->getRoles(), ' ,'));
+        $toCheck[] = $this->getId();
+        $parentFound = array_intersect($toCheck, $parentIds);
+        return !empty($parentFound);
+    }
+    
+    /**
      * @param mixed $newPasswd string or null
      * @param boolean $save
      */

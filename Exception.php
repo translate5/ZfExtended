@@ -42,6 +42,7 @@ class ZfExtended_Exception extends Zend_Exception {
     protected $origin = 'core';
     
     /**
+     * FIXME should be replaced with a loglevel based way
      * Flag if logging for this exception is enabled / disabled
      * @var boolean
      */
@@ -98,6 +99,12 @@ class ZfExtended_Exception extends Zend_Exception {
             $msg = $this->_translate->_($msg);
         }
         $this->message = $msg;
+        
+        //FIXME add a flag here, to find out if it is the default message or a custom message. 
+        // bring this info (custom message or default message) to the frontend, so that we can react there better
+        
+        // Also we should differ in the excption messages for the different log levels.
+        // A Exception should contain content for each loglevel. The message ported to the frontend for example should not contain debug data.
     }
     
     /**
@@ -146,6 +153,8 @@ class ZfExtended_Exception extends Zend_Exception {
     }
     
     /**
+     * FIXME should be replaced with a loglevel based way
+     * 
      * returns true if logging should be done for this exception
      * We can force to enable the logging even if the exception was coded not to log by setting this in the config:
      * runtimeOptions.logging.default.delete.index.ZfExtended_BadMethodCallException = true 

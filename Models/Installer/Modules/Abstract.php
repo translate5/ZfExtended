@@ -22,22 +22,34 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
-/**#@+ 
- * @author Marc Mittag
+/**
  * @package ZfExtended
  * @version 2.0
- * 
  */
-/**
- * Wrapper Class for using additional, normal routes, which fake REST-Routes.
- * This is needed since Rest Routes just know and call GET PUT POST DELETE actions. 
- * All other additionally actions must configured as either RestFakeRoute or RestLikeRoute
- * 
- * RestFakeRoute and RestLikeRoute Routes are treated in error and access handling like a a rest route (called via API)
- * 
- * Difference between RestFakeRoute and RestLikeRoute:
- * RestFakeRoute: No automatic request result conversion is done - the result is outputted as generated (HTML, binary data from a file, JSON manually encoded)
- * RestLikeRoute: REST_Controller_Plugin_RestHandler is invoked, so the data in the view is returned in the format as requested by the caller  (mainly JSON)
- */
-class ZfExtended_Controller_RestLikeRoute extends Zend_Controller_Router_Route {
+abstract class ZfExtended_Models_Installer_Modules_Abstract {
+    public function __construct(){
+        $this->logger = new ZfExtended_Models_Installer_Logger();
+    }
+    
+    public function setOptions($options){
+        $this->options = $options;
+    }
+    
+    abstract public function run();
+    
+    /**
+     * returns a list of valid short options for that Module (for getopt)
+     * @return string
+     */
+    public function getShortOptions() {
+        return '';
+    }
+    
+    /**
+     * returns a list of valid long options for that Module (for getopt)
+     * @return array
+     */
+    public function getLongOptions() {
+        return [];
+    }
 }

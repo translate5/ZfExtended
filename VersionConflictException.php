@@ -26,4 +26,5 @@ class ZfExtended_VersionConflictException extends ZfExtended_Exception {
     protected $defaultCode = 409;
     protected $defaultMessage = 'Die Ausgangsdaten wurden in der Zwischenzeit verändert. Bitte aktualisieren Sie Ihre Ansicht!';
     protected $defaultMessageTranslate = true;
+    protected $loggingEnabled = false;
 }
