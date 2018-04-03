@@ -289,12 +289,8 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
       try {
           $this->entity->validate();
           $this->additionalValidations();
-          
           //new event here to invoke to the controller validation call
-          $eventManager = ZfExtended_Factory::get('ZfExtended_EventManager', array(get_class($this)));
-          /* @var $eventManager ZfExtended_EventManager */
-          $eventManager->trigger('onValidate', $this, array('entity'=>$this->entity));
-          
+          $this->events->trigger('onValidate', $this, array('entity' => $this->entity));
           return $this->wasValid = true;
       }
       catch (ZfExtended_ValidateException $e) {
