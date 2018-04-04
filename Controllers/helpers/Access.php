@@ -156,11 +156,9 @@ class ZfExtended_Controller_Helper_Access extends Zend_Controller_Action_Helper_
             //setting the message to empty here, since a textual message would break the JSON decoding
             // Exceptions in this early stage of the application would not be converted correctly to JSON
             // since RestContext is done in shutdown of the dispatching
-            //TODO: make difference between not authenticaded and missing acl role in the exception type
             $e = new ZfExtended_NotAuthenticatedException();
             $e->setMessage("");
             throw $e;
-            
         }
         $redirector = ZfExtended_Zendoverwrites_Controller_Action_HelperBroker::getStaticHelper(
             'Redirector'
