@@ -64,7 +64,7 @@ class ZfExtended_UserController extends ZfExtended_RestController {
         }
         $this->view->rows=$rows;
         $this->view->total=$count;
-        $this->languagesCommaSeparatedToArray();
+        $this->csvToArray();
     }
     
     /**
@@ -82,7 +82,7 @@ class ZfExtended_UserController extends ZfExtended_RestController {
         }
         $this->view->rows = $this->entity->loadAllByRole('pm', $parentId);
         $this->view->total = $this->entity->getTotalCount();
-        $this->languagesCommaSeparatedToArray();
+        $this->csvToArray();
     }
     
     
@@ -95,7 +95,7 @@ class ZfExtended_UserController extends ZfExtended_RestController {
             parent::putAction();
             $this->handlePasswdMail();
             $this->credentialCleanup();
-            $this->languagesCommaSeparatedToArray();
+            $this->csvToArray();
         }
         catch(Zend_Db_Statement_Exception $e) {
             $this->handleLoginDuplicates($e);
@@ -111,7 +111,7 @@ class ZfExtended_UserController extends ZfExtended_RestController {
             parent::postAction();
             $this->handlePasswdMail();
             $this->credentialCleanup();
-            $this->languagesCommaSeparatedToArray();
+            $this->csvToArray();
         }
         catch(Zend_Db_Statement_Exception $e) {
             $this->handleLoginDuplicates($e);
@@ -125,7 +125,7 @@ class ZfExtended_UserController extends ZfExtended_RestController {
     public function getAction() {
         parent::getAction();
         $this->checkUserAccessByParent();
-        $this->languagesCommaSeparatedToArray();
+        $this->csvToArray();
         if($this->entity->getLogin() == ZfExtended_Models_User::SYSTEM_LOGIN) {
             $e = new ZfExtended_Models_Entity_NotFoundException();
             $e->setMessage("System Benutzer wurde versucht zu erreichen",true);
@@ -169,10 +169,10 @@ class ZfExtended_UserController extends ZfExtended_RestController {
      * converts the source and target comma separated language ids to array.
      * Frontend/api use array, in the database we save comma separated values.
      */
-    protected function languagesCommaSeparatedToArray(){
+    protected function csvToArray(){
         $callback=function($row){
             if($row!==null && $row!==""){
-                $row=substr($row, 1,-1);
+                $row=trim($row, ', ');
                 $row=explode(',', $row);
             }
             return $row;
@@ -182,12 +182,14 @@ class ZfExtended_UserController extends ZfExtended_RestController {
             foreach ($this->view->rows as &$singleRow){
                 $singleRow['sourceLanguage']=$callback($singleRow['sourceLanguage']);
                 $singleRow['targetLanguage']=$callback($singleRow['targetLanguage']);
+                $singleRow['parentIds']=$callback($singleRow['parentIds']);
             }
             return;
         }
         
         $this->view->rows->sourceLanguage=$callback($this->view->rows->sourceLanguage);
         $this->view->rows->targetLanguage=$callback($this->view->rows->targetLanguage);
+        $this->view->rows->parentIds = $callback($this->view->rows->parentIds);
     }
     
     /***
