@@ -72,6 +72,12 @@ class ZfExtended_Test_ApiHelper {
      */
     protected $testRoot;
     
+    /***
+     * stdObject with the values of the test customer
+     * @var stdClass
+     */
+    protected $customer;
+    
     protected $testusers = array(
         'testmanager' => '{00000000-0000-0000-C100-CCDDEE000001}',
         'testlector' => '{00000000-0000-0000-C100-CCDDEE000002}',
@@ -298,6 +304,15 @@ class ZfExtended_Test_ApiHelper {
         
     }
     
+    public function loadCustomer(){
+        $test = $this->testClass;
+        $user=$test::assertLogin('testmanager');
+        
+        $this->customer = $this->requestJson('editor/plugins_customer_customer/123456789/find', 'GET');
+        $resp = $this->getLastResponse();
+        $test::assertEquals(200, $resp->getStatus(), 'Load test customer Request does not respond HTTP 200! Body was: '.$resp->getBody());
+    }
+    
     /**
      * tests the config names and values in the given associated array against the REST accessible application config
      * @param array $configsToTest
@@ -319,6 +334,14 @@ class ZfExtended_Test_ApiHelper {
      */
     public function getTask() {
         return $this->task;
+    }
+    
+    /***
+     * return the test customer
+     * @return stdClass
+     */
+    public function getCustomer(){
+        return $this->customer;
     }
     
     /**
