@@ -90,6 +90,9 @@ abstract class ZfExtended_Test_ApiTestcase extends \ZfExtended_Test_Testcase {
         self::assertContains('noRights', $json->user->roles, 'Checking users roles:');
     }
     
+    /***
+     * Asserts that a default customer is loaded
+     */
     public function assertCustomer(){
         self::$api->loadCustomer();
     }

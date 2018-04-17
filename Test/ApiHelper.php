@@ -84,6 +84,13 @@ class ZfExtended_Test_ApiHelper {
         'testtranslator' => '{00000000-0000-0000-C100-CCDDEE000003}',
     );
     
+    /***
+     * Collection from shared parameters between test functions
+     * 
+     * @var array
+     */
+    protected $scharedParameters=array();
+    
     public function __construct($testClass){
         $this->testClass = $testClass;
         $this->testRoot = getcwd();
@@ -304,6 +311,9 @@ class ZfExtended_Test_ApiHelper {
         
     }
     
+    /***
+     * Load the default customer
+     */
     public function loadCustomer(){
         $test = $this->testClass;
         $user=$test::assertLogin('testmanager');
@@ -645,5 +655,25 @@ class ZfExtended_Test_ApiHelper {
         $zip->close();
         
         return $zipFile;
+    }
+    
+    /***
+     * Get shared parameter from the collection by parameter name
+     * 
+     * @param string $paramName
+     * @return mixed
+     */
+    public function getScharedParameterValue($paramName){
+        return $this->scharedParameters[$paramName];
+    }
+    
+    /***
+     * Add shared parameter to the collection by parameter name and parameter value
+     * 
+     * @param string $paramName
+     * @param mixed $paramValue
+     */
+    public function addScharedParameters($paramName,$paramValue){
+        $this->scharedParameters[$paramName]=$paramValue;
     }
 }
