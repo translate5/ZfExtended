@@ -93,7 +93,7 @@ abstract class ZfExtended_Test_ApiTestcase extends \ZfExtended_Test_Testcase {
     /***
      * Asserts that a default customer is loaded
      */
-    public function assertCustomer(){
+    public static function assertCustomer(){
         self::$api->loadCustomer();
     }
     
