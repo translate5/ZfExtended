@@ -84,13 +84,6 @@ class ZfExtended_Test_ApiHelper {
         'testtranslator' => '{00000000-0000-0000-C100-CCDDEE000003}',
     );
     
-    /***
-     * Collection from shared parameters between test functions
-     * 
-     * @var array
-     */
-    protected $scharedParameters=array();
-    
     public function __construct($testClass){
         $this->testClass = $testClass;
         $this->testRoot = getcwd();
@@ -196,6 +189,8 @@ class ZfExtended_Test_ApiHelper {
         if(200 <= $status && $status < 300) {
             $json = json_decode($resp->getBody());
             $t = $this->testClass;
+            //error_log('#'.json_last_error_msg().'#');
+            //error_log('#'.$resp->getBody().'#');
             $t::assertEquals('No error', json_last_error_msg(), 'Server did not response valid JSON: '.$resp->getBody());
             if(isset($json->success)) {
                 $t::assertEquals(true, $json->success);
@@ -317,8 +312,12 @@ class ZfExtended_Test_ApiHelper {
     public function loadCustomer(){
         $test = $this->testClass;
         $user=$test::assertLogin('testmanager');
-        
-        $this->customer = $this->requestJson('editor/plugins_customer_customer/123456789/find', 'GET');
+        $filter='[{"operator":"eq","value":"123456789","property":"number"}]';
+        $filter=urlencode($filter);
+        $url='editor/plugins_customer_customer?page=1&start=0&limit=20&filter='.$filter;
+        $customerData=$this->requestJson($url, 'GET');
+        $test::assertNotEmpty($customerData,"Unable to load test customer.No test customer was found for number:123456789");
+        $this->customer = $customerData[0];
         $resp = $this->getLastResponse();
         $test::assertEquals(200, $resp->getStatus(), 'Load test customer Request does not respond HTTP 200! Body was: '.$resp->getBody());
     }
@@ -655,25 +654,5 @@ class ZfExtended_Test_ApiHelper {
         $zip->close();
         
         return $zipFile;
-    }
-    
-    /***
-     * Get shared parameter from the collection by parameter name
-     * 
-     * @param string $paramName
-     * @return mixed
-     */
-    public function getScharedParameterValue($paramName){
-        return $this->scharedParameters[$paramName];
-    }
-    
-    /***
-     * Add shared parameter to the collection by parameter name and parameter value
-     * 
-     * @param string $paramName
-     * @param mixed $paramValue
-     */
-    public function addScharedParameters($paramName,$paramValue){
-        $this->scharedParameters[$paramName]=$paramValue;
     }
 }
