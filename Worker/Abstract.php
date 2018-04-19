@@ -148,6 +148,14 @@ abstract class ZfExtended_Worker_Abstract {
      */
     protected $events;
     
+
+    /***
+     * Is worker thread flag
+     * 
+     * @var boolean
+     */
+    public $isWorkerThread=true;
+    
     public function __construct() {
         $this->log = ZfExtended_Factory::get('ZfExtended_Log');
         $this->maxParallelProcesses = $this->getMaxParallelProcesses();
@@ -469,7 +477,9 @@ abstract class ZfExtended_Worker_Abstract {
      */
     private function _run() {
         //code in the worker can check now if we are in a worker thread or not
-        define('ZFEXTENDED_IS_WORKER_THREAD', true);
+        if(!defined('ZFEXTENDED_IS_WORKER_THREAD') && $this->isWorkerThread){
+            define('ZFEXTENDED_IS_WORKER_THREAD', true);
+        }
         $this->registerShutdown();
         //prefilling the finishedWorker for the following return false step outs
         $this->finishedWorker = clone $this->workerModel;

@@ -151,23 +151,16 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
    * triggers event "before<Controllername>Action"
    */
    public function preDispatch() {
-      $this->displayMaintenance();
-      $eventName = "before".ucfirst($this->_request->getActionName())."Action";
-      $this->events->trigger($eventName, $this, [
-              'entity' => $this->entity, 
-              'params' => $this->getAllParams(),
-              'controller' => $this
-      ]);
-
+       $this->displayMaintenance();
+       $this->beforeActionEvent($this->_request->getActionName());
    }
    
   /**
    * triggers event "after<Controllername>Action"
    */
   public function postDispatch() {
-      $eventName = "after".ucfirst($this->_request->getActionName())."Action";
-      $this->events->trigger($eventName, $this, array('entity' => $this->entity, 'view' => $this->view));
-      
+      $this->afterActionEvent($this->_request->getActionName());
+
       //add rest Messages to the error field
       $messages = $this->restMessages->toArray();
       if(empty($messages)) {
@@ -181,6 +174,29 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
       else {
           $this->view->errors = array_merge($this->view->errors, $messages);
       }
+  }
+  
+  /***
+   * Trigger before action event for given controller action name
+   * 
+   * @param string $actionName
+   */
+  public function beforeActionEvent($actionName){
+      $eventName = "before".ucfirst($actionName)."Action";
+      $this->events->trigger($eventName, $this, [
+              'entity' => $this->entity,
+              'params' => $this->getAllParams(),
+              'controller' => $this
+      ]);
+  }
+  
+  /***
+   * Trigger after action event for given controller action name
+   * @param string $actionName
+   */
+  public function afterActionEvent($actionName){
+      $eventName = "after".ucfirst($actionName)."Action";
+      $this->events->trigger($eventName, $this, array('entity' => $this->entity, 'view' => $this->view));
   }
   
   /**
@@ -289,12 +305,8 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
       try {
           $this->entity->validate();
           $this->additionalValidations();
-          
           //new event here to invoke to the controller validation call
-          $eventManager = ZfExtended_Factory::get('ZfExtended_EventManager', array(get_class($this)));
-          /* @var $eventManager ZfExtended_EventManager */
-          $eventManager->trigger('onValidate', $this, array('entity'=>$this->entity));
-          
+          $this->events->trigger('onValidate', $this, array('entity' => $this->entity));
           return $this->wasValid = true;
       }
       catch (ZfExtended_ValidateException $e) {
