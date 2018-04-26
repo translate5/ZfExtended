@@ -78,7 +78,21 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract {
     public function loadByIds($ids){
         return $this->loaderByIds($ids, 'id');
     }
-
+    
+    /***
+     * Load languages by rfc values
+     * @param array $rfc
+     * @return array
+     */
+    public function loadByRfc(array $rfc){
+        $s = $this->db->select();
+        $s->where('lower(rfc5646) IN(?)',$rfc);
+        $retval = $this->db->fetchAll($s)->toArray();
+        if(empty($retval)){
+            return [];
+        }
+        return $retval;
+    }
     /**
      * @param mixed $lang
      * @param string $field
