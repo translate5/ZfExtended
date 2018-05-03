@@ -263,7 +263,9 @@ class ZfExtended_UserController extends ZfExtended_RestController {
         $this->languagesArrayToCommaSeparated();
         if($this->_request->isPost()) {
             unset($this->data->id);
-            $this->data->userGuid = $this->_helper->guid->create(true);
+            if(empty($this->data->userGuid)) {
+                $this->data->userGuid = $this->_helper->guid->create(true);
+            }
         }
         $this->handleUserSetAclRole();
     }
