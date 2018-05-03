@@ -95,7 +95,9 @@ class ZfExtended_UserController extends ZfExtended_RestController {
             parent::putAction();
             $this->handlePasswdMail();
             $this->credentialCleanup();
-            $this->csvToArray();
+            if($this->wasValid) {
+                $this->csvToArray();
+            }
         }
         catch(Zend_Db_Statement_Exception $e) {
             $this->handleLoginDuplicates($e);
@@ -111,7 +113,9 @@ class ZfExtended_UserController extends ZfExtended_RestController {
             parent::postAction();
             $this->handlePasswdMail();
             $this->credentialCleanup();
-            $this->csvToArray();
+            if($this->wasValid) {
+                $this->csvToArray();
+            }
         }
         catch(Zend_Db_Statement_Exception $e) {
             $this->handleLoginDuplicates($e);
