@@ -139,6 +139,24 @@ abstract class ZfExtended_Models_Entity_Abstract {
     }
     
     /**
+     * loads the Entity by Primary Key Id if it exist in the database.
+     * @param integer $id
+     */
+    public function loadIfExist($id) {
+        try {
+            $rowset = $this->db->find($id);
+        } catch (Exception $e) {
+            return false;
+        }
+        if (!$rowset || $rowset->count() == 0) {
+            return false;
+        }
+        //load implies loading one Row, so use only the first row
+        return $this->row = $rowset->rewind()->current();
+    }
+    
+    
+    /**
      * Fetches one row in an object of type Zend_Db_Table_Row_Abstract
      *
      * Basiert auf fetchRow

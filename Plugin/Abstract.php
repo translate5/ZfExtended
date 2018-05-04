@@ -162,6 +162,21 @@ abstract class ZfExtended_Plugin_Abstract {
     }
     
     /**
+    * Check if the folder contains file
+    * @param string $dir
+    * @return boolean
+    */
+    protected function isFolderEmpty($dir) {
+        foreach (new DirectoryIterator($dir) as $fileInfo) {
+            if($fileInfo->isDot()){
+                continue;
+            }
+            return false;
+        }
+        return true;
+    }
+    
+    /**
      * returns the relative plugin path to APPLICATION_ROOT
      * @return string
      */

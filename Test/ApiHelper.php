@@ -72,6 +72,12 @@ class ZfExtended_Test_ApiHelper {
      */
     protected $testRoot;
     
+    /***
+     * stdObject with the values of the test customer
+     * @var stdClass
+     */
+    protected $customer;
+    
     protected $testusers = array(
         'testmanager' => '{00000000-0000-0000-C100-CCDDEE000001}',
         'testlector' => '{00000000-0000-0000-C100-CCDDEE000002}',
@@ -183,6 +189,8 @@ class ZfExtended_Test_ApiHelper {
         if(200 <= $status && $status < 300) {
             $json = json_decode($resp->getBody());
             $t = $this->testClass;
+            //error_log('#'.json_last_error_msg().'#');
+            //error_log('#'.$resp->getBody().'#');
             $t::assertEquals('No error', json_last_error_msg(), 'Server did not response valid JSON: '.$resp->getBody());
             if(isset($json->success)) {
                 $t::assertEquals(true, $json->success);
@@ -298,6 +306,22 @@ class ZfExtended_Test_ApiHelper {
         
     }
     
+    /***
+     * Load the default customer
+     */
+    public function loadCustomer(){
+        $test = $this->testClass;
+        $user=$test::assertLogin('testmanager');
+        $filter='[{"operator":"eq","value":"123456789","property":"number"}]';
+        $filter=urlencode($filter);
+        $url='editor/plugins_customer_customer?page=1&start=0&limit=20&filter='.$filter;
+        $customerData=$this->requestJson($url, 'GET');
+        $test::assertNotEmpty($customerData,"Unable to load test customer.No test customer was found for number:123456789");
+        $this->customer = $customerData[0];
+        $resp = $this->getLastResponse();
+        $test::assertEquals(200, $resp->getStatus(), 'Load test customer Request does not respond HTTP 200! Body was: '.$resp->getBody());
+    }
+    
     /**
      * tests the config names and values in the given associated array against the REST accessible application config
      * @param array $configsToTest
@@ -319,6 +343,14 @@ class ZfExtended_Test_ApiHelper {
      */
     public function getTask() {
         return $this->task;
+    }
+    
+    /***
+     * return the test customer
+     * @return stdClass
+     */
+    public function getCustomer(){
+        return $this->customer;
     }
     
     /**
