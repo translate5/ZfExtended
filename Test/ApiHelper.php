@@ -547,6 +547,18 @@ class ZfExtended_Test_ApiHelper {
         unset($segmentContent->fileId);
         unset($segmentContent->taskGuid);
         unset($segmentContent->timestamp);
+        if(isset($segmentContent->metaCache)) {
+            $meta = json_decode($segmentContent->metaCache, true);
+            if(!empty($meta['siblingData'])) {
+                $data = [];
+                foreach($meta['siblingData'] as $sibling) {
+                    $data['fakeSegId_'.$sibling['nr']] = $sibling;
+                }
+                ksort($data);
+                $meta['siblingData'] = $data;
+            }
+            $segmentContent->metaCache = json_encode($meta, JSON_FORCE_OBJECT);
+        }
         return $segmentContent;
     }
     
