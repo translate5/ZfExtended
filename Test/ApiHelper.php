@@ -314,7 +314,7 @@ class ZfExtended_Test_ApiHelper {
         $user=$test::assertLogin('testmanager');
         $filter='[{"operator":"eq","value":"123456789","property":"number"}]';
         $filter=urlencode($filter);
-        $url='editor/plugins_customer_customer?page=1&start=0&limit=20&filter='.$filter;
+        $url='editor/customer?page=1&start=0&limit=20&filter='.$filter;
         $customerData=$this->requestJson($url, 'GET');
         $test::assertNotEmpty($customerData,"Unable to load test customer.No test customer was found for number:123456789");
         $this->customer = $customerData[0];
