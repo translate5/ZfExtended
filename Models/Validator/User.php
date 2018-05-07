@@ -58,8 +58,11 @@ class ZfExtended_Models_Validator_User extends ZfExtended_Models_Validator_Abstr
   protected function setEmailValidator() {
       $me = $this;
       $this->addValidatorCustom('email', function($v) use ($me){
-          $me->addMessage('email', 'invalidEmail', 'invalidEmail');
-          return filter_var($v, FILTER_VALIDATE_EMAIL) !== false;
+          $valid = filter_var($v, FILTER_VALIDATE_EMAIL) !== false;
+          if(!$valid){
+              $me->addMessage('email', 'invalidEmail', 'invalidEmail');
+          }
+          return $valid;
       });
   }
   

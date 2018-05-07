@@ -335,14 +335,23 @@ class ZfExtended_UserController extends ZfExtended_RestController {
      */
     protected function handleLoginDuplicates(Zend_Db_Statement_Exception $e) {
         $msg = $e->getMessage();
-        if(stripos($msg, 'duplicate entry') === false || stripos($msg, "for key 'login'") === false) {
+        if(stripos($msg, 'duplicate entry') === false) {
             throw $e; //otherwise throw this again
         }
         
         $t = ZfExtended_Zendoverwrites_Translate::getInstance();
         /* @var $t ZfExtended_Zendoverwrites_Translate */;;
         
-        $errors = array('login' => $t->_('Dieser Anmeldename wird bereits verwendet.'));
+        if(stripos($msg, "for key 'login'") !== false) {
+            $errors = array('login' => $t->_('Dieser Anmeldename wird bereits verwendet.'));
+        }
+        elseif (stripos($msg, "for key 'userGuid") !== false) {
+            $errors = array('login' => $t->_('Diese UserGuid wird bereits verwendet.'));
+        }
+        else {
+            throw $e; //otherwise throw this again
+        }
+        
         $e = new ZfExtended_ValidateException();
         $e->setErrors($errors);
         $this->handleValidateException($e);
