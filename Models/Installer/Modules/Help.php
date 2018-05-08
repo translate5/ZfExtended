@@ -22,9 +22,23 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
-class ZfExtended_VersionConflictException extends ZfExtended_Exception {
-    protected $defaultCode = 409;
-    protected $defaultMessage = 'Die Ausgangsdaten wurden in der Zwischenzeit verändert. Bitte aktualisieren Sie Ihre Ansicht!';
-    protected $defaultMessageTranslate = true;
-    protected $loggingEnabled = false;
+/**
+ * @package ZfExtended
+ * @version 2.0
+ */
+class ZfExtended_Models_Installer_Modules_Help extends ZfExtended_Models_Installer_Modules_Abstract{
+    public function __construct($options){
+        
+    }
+    public function run() {
+        echo "\n";
+        echo "  Usage: install-and-update2.sh MODULE\n";
+        echo "\n";
+        echo "  Without parameters: shows this help.\n";
+        echo "\n\n";
+        echo "  Modules: \n";
+        echo "    help [MODULE]              Shows this help, or with module the modules help page.\n";
+        echo "    database                   Updates the database.\n";
+        echo "\n\n";
+    }
 }

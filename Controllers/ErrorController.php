@@ -315,6 +315,11 @@ class ErrorController extends ZfExtended_Controllers_Action
         $highestError = $this->getErrorWithHighesErrorCode();
         $loggingDisabled = (($this->_exception instanceof ZfExtended_Exception) && ! $this->_exception->isLoggingEnabled());
         
+        //TODO intermediate implementation of log levels, overriding isLoggingEnabled
+        if(isset($this->_exception->logLevel)) {
+            $loggingDisabled = $this->_exception->logLevel > ZfExtended_Log::LEVEL_WARN;
+        }
+        
         if($loggingDisabled){
             //do nothing here
         }

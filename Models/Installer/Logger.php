@@ -22,9 +22,25 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
-class ZfExtended_VersionConflictException extends ZfExtended_Exception {
-    protected $defaultCode = 409;
-    protected $defaultMessage = 'Die Ausgangsdaten wurden in der Zwischenzeit verändert. Bitte aktualisieren Sie Ihre Ansicht!';
-    protected $defaultMessageTranslate = true;
-    protected $loggingEnabled = false;
+/**
+ * @package ZfExtended
+ * @version 2.0
+ */
+class ZfExtended_Models_Installer_Logger {
+    /**
+     * logs a message
+     * @param string $msg
+     */
+    public function log($msg) {
+        echo $msg."\n";
+    }
+    
+    /**
+     * logs a message with separator
+     * @param string $msg
+     */
+    public function logSection($msg, $lineChar = '=') {
+        echo "\n".$msg."\n";
+        echo str_pad('', strlen($msg), $lineChar)."\n\n";
+    }
 }

@@ -40,6 +40,7 @@ END LICENSE AND COPYRIGHT
  * @method void setSourceLanguage() setSourceLanguage(string $sourceLanguage)
  * @method void setTargetLanguage() setTargetLanguage(string $targetLanguage)
  * @method void setParentIds() setParentIds(string $parentIds)
+ * @method void setCustomers() setCustomers(string $customers)
  * 
  * @method void setLogin() setLogin(string $login)
  * @method integer getId() getId()
@@ -54,6 +55,7 @@ END LICENSE AND COPYRIGHT
  * @method void getSourceLanguage() getSourceLanguage()
  * @method void getTargetLanguage() getTargetLanguage() 
  * @method void getParentIds() getParentIds() 
+ * @method void getCustomers() getCustomers() 
  */
 class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implements ZfExtended_Models_SessionUserInterface {
     const SYSTEM_LOGIN = 'system';
@@ -280,6 +282,32 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implement
         }
         $parentIds = explode(',', trim($parentIds, ' ,'));
         return in_array($parentId, $parentIds);
+    }
+    
+    /**
+     * @todo This method is a working draft and is not tested yet!
+     * Return true if the given user is a child of the currently loaded one
+     * 
+     * @param ZfExtended_Models_User $user
+     * @return boolean
+     */
+    public function isChildOf(ZfExtended_Models_User $user) {
+        return $user->isParentOf($this);
+    }
+    
+    /**
+     * @todo This method is a working draft and is not tested yet!
+     * Return true if the given user is a parent of the currently loaded one
+     * 
+     * @param ZfExtended_Models_User $user
+     * @return boolean
+     */
+    public function isParentOf(ZfExtended_Models_User $user) {
+        $parentIds = explode(',', trim($user->getParentIds(), ' ,'));
+        $toCheck = explode(',', trim($this->getRoles(), ' ,'));
+        $toCheck[] = $this->getId();
+        $parentFound = array_intersect($toCheck, $parentIds);
+        return !empty($parentFound);
     }
     
     /**

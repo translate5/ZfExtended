@@ -31,7 +31,19 @@ END LICENSE AND COPYRIGHT
 /**
  * Klasse zur Kapselung des Loggings und Mailversands von Logmeldungen
  */
-class  ZfExtended_Log extends ZfExtended_Mail{
+class  ZfExtended_Log extends ZfExtended_Mail {
+    /**
+     * Defining the log levels (draft, not really used at the moment)
+     * Using 2^n values for better filtering and combining possibilties, although a simple < comparsion should be enough 
+     * @var integer
+     */
+    const LEVEL_FATAL = 1;
+    const LEVEL_ERROR = 2;
+    const LEVEL_WARN = 4;
+    const LEVEL_INFO = 8;
+    const LEVEL_DEBUG = 16;
+    const LEVEL_TRACE = 32;
+    
     /**
       * @var Zend_Config_Ini
       */

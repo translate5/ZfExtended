@@ -72,6 +72,12 @@ class ZfExtended_Test_ApiHelper {
      */
     protected $testRoot;
     
+    /***
+     * stdObject with the values of the test customer
+     * @var stdClass
+     */
+    protected $customer;
+    
     protected $testusers = array(
         'testmanager' => '{00000000-0000-0000-C100-CCDDEE000001}',
         'testlector' => '{00000000-0000-0000-C100-CCDDEE000002}',
@@ -183,6 +189,8 @@ class ZfExtended_Test_ApiHelper {
         if(200 <= $status && $status < 300) {
             $json = json_decode($resp->getBody());
             $t = $this->testClass;
+            //error_log('#'.json_last_error_msg().'#');
+            //error_log('#'.$resp->getBody().'#');
             $t::assertEquals('No error', json_last_error_msg(), 'Server did not response valid JSON: '.$resp->getBody());
             if(isset($json->success)) {
                 $t::assertEquals(true, $json->success);
@@ -283,6 +291,10 @@ class ZfExtended_Test_ApiHelper {
                 $this->task = $taskResult;
                 return true;
             }
+            if($taskResult->state == 'unconfirmed') {
+                //with task templates we could implement separate tests for that feature:
+                throw new Exception("runtimeOptions.import.initialTaskState = unconfirmed is not supported at the moment!");
+            }
             if($taskResult->state == 'error') {
                 if($failOnError) {
                     $test::fail('Task Import stopped. Task has state error.');
@@ -292,6 +304,22 @@ class ZfExtended_Test_ApiHelper {
             sleep(5);
         }
         
+    }
+    
+    /***
+     * Load the default customer
+     */
+    public function loadCustomer(){
+        $test = $this->testClass;
+        $user=$test::assertLogin('testmanager');
+        $filter='[{"operator":"eq","value":"123456789","property":"number"}]';
+        $filter=urlencode($filter);
+        $url='editor/customer?page=1&start=0&limit=20&filter='.$filter;
+        $customerData=$this->requestJson($url, 'GET');
+        $test::assertNotEmpty($customerData,"Unable to load test customer.No test customer was found for number:123456789");
+        $this->customer = $customerData[0];
+        $resp = $this->getLastResponse();
+        $test::assertEquals(200, $resp->getStatus(), 'Load test customer Request does not respond HTTP 200! Body was: '.$resp->getBody());
     }
     
     /**
@@ -315,6 +343,14 @@ class ZfExtended_Test_ApiHelper {
      */
     public function getTask() {
         return $this->task;
+    }
+    
+    /***
+     * return the test customer
+     * @return stdClass
+     */
+    public function getCustomer(){
+        return $this->customer;
     }
     
     /**
@@ -511,6 +547,18 @@ class ZfExtended_Test_ApiHelper {
         unset($segmentContent->fileId);
         unset($segmentContent->taskGuid);
         unset($segmentContent->timestamp);
+        if(isset($segmentContent->metaCache)) {
+            $meta = json_decode($segmentContent->metaCache, true);
+            if(!empty($meta['siblingData'])) {
+                $data = [];
+                foreach($meta['siblingData'] as $sibling) {
+                    $data['fakeSegId_'.$sibling['nr']] = $sibling;
+                }
+                ksort($data);
+                $meta['siblingData'] = $data;
+            }
+            $segmentContent->metaCache = json_encode($meta, JSON_FORCE_OBJECT);
+        }
         return $segmentContent;
     }
     

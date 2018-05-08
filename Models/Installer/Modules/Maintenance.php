@@ -22,9 +22,13 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
-class ZfExtended_VersionConflictException extends ZfExtended_Exception {
-    protected $defaultCode = 409;
-    protected $defaultMessage = 'Die Ausgangsdaten wurden in der Zwischenzeit verändert. Bitte aktualisieren Sie Ihre Ansicht!';
-    protected $defaultMessageTranslate = true;
-    protected $loggingEnabled = false;
+/**
+ * @package ZfExtended
+ * @version 2.0
+ */
+class ZfExtended_Models_Installer_Modules_Maintenance extends ZfExtended_Models_Installer_Modules_Abstract{
+    public function run() {
+        //TODO Im Moment einfach den Standalone alt anwerfen und die Kommandos mappen???
+        
+    }
 }

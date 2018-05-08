@@ -41,7 +41,8 @@ class ZfExtended_UserController extends ZfExtended_RestController {
         //add filter type for languages
         $this->_filterTypeMap = array(
                 array('sourceLanguage' => array('list' => 'listCommaSeparated')),
-                array('targetLanguage' => array('list' => 'listCommaSeparated'))
+                array('targetLanguage' => array('list' => 'listCommaSeparated')),
+                array('customers' => array('list' => 'listCommaSeparated')),
         );
         parent::init();
     }
@@ -64,7 +65,7 @@ class ZfExtended_UserController extends ZfExtended_RestController {
         }
         $this->view->rows=$rows;
         $this->view->total=$count;
-        $this->languagesCommaSeparatedToArray();
+        $this->csvToArray();
     }
     
     /**
@@ -82,7 +83,7 @@ class ZfExtended_UserController extends ZfExtended_RestController {
         }
         $this->view->rows = $this->entity->loadAllByRole('pm', $parentId);
         $this->view->total = $this->entity->getTotalCount();
-        $this->languagesCommaSeparatedToArray();
+        $this->csvToArray();
     }
     
     
@@ -95,7 +96,9 @@ class ZfExtended_UserController extends ZfExtended_RestController {
             parent::putAction();
             $this->handlePasswdMail();
             $this->credentialCleanup();
-            $this->languagesCommaSeparatedToArray();
+            if($this->wasValid) {
+                $this->csvToArray();
+            }
         }
         catch(Zend_Db_Statement_Exception $e) {
             $this->handleLoginDuplicates($e);
@@ -111,7 +114,9 @@ class ZfExtended_UserController extends ZfExtended_RestController {
             parent::postAction();
             $this->handlePasswdMail();
             $this->credentialCleanup();
-            $this->languagesCommaSeparatedToArray();
+            if($this->wasValid) {
+                $this->csvToArray();
+            }
         }
         catch(Zend_Db_Statement_Exception $e) {
             $this->handleLoginDuplicates($e);
@@ -125,7 +130,7 @@ class ZfExtended_UserController extends ZfExtended_RestController {
     public function getAction() {
         parent::getAction();
         $this->checkUserAccessByParent();
-        $this->languagesCommaSeparatedToArray();
+        $this->csvToArray();
         if($this->entity->getLogin() == ZfExtended_Models_User::SYSTEM_LOGIN) {
             $e = new ZfExtended_Models_Entity_NotFoundException();
             $e->setMessage("System Benutzer wurde versucht zu erreichen",true);
@@ -169,10 +174,10 @@ class ZfExtended_UserController extends ZfExtended_RestController {
      * converts the source and target comma separated language ids to array.
      * Frontend/api use array, in the database we save comma separated values.
      */
-    protected function languagesCommaSeparatedToArray(){
+    protected function csvToArray(){
         $callback=function($row){
             if($row!==null && $row!==""){
-                $row=substr($row, 1,-1);
+                $row=trim($row, ', ');
                 $row=explode(',', $row);
             }
             return $row;
@@ -182,35 +187,27 @@ class ZfExtended_UserController extends ZfExtended_RestController {
             foreach ($this->view->rows as &$singleRow){
                 $singleRow['sourceLanguage']=$callback($singleRow['sourceLanguage']);
                 $singleRow['targetLanguage']=$callback($singleRow['targetLanguage']);
+                $singleRow['parentIds']=$callback($singleRow['parentIds']);
             }
             return;
         }
         
         $this->view->rows->sourceLanguage=$callback($this->view->rows->sourceLanguage);
         $this->view->rows->targetLanguage=$callback($this->view->rows->targetLanguage);
+        $this->view->rows->parentIds = $callback($this->view->rows->parentIds);
     }
     
     /***
-     * Convert the language array to comma separated values.
-     * Frontend/api use array, in the database we save comma separated values.
+     * After the fields are decoded, modify their values if needed
      */
-    protected function languagesArrayToCommaSeparated(){
+    protected function convertDecodedFields(){
+        //Convert array to comma separated values.
+        //Frontend/api use array, in the database we save comma separated values.
         $this->arrayToCommaSeparated('sourceLanguage');
         $this->arrayToCommaSeparated('targetLanguage');
-    }
-    
-    /***
-     * If the language array exist in the request data, it will be converted to comma separated value
-     * @param string $language
-     */
-    private function arrayToCommaSeparated($language){
-        if(isset($this->data->$language) && is_array($this->data->$language)) {
-            $this->data->$language=implode(',', $this->data->$language);
-            if(empty($this->data->$language)){
-                $this->data->$language=null;
-            }else{
-                $this->data->$language=','.$this->data->$language.',';
-            }
+        //add leading and trailing comma
+        if(!empty($this->data->customers)){
+            $this->data->customers=','.$this->data->customers.',';
         }
     }
     
@@ -254,10 +251,12 @@ class ZfExtended_UserController extends ZfExtended_RestController {
         $this->alreadyDecoded = true;
         $this->_request->isPost() || $this->checkIsEditable(); //checkEditable only if not POST
         parent::decodePutData();
-        $this->languagesArrayToCommaSeparated();
+        $this->convertDecodedFields();
         if($this->_request->isPost()) {
             unset($this->data->id);
-            $this->data->userGuid = $this->_helper->guid->create(true);
+            if(empty($this->data->userGuid)) {
+                $this->data->userGuid = $this->_helper->guid->create(true);
+            }
         }
         $this->handleUserSetAclRole();
     }
@@ -336,14 +335,23 @@ class ZfExtended_UserController extends ZfExtended_RestController {
      */
     protected function handleLoginDuplicates(Zend_Db_Statement_Exception $e) {
         $msg = $e->getMessage();
-        if(stripos($msg, 'duplicate entry') === false || stripos($msg, "for key 'login'") === false) {
+        if(stripos($msg, 'duplicate entry') === false) {
             throw $e; //otherwise throw this again
         }
         
         $t = ZfExtended_Zendoverwrites_Translate::getInstance();
         /* @var $t ZfExtended_Zendoverwrites_Translate */;;
         
-        $errors = array('login' => $t->_('Dieser Anmeldename wird bereits verwendet.'));
+        if(stripos($msg, "for key 'login'") !== false) {
+            $errors = array('login' => $t->_('Dieser Anmeldename wird bereits verwendet.'));
+        }
+        elseif (stripos($msg, "for key 'userGuid") !== false) {
+            $errors = array('login' => $t->_('Diese UserGuid wird bereits verwendet.'));
+        }
+        else {
+            throw $e; //otherwise throw this again
+        }
+        
         $e = new ZfExtended_ValidateException();
         $e->setErrors($errors);
         $this->handleValidateException($e);

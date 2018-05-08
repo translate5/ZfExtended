@@ -78,7 +78,21 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract {
     public function loadByIds($ids){
         return $this->loaderByIds($ids, 'id');
     }
-
+    
+    /***
+     * Load languages by rfc values
+     * @param array $rfc
+     * @return array
+     */
+    public function loadByRfc(array $rfc){
+        $s = $this->db->select();
+        $s->where('lower(rfc5646) IN(?)',$rfc);
+        $retval = $this->db->fetchAll($s)->toArray();
+        if(empty($retval)){
+            return [];
+        }
+        return $retval;
+    }
     /**
      * @param mixed $lang
      * @param string $field
@@ -229,5 +243,24 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract {
     public function loadLangRfc5646($langId){
         $this->loadById($langId);
         return $this->getRfc5646();
+    }
+    
+    /***
+     * Find languages which are belonging to the same language group
+     * Ex:
+     * when the $rfc = "de"
+     * the result will be the ids from the de-at, de-ch, de-de, de-lu etc...
+     * @param string $rfc
+     */
+    public function findLanguageGroup($rfc){
+        $rfc=explode('-',$rfc);
+        $rfc=$rfc[0];
+        $s = $this->db->select();
+        $s->where('lower(rfc5646) LIKE lower(?)',$rfc.'%');
+        $retval = $this->db->fetchAll($s)->toArray();
+        if(empty($retval)){
+            return [];
+        }
+        return $retval;
     }
 }

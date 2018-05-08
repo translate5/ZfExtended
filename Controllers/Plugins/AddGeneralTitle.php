@@ -31,7 +31,8 @@ END LICENSE AND COPYRIGHT
 
 /**
  * Fügt ein allgemeines Suffix für den title-Tag hinzu
- *
+ * FIXME this plugin is also called on REST calls which is completly nonsense! 
+ *   Should be moved into the default module layout phtml for ExtJS / API based applications!
  */
 class ZfExtended_Controllers_Plugins_AddGeneralTitle extends Zend_Controller_Plugin_Abstract
 {

@@ -151,23 +151,16 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
    * triggers event "before<Controllername>Action"
    */
    public function preDispatch() {
-      $this->displayMaintenance();
-      $eventName = "before".ucfirst($this->_request->getActionName())."Action";
-      $this->events->trigger($eventName, $this, [
-              'entity' => $this->entity, 
-              'params' => $this->getAllParams(),
-              'controller' => $this
-      ]);
-
+       $this->displayMaintenance();
+       $this->beforeActionEvent($this->_request->getActionName());
    }
    
   /**
    * triggers event "after<Controllername>Action"
    */
   public function postDispatch() {
-      $eventName = "after".ucfirst($this->_request->getActionName())."Action";
-      $this->events->trigger($eventName, $this, array('entity' => $this->entity, 'view' => $this->view));
-      
+      $this->afterActionEvent($this->_request->getActionName());
+
       //add rest Messages to the error field
       $messages = $this->restMessages->toArray();
       if(empty($messages)) {
@@ -181,6 +174,29 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
       else {
           $this->view->errors = array_merge($this->view->errors, $messages);
       }
+  }
+  
+  /***
+   * Trigger before action event for given controller action name
+   * 
+   * @param string $actionName
+   */
+  public function beforeActionEvent($actionName){
+      $eventName = "before".ucfirst($actionName)."Action";
+      $this->events->trigger($eventName, $this, [
+              'entity' => $this->entity,
+              'params' => $this->getAllParams(),
+              'controller' => $this
+      ]);
+  }
+  
+  /***
+   * Trigger after action event for given controller action name
+   * @param string $actionName
+   */
+  public function afterActionEvent($actionName){
+      $eventName = "after".ucfirst($actionName)."Action";
+      $this->events->trigger($eventName, $this, array('entity' => $this->entity, 'view' => $this->view));
   }
   
   /**
@@ -243,8 +259,9 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
 
   /**
    * wraps REST Exception Handling around the called Actions
-   *
-   * - Exception werden REST-konform im Error-Controller
+   * 
+   * Warning: Only Exceptions thrown in the dispatch process are handled correctly in REST calls.
+   * Exceptions thrown before are not handled correctly, they are exposed as plain HTML exceptions!
    *
    * @see Zend_Controller_Action::dispatch()
    */
@@ -288,12 +305,8 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
       try {
           $this->entity->validate();
           $this->additionalValidations();
-          
           //new event here to invoke to the controller validation call
-          $eventManager = ZfExtended_Factory::get('ZfExtended_EventManager', array(get_class($this)));
-          /* @var $eventManager ZfExtended_EventManager */
-          $eventManager->trigger('onValidate', $this, array('entity'=>$this->entity));
-          
+          $this->events->trigger('onValidate', $this, array('entity' => $this->entity));
           return $this->wasValid = true;
       }
       catch (ZfExtended_ValidateException $e) {
@@ -473,6 +486,23 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
       $userSession = new Zend_Session_Namespace('user');
       return $this->acl->isInAllowedRoles($userSession->data->roles, $resource, $privilege);
   }
+  
+  /***
+   * Join array elements with a comma.
+   * The column string will start and end with comma to.
+   * 
+   * @param string $language
+   */
+  protected function arrayToCommaSeparated($columnName){
+      if(isset($this->data->$columnName) && is_array($this->data->$columnName)) {
+          $this->data->$columnName=implode(',', $this->data->$columnName);
+          if(empty($this->data->$columnName)){
+              $this->data->$columnName=null;
+          }else{
+              $this->data->$columnName=','.$this->data->$columnName.',';
+          }
+      }
+  }
 
   public function deleteAction()
   {
@@ -485,13 +515,17 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
    * must be present in Zend_Framework 1.12, therefore solved this way
    */
   public function headAction() {
-       throw new ZfExtended_BadMethodCallException(__CLASS__.'->head');
+       $e = new ZfExtended_BadMethodCallException(__CLASS__.'->head not implemented yet');
+       $e->setLogging(false); //in future ZfExtended_Log::LEVEL_INFO
+       throw $e;
   }
   /**
    * not implemented so far, therefore BadMethodCallException
    * must be present in Zend_Framework 1.12, therefore solved this way
    */
   public function optionsAction() {
-       throw new ZfExtended_BadMethodCallException(__CLASS__.'->head');
+       $e = new ZfExtended_BadMethodCallException(__CLASS__.'->options not implemented yet');
+       $e->setLogging(false); //in future ZfExtended_Log::LEVEL_INFO
+       throw $e;
   }
 }

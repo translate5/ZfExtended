@@ -139,4 +139,14 @@ class ZfExtended_Utils {
         $config = Zend_Registry::get('config');
         return iconv($config->runtimeOptions->fileSystemEncoding, 'UTF-8', $path);
     }
+    
+    public static function getAppVersion() {
+        $versionFile = APPLICATION_PATH.'/../version';
+        $regex = '/MAJOR_VER=([0-9]+)\s*MINOR_VER=([0-9]+).*\s*BUILD=([0-9]+).*/';
+        if(file_exists($versionFile) && $res = preg_match($regex, file_get_contents($versionFile), $matches)) {
+            array_shift($matches);
+            return join('.', $matches);
+        }
+        return 'development';
+    }
 }
