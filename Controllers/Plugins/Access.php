@@ -45,6 +45,8 @@ class ZfExtended_Controllers_Plugins_Access extends Zend_Controller_Plugin_Abstr
         $accessHelper = ZfExtended_Zendoverwrites_Controller_Action_HelperBroker::getStaticHelper(
             'Access'
         );
+        /* @var $accessHelper ZfExtended_Controller_Helper_Access */
+        $accessHelper->isDispatchable();
         $accessHelper->isAuthenticated();
     }
     
