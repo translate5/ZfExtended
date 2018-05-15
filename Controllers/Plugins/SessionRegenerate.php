@@ -44,33 +44,39 @@ END LICENSE AND COPYRIGHT
 class ZfExtended_Controllers_Plugins_SessionRegenerate extends Zend_Controller_Plugin_Abstract {
 
     /**
-     * @var Zend_Session_Namespace
-     */
-    protected $_session = NULL;
-    
-    /**
      * Wird vor dem Start des Dispatcher Laufes ausgeführt
      *
      * @param  Zend_Controller_Request_Abstract $request
      * @return void
      */
-    public function dispatchLoopShutdown()
-    {
+    public function dispatchLoopShutdown() {
         $layouthelper = ZfExtended_Zendoverwrites_Controller_Action_HelperBroker::getStaticHelper(
             'layout'
         );
-        $row = ZfExtended_Factory::get('ZfExtended_Models_Entity',
-                    array('ZfExtended_Models_Db_SessionMapInternalUniqId',
-                        array()));
-        /* @var $row ZfExtended_Models_Entity */
-        $row->loadRow('session_id = ?',Zend_Session::getId());
+        $user = new Zend_Session_Namespace('user');
+        $isAuthenticated = !empty($user->data->userGuid);
+        $this->updateSession($layouthelper->isEnabled() && !$isAuthenticated && !Zend_Session::isDestroyed());
+    }
+
+    /**
+     * Updates the sessionMapInternalUniqId table modified stamp and regenerates the session id if needed 
+     * @param boolean $regenerate if true, the session id is regenerated!
+     */
+    public function updateSession($regenerate = false) {
+        $db = ZfExtended_Factory::get('ZfExtended_Models_Db_SessionMapInternalUniqId');
+        /* @var $db ZfExtended_Models_Db_SessionMapInternalUniqId */
+        $newSessionId = $oldSessionId = Zend_Session::getId();
         
-        if($layouthelper->isEnabled() && !Zend_Session::isDestroyed()){
+        if($regenerate){
             $config = Zend_Registry::get('config');
             Zend_Session::rememberMe($config->resources->ZfExtended_Resource_Session->remember_me_seconds);
-            $row->setSession_id(Zend_Session::getId());
+            $newSessionId = Zend_Session::getId();
         }
-        $row->setModified(time());
-        $row->save();
+        $db->update([
+            'session_id' => $newSessionId,
+            'modified' => time(),
+        ], ['session_id = ?' => $oldSessionId]);
     }
+    
+        
 }
