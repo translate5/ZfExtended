@@ -36,6 +36,7 @@ END LICENSE AND COPYRIGHT
 * @method string getRfc5646() getRfc5646()
 * @method int getLcid() getLcid()
 * @method int getId() getId()
+* @method string getIso3166Part1alpha2() getIso3166Part1alpha2()
 */
 abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract {
 
