@@ -340,6 +340,27 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implement
         return $aclInstance->isInAllowedRoles($userRoles,$resource,$right);
     }
     
+    /***
+     * Get assigned customers to the currently logged user
+     * @return array
+     */
+    public function getUserCustomersFromSession(){
+        $sessionUser = new Zend_Session_Namespace('user');
+        
+        $sessionUser=$sessionUser->data;
+        
+        $userModel=ZfExtended_Factory::get('ZfExtended_Models_User');
+        /* @var $userModel ZfExtended_Models_User */
+        
+        $userModel->load($sessionUser->id);
+        
+        if(empty($userModel->getCustomers())){
+            return array();
+        }
+        
+        $customers=trim($userModel->getCustomers(),",");
+        return explode(',', $customers);
+    }
     /**
      * merges firstname and surname to username
      */

@@ -74,6 +74,19 @@ class ZfExtended_Controller_Helper_Access extends Zend_Controller_Action_Helper_
     }
     
     /**
+     * Checks if the request is dispatchable (a controller and action exists)
+     * if not a 404 is produced
+     */
+    public function isDispatchable() {
+        $front = $this->getFrontController();
+        if(! $front->getDispatcher()->isDispatchable($front->getRequest())) {
+            $e = new ZfExtended_NotFoundException();
+            $e->setMessage('Seite nicht gefunden!',true);
+            throw $e;
+        }
+    }
+    
+    /**
      * checks the rights of the user and redirects if no access is allowed
      */
     protected function checkRights() {
@@ -81,22 +94,13 @@ class ZfExtended_Controller_Helper_Access extends Zend_Controller_Action_Helper_
         if($module === 'default_'){
             $module = '';
         }
+        $action = $this->_request->getActionName();
+        $ressource = $module.$this->_request->getControllerName();
         
-        try {
-            if(!$this->_acl->isInAllowedRoles(
-                    $this->_roles, 
-                    $module.$this->_request->getControllerName(), 
-                    $this->_request->getActionName())){
-                $this->notAuthenticated();
-            }
-        } catch (Exception $exc) {
-            if($this->isRestRoute()){
-                $this->notAuthenticated();
-            }
-            $e = new ZfExtended_NotFoundException();
-            $e->setMessage('Seite nicht gefunden!',true);
-            throw $e;
+        if($this->_acl->isInAllowedRoles($this->_roles, $ressource, $action)){
+            return;
         }
+        $this->notAuthenticated();
     }
     
     /**

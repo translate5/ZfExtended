@@ -235,8 +235,7 @@ class ZfExtended_Test_ApiHelper {
                 return;
             }
             else {
-                global $T5_LOGOUT_PATH;
-                $this->request($T5_LOGOUT_PATH);
+                $this->logout();
             }
         }
         
@@ -256,6 +255,15 @@ class ZfExtended_Test_ApiHelper {
 
         $this->authCookie = $response->sessionId;
         $this->authLogin = $login;
+    }
+    
+    /**
+     * Makes a request to the configured logout URL
+     */
+    public function logout() {
+        global $T5_LOGOUT_PATH;
+        $this->request($T5_LOGOUT_PATH);
+        $this->authLogin = null;
     }
     
     /**
@@ -358,6 +366,7 @@ class ZfExtended_Test_ApiHelper {
      * @param string $username one of the predefined users (testmanager, testlector, testtranslator)
      * @param string $state open, waiting, finished, as available by the workflow
      * @param string $role lector or translator, as available by the workflow
+     * @return stdClass taskuserassoc result 
      */
     public function addUser($username, $state = 'open', $role = 'lector') {
         $test = $this->testClass;
@@ -370,9 +379,10 @@ class ZfExtended_Test_ApiHelper {
                 "state" => $state,
                 "role" => $role,
         );
-        $this->requestJson('editor/taskuserassoc', 'POST', $p);
+        $json = $this->requestJson('editor/taskuserassoc', 'POST', $p);
         $resp = $this->getLastResponse();
         $test::assertEquals(200, $resp->getStatus(), 'User "'.$username.'" could not be added to test task '.$this->task->taskGuid.'! Body was: '.$resp->getBody());
+        return $json;
     }
     
     /**

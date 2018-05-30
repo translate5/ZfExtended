@@ -36,6 +36,7 @@ END LICENSE AND COPYRIGHT
 * @method string getRfc5646() getRfc5646()
 * @method int getLcid() getLcid()
 * @method int getId() getId()
+* @method string getIso3166Part1alpha2() getIso3166Part1alpha2()
 */
 abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract {
 
@@ -150,6 +151,16 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract {
         }
         return array_values($result);
     }
+    
+    /**
+     * Gibt die interne Sprach ID anhand der übergebenen Sprache im spezifizierten Typ zurück
+     * @param mixed $lang
+     * @param unknown_type $lang
+     */
+    public function getLangId($lang, $type = self::LANG_TYPE_RFC5646) {
+        $this->loadLang($lang, $type);
+        return $this->getId();
+    }
 
     /**
      * Gibt die interne Sprach ID (PK der Sprach Tabelle) zu einer LCID zurück
@@ -170,15 +181,25 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract {
         $this->loadByRfc5646($lang);
         return $this->getId();
     }
-
+    
     /**
-     * Gibt die interne Sprach ID anhand der übergebenen Sprache im spezifizierten Typ zurück
-     * @param mixed $lang
-     * @param unknown_type $lang
+     * Gibt die interne default Sublanguage zu einem Sprachkürzel nach RFC5646 zurück
+     * @param int $lang Sprachkürzel nach RFC5646, wie in Tabelle languages hinterlegt
+     * @return string sublanguage der gesuchten Sprache
      */
-    public function getLangId($lang, $type = self::LANG_TYPE_RFC5646) {
-        $this->loadLang($lang, $type);
-        return $this->getId();
+    public function getSublanguageByRfc5646($lang){
+        $this->loadByRfc5646($lang);
+        return $this->getSublanguage();
+    }
+    
+    /**
+     * Gibt die interne ISO_3166-1_alpha-2 zu einem Sprachkürzel nach RFC5646 zurück
+     * @param int $lang Sprachkürzel nach RFC5646, wie in Tabelle languages hinterlegt
+     * @return string ISO_3166-1_alpha-2 der gesuchten Sprache
+     */
+    public function getIso3166Part1alpha2ByRfc5646($lang){
+        $this->loadByRfc5646($lang);
+        return $this->getIso3166Part1alpha2();
     }
 
     /**
