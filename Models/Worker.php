@@ -59,6 +59,7 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
      * This constant values define the different worker-states
      * @var string
      */
+    const STATE_PREPARE = 'prepare';
     const STATE_SCHEDULED = 'scheduled';
     const STATE_WAITING = 'waiting';
     const STATE_RUNNING = 'running';
@@ -86,13 +87,35 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
     protected $parameters = null;
     
     /**
-     * Wake up a scheduled worker (set state from scheduled to waiting)
-     * if there are no other worker waiting or running with the given taskGuid
-     * TODO implement for waking up general workers without a $taskGuid
+     * Loads first worker of a specific worker for a specific task
+     * @param string $worker
      * @param string $taskGuid
-     * @param string $resourceName resourceName of the worker, which currently runs
+     * @return ZfExtended_Models_Worker
      */
-    public function wakeupScheduled($taskGuid, $resourceName) {
+    public function loadFirstOf($worker, $taskGuid) {
+        try {
+            $s = $this->db->select()
+            ->where('taskGuid = ?', $taskGuid)
+            ->where('worker = ?', $worker)
+            ->order('id ASC')
+            ->limit(1);
+            $row = $this->db->fetchRow($s);
+        } catch (Exception $e) {
+            $this->notFound('NotFound after other Error', $e);
+        }
+        if (!$row) {
+            $this->notFound(__CLASS__ . '#worker #taskGuid', $worker.', '.$taskGuid);
+        }
+        //load implies loading one Row, so use only the first row
+        $this->row = $row;
+        return $this;
+    }
+    
+    /**
+     * Wake up a scheduled worker (set state from scheduled to waiting)
+     * if there are no other worker waiting or running with the same taskGuid
+     */
+    public function wakeupScheduled() {
         // check if there are any worker waiting or running with this taskGuid
         $db = $this->db;
         $adapter = $db->getAdapter();
@@ -120,7 +143,7 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
                                     WHERE d2.dependency = ws.worker
                                        AND ws2.worker = d2.worker
                                        AND ws.taskGuid = ws2.taskGuid
-                                       AND ws.state IN (?, ?, ?)
+                                       AND ws.state IN (?, ?, ?, ?)
                                        AND ws2.id = w.id)
                             )
                     ORDER BY w.id ASC
@@ -130,8 +153,31 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
                 SET u.STATE = ?
                 WHERE u.id = s.id;'; 
         
-        $bindings = array(self::STATE_SCHEDULED, self::STATE_WAITING,self::STATE_RUNNING,self::STATE_SCHEDULED,self::STATE_WAITING);
+        $bindings = array(self::STATE_SCHEDULED, self::STATE_WAITING,self::STATE_RUNNING,self::STATE_SCHEDULED,self::STATE_PREPARE,self::STATE_WAITING);
         
+        $res = $adapter->query($sql, $bindings);
+    }
+    
+    /**
+     * sets the prepared workers of the same workergroup and taskGuid as the current one
+     */
+    public function schedulePrepared() {
+        // check if there are any worker waiting or running with this taskGuid
+        $db = $this->db;
+        $adapter = $db->getAdapter();
+        $taskGuid = $this->getTaskGuid();
+        $parentId = $this->getParentId();
+        if(empty($parentId)) {
+            $parentId = $this->getId();
+        }
+        $bindings = [self::STATE_SCHEDULED,self::STATE_PREPARE, $parentId, $parentId];
+        $sql = 'UPDATE `Zf_worker` SET `state` = ? ';
+        $sql .= 'WHERE `state` = ? ';
+        $sql .= 'AND (`id` = ? OR `parentId` = ?) ';
+        if(!empty($taskGuid)) {
+            $sql .= 'AND taskGuid = ? ';
+            $bindings[] = $taskGuid;
+        }
         $res = $adapter->query($sql, $bindings);
     }
     

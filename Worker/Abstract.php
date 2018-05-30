@@ -273,7 +273,7 @@ abstract class ZfExtended_Worker_Abstract {
      * Get a worker-instance from a worker-model
      * 
      * @param ZfExtended_Models_Worker $model
-     * @return mixed a concrete worker corresponding to the submittied worker-model; false if instance could not be initialized;
+     * @return ZfExtended_Worker_Abstract mixed a concrete worker corresponding to the submittied worker-model; false if instance could not be initialized;
      */
     static public function instanceByModel(ZfExtended_Models_Worker $model) {
         $instance = ZfExtended_Factory::get($model->getWorker());
@@ -324,11 +324,19 @@ abstract class ZfExtended_Worker_Abstract {
         $this->logit('queued with state '.$this->workerModel->getState());
         
         if($startNext) {
-            $this->wakeUpAndStartNextWorkers($this->workerModel->getTaskGuid());
+            $this->wakeUpAndStartNextWorkers();
             $this->emulateBlocking();
         }
         
         return $this->workerModel->getId();
+    }
+    
+    /**
+     * Schedules prepared workers of same taskGuid and workergroup as the current
+     */
+    public function schedulePrepared() {
+        $this->workerModel->schedulePrepared();
+        $this->wakeUpAndStartNextWorkers();
     }
     
     /**
@@ -440,7 +448,7 @@ abstract class ZfExtended_Worker_Abstract {
             $this->log->logException($this->workerException);
         }
         
-        $this->wakeUpAndStartNextWorkers($this->finishedWorker->getTaskGuid());
+        $this->wakeUpAndStartNextWorkers();
         return $result;
     }
     
@@ -457,7 +465,7 @@ abstract class ZfExtended_Worker_Abstract {
         
         $result = $this->_run();
         
-        $this->wakeUpAndStartNextWorkers($this->finishedWorker->getTaskGuid());
+        $this->wakeUpAndStartNextWorkers();
         
         if(!empty($this->workerException)) {
             if($this->workerException instanceof  Zend_Exception) {
@@ -535,8 +543,8 @@ abstract class ZfExtended_Worker_Abstract {
         }, $this->workerModel);
     }
     
-    protected function wakeUpAndStartNextWorkers($taskGuid) {
-        $this->workerModel->wakeupScheduled($taskGuid,  self::$resourceName);
+    protected function wakeUpAndStartNextWorkers() {
+        $this->workerModel->wakeupScheduled();
         $this->logit(__CLASS__.'::'.__FUNCTION__);
         $this->startWorkerQueue();
     }
