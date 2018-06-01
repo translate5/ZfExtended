@@ -30,7 +30,12 @@ END LICENSE AND COPYRIGHT
  */
 
 $session = new Zend_Session_Namespace();
-?><h1><?php echo (isset($this->heading))?$this->heading:$this->translate->_('Neues Passwort'); ?></h1><?php
+?>
+<article class="post">
+    <header>
+        <div class="title"><h2><?php echo (isset($this->heading))?$this->heading:$this->translate->_('Neues Passwort'); ?></h2></div>
+    </header>
+    <?php
 if(isset($this->message)): ?><p class="message"><?php echo $this->message;  ?></p><?php endif;
 if(count($this->form->getErrorMessages())>0){ ?>
     <ul class="errors">
@@ -45,3 +50,4 @@ if(count($this->form->getErrorMessages())>0){ ?>
 if(!$this->passwdResetInfo){
    echo $this->form;
 }
+?></article>
