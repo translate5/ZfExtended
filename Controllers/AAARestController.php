@@ -528,4 +528,17 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
        $e->setLogging(false); //in future ZfExtended_Log::LEVEL_INFO
        throw $e;
   }
+  
+  /***
+   * TODO: desc me
+   */
+  public function operationAction() {
+      $action = $this->getParam('operation');
+      $this->getAction();
+      $this->events->trigger($action.'Operation', $this, [
+          'entity' => $this->entity,
+          'params' => $this->getAllParams(),
+          'controller' => $this
+      ]);
+  }
 }
