@@ -439,7 +439,7 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
   }
 
   protected function decodePutData() {
-    $this->data = json_decode($this->_getParam('data'));
+      $this->data = json_decode($this->_getParam('data'));
   }
   
   /**

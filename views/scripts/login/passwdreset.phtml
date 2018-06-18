@@ -29,7 +29,11 @@ END LICENSE AND COPYRIGHT
  *
  */
 
-?><h1><?php echo $this->translate->_('Neues Passwort'); ?></h1><?php
+?>
+<article class="post">
+    <header>
+        <div class="title"><h2><?php echo $this->translate->_('Neues Passwort'); ?></h2></div>
+    </header><?php
 if(isset($this->message)): ?><p class="message"><?php echo $this->message;  ?></p><?php endif;
 if(count($this->form->getErrorMessages())>0){ ?>
     <ul class="errors">
@@ -42,4 +46,4 @@ if(count($this->form->getErrorMessages())>0){ ?>
     <?php
 }
 echo $this->form; ?>
-    <p><a href="<?php echo APPLICATION_RUNDIR; ?>/"><?php echo $this->translate->_('Zurück zur Startseite'); ?></a></p>
+<p><a href="<?php echo APPLICATION_RUNDIR; ?>/"><?php echo $this->translate->_('Zurück zur Startseite'); ?></a></p></article>
