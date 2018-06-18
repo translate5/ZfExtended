@@ -340,21 +340,6 @@ class ErrorController extends ZfExtended_Controllers_Action
         }
         $this->renderScript($this->_renderScript);
     }
-
-    /**
-     * Wird von JS im Falle eines JS-Fehlers getriggert und speist diesen Fehler
-     * in die Fehlerbehandlung ein
-     *
-     * @throws Zend_Exception
-     * @return void
-     */
-    public function jserrorAction(){
-        throw new Zend_Exception(
-                'Fehler im Javascript. Die folgende Meldung wurde vom JS übergeben: '.
-                $this->_request->getParam('jsError').
-                '  Content of $_SERVER had been: '.  print_r($_SERVER,true));
-    }
-
 }
 /**
  * Pseudo-Klasse zur Verwendung, falls Zend_Translate noch nicht initialisiert wurde.
