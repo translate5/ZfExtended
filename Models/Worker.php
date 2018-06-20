@@ -111,6 +111,31 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
         return $this;
     }
     
+    /***
+     * Load worker rows by given $worker, $state and $taskGuid
+     * 
+     * @param string $worker
+     * @param string $state
+     * @param string $taskGuid
+     * @return array|array
+     */
+    public function loadByState($worker,$state,$taskGuid) {
+        try{
+            $s=$this->db->select()
+            ->where('worker = ?',$worker)
+            ->where('state = ?',$state)
+            ->where('taskGuid = ?',$taskGuid)
+            ->order('id ASC');
+            $rows=$this->db->fetchAll($s);
+        } catch (Exception $e) {
+            $this->notFound('NotFound after other Error', $e);
+            return array();
+        }
+        if($rows->count()>0){
+            return $rows->toArray();
+        }
+        return array();
+    }
     /**
      * Wake up a scheduled worker (set state from scheduled to waiting)
      * if there are no other worker waiting or running with the same taskGuid
