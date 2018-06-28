@@ -36,6 +36,9 @@ END LICENSE AND COPYRIGHT
 ?>
 <?php
 foreach ($this->errors as $error) {
+    if(empty($error->_errorMessage)) {
+        continue;
+    }
     ?>
     <h2><?php echo $error->_errorMessage; ?></h2>
     <?php
