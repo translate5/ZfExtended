@@ -287,7 +287,7 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
             $this->_form = new ZfExtended_Zendoverwrites_Form('loginPasswdnew.ini');
             $this->_form->setTranslator($this->_translate);
             $md5Validator = new ZfExtended_Validate_Md5();
-            if(!$md5Validator->isValid($this->getRequest()->getParam('resetHash'))){
+            if(true || !$md5Validator->isValid($this->getRequest()->getParam('resetHash'))){
                 $this->passwdResetHashNotValid();
                 return;
             }
@@ -334,7 +334,7 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
         $this->_form = new ZfExtended_Zendoverwrites_Form('loginPasswdreset.ini');
         $this->_form->setTranslator($this->_translate);
         $this->view->errors = true;
-        $this->_form->addError('Der ResetHash oder die Browsersitzung ist nicht (mehr) gültig. Bitte fordern Sie über das nebenstehende Formular eine E-Mail mit einem neuen Link an.');
+        $this->_form->addError($this->_translate->_('Der ResetHash oder die Browsersitzung ist nicht (mehr) gültig. Bitte fordern Sie über das nebenstehende Formular eine E-Mail mit einem neuen Link an.'));
         $this->view->form = $this->_form;
         $this->render('passwdreset');
     }
