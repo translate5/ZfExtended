@@ -31,6 +31,12 @@ abstract class ZfExtended_Models_Entity_Abstract {
      * @var Zend_Db_Table_Abstract
      */
     public $db;
+    
+    /**
+     * @var Zend_Db_Table_Abstract
+     */
+    public $dbWritable;
+    
     /**
      * maps the Object Attributes (key) to the Row Field Names (value)
      * @var array
