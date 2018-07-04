@@ -168,6 +168,7 @@ class ZfExtended_Controller_Helper_General extends Zend_Controller_Action_Helper
      */
     public function natcasesortUtf($array)
     {
+        $clean_vals_arr = [];
         $original_keys_arr = array();
         $original_values_arr = array();
         $clean_keys_arr = array();
