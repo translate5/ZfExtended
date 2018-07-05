@@ -32,10 +32,6 @@ abstract class ZfExtended_Models_Entity_Abstract {
      */
     public $db;
     
-    /**
-     * @var Zend_Db_Table_Abstract
-     */
-    public $dbWritable;
     
     /**
      * maps the Object Attributes (key) to the Row Field Names (value)
@@ -46,6 +42,15 @@ abstract class ZfExtended_Models_Entity_Abstract {
      * @var Zend_Db_Table_Row_Abstract
      */
     protected $row;
+    
+    /**
+     * Additional table class used to save the data content in other table.
+     * Change the table with setTable($dbWritable) if the entity should be saved in the table defined
+     * in the $dbWritable
+     * @var Zend_Db_Table_Abstract
+     */
+    public $dbWritable;
+    
     /**
      * set the Model_Db_Classname
      * @var string
