@@ -287,7 +287,7 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
             $this->_form = new ZfExtended_Zendoverwrites_Form('loginPasswdnew.ini');
             $this->_form->setTranslator($this->_translate);
             $md5Validator = new ZfExtended_Validate_Md5();
-            if(true || !$md5Validator->isValid($this->getRequest()->getParam('resetHash'))){
+            if(!$md5Validator->isValid($this->getRequest()->getParam('resetHash'))){
                 $this->passwdResetHashNotValid();
                 return;
             }
