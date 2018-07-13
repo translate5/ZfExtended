@@ -89,6 +89,19 @@ class ZfExtended_Acl extends Zend_Acl {
     }
     
     /**
+     * Return all roles, not only the ones from the current module
+     * @return array
+     */
+    public function getAllRoles() {
+        $db = ZfExtended_Factory::get('ZfExtended_Models_Db_AclRules');
+        /* @var $db ZfExtended_Models_Db_AclRules */
+        $s = $db->select()
+        ->from($db->info($db::NAME), 'role')
+        ->distinct();
+        return array_column($db->fetchAll($s)->toArray(), 'role');
+    }
+    
+    /**
      * checks if one of the passed roles allows the resource / privelege
      *
      * @param  array     $roles
