@@ -194,25 +194,42 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implement
      * loads all users without the passwd field
      * with role $role
      * @param string - acl role
-     * @param id - the parent id which the select should check
+     * @param parentIdFilter - the parent id which the select should check
      * @return array
      */
-    public function loadAllByRole($role,$parendIdFilter=false) {
+    public function loadAllByRole($role, $parentIdFilter = false) {
         $s = $this->_loadAll();
-        
+        $this->addByRoleSql($s, $role, $parentIdFilter);
+        return $this->loadFilterdCustom($s);
+    }
+    
+    /**
+     * loads all users without the passwd field
+     * with role $role
+     * @param string - acl role
+     * @param parentIdFilter - the parent id which the select should check
+     * @return array
+     */
+    public function getTotalByRole($role, $parentIdFilter = false) {
+        $s = $this->_loadAll();
+        $s->reset($s::COLUMNS);
+        $s->reset($s::FROM);
+        $this->addByRoleSql($s, $role, $parentIdFilter);
+        return $this->computeTotalCount($s);
+    }
+    
+    protected function addByRoleSql($s, $role, $parentIdFilter) {
         $adapter = $this->db->getAdapter();
         $sLike = sprintf('roles like %s OR roles like %s OR roles like %s OR roles=%s',
             $adapter->quote($role.',%'),
             $adapter->quote('%,'.$role.',%'),
             $adapter->quote('%,'.$role),
             $adapter->quote($role)
-        );
-        if($parendIdFilter !== false){
-            $s->where('parentIds like "%,'.$parendIdFilter.',%" OR id='.$adapter->quote($parendIdFilter));
+            );
+        if($parentIdFilter !== false){
+            $s->where('parentIds like "%,'.$parentIdFilter.',%" OR id='.$adapter->quote($parentIdFilter));
         }
         $s->where($sLike);
-        
-        return $this->loadFilterdCustom($s);
     }
     
     /**
