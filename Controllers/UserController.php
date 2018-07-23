@@ -82,7 +82,7 @@ class ZfExtended_UserController extends ZfExtended_RestController {
             $parentId = $userSession->data->id;
         }
         $this->view->rows = $this->entity->loadAllByRole('pm', $parentId);
-        $this->view->total = $this->entity->getTotalCount();
+        $this->view->total = $this->entity->getTotalByRole('pm', $parentId);
         $this->csvToArray();
     }
     
