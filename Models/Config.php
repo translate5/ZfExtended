@@ -54,6 +54,36 @@ END LICENSE AND COPYRIGHT
  * The conversion from DB Storage Format to Zend Config Format is done by ZfExtended_Resource_DbConfig
  */
 class ZfExtended_Models_Config extends ZfExtended_Models_Entity_Abstract {
-  protected $dbInstanceClass = 'ZfExtended_Models_Db_Config';
-  //protected $validatorInstanceClass = 'ZfExtended_Models_Validator_User';
+    protected $dbInstanceClass = 'ZfExtended_Models_Db_Config';
+    //protected $validatorInstanceClass = 'ZfExtended_Models_Validator_User';
+  
+    /**
+     * Sets the given configuration value for the configuration identified via the given name
+     * loads internally the configuration instance so that the instance is a fully loaded instance then   
+     * @param string $name the configuration name
+     * @param string $value the value to be set
+     */
+    public function update($name, $value) {
+        $this->db->update(['value' => $value], ['name = ?' => $name]);
+        $this->loadByName($name);
+        return $this;
+    }
+    
+    /**
+     * loads the config entry to the given name
+     * @param string $name
+     */
+    public function loadByName($name){
+        try {
+            $s = $this->db->select()->where('name = ?', $name);
+            $row = $this->db->fetchRow($s);
+        } catch (Exception $e) {
+            $this->notFound('NotFound after other Error', $e);
+        }
+        if (!$row) {
+            $this->notFound(__CLASS__ . '#name', $name);
+        }
+        //load implies loading one Row, so use only the first row
+        $this->row = $row;
+    }
 }

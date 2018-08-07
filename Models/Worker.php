@@ -408,7 +408,7 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
         // first clean all 'archived' worker (state=done and endtim older than 1 HOUR)
         $where = array();
         $where[] = $this->db->getAdapter()->quoteInto('state = ?', self::STATE_DONE);
-        $where[] = $this->db->getAdapter()->quoteInto('endtime < ?', new Zend_Db_Expr('NOW() - INTERVAL 1 HOUR'));
+        $where[] = $this->db->getAdapter()->quoteInto('endtime < ?', new Zend_Db_Expr('NOW() - INTERVAL 2 HOUR'));
         $this->db->delete($where);
         
         // TODO: do something with all crashed worker (maxRuntime expired)
