@@ -32,7 +32,7 @@ VALUES ('runtimeOptions.garbageCollector.invocation', '1', 'app', 'system', 'req
 CREATE TABLE `Zf_memcache` (
   `id` varchar(255) NOT NULL,
   `content` VARCHAR(4096) NULL,
-  `lastModified` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NULL,
+  `lastModified` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NULL,
   `expire` DATETIME NULL,
   PRIMARY KEY (`id`),
   INDEX (`id`, `expire`)
