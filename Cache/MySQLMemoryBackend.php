@@ -104,12 +104,9 @@ class ZfExtended_Cache_MySQLMemoryBackend extends Zend_Cache_Backend implements 
         $sql .= ' `content` = if(`lastModified` < ?, VALUES(`content`), `content`)';
         $res = $this->db->query($sql, [$id, $value, $elapsed, $elapsed]);
         $res2 = $this->db->query('SELECT * FROM Zf_memcache WHERE id = ?', [$id]);
-        error_log(print_r($res2->fetchObject(),1));
         if($res && $res->rowCount() > 0) {
-            error_log("UPDATED ".$res->rowCount());
             return true;
         }
-        error_log("NOT UPDATED");
         return false;
     }
     
