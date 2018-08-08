@@ -1,0 +1,112 @@
+<?php
+/*
+START LICENSE AND COPYRIGHT
+
+ This file is part of ZfExtended library
+ 
+ Copyright (c) 2013 - 2017 Marc Mittag; MittagQI - Quality Informatics;  All rights reserved.
+
+ Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
+
+ This file may be used under the terms of the GNU LESSER GENERAL PUBLIC LICENSE version 3
+ as published by the Free Software Foundation and appearing in the file lgpl3-license.txt 
+ included in the packaging of this file.  Please review the following information 
+ to ensure the GNU LESSER GENERAL PUBLIC LICENSE version 3.0 requirements will be met:
+https://www.gnu.org/licenses/lgpl-3.0.txt
+
+ @copyright  Marc Mittag, MittagQI - Quality Informatics
+ @author     MittagQI - Quality Informatics
+ @license    GNU LESSER GENERAL PUBLIC LICENSE version 3
+			 https://www.gnu.org/licenses/lgpl-3.0.txt
+
+END LICENSE AND COPYRIGHT
+*/
+
+/**
+ * This resource bundles recurring jobs for cleaning up stuff in the application
+ */
+class ZfExtended_Resource_GarbageCollector extends Zend_Application_Resource_ResourceAbstract {
+    const ORIGIN_CRON = 'cron';
+    const ORIGIN_REQUEST = 'request'; 
+    
+    /**
+     * @var Zend_Config
+     */
+    protected $config;
+    
+    public function init() {
+        $bootstrap = $this->getBootstrap();
+        $bootstrap->bootstrap('db');
+        $bootstrap->bootstrap('ZfExtended_Resource_ErrorHandler');
+        $bootstrap->bootstrap('ZfExtended_Resource_DbConfig');
+        
+        $cache = Zend_Cache::factory('Core', new ZfExtended_Cache_MySQLMemoryBackend());
+        $backend = $cache->getBackend();
+        $this->config = Zend_Registry::get('config');
+        /* @var $backend ZfExtended_Cache_MySQLMemoryBackend */
+        $interval = 15 * 60;
+        $key = 'ZfExtended_Resource_GarbageCollector::cleanByInterval';
+        //using cache backend as time based mutex to ensure that cleanup is not done more often as each 15 minutes:
+        if($this->checkOrigin(self::ORIGIN_REQUEST) && $backend->updateIfOlderThen($key, $_SERVER['REQUEST_URI'], $interval)) {
+            $this->cleanUp(self::ORIGIN_REQUEST);
+        }
+    }
+    
+    /**
+     * Start garbage collection, $callOrigin is a string to identify from where cleanUp was called
+     * @param string $callOrigin
+     */
+    public function cleanUp($callOrigin) {
+        //if given origin is allowed via config we trigger garbage collection
+        if(!$this->checkOrigin($callOrigin)) {
+            return;
+        }
+        
+        //start zfextended stuff to be cleaned
+        $this->cleanUpWorker();
+        $this->cleanUpSession();
+        
+        //trigger event for module specific clean up
+        $events = ZfExtended_Factory::get('ZfExtended_EventManager', array(get_class($this)));
+        /* @var $events ZfExtended_EventManager */
+        $events->trigger(__FUNCTION__, $this);
+    }
+    
+    /**
+     * checks if the given call origin is allowed to start garbage collection
+     * reconfigures the garbageCollector invocation to type "cron" if called once via cron
+     * @param string $callOrigin
+     * @return boolean true if origin matches the configured one
+     */
+    protected function checkOrigin($callOrigin) {
+        if($this->config->runtimeOptions->garbageCollector) {
+            $configuredInvocation = $this->config->runtimeOptions->garbageCollector->invocation;
+        }
+        else {
+            $configuredInvocation = false;
+        }
+        
+        //if origin is already cron, or if a origin different as cron is given: we return true if origin == allowed invocation origin
+        if($configuredInvocation == self::ORIGIN_CRON || $callOrigin != self::ORIGIN_CRON) {
+            return $configuredInvocation == $callOrigin;
+        }
+        //if the config value was not cron but the cleanup was triggered via cron, we set the config to cron and return true
+        $config = ZfExtended_Factory::get('ZfExtended_Models_Config');
+        /* @var $config ZfExtended_Models_Config */
+        $config->update('runtimeOptions.garbageCollector.invocation', self::ORIGIN_CRON);
+        return true;
+    }
+    
+    protected function cleanUpWorker() {
+        //still using old clean up invocation for the done workers....
+        //FIXME what should be implemented here is a clean up for defunct workers!
+    }
+    
+    protected function cleanUpSession() {
+        $lifetime = $this->config->resources->ZfExtended_Resource_Session->garbageCollectorLifetime;
+        $sessionTable = new ZfExtended_Models_Db_Session();
+        $sessionTable->delete('modified < '.(string)(time()-$lifetime));
+        $SessionMapInternalUniqIdTable = new ZfExtended_Models_Db_SessionMapInternalUniqId();
+        $SessionMapInternalUniqIdTable->delete('modified < '.(string)(time()-$lifetime));
+    }
+}

@@ -150,7 +150,12 @@ class ZfExtended_Test_ApiHelper {
             $this->filesToAdd = array();
         }
         
-        $addParamsMethod = $method == 'POST' ? 'setParameterPost' : 'setParameterGet';
+        if($method == 'POST' || $method == 'PUT') {
+            $addParamsMethod = 'setParameterPost';
+        }
+        else {
+            $addParamsMethod = 'setParameterGet';
+        }
         
         if(!empty($parameters)) {
             foreach($parameters as $key => $value) {
@@ -402,6 +407,10 @@ class ZfExtended_Test_ApiHelper {
         }
         if(empty($task['wordCount'])) {
             $task['wordCount'] = 666;
+        }
+        //currently all test tasks are started automatically, no test of the /editor/task/ID/import URL is implemented!
+        if(!isset($task['autoStartImport'])) {
+            $task['autoStartImport'] = 1;
         }
     }
     

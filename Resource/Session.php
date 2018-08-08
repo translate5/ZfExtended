@@ -61,9 +61,10 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
         $bootstrap = $this->getBootstrap();
         $bootstrap->bootstrap('db');
         $bootstrap->bootstrap('ZfExtended_Resource_ErrorHandler');
+        $bootstrap->bootstrap('ZfExtended_Resource_DbConfig');
+        $bootstrap->bootstrap('ZfExtended_Resource_GarbageCollector');
         $config = new Zend_config($bootstrap->getOptions());
         $resconf = $config->resources->ZfExtended_Resource_Session->toArray();
-        $this->garbageCollector($resconf['garbageCollectorLifetime']);
         unset($resconf['garbageCollectorLifetime']); //Zend_Session does not know this value! 
         Zend_Session::setOptions($resconf);
         //im if: wichtiger workaround für swfuploader, welcher in awesomeuploader 
@@ -152,17 +153,5 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
             $row->setModified(time());
             $row->save();
         }
-    }
-    /**
-     * Löscht verfallene Sessions aus der Session-Tabelle
-     * 
-     * - Einbindung von Session-Models ohne ZfExtended_Factory, da die Factory eine initialisierte Session benötigt
-     * @param integer $lifetime in seconds
-     */
-    private function garbageCollector($lifetime){
-        $sessionTable = new ZfExtended_Models_Db_Session();
-        $sessionTable->delete('modified < '.(string)(time()-$lifetime));
-        $SessionMapInternalUniqIdTable = new ZfExtended_Models_Db_SessionMapInternalUniqId();
-        $SessionMapInternalUniqIdTable->delete('modified < '.(string)(time()-$lifetime));
     }
 }
