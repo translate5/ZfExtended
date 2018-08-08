@@ -403,6 +403,10 @@ class ZfExtended_Test_ApiHelper {
         if(empty($task['wordCount'])) {
             $task['wordCount'] = 666;
         }
+        //currently all test tasks are started automatically, no test of the /editor/task/ID/import URL is implemented!
+        if(!isset($task['autoStartImport'])) {
+            $task['autoStartImport'] = 1;
+        }
     }
     
     /**
