@@ -48,7 +48,6 @@ class ZfExtended_Resource_AddHelper extends Zend_Application_Resource_ResourceAb
     public function init()
     {
         $bootstrap = $this->getBootstrap();
-        $bootstrap->bootstrap('ZfExtended_Resource_PreFillSession');
         $this->_session = new Zend_Session_Namespace();
         if(!isset($this->_session->zfExtendedPaths2Add[APPLICATION_MODULE])){
             $this->_pathsToAdd = array();
