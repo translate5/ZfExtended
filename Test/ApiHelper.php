@@ -150,7 +150,12 @@ class ZfExtended_Test_ApiHelper {
             $this->filesToAdd = array();
         }
         
-        $addParamsMethod = $method == 'POST' ? 'setParameterPost' : 'setParameterGet';
+        if($method == 'POST' || $method == 'PUT') {
+            $addParamsMethod = 'setParameterPost';
+        }
+        else {
+            $addParamsMethod = 'setParameterGet';
+        }
         
         if(!empty($parameters)) {
             foreach($parameters as $key => $value) {
