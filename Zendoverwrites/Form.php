@@ -70,15 +70,14 @@ class  ZfExtended_Zendoverwrites_Form extends Zend_Form
      */
     public function init()
     {
+        $config = Zend_Registry::get('config');
+        $libraries = $config->runtimeOptions->libraries->order->toArray();
         $module = Zend_Registry::get('module');
         $this->addElementPrefixPath( 'Views_', APPLICATION_PATH . '/modules/'.$module.'/views' );
-        $session = new Zend_Session_Namespace();
-        foreach($session->libraryNames as $library){
-            $this->addElementPrefixPath( $library.'_', APPLICATION_PATH . '/../library/'.$library );
-        }
         $ini_paths = array();
         $ini_paths[] = APPLICATION_PATH.'/modules/'.$module.'/configs/forms/' . $this->_form;
-        foreach($session->libraryNames as $library){
+        foreach($libraries as $library){
+            $this->addElementPrefixPath( $library.'_', APPLICATION_PATH . '/../library/'.$library );
             $ini_paths[] = APPLICATION_PATH. '/../library/'.$library.'/configs/forms/' . $this->_form;
         }
         $ini_path = false;
