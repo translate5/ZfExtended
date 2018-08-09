@@ -65,11 +65,27 @@ class ZfExtended_Resource_GarbageCollector extends Zend_Application_Resource_Res
         //start zfextended stuff to be cleaned
         $this->cleanUpWorker();
         $this->cleanUpSession();
+
+        //start clean up stuff in other parts of the application
+        $triggerEvents = function() {
+            //trigger event for module specific clean up
+            $events = ZfExtended_Factory::get('ZfExtended_EventManager', array(get_class($this)));
+            /* @var $events ZfExtended_EventManager */
+            $events->trigger(__FUNCTION__, $this);
+        };
         
-        //trigger event for module specific clean up
-        $events = ZfExtended_Factory::get('ZfExtended_EventManager', array(get_class($this)));
-        /* @var $events ZfExtended_EventManager */
-        $events->trigger(__FUNCTION__, $this);
+        //if called directly via the self::init method here, we have to trigger the events to a later point in the application run.
+        // since self::init call is before the event binding in later processed module Bootstraps 
+        // we do that by adding the GarbageCollection Controller plugin - only if needed/triggered
+        if($callOrigin == self::ORIGIN_REQUEST) {
+            $plugin = new ZfExtended_Controllers_Plugins_GarbageCollector($triggerEvents);
+            $front = Zend_Controller_Front::getInstance();
+            $front->registerPlugin($plugin);
+        }
+        else {
+            //in cron call, we can trigger events directly
+            $triggerEvents();
+        }
     }
     
     /**
