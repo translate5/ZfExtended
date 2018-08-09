@@ -71,7 +71,7 @@ class ZfExtended_Resource_GarbageCollector extends Zend_Application_Resource_Res
             //trigger event for module specific clean up
             $events = ZfExtended_Factory::get('ZfExtended_EventManager', array(get_class($this)));
             /* @var $events ZfExtended_EventManager */
-            $events->trigger(__FUNCTION__, $this);
+            $events->trigger('cleanUp', $this);
         };
         
         //if called directly via the self::init method here, we have to trigger the events to a later point in the application run.
