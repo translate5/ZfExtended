@@ -144,11 +144,12 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
     private function setInternalSessionUniqId(){
         $session = new Zend_Session_Namespace();
         if(!isset($session->internalSessionUniqId)){
-            $session->internalSessionUniqId =  md5(uniqid(__FUNCTION__, true));
+            $sessionId = Zend_Session::getId();
+            $session->internalSessionUniqId =  md5($sessionId . uniqid(__FUNCTION__, true));
             $row = ZfExtended_Factory::get('ZfExtended_Models_Entity',
                         array('ZfExtended_Models_Db_SessionMapInternalUniqId',
                             array()));
-            $row->setSession_id(Zend_Session::getId());
+            $row->setSession_id($sessionId);
             $row->setInternalSessionUniqId($session->internalSessionUniqId);
             $row->setModified(time());
             $row->save();
