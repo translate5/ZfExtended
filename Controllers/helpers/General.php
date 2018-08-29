@@ -155,6 +155,7 @@ class ZfExtended_Controller_Helper_General extends Zend_Controller_Action_Helper
         // Delete the information from the session
         $auth->clearIdentity();
         Zend_Session::destroy(TRUE);
+        Zend_Registry::set('logoutDeletedSessionId', ['sessionId' => $sessionId, 'internalSessionUniqId' => $internalSessionUniqId]);
     }
   /**
      * Sortiert ein Array in natürlicher Reihenfolge nach Werten unter Berücksichtigung von Sonderzeichen

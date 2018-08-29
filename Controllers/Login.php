@@ -234,8 +234,8 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
         Zend_Layout::getMvcInstance()->disableLayout();
 
         $this->doOnLogout();
-        
         $this->_helper->general->logoutUser();
+        $this->postDispatch(); //trigger after action events before redirecting
         if($this->getRequest()->getParam('redirect', true)){
             header('Location: '.APPLICATION_RUNDIR.'/');
             exit();
