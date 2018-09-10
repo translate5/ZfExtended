@@ -520,6 +520,7 @@ abstract class ZfExtended_Worker_Abstract {
             $this->finishedWorker = clone $this->workerModel;
             $this->workerModel->save();
         } catch(Exception $workException) {
+            $this->reconnectDb();
             $result = false;
             $this->workerModel->setState(ZfExtended_Models_Worker::STATE_DEFUNCT);
             $this->workerModel->save();
@@ -528,6 +529,19 @@ abstract class ZfExtended_Worker_Abstract {
         }
         
         return $result;
+    }
+    
+    /**
+     * if worker exception was destroying DB connection on DB side
+     * (for example violating max_allowed_packet or so), each next DB connection would trigger a mysql gone away
+     * to prevent that we force a reconnect in case of error
+     * Sadly this solves the problems only partly, since the reconnect reconnects the connection here,
+     * but not for later connections in this request, why ever...
+     */
+    protected function reconnectDb() {
+        $db = $this->workerModel->db->getAdapter();
+        $db->closeConnection();
+        $db->getConnection();
     }
     
     /**
