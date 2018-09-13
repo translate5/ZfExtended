@@ -285,4 +285,39 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract {
         }
         return $retval;
     }
+    
+    /***
+     * Search languages by given search string.
+     * The search will provide any match on langName field.
+     * 
+     * @param string $searchString
+     * @return array|array
+     */
+    public function search($searchString,$fields=array()) {
+        $s = $this->db->select();
+        if(!empty($fields)){
+            $s->from($this->tableName,$fields);
+        }
+        $s->where('lower(langName) LIKE lower(?)','%'.$searchString.'%');
+        return $this->db->fetchAll($s)->toArray();
+    }
+    
+    /***
+     * Load all languages where the return array will be with $key(lek_languages field) as key and $value(lek_languages field) as value
+     *  
+     * @param string $key
+     * @param string $value
+     * @return array
+     */
+    public function loadAllKeyValueCustom($key,$value){
+        $rfcToIsoLanguage=array();
+        if(!isset($key) || !isset($value)){
+            return $rfcToIsoLanguage;
+        }
+        $lngs=$this->loadAll();
+        foreach($lngs as $l){
+            $rfcToIsoLanguage[$l[$key]]=$l[$value];
+        }
+        return $rfcToIsoLanguage;
+    }
 }
