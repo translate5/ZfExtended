@@ -65,7 +65,10 @@ class ZfExtended_Resource_GarbageCollector extends Zend_Application_Resource_Res
         //start zfextended stuff to be cleaned
         $this->cleanUpWorker();
         $this->cleanUpSession();
-
+        
+        // cleanup chache (Zf_memcache)
+        $this->cleanUpCache();
+        
         //start clean up stuff in other parts of the application
         $triggerEvents = function() {
             //trigger event for module specific clean up
@@ -124,5 +127,13 @@ class ZfExtended_Resource_GarbageCollector extends Zend_Application_Resource_Res
         $sessionTable->delete('modified < '.(string)(time()-$lifetime));
         $SessionMapInternalUniqIdTable = new ZfExtended_Models_Db_SessionMapInternalUniqId();
         $SessionMapInternalUniqIdTable->delete('modified < '.(string)(time()-$lifetime));
+    }
+    
+    /**
+     * cleanup chache (DB: Zf_memcache)
+     */
+    protected function cleanUpCache() {
+        $cache = Zend_Cache::factory('Core', new ZfExtended_Cache_MySQLMemoryBackend());
+        $cache->clean('old');
     }
 }

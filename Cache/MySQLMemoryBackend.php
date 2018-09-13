@@ -258,4 +258,20 @@ class ZfExtended_Cache_MySQLMemoryBackend extends Zend_Cache_Backend implements 
         }
         return false;
     }
+    
+    /**
+     * Returns all rows where the given idPart is in the id.
+     * @param  string  $idPart Part of cache id
+     * @return array|false
+     */
+    public function getAllForPartOfId (string $idPart)
+    {
+        $sql = 'SELECT * FROM `Zf_memcache` WHERE `id` LIKE ?';
+        $params = ["%$idPart%"];
+        $res = $this->db->query($sql, $params);
+        if($res && $res->rowCount() > 0) {
+            return $res->fetchAll();
+        }
+        return false;
+    }
 }
