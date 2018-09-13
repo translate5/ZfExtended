@@ -345,8 +345,8 @@ class ZfExtended_Test_ApiHelper {
             $config = $this->requestJson('editor/config', 'GET', array(
                 'filter' => '[{"type":"string","value":"'.$name.'","property":"name","operator":"like"}]',
             ));
-            $test::assertCount(1, $config);
-            $test::assertEquals($value, $config[0]->value);
+            $test::assertCount(1, $config, 'No Config entry for config "'.$name.'" found in instance config!');
+            $test::assertEquals($value, $config[0]->value, 'Config '.$name.' in instance config is not as expected: ');
         }
     }
     
