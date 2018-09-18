@@ -155,6 +155,7 @@ class ZfExtended_Cache_MySQLMemoryBackend extends Zend_Cache_Backend implements 
         $expire = date(DATE_ISO8601, $expire);
         $this->db->query('DELETE FROM Zf_memcache WHERE id = ?', [$id]);
         $sql = 'INSERT INTO Zf_memcache (id, content, lastModified, expire) VALUES (?, ?, ?, ?)';
+        $sql .= ' ON DUPLICATE KEY UPDATE `content` = VALUES(`content`), `lastModified` = VALUES(`lastModified`),`expire` = VALUES(`expire`)';
         $res = $this->db->query($sql, [$id, $data, $mktime, $expire]);
         if (!$res) {
             $this->_log("ZfExtended_Cache_MySQLMemoryBackend::save() : impossible to store the cache id=$id");
