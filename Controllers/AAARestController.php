@@ -123,12 +123,13 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
    */
   public function init() {
       $this->entity = ZfExtended_Factory::get($this->entityClass);
-      $this->handleLimit();
-      $this->handleFilterAndSort();
-      $this->initRestControllerSpecific();
       $this->acl = ZfExtended_Acl::getInstance();
+      $this->initRestControllerSpecific();
   }
   
+  /**
+   * inits all generally needed stuff for restcontrollers beside entity handling
+   */
   protected function initRestControllerSpecific() {
       $this->_helper->viewRenderer->setNoRender(true);
       $this->_helper->layout->disableLayout();
@@ -154,9 +155,13 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
   }
   
   /**
+   * inits sorting and filtering
+   * handels maintenance
    * triggers event "before<Controllername>Action"
    */
    public function preDispatch() {
+       $this->handleLimit();
+       $this->prepareFilterAndSort();
        $this->displayMaintenance();
        $this->beforeActionEvent($this->_request->getActionName());
    }
@@ -231,6 +236,10 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
    * handles given limit parameters and applies them to the entity
    */
   protected function handleLimit() {
+      if(empty($this->entity)) {
+          //instance without entity
+          return;
+      }
     $offset = $this->offset = $this->_getParam('start');
     $limit = $this->_getParam('limit');
     settype($offset, 'integer');
@@ -242,7 +251,11 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
    * handles given filter and sort parameters and applies them to the entity
    * actual using fixed ExtJS formatted Parameters
    */
-  protected function handleFilterAndSort() {
+  protected function prepareFilterAndSort() {
+      if(empty($this->entity)) {
+          //instance without entity
+          return;
+      }
     //Der RestController entscheidet anhand der Konfiguration und/oder
     //der Client Anfrage in welchem Format die Filter und Sortierungsinfos kommen.
     //Aktuell gibt es nur das ExtJS Format, sollte sich das je ändern, muss die Instanzieriungs Logik an dieser Stelle geändert
@@ -262,7 +275,7 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
     $filter->setMappings($this->_sortColMap, $this->_filterTypeMap);
     $this->entity->filterAndSort($filter);
   }
-
+  
   /**
    * wraps REST Exception Handling around the called Actions
    * 
