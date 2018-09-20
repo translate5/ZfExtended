@@ -42,9 +42,10 @@ class ZfExtended_ConfigController extends ZfExtended_RestController {
         $iniOptions = $this->getInvokeArg('bootstrap')->getApplication()->getOptions();
         parent::indexAction();
         $rows = $this->view->rows;
-        foreach($rows as $row) {
+        foreach($rows as &$row) {
             $this->mergeWithIni($iniOptions, explode('.', $row['name']), $row);
         }
+        $this->view->rows = $rows;
     }
     
     /**
@@ -55,7 +56,6 @@ class ZfExtended_ConfigController extends ZfExtended_RestController {
      */
     protected function mergeWithIni(array $root, array $path, array &$row) {
         $row['origin'] = 'db';
-        $row['dbValue'] = null;
         $part = array_shift($path);
         if(!isset($root[$part])) {
             return;
