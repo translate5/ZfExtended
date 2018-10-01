@@ -155,6 +155,7 @@ class ZfExtended_Cache_MySQLMemoryBackend extends Zend_Cache_Backend implements 
         $expire = date(DATE_ISO8601, $expire);
         $this->db->query('DELETE FROM Zf_memcache WHERE id = ?', [$id]);
         $sql = 'INSERT INTO Zf_memcache (id, content, lastModified, expire) VALUES (?, ?, ?, ?)';
+        $sql .= ' ON DUPLICATE KEY UPDATE `content` = VALUES(`content`), `lastModified` = VALUES(`lastModified`),`expire` = VALUES(`expire`)';
         $res = $this->db->query($sql, [$id, $data, $mktime, $expire]);
         if (!$res) {
             $this->_log("ZfExtended_Cache_MySQLMemoryBackend::save() : impossible to store the cache id=$id");
@@ -255,6 +256,22 @@ class ZfExtended_Cache_MySQLMemoryBackend extends Zend_Cache_Backend implements 
                 return $this->db->query('DELETE FROM Zf_memcache WHERE expire>0 AND expire <= ?', [$mktime]);
             default:
                 break;
+        }
+        return false;
+    }
+    
+    /**
+     * Returns all rows where the given idPart is in the id.
+     * @param  string  $idPart Part of cache id
+     * @return array|false
+     */
+    public function getAllForPartOfId (string $idPart)
+    {
+        $sql = 'SELECT * FROM `Zf_memcache` WHERE `id` LIKE ?';
+        $params = ["%$idPart%"];
+        $res = $this->db->query($sql, $params);
+        if($res && $res->rowCount() > 0) {
+            return $res->fetchAll();
         }
         return false;
     }
