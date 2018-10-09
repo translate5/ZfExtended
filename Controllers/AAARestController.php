@@ -236,7 +236,7 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
    * handles given limit parameters and applies them to the entity
    */
   protected function handleLimit() {
-      if(empty($this->entity)) {
+      if(empty($this->entity) || !$this->entity instanceof ZfExtended_Models_Entity_Abstract) {
           //instance without entity
           return;
       }
@@ -252,7 +252,7 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
    * actual using fixed ExtJS formatted Parameters
    */
   protected function prepareFilterAndSort() {
-      if(empty($this->entity)) {
+      if(empty($this->entity)|| !$this->entity instanceof ZfExtended_Models_Entity_Abstract) {
           //instance without entity
           return;
       }
