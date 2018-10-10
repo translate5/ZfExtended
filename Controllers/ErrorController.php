@@ -312,13 +312,10 @@ class ErrorController extends ZfExtended_Controllers_Action
      */
     public function errorAction()
     {
+        $logger = Zend_Registry::get('logger');
+        /* @var $logger ZfExtended_Logger */
         $highestError = $this->getErrorWithHighesErrorCode();
         $loggingDisabled = (($this->_exception instanceof ZfExtended_Exception) && ! $this->_exception->isLoggingEnabled());
-        
-        //TODO intermediate implementation of log levels, overriding isLoggingEnabled
-        if(isset($this->_exception->logLevel)) {
-            $loggingDisabled = $this->_exception->logLevel > ZfExtended_Log::LEVEL_WARN;
-        }
         
         if($loggingDisabled){
             //do nothing here
@@ -330,7 +327,7 @@ class ErrorController extends ZfExtended_Controllers_Action
             $this->_log->logError($highestError->_errorMessage,  $this->buildErrorCollectLogLongMessage());
         }
         else{
-            $this->_log->logException($this->_exception);
+            $logger->exception($this->_exception);
         }
         $this->getResponse()->setHttpResponseCode($highestError->_errorCode);
         //ExtJS does not parse the HTTP Status well on file uploads. 

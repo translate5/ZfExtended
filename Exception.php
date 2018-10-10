@@ -24,7 +24,13 @@ END LICENSE AND COPYRIGHT
 
 class ZfExtended_Exception extends Zend_Exception {
     /**
-     *
+     * the error/event level of this exception (how "important" that error is)
+     * By default all Exceptions are of level error
+     * @var integer
+     */
+    protected $level = ZfExtended_Logger::LEVEL_ERROR;
+    
+    /**
      * @var ZfExtended_Zendoverwrites_Translate 
      */
     protected $_translate;
@@ -137,6 +143,14 @@ class ZfExtended_Exception extends Zend_Exception {
      */
     public function getOrigin() {
         return $this->origin;
+    }
+    
+    /**
+     * return the error/event level of this exception (how "important" that error is)
+     * @return integer
+     */
+    public function getLevel() {
+        return $this->level;
     }
     
     /**
