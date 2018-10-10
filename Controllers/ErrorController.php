@@ -23,7 +23,7 @@ END LICENSE AND COPYRIGHT
 */
 
 /**
- * Schreibt das Errorlog und versendet Mail an Admin bei Fehler, falls runtimeOptions.errorCollect = 1 via application.ini oder Zend_Registry gesetzt wurde
+ * Schreibt das Errorlog und versendet Mail an Admin bei Fehler
  *
  * - wenn $this->_session->runtimeOptions->showErrorsInBrowser auf 1, wird die Fehlermeldung mit trace im
  *   Browser angezeigt, sonst nur eine allgemein Fehlermeldung mit Kontaktdaten
@@ -50,10 +50,6 @@ class ErrorController extends ZfExtended_Controllers_Action
      * @var ZfExtended_Zendoverwrites_Translate
      */
     protected $_translate;
-    /**
-     * @var boolean Definiert, ob der ErrorController durch einen errorCollect (true) oder durch eine ErrorException aufgerufen wurde (false)
-     */
-    protected $_errorCollect = false;
     /**
      * @var array
      */
@@ -135,20 +131,12 @@ class ErrorController extends ZfExtended_Controllers_Action
         try {
             $config = Zend_Registry::get('config');
             $this->_showErrorsInBrowser = !empty($config->runtimeOptions->showErrorsInBrowser);
-            if(isset($config->runtimeOptions->errorCollect)){
-                $this->_errorCollect = Zend_Registry::get('errorCollect');
-            }
         }
         catch (Exception $e) {
         }
         $this->_translate = ZfExtended_Zendoverwrites_Translate::getInstance();
         $this->_log = ZfExtended_Factory::get('ZfExtended_Log');
-        if($this->_errorCollect){
-            $this->errorcollectInit();
-        }
-        else{
-            $this->exceptionInit();
-        }
+        $this->exceptionInit();
         if(count($this->_errors)==0){
             throw new Zend_Exception('ErrorController ausgeführt, aber keine Fehler übergeben.');
         }
@@ -165,20 +153,6 @@ class ErrorController extends ZfExtended_Controllers_Action
                 $this->_errors[$key]->_errorCode = 500;
             }
         }
-    }
-    /**
-     * Initialisiert im exceptionbasierten Errorprozess die Exceptions
-     */
-    protected function errorcollectInit()
-    {
-        $this->_errors = Zend_Registry::get('errorCollector');
-        $this->_getParams = $this->_log->getUrlLogMessage();
-		if(count($this->_errors)==0){
-			//es wurde eine Exception geworfen, deaktiviere errorCollect und initialisiere die Exception
-			Zend_Registry::set('errorCollect',false);
-			$this->_errorCollect = false;
-			$this->exceptionInit();
-		}
     }
 
     /**
@@ -234,32 +208,12 @@ class ErrorController extends ZfExtended_Controllers_Action
         return $r;
     }
     /**
-     * Stellt aus ->_errno, _errorMessage, _errorTrace, errfile, errline aller
-     * in $this->_errors abgelegten Fehler
-     * einen sinnvoll formatierten String zusammen
-     *
-     * - funktioniert nur, wenn all diese Unterobjekte auch im Fehler existieren
-     */
-    protected function buildErrorCollectLogLongMessage()
-    {
-        $m = '';
-        foreach($this->_errors as $error){
-            $m .= "                       ".$error->_errorMessage."\r\n";
-            if($error->_errorCode > 202){
-                $m .="                       File: ".$error->errfile."; Line: ".$error->errline."; errno: ".$error->errno."\r\n".
-                    "                       Trace: ".$error->_errorTrace."\r\n\r\n";
-            }
-        }
-        return ltrim($m);
-    }
-    /**
      * Initialisiert den view abhängig von Fehlerart und Art der Route
      */
     protected function viewInit()
     {
         $this->view->errors = $this->_errors;
         $this->view->getParams   = $this->_getParams;
-        $this->view->errorCollect   = $this->_errorCollect;
         $this->view->translate = $this->_translate;
         $missingController = $this->_exception instanceof Zend_Controller_Dispatcher_Exception && strpos($this->_exception->getMessage(), 'Invalid controller specified') !== false;
         $missingAction = $this->_exception instanceof Zend_Controller_Action_Exception && $this->_exception->getCode() == '404';
@@ -322,9 +276,6 @@ class ErrorController extends ZfExtended_Controllers_Action
         }
         elseif($this->_isHttp404 || ($this->_exception instanceof ZfExtended_Models_Entity_NotFoundException && $this->isRestRoute())){
             $this->_log->log404($highestError->_errorMessage);
-        }
-        elseif($this->_errorCollect){
-            $this->_log->logError($highestError->_errorMessage,  $this->buildErrorCollectLogLongMessage());
         }
         else{
             $logger->exception($this->_exception);
