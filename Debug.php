@@ -185,7 +185,7 @@ class ZfExtended_Debug {
         $applicationState->languagesource = [];
         $resources = $serviceManager->getAllResources();
         foreach($resources as $resource) {
-            /* @var $resource editor_Models_Resource */
+            /* @var $resource editor_Models_LanguageResources_Resource */
             $obj = new stdClass();
             $obj->id = $resource->getId();
             $obj->name = $resource->getName();
