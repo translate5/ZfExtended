@@ -52,9 +52,19 @@ class ZfExtended_Logger {
     protected $domain = 'core';
     
     /**
+     * @var ZfExtended_Logger_Writer_Abstract[]
+     */
+    protected $writer = [];
+    
+    /**
      */
     public function __construct($options = null) {
-        //FIXME evaluate $options to setup logger!
+        if(empty($options) || empty($options['writer'])) {
+            $options[] = ['type' => 'ErrorLog', 'level' => self::LEVEL_WARN];
+        }
+        foreach($options['writer'] as $name => $writerConfig) {
+            $this->addWriter($name, ZfExtended_Logger_Writer_Abstract::create($writerConfig));
+        }
         $r = new ReflectionClass($this);
         $this->logLevels = array_flip($r->getConstants());
     }
@@ -109,7 +119,8 @@ class ZfExtended_Logger {
             $event->domain = $this->domain;
         }
         
-        $event->eventCode = $exception->getCode();
+        $event->exception = $exception;
+        $event->eventCode = $exception instanceof ZfExtended_ErrorCodeException ? 'E'.$exception->getCode() : $exception->getCode();
         $event->message = $this->formatMessage($exception->getMessage(), $extraData);
         $this->fillTrace($event, $exception);
         $event->extra = $extraData;
@@ -118,8 +129,14 @@ class ZfExtended_Logger {
         $this->processEvent($event);
     }
     
+    /**
+     * pass the event to each writer
+     * @param ZfExtended_Logger_Event $event
+     */
     protected function processEvent(ZfExtended_Logger_Event $event) {
-        error_log($event);
+        foreach($this->writer as $writer) {
+            $writer->write($event);
+        }
     }
     
     //FIXME fillTrace only if needed, depending on the LEVEL!
@@ -137,18 +154,33 @@ class ZfExtended_Logger {
             settype($stepBefore['line'], 'string');
             $event->file = $stepBefore['file'];
             $event->line = $stepBefore['line'];
-            return;
         }
-        $event->trace = $e->getTraceAsString();
-        $event->file = $e->getFile();
-        $event->line = $e->getLine();
+        else {
+            $trace = $e->getTrace();
+            $event->trace = $e->getTraceAsString();
+            $event->file = $e->getFile();
+            $event->line = $e->getLine();
+        }
+        foreach($trace as $step) {
+            if(empty($step['class'])){
+                continue;
+            }
+            if(is_a($step['class'], 'ZfExtended_Worker_Abstract')) {
+                $event->worker = $step['class'];
+                break;
+            }
+        }
     }
+    
+    
     
     /**
      * Fills up log data about the request and the current user
      * @param ZfExtended_Logger_Event $event
      */
     protected function fillStaticData(ZfExtended_Logger_Event $event) {
+        $event->levelName = $this->getLevelName($event->level);
+        
         if(!empty($_SERVER['REQUEST_URI'])) {
             $event->url = $_SERVER['REQUEST_URI'];
         }
@@ -160,8 +192,10 @@ class ZfExtended_Logger {
         
         if(Zend_Session::isStarted()) {
             $user = new Zend_Session_Namespace('user');
-            $event->userGuid = $user->data->userGuid;
-            $event->userLogin = $user->data->login;
+            if(!empty($user->data->userGuid)){
+                $event->userGuid = $user->data->userGuid;
+                $event->userLogin = $user->data->login;
+            }
         }
     }
     
@@ -197,6 +231,29 @@ class ZfExtended_Logger {
         $message = str_replace($numericKeys, $data, $message);
         //replace assoc key placeholders
         return str_replace($keys, $data, $message);
+    }
+    
+    /**
+     * Adds a writer to this logger instance
+     * @param string $name same named writers overwrite each other
+     * @param ZfExtended_Logger_Writer_Abstract $writer
+     */
+    public function addWriter($name, ZfExtended_Logger_Writer_Abstract $writer) {
+        $this->writer[$name] = $writer;
+    }
+    
+    /**
+     * returns the levelname to the given LEVEL_CONST integer
+     * @param integer $level
+     * @return string
+     */
+    public function getLevelName($level) {
+        foreach($this->logLevels as $idx => $name) {
+            if(($level & $idx) > 0) {
+                return substr($name, 6);
+            }
+        }
+        return null;
     }
     
     public function __call($method, $arguments) {

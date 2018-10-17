@@ -28,6 +28,12 @@ END LICENSE AND COPYRIGHT
 abstract class ZfExtended_Logger_Writer_Abstract {
     
     /**
+     * Configuration of the writer
+     * @var array
+     */
+    protected $options;
+    
+    /**
      * creates a Logger writer as defined in the given options array, possible values 
      * @param array $options 
      * @return ZfExtended_Logger_Writer_Abstract
@@ -38,14 +44,24 @@ abstract class ZfExtended_Logger_Writer_Abstract {
             $cls = $options['type'];
         }
         if(class_exists($cls)) {
-            return ZfExtended_Factory::get($cls);
+            return ZfExtended_Factory::get($cls, [$options]);
         }
         throw new ZfExtended_Logger_Exception("ZfExtended_Logger writer ".$options['type']." not found!");
+    }
+    
+    public function __construct(array $options) {
+        $this->validateOptions($options);
+        $this->options = $options;
     }
     
     /**
      * Writes the given event to the log if event matches the configured filters  
      * @param ZfExtended_Logger_Event $event
      */
-    abstract public function write(ZfExtended_Logger_Event $event); 
+    abstract public function write(ZfExtended_Logger_Event $event);
+    
+    /**
+     * Validates the given options
+     */
+    abstract public function validateOptions(array $options); 
 }

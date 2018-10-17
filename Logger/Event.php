@@ -24,6 +24,7 @@ END LICENSE AND COPYRIGHT
 
 /**
  * The "event" to be logged
+ * Currently no need for different formatters (like in Zend_Log), so we just provide a toString and a toHtml function.  
  */
 class ZfExtended_Logger_Event {
     
@@ -40,11 +41,22 @@ class ZfExtended_Logger_Event {
     public $level;
     
     /**
+     * String representation of the above numeric level
+     * @var string
+     */
+    public $levelName;
+    
+    /**
      * hierarchical area code, for further filtering, can be for example: 
      * FIXME better examples import / export / Plugin XYZ, and so on 	from exception type
      * @var string
      */
     public $domain;
+    
+    /**
+     * @var Exception
+     */
+    public $exception;
     
     //worker 	worker class (loop over debug_backtrace, and ue is_subclass_of) 	automatically
     // → FIXME is the domain usable for that? 
@@ -74,8 +86,14 @@ class ZfExtended_Logger_Event {
     public $line;
     
     /**
+     * the worker where the error happened
+     * @var string
+     */
+    public $worker;
+    
+    /**
      * the trace to the event 
-     * @var array
+     * @var string
      */
     public $trace = '';
     
@@ -110,7 +128,68 @@ class ZfExtended_Logger_Event {
     public $extra;
     
     public function __toString() {
+        $msg = [];
+        $e = empty($this->exception) ? '' : ' '.get_class($this->exception);
+        $msg[] = $this->levelName.$e.': '.$this->eventCode.' - '.$this->message;
+        $msg[] = 'in '.$this->domain.' '.$this->file.' ('.$this->line.') ';
+        if(!empty($this->userGuid)) {
+            $msg[] = 'User: '.$this->userLogin.' ('.$this->userGuid.') ';
+        }
+        if(!empty($this->url)) {
+            $msg[] = 'Request: '.$this->method.' '.$this->url;
+        }
+        if(!empty($this->worker)) {
+            $msg[] = 'Worker: '.$this->worker;
+        }
+        if(!empty($this->extra)) {
+            $msg[] = 'Extra: '.print_r($this->extra,1);
+        }
+        if(!empty($this->trace)) {
+            $msg[] = 'Trace: ';
+            $msg[] = $this->trace;
+        }
+        
         //FIXME implement a nice, flexible, changeable formatter here
-        return print_r($this,1);
+        return join("\n", $msg);
+    }
+    
+    /**
+     * return event as HTML
+     * @return string
+     */
+    public function toHtml() {
+        $msg = ['<table><tr>'];
+        if(!empty($this->exception)) {
+            $msg[] = '<td>Exception:</td><td>'.get_class($this->exception).'</td>';
+        }
+        $msg[] = '<td>Level:</td><td>'.$this->levelName.'</td>';
+        $msg[] = '<td>Errorcode:</td><td>'.$this->eventCode.'</td>';
+        $msg[] = '<td>Message:</td><td>'.$this->message.'</td>';
+        $msg[] = '<td>Domain:</td><td>'.$this->domain.'</td>';
+        $msg[] = '<td>File (Line):</td><td>'.$this->file.' ('.$this->line.')</td>';
+        if(!empty($this->userGuid)) {
+            $msg[] = '<td>User:</td><td>'.$this->userLogin.' ('.$this->userGuid.')</td>';
+        }
+        if(!empty($this->url)) {
+            $msg[] = '<td>Request:</td><td>'.$this->method.' '.$this->url.'</td>';
+        }
+        if(!empty($this->worker)) {
+            $msg[] = '<td>Worker:</td><td>'.$this->worker.'</td>';
+        }
+        if(!empty($this->extra)) {
+            $msg[] = '<td>Extra:</td><td>'.htmlspecialchars(print_r($this->extra,1)).'</td>';
+        }
+        if(!empty($this->trace)) {
+            $msg[] = '<td colspan="2">Trace:</td>';
+            $msg[] = '<td colspan="2"><pre>'.$this->trace.'</pre></td>';
+        }
+        if(!empty($_REQUEST)) {
+            $msg[] = '<td colspan="2">Request:</td>';
+            $msg[] = '<td colspan="2"><pre>'.htmlspecialchars(print_r($_REQUEST,1)).'</pre></td>';
+        }
+        $msg[] = '</tr></table>';
+        
+        //FIXME implement a nice, flexible, changeable formatter here
+        return join("</tr>\n<tr>", $msg);
     }
 }

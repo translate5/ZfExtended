@@ -31,4 +31,8 @@ class ZfExtended_Logger_Writer_ErrorLog extends ZfExtended_Logger_Writer_Abstrac
     public function write(ZfExtended_Logger_Event $event) {
         error_log($event);
     }
+    
+    public function validateOptions(array $options) {
+        //no special options needed at the moment 
+    }
 }
