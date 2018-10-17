@@ -99,6 +99,7 @@ class ZfExtended_UserController extends ZfExtended_RestController {
             if($this->wasValid) {
                 $this->csvToArray();
             }
+            $this->checkAndUpdateSession();
         }
         catch(Zend_Db_Statement_Exception $e) {
             $this->handleLoginDuplicates($e);
@@ -458,5 +459,15 @@ class ZfExtended_UserController extends ZfExtended_RestController {
         //merge the old roles and the allowed roles from the request
         $requestAclsArray=array_merge($requestAclsArray,$oldRoles);
         $this->data->roles=implode(',', $requestAclsArray);
+    }
+
+    /***
+     * Check and update user session if the current modefied user is the one in the session
+     */
+    protected function checkAndUpdateSession(){
+        $userSession = new Zend_Session_Namespace('user');
+        if($userSession->data->id==$this->data->id){
+            $this->entity->setUserSessionNamespaceWithoutPwCheck($userSession->data->login);
+        }
     }
 }
