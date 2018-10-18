@@ -61,6 +61,16 @@ abstract class ZfExtended_Logger_Writer_Abstract {
     abstract public function write(ZfExtended_Logger_Event $event);
     
     /**
+     * returns true if writer accepts (via configured filters) the given event
+     * @param ZfExtended_Logger_Event $event
+     * @return boolean
+     */
+    public function isAccepted(ZfExtended_Logger_Event $event) {
+        //FIXME implement basic filter here!
+        return true;
+    }
+    
+    /**
      * Validates the given options
      */
     abstract public function validateOptions(array $options); 

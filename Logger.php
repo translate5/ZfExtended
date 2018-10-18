@@ -88,7 +88,15 @@ class ZfExtended_Logger {
     taskGuid 	affected task 	from exception
     */
     
-    protected function log($code, $message, $level = self::LEVEL_INFO, array $extraData = null) {
+    /**
+     * logs the given stuff
+     * @param string $message unformatted message
+     * @param string $code    event code / error code, optional, since for logging of debug output not necessary, only for errors
+     * @param integer $level event level
+     * @param array $extraData optional extra data / info to the event
+     * @param array $writerNames optional, if given uses this writer(s) only (names as given in config)
+     */
+    protected function log($code, $message, $level = self::LEVEL_INFO, array $extraData = null, array $writerNames = null) {
         $event = new ZfExtended_Logger_Event();
         $event->created = NOW_ISO;
         
@@ -100,7 +108,7 @@ class ZfExtended_Logger {
         $event->extra = $extraData;
         
         $this->fillStaticData($event);
-        $this->processEvent($event);
+        $this->processEvent($event, is_null($writerNames) ? [] : $writerNames);
     }
     
     public function exception(Exception $exception) {
@@ -130,12 +138,18 @@ class ZfExtended_Logger {
     }
     
     /**
-     * pass the event to each writer
+     * pass the event to each configured writer, or to the given one only
      * @param ZfExtended_Logger_Event $event
+     * @param string[] $writerName
      */
-    protected function processEvent(ZfExtended_Logger_Event $event) {
-        foreach($this->writer as $writer) {
-            $writer->write($event);
+    protected function processEvent(ZfExtended_Logger_Event $event, array $writersToUse = []) {
+        $availableWriters = array_keys($this->writer);
+        if(!empty($writersToUse)) {
+            $availableWriters = array_intersect($writersToUse, $availableWriters);
+        }
+        foreach($availableWriters as $name) {
+            $writer = $this->writer[$name];
+            $writer->isAccepted($event) && $writer->write($event);
         }
     }
     
@@ -194,7 +208,7 @@ class ZfExtended_Logger {
             $user = new Zend_Session_Namespace('user');
             if(!empty($user->data->userGuid)){
                 $event->userGuid = $user->data->userGuid;
-                $event->userLogin = $user->data->login;
+                $event->userLogin = $user->data->login.' ('.$user->data->firstName.' '.$user->data->surName.')';
             }
         }
     }
@@ -221,6 +235,9 @@ class ZfExtended_Logger {
         
         //flatten data to strings
         $data = array_map(function($item) {
+            if(is_object($item) && $item instanceof ZfExtended_Models_Entity_Abstract) {
+                $item = $item->getDataObject();
+            }
             if(is_array($item) || is_object($item) && !method_exists($item, '__toString')) {
                 return print_r($item, 1);
             }
@@ -256,6 +273,11 @@ class ZfExtended_Logger {
         return null;
     }
     
+    /**
+     * @param string $method
+     * @param array $arguments
+     * @throws InvalidArgumentException
+     */
     public function __call($method, $arguments) {
         $level = 'LEVEL_'.strtoupper($method);
         if (($level = array_search($level, $this->logLevels)) === false) {
@@ -269,13 +291,22 @@ class ZfExtended_Logger {
                 $code = array_shift($arguments);
                 $message = array_shift($arguments);
                 $extra = null;
+                $writer = [];
+                break;
+            case 3:
+                $code = array_shift($arguments);
+                $message = array_shift($arguments);
+                $extra = array_shift($arguments);
+                $writer = [];
                 break;
             default:
                 $code = array_shift($arguments);
                 $message = array_shift($arguments);
                 $extra = array_shift($arguments);
-                //do additional parameters!
+                $writer = array_shift($arguments);
+                //do additional parameters!?
+                break;
         }
-        $this->log($code, $message, $level, $extra);
+        $this->log($code, $message, $level, $extra, $writer);
     }
 }

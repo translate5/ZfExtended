@@ -141,8 +141,9 @@ class ZfExtended_Logger_Event {
         if(!empty($this->worker)) {
             $msg[] = 'Worker: '.$this->worker;
         }
-        if(!empty($this->extra)) {
-            $msg[] = 'Extra: '.print_r($this->extra,1);
+        $extra = $this->convertExtra();
+        if(!empty($extra)) {
+            $msg[] = 'Extra: '.print_r($extra,1);
         }
         if(!empty($this->trace)) {
             $msg[] = 'Trace: ';
@@ -151,6 +152,22 @@ class ZfExtended_Logger_Event {
         
         //FIXME implement a nice, flexible, changeable formatter here
         return join("\n", $msg);
+    }
+    
+    /**
+     * Flattens the data in the extra array
+     * @return NULL|array
+     */
+    protected function convertExtra() {
+        if(empty($this->extra)) {
+            return '';
+        }
+        return print_r(array_map(function($item){
+            if($item instanceof ZfExtended_Models_Entity_Abstract) {
+                return $item->getDataObject();
+            }
+            return $item;
+        }, $this->extra),1);
     }
     
     /**
@@ -177,6 +194,9 @@ class ZfExtended_Logger_Event {
             $msg[] = '<td>Worker:</td><td>'.$this->worker.'</td>';
         }
         if(!empty($this->extra)) {
+            if(is_object($item) && $item instanceof ZfExtended_Models_Entity_Abstract) {
+                $item = $item->getDataObject();
+            }
             $msg[] = '<td>Extra:</td><td>'.htmlspecialchars(print_r($this->extra,1)).'</td>';
         }
         if(!empty($this->trace)) {

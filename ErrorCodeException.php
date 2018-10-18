@@ -48,6 +48,13 @@ class ZfExtended_ErrorCodeException extends ZfExtended_Exception {
         $this->setErrors($extra);
     }
     
+    protected function getErrorMessage($errorCode) {
+        if(empty($this->allErrorCodes[$errorCode])) {
+            return $errorCode.': Unknown Error!';
+        }
+        return $this->allErrorCodes[$errorCode];
+    }
+    
     /**
      * Merges the static errorcodes from this class and all its parents into one array
      * @return array
