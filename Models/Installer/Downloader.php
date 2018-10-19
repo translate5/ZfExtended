@@ -157,17 +157,19 @@ class ZfExtended_Models_Installer_Downloader {
         if(is_null($installed)) {
             return false;
         }
-        $liveMatched = $this->getLiveHash($installed) === $installed->md5;
+        //we have to get the live hash of the new dependency here, not the already installed one.
+        // on updates mostly the URL changes because of changed URL, so the hash for the new URL must be checked
+        $liveMatched = $this->getLiveHash($dependency) === $installed->md5;
         $depMatched = empty($dependency->md5) || $installed->md5 === $dependency->md5;
         return $liveMatched && $depMatched;
     }
     
     /**
-     * @param stdClass $installed
+     * @param stdClass $dependency
      * @return NULL|multitype:
      */
-    protected function getLiveHash(stdClass $installed) {
-        $parsed = (object) $installed->url_parsed;
+    protected function getLiveHash(stdClass $dependency) {
+        $parsed = (object) $dependency->url_parsed;
         $idx = basename($parsed->path);
         if(empty($this->md5HashTable[$idx])){
             return null;
