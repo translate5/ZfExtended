@@ -168,6 +168,34 @@ class ZfExtended_Debug {
         $events = ZfExtended_Factory::get('ZfExtended_EventManager', array(__CLASS__));
         /* @var $events ZfExtended_EventManager */
         $events->trigger('applicationState', __CLASS__, array('applicationState' => $result));
+        
+        self::addLanguageResources($result);
+        
         return $result;
+    }
+    
+    /***
+     * Add the available resources to the application state
+     * @param stdClass $applicationState
+     */
+    public static  function addLanguageResources(&$applicationState) {
+        
+        $serviceManager = ZfExtended_Factory::get('editor_Services_Manager');
+        /* @var $serviceManager editor_Services_Manager */
+        $applicationState->languagesource = [];
+        $resources = $serviceManager->getAllResources();
+        foreach($resources as $resource) {
+            /* @var $resource editor_Models_LanguageResources_Resource */
+            $obj = new stdClass();
+            $obj->id = $resource->getId();
+            $obj->name = $resource->getName();
+            $obj->serviceType = $resource->getServiceType();
+            $obj->serviceName = $resource->getService();
+            
+            //FIXME implement a "ping" method in the reosurce class to ping the connection to the resource
+            
+            $obj->url = $resource->getUrl();
+            $applicationState->languagesource[] = $obj;
+        }
     }
 }
