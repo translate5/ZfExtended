@@ -85,11 +85,6 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
   protected $events = false;
   
   /**
-   * @var Zend_EventManager_StaticEventManager
-   */
-  protected $eventManager;
-  
-  /**
    * @var ZfExtended_Models_Messages
    */
   protected $restMessages;
@@ -134,8 +129,6 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
       $this->_helper->viewRenderer->setNoRender(true);
       $this->_helper->layout->disableLayout();
       $this->events = ZfExtended_Factory::get('ZfExtended_EventManager', array(get_class($this)));
-      $this->eventManager = Zend_EventManager_StaticEventManager::getInstance();
-      
       $this->restMessages = ZfExtended_Factory::get('ZfExtended_Models_Messages');
       Zend_Registry::set('rest_messages', $this->restMessages);
       
