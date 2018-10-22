@@ -378,6 +378,21 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implement
         $customers=trim($userModel->getCustomers(),",");
         return explode(',', $customers);
     }
+    
+    /***
+     * Return min search customer characters of users customers.
+     * @return integer
+     */
+    public function getUserCustomerMinCharacters(){
+        $customerModel=ZfExtended_Factory::get('editor_Models_Customer');
+        /* @var $customerModel editor_Models_Customer */
+        $ret=$customerModel->getMinSearchCharacters($this->getUserCustomersFromSession());
+        if(!empty($ret) && isset($ret['searchCharacterLimit'])){
+            return $ret['searchCharacterLimit'];
+        }
+        return 0;
+    }
+    
     /**
      * merges firstname and surname to username
      */

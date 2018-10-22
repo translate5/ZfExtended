@@ -81,6 +81,15 @@ class ZfExtended_Models_Entity_ExcelExport {
     private $_defaultFieldTypeCurrency = PHPExcel_Style_NumberFormat::FORMAT_CURRENCY_EUR_SIMPLE;
     
     
+    /**
+     * Pre-calculate formulas
+     * Forces PHPExcel to recalculate all formulae in a workbook when saving, so that the pre-calculated values are
+     *    immediately available to MS Excel or other office spreadsheet viewer when opening the file
+     *
+     * @var boolean
+     */
+    protected $_preCalculateFormulas = false;
+    
     
     
     public function __construct() {
@@ -303,6 +312,33 @@ class ZfExtended_Models_Entity_ExcelExport {
     
     
     /**
+     * Get Pre-Calculate Formulas flag
+     *     If this is true (the default), then the writer will recalculate all formulae in a workbook when saving,
+     *        so that the pre-calculated values are immediately available to MS Excel or other office spreadsheet
+     *        viewer when opening the file
+     *     If false, then formulae are not calculated on save. This is faster for saving in PHPExcel, but slower
+     *        when opening the resulting file in MS Excel, because Excel has to recalculate the formulae itself
+     *
+     * @return boolean
+     */
+    public function getPreCalculateFormulas() {
+        return $this->_preCalculateFormulas;
+    }
+    
+    /**
+     * Set Pre-Calculate Formulas
+     *		Set to true (the default) to advise the Writer to calculate all formulae on save
+     *		Set to false to prevent precalculation of formulae on save.
+     *
+     * @param boolean $pValue	Pre-Calculate Formulas?
+     * @return	PHPExcel_Writer_IWriter
+     */
+    public function setPreCalculateFormulas($pValue = TRUE) {
+        $this->_preCalculateFormulas = (boolean) $pValue;
+        return $this;
+    }
+    
+    /**
      * Redirect output to a client's web browser (Excel)
      */
     public function sendDownload () {
@@ -315,6 +351,9 @@ class ZfExtended_Models_Entity_ExcelExport {
         
         // XLSX Excel2007 output
         $objWriter = PHPExcel_IOFactory::createWriter($this->PHPExcel, 'Excel2007');
+        
+        $objWriter->setPreCalculateFormulas($this->getPreCalculateFormulas());
+
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         header('Content-Disposition: attachment;filename="'.$fileName.'.xlsx"');
         
