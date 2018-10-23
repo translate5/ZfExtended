@@ -63,6 +63,9 @@ class ZfExtended_Logger {
             $options[] = ['type' => 'ErrorLog', 'level' => self::LEVEL_WARN];
         }
         foreach($options['writer'] as $name => $writerConfig) {
+            if($writerConfig instanceof Zend_Config) {
+                $writerConfig = $writerConfig->toArray();
+            }
             $this->addWriter($name, ZfExtended_Logger_Writer_Abstract::create($writerConfig));
         }
         $r = new ReflectionClass($this);
