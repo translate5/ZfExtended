@@ -286,12 +286,15 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
       try {
           parent::dispatch($action);
       }
-      //this is the only usefule place in processing REST request to translate 
+      //this is the only useful place in processing REST request to translate 
       //the entityVersion DB exception to an 409 conflict exception
       catch(Zend_Db_Statement_Exception $e) {
           $m = $e->getMessage();
           if(stripos($m, 'raise_version_conflict does not exist') !== false) {
               throw new ZfExtended_VersionConflictException('', 0, $e);
+          }
+          if(stripos($m, 'Integrity constraint violation') !== false) {
+              throw new ZfExtended_Models_Entity_NotAcceptableException('', 0, $e);
           }
           throw $e;
       }
