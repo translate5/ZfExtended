@@ -39,11 +39,11 @@ class ZfExtended_UserController extends ZfExtended_RestController {
     
     public function init() {
         //add filter type for languages
-        $this->_filterTypeMap = array(
-                array('sourceLanguage' => array('list' => 'listCommaSeparated')),
-                array('targetLanguage' => array('list' => 'listCommaSeparated')),
-                array('customers' => array('list' => 'listCommaSeparated')),
-        );
+        $this->_filterTypeMap = [
+            'sourceLanguage' => ['list' => 'listCommaSeparated'],
+            'targetLanguage' => ['list' => 'listCommaSeparated'],
+            'customers' => ['list' => 'listCommaSeparated'],
+        ];
         parent::init();
     }
     

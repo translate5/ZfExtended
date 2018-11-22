@@ -77,6 +77,12 @@ abstract class ZfExtended_Models_Filter {
   protected $fieldTableMap = array();
   
   /**
+   * Contains the automatically joined tables coming from join configurations in fileTypeMaps 
+   * @var array
+   */
+  protected $joinedTables = [];
+  
+  /**
    * @param ZfExtended_Models_Entity_Abstract $entity
    * @param string $filter
    */
@@ -194,6 +200,13 @@ abstract class ZfExtended_Models_Filter {
     foreach($this->filter as $filter){
       $this->checkAndApplyOneFilter($filter);
     }
+    
+    foreach($this->joinedTables as $table => $config) {
+        list($table, $localKey, $foreignKey, $columns) = $config;
+        $select->join($table, '`'.$this->defaultTable.'`.`'.$localKey.'` = `'.$table.'`.`'.$foreignKey.'`', $columns);
+        $select->setIntegrityCheck(false);
+    }
+    
     return $this->select;
   }
   
@@ -207,18 +220,33 @@ abstract class ZfExtended_Models_Filter {
   }
   
   /**
+   * returns true if the filter has already configured a default table
+   * @return boolean
+   */
+  public function hasDefaultTable() {
+      return !empty($this->defaultTable);
+  }
+  
+  /**
    * mappt die Filter anhand $this->_filterTypeMap
    */
   protected function mapFilter(){
-      if(!empty($this->_filterTypeMap)){
-          foreach($this->_filterTypeMap as $field => $origType){
-                $typeMap = each($origType);
-                foreach($this->filter as &$filter){
-                  if($filter->field === $typeMap['key'] and isset($typeMap['value'][$filter->type])){
-                    $filter->type = $typeMap['value'][$filter->type];
-                  }
-                }
+      if(empty($this->_filterTypeMap)){
+          return;
+      }
+      foreach($this->filter as &$filter){
+          //check if there is a type map for the current filter
+          if(empty($this->_filterTypeMap[$filter->field])) {
+              continue;
           }
+          $typeMap = $this->_filterTypeMap[$filter->field];
+          //check if in the current type map there is a mapping for the current type
+          if(empty($typeMap[$filter->type])) {
+              continue;
+          }
+          
+          $filter->_origType = $filter->type;
+          $filter->type = $typeMap[$filter->type];
       }
   }
 
@@ -308,9 +336,27 @@ abstract class ZfExtended_Models_Filter {
       return $defaultTable.$sortKey;
   }
 
+  /**
+   * Adds a table alias for the usage of the given field (does not add automatically the join)
+   * @param string $field
+   * @param string $table
+   */
   public function addTableForField($field, $table) {
       $this->fieldTableMap[$field] = $table;
   }
+  
+  /**
+   * Adds a table join configuration to be used for the filters
+   * @param string $table
+   * @param string $localKey
+   * @param string $foreignKey
+   * @param array $columns
+   */
+  public function addJoinedTable($table, $localKey, $foreignKey, array $columns = []) {
+      $this->joinedTables[$table.'#'.$localKey.'#'.$foreignKey] = func_get_args();
+  }
+  
+  
   
   /**
    * decodes the filter/sort string, return always an array

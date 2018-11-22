@@ -148,6 +148,12 @@ class ZfExtended_Models_Filter_ExtJs extends ZfExtended_Models_Filter {
    * @param stdClass $filter
    */
   protected function initFilterData(stdClass $filter) {
+      if($filter->type instanceof ZfExtended_Models_Filter_Join) {
+          $join = $filter->type;
+          /* @var $join ZfExtended_Models_Filter_Join */
+          $join->mergeFilter($filter);
+          $join->configureEntityFilter($this);
+      }
     settype($filter->type, 'string');
     settype($filter->field, 'string');
     settype($filter->comparison, 'string');

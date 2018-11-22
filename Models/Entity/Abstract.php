@@ -391,6 +391,10 @@ abstract class ZfExtended_Models_Entity_Abstract {
      * @param ZfExtended_Models_Filter $filter
      */
     public function filterAndSort(ZfExtended_Models_Filter $filter) {
+        if(!$filter->hasDefaultTable()) {
+            $db = $this->db;
+            $filter->setDefaultTable($db->info($db::NAME));
+        }
       $this->filter = $filter;
     }
 
