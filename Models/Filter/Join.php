@@ -24,34 +24,7 @@ END LICENSE AND COPYRIGHT
 
 /**
  */
-class ZfExtended_Models_Filter_Join {
-    protected $table;
-    protected $foreignKey;
-    protected $searchField;
-    protected $localKey;
-    
-    /**
-     * Inits a join config to join a filterable field from a separate table
-     * @param string $table
-     * @param string $searchField
-     * @param string $foreignKey
-     * @param string $localKey
-     */
-    public function __construct($table, $searchField, $foreignKey = 'id', $localKey = null) {
-        $this->table = $table; 
-        $this->searchField = $searchField; 
-        $this->foreignKey = $foreignKey; 
-        $this->localKey = $localKey; 
-    }
-    
-    /**
-     * returns the fieldname in which the search should be performed 
-     * @return string
-     */
-    public function getSearchfield() {
-        return $this->searchField;
-    }
-    
+class ZfExtended_Models_Filter_Join extends ZfExtended_Models_Filter_JoinAbstract {
     /**
      * merge the join info into the single filter coming from the frontend
      * @param stdClass $filter

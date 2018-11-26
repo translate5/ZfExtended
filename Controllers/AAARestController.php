@@ -259,10 +259,10 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
     ));
     
     /* @var $filter ZfExtended_Models_Filter_ExtJs */
-    if($this->_hasParam('defaultFilter')) {
+    if($this->hasParam('defaultFilter')) {
         $filter->setDefaultFilter($this->_getParam('defaultFilter'));
     }
-    if($this->_hasParam('sort')) {
+    if($this->hasParam('sort')) {
         $filter->setSort($this->_getParam('sort'));
     }
     $filter->setMappings($this->_sortColMap, $this->_filterTypeMap);

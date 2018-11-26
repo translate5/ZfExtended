@@ -83,13 +83,15 @@ abstract class ZfExtended_Models_Filter {
   protected $joinedTables = [];
   
   /**
-   * @param ZfExtended_Models_Entity_Abstract $entity
-   * @param string $filter
+   * @param ZfExtended_Models_Entity_Abstract $entity optional, needed for default invocation in controller
+   * @param string $filter optional, needed for default invocation in controller
    */
-  public function __construct(ZfExtended_Models_Entity_Abstract $entity, $filter){
+  public function __construct(ZfExtended_Models_Entity_Abstract $entity = null, $filter = null){
     $this->entity = $entity;
-    $this->filter = $this->decode($filter);
-    settype($this->filter, 'array');
+    if(!empty($filter)) {
+        $this->filter = $this->decode($filter);
+        settype($this->filter, 'array');
+    }
   }
   
   /**
@@ -200,13 +202,23 @@ abstract class ZfExtended_Models_Filter {
     foreach($this->filter as $filter){
       $this->checkAndApplyOneFilter($filter);
     }
-    
-    foreach($this->joinedTables as $table => $config) {
-        list($table, $localKey, $foreignKey, $columns) = $config;
-        $select->join($table, '`'.$this->defaultTable.'`.`'.$localKey.'` = `'.$table.'`.`'.$foreignKey.'`', $columns);
+    $from = $select->getPart($select::FROM);
+    if(empty($from) && !empty($this->joinedTables)) {
+        //we have to assemble here to add the right table as default table, otherwise the joined table is used, which is wrong
+        $select->assemble();
+        $from = $select->getPart($select::FROM);
+    }
+    if(empty($this->defaultTable)) {
+        $table = reset($from)['tableName'];
+    }
+    else {
+        $table = $this->defaultTable;
+    }
+    foreach($this->joinedTables as $config) {
+        list($foreignTable, $localKey, $foreignKey, $columns) = $config;
+        $select->join($foreignTable, '`'.$table.'`.`'.$localKey.'` = `'.$foreignTable.'`.`'.$foreignKey.'`', $columns);
         $select->setIntegrityCheck(false);
     }
-    
     return $this->select;
   }
   
@@ -328,6 +340,11 @@ abstract class ZfExtended_Models_Filter {
       $origSortkey = $sortKey;
       if (isset($this->_sortColMap[$sortKey])) {
           $sortKey = $this->_sortColMap[$sortKey];
+      }
+      //if the mapped sortkey is a joined table, we have to configure it
+      if($sortKey instanceof ZfExtended_Models_Filter_JoinAbstract) {
+          $sortKey->configureEntityFilter($this);
+          return $sortKey->getTable().'.'.$sortKey->getSearchfield();
       }
       if(isset($this->fieldTableMap[$origSortkey])) {
           return $this->fieldTableMap[$origSortkey].'.'.$sortKey;
