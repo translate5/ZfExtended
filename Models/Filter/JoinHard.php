@@ -31,16 +31,23 @@ class ZfExtended_Models_Filter_JoinHard extends ZfExtended_Models_Filter_JoinAbs
     protected $filterForBasetable;
     
     /**
+     * @var string
+     */
+    protected $localFilterType = 'list';
+    
+    /**
      * Inits a join config to join a filterable field from a separate table
      * @param string $table ClassName of the Zend_Db_Table_Abstract
      * @param string $searchField field to be searched in
      * @param string $foreignKey foreign key in the table
      * @param string $localKey localkey, defaults to searchfield
+     * @param string $filterType filter type to which the found data should be mapped 
      */
-    public function __construct($tableClass, $searchField, $foreignKey = 'id', $localKey = null) {
+    public function __construct($tableClass, $searchField, $foreignKey = 'id', $localKey = null, $localFilterType = 'list') {
         if(!is_subclass_of($tableClass, 'Zend_Db_Table_Abstract')) {
             throw new ZfExtended_Exception('Given $tableClass "'.$tableClass.'" is not a subclass of Zend_Db_Table_Abstract');
         }
+        $this->localFilterType = $localFilterType;
         parent::__construct($tableClass, $searchField, $foreignKey, $localKey);
     }
     
@@ -70,7 +77,7 @@ class ZfExtended_Models_Filter_JoinHard extends ZfExtended_Models_Filter_JoinAbs
         $filter->table = $db->info($db::NAME);
         
         //reconfigure the filter for the base table to be used as in filter
-        $this->filterForBasetable->type = 'list';
+        $this->filterForBasetable->type = $this->localFilterType;
         $this->filterForBasetable->field = $this->localKey;
         $this->filterForBasetable->value = []; //replaced with data from below
         

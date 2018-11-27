@@ -42,7 +42,10 @@ class ZfExtended_UserController extends ZfExtended_RestController {
         $this->_filterTypeMap = [
             'sourceLanguage' => ['list' => 'listCommaSeparated'],
             'targetLanguage' => ['list' => 'listCommaSeparated'],
-            'customers' => ['list' => 'listCommaSeparated'],
+            'customers' => [
+                'list' => 'listCommaSeparated',
+                'string' => new ZfExtended_Models_Filter_JoinHard('editor_Models_Db_Customer', 'name', 'id', 'customers', 'listCommaSeparated')
+            ],
         ];
         parent::init();
     }
@@ -159,7 +162,7 @@ class ZfExtended_UserController extends ZfExtended_RestController {
     public function authenticatedAction() {
         $userSession = new Zend_Session_Namespace('user');
         $id = $userSession->data->id;
-        $this->_setParam('id', $id);
+        $this->setParam('id', $id);
         if($this->_request->isPut()){
             $this->entity->load($id);
             $this->filterDataForAuthenticated();
