@@ -80,7 +80,7 @@ class ZfExtended_Controllers_Plugins_ParseXliff extends Zend_Controller_Plugin_A
         $file = str_replace("<trans-unit id=''><source></source><target></target></trans-unit>","",$file);
         $file = $this->translate->getXliffStartString().$file.$this->translate->getXliffEndString();
         //making an exclusive lock here. 
-        // It is better to miss translations by non saved files, instead of getting corrupt xliff file sby concurent calls 
+        // It is better to miss translations by non saved files, instead of getting corrupt xliff files by concurrent calls 
         file_put_contents($path, $file, LOCK_EX);
     }
 
