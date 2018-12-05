@@ -500,6 +500,9 @@ abstract class ZfExtended_Models_Entity_Abstract {
      * @return string the truncated string
      */
     public function truncateLength($field, $value) {
+        if(!is_string($field)) {
+            return $value;
+        }
         $db = $this->db;
         $md = $db->info($db::METADATA);
         if(empty($md[$field]) || empty($md[$field]['LENGTH'])) {
