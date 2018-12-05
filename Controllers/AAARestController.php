@@ -480,7 +480,7 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
         $blackListed = $hasField && $mode === self::SET_DATA_BLACKLIST;
         if($this->entity->hasField($key) && $whiteListed && !$blackListed){
             $this->entity->__call('set'.ucfirst($key), array($value));
-            if(isset($this->_sortColMap[$key])){
+            if(isset($this->_sortColMap[$key]) && is_string($this->_sortColMap[$key])){
                 $toSort = $this->_sortColMap[$key];
                 $value = $this->entity->truncateLength($toSort, $value);
                 $this->entity->__call('set'.ucfirst($toSort), array($value));
