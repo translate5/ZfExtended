@@ -393,4 +393,14 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implement
     public function getUsernameLong() {
         return $this->getSurName().', '.$this->getFirstName().' ('.$this->getLogin().')';
     }
+    
+    /**
+     * Assign the user to the default customer.
+     */
+    public function setDefaultCustomer() {
+        $customer = ZfExtended_Factory::get('editor_Models_Customer');
+        /* @var $customer editor_Models_Customer */
+        $customer->loadByDefaultCustomer();
+        $this->setCustomers(','.$customer->getId().','); // Commas are necessary due to the search-process.
+    }
 }

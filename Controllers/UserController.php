@@ -110,6 +110,17 @@ class ZfExtended_UserController extends ZfExtended_RestController {
     }
     
     /**
+     * Check if (at least one) customer was given and set the 'defaultcustomer' if not.
+     */
+    protected function checkDefaultCustomer(){
+        if(empty($this->data->customers)){
+            $this->entity->loadByGuid($this->data->userGuid);
+            $this->entity->setDefaultCustomer();
+            $this->entity->save();
+        }
+    }
+    
+    /**
      * (non-PHPdoc)
      * @see ZfExtended_RestController::postAction()
      */
@@ -121,6 +132,7 @@ class ZfExtended_UserController extends ZfExtended_RestController {
             if($this->wasValid) {
                 $this->csvToArray();
             }
+            $this->checkDefaultCustomer();
         }
         catch(Zend_Db_Statement_Exception $e) {
             $this->handleLoginDuplicates($e);
