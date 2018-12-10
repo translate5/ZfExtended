@@ -481,6 +481,10 @@ class ZfExtended_UserController extends ZfExtended_RestController {
      */
     protected function checkAndUpdateSession(){
         $userSession = new Zend_Session_Namespace('user');
+        //ignore the check if session user or the data user is not set
+        if(!isset($userSession->data->id) || !isset($this->data->id)){
+            return;
+        }
         if($userSession->data->id==$this->data->id){
             $this->entity->setUserSessionNamespaceWithoutPwCheck($userSession->data->login);
         }
