@@ -215,8 +215,14 @@ abstract class ZfExtended_Models_Filter {
         $table = $this->defaultTable;
     }
     foreach($this->joinedTables as $config) {
-        list($foreignTable, $localKey, $foreignKey, $columns) = $config;
-        $select->join($foreignTable, '`'.$table.'`.`'.$localKey.'` = `'.$foreignTable.'`.`'.$foreignKey.'`', $columns);
+        if(count($config) > 4) {
+            list($foreignTable, $localKey, $foreignKey, $columns, $localTable) = $config;
+        }
+        else {
+            list($foreignTable, $localKey, $foreignKey, $columns) = $config;
+            $localTable = $table;
+        }
+        $select->join($foreignTable, '`'.$localTable.'`.`'.$localKey.'` = `'.$foreignTable.'`.`'.$foreignKey.'`', $columns);
         $select->setIntegrityCheck(false);
     }
     return $this->select;
@@ -369,7 +375,7 @@ abstract class ZfExtended_Models_Filter {
    * @param string $foreignKey
    * @param array $columns
    */
-  public function addJoinedTable($table, $localKey, $foreignKey, array $columns = []) {
+  public function addJoinedTable($table, $localKey, $foreignKey, array $columns = [], $localOverride = null) {
       $this->joinedTables[$table.'#'.$localKey.'#'.$foreignKey] = func_get_args();
   }
   

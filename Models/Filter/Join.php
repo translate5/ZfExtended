@@ -43,7 +43,6 @@ class ZfExtended_Models_Filter_Join extends ZfExtended_Models_Filter_JoinAbstrac
      */
     public function configureEntityFilter(ZfExtended_Models_Filter $filter) {
         $filter->addTableForField($this->searchField, $this->table);
-        $on = '`'.$this->localKey.'` = `'.$this->foreignKey.'`';
         $filter->addJoinedTable($this->table, $this->localKey, $this->foreignKey, [$this->searchField]);
     }
 }
