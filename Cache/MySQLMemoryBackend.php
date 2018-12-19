@@ -103,7 +103,6 @@ class ZfExtended_Cache_MySQLMemoryBackend extends Zend_Cache_Backend implements 
         $sql .= ' ON DUPLICATE KEY UPDATE `expire` = if(`lastModified` < ?, VALUES(`expire`), `expire`),';
         $sql .= ' `content` = if(`lastModified` < ?, VALUES(`content`), `content`)';
         $res = $this->db->query($sql, [$id, $value, $elapsed, $elapsed]);
-        $res2 = $this->db->query('SELECT * FROM Zf_memcache WHERE id = ?', [$id]);
         if($res && $res->rowCount() > 0) {
             return true;
         }
