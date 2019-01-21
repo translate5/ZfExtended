@@ -293,7 +293,11 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
           if(stripos($m, 'raise_version_conflict does not exist') !== false) {
               throw new ZfExtended_VersionConflictException('', 0, $e);
           }
-          if(stripos($m, 'Integrity constraint violation') !== false) {
+          //FIXME waiting on feedback of Ines-Paul - after that change this here again. 
+          // I assume that it should be "Integrity constraint violation: 1452 Cannot add or update a child row"
+          // not only "Integrity constraint violation" since this is also in the error message for other errors, which should not produce an 406
+          $sendingDataToServer = $this->_request->isPost() || $this->_request->isPut();
+          if($sendingDataToServer && stripos($m, 'Integrity constraint violation') !== false) {
               throw new ZfExtended_Models_Entity_NotAcceptableException('', 0, $e);
           }
           throw $e;
