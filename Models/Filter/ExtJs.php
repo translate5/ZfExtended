@@ -159,7 +159,8 @@ class ZfExtended_Models_Filter_ExtJs extends ZfExtended_Models_Filter {
     settype($filter->type, 'string');
     settype($filter->field, 'string');
     settype($filter->comparison, 'string');
-    if(isset($this->fieldTableMap[$filter->field])) {
+    //override filter table only if not set explicitly
+    if(empty($filter->table) && isset($this->fieldTableMap[$filter->field])) {
         $filter->table = $this->fieldTableMap[$filter->field];
     }
     else {

@@ -379,7 +379,14 @@ abstract class ZfExtended_Models_Filter {
       $this->joinedTables[$table.'#'.$localKey.'#'.$foreignKey] = func_get_args();
   }
   
-  
+  /**
+   * returns the original table name of the underlying entity
+   * @return string
+   */
+  public function getEntityTable() {
+      $db = $this->entity->db;
+      return $db->info($db::NAME);
+  }
   
   /**
    * decodes the filter/sort string, return always an array

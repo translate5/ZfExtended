@@ -48,15 +48,23 @@ class ZfExtended_Models_Filter_JoinAssoc extends ZfExtended_Models_Filter_Join {
     }
     
     /**
+     */
+    public function mergeFilter(stdClass $filter) {
+        parent::mergeFilter($filter);
+        //set table name for search field
+        $filter->table = $this->finalJoin->table;
+    }
+    
+    /**
      * Configure the filter instance in the entity
      * @param ZfExtended_Models_Filter $filter
      */
     public function configureEntityFilter(ZfExtended_Models_Filter $filter) {
-        //set table name for search field
-        $filter->addTableForField($this->searchField, $this->finalJoin->table);
+        //if searchfield is ambigious we have to set the originaltable as mapping, the foreign table name is set directly in the filter
+        $filter->addTableForField($this->searchField, $filter->getEntityTable());
         // join to the assoc table
         $filter->addJoinedTable($this->table, $this->localKey, $this->foreignKey, []);
         // join to the final table
-        $filter->addJoinedTable($this->finalJoin->table, $this->finalJoin->localKey, $this->finalJoin->foreignKey, [$this->searchField], $this->table);
+        $filter->addJoinedTable($this->finalJoin->table, $this->finalJoin->localKey, $this->finalJoin->foreignKey, [], $this->table);
     }
 }

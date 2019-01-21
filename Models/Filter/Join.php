@@ -35,6 +35,8 @@ class ZfExtended_Models_Filter_Join extends ZfExtended_Models_Filter_JoinAbstrac
             $this->localKey = $filter->field;
         }
         $filter->field = $this->searchField;
+        //set table name for search field
+        $filter->table = $this->table;
     }
     
     /**
@@ -42,7 +44,8 @@ class ZfExtended_Models_Filter_Join extends ZfExtended_Models_Filter_JoinAbstrac
      * @param ZfExtended_Models_Filter $filter
      */
     public function configureEntityFilter(ZfExtended_Models_Filter $filter) {
-        $filter->addTableForField($this->searchField, $this->table);
-        $filter->addJoinedTable($this->table, $this->localKey, $this->foreignKey, [$this->searchField]);
+        //if searchfield is ambigious we have to set the originaltable as mapping, the foreign table name is set directly in the filter
+        $filter->addTableForField($this->searchField, $filter->getEntityTable());
+        $filter->addJoinedTable($this->table, $this->localKey, $this->foreignKey, []);
     }
 }
