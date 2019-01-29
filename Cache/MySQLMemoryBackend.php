@@ -118,7 +118,7 @@ class ZfExtended_Cache_MySQLMemoryBackend extends Zend_Cache_Backend implements 
      */
     public function test($id)
     {
-        $sql = 'SELECT `lastModified` FROM `Zf_memcache` WHERE `id` = ? AND (`expire` = 0 OR `expire` > ? )';
+        $sql = 'SELECT `lastModified` FROM `Zf_memcache` WHERE `id` = ? AND (`expire` is null OR `expire` > ? )';
         $res = $this->db->query($sql, [$id, time()]);
         $row = $res->fetchObject();
         if ($row) {
@@ -251,7 +251,7 @@ class ZfExtended_Cache_MySQLMemoryBackend extends Zend_Cache_Backend implements 
             case Zend_Cache::CLEANING_MODE_ALL:
                 return $this->db->query('DELETE FROM Zf_memcache');
             case Zend_Cache::CLEANING_MODE_OLD:
-                $mktime = time();
+                $mktime = date(DATE_ISO8601, time());
                 return $this->db->query('DELETE FROM Zf_memcache WHERE expire>0 AND expire <= ?', [$mktime]);
             default:
                 break;
