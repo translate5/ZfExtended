@@ -36,6 +36,7 @@ require_once 'Zend/Cache/Backend.php';
  */
 class ZfExtended_Cache_MySQLMemoryBackend extends Zend_Cache_Backend implements Zend_Cache_Backend_Interface
 {
+    const DATE_MYSQL = 'Y-m-d H:i:s';
     /**
      * Available options
      * @var array Available options
@@ -97,7 +98,7 @@ class ZfExtended_Cache_MySQLMemoryBackend extends Zend_Cache_Backend implements 
     public function updateIfOlderThen($id, $value, $seconds) {
         $this->checkLength($id, $value);
         $now = time();
-        $elapsed = date(DATE_ISO8601, $now - $seconds);
+        $elapsed = date(self::DATE_MYSQL, $now - $seconds);
         $sql = 'INSERT INTO `Zf_memcache` (`id`, `content`, `lastModified`, `expire`)';
         $sql .= ' VALUES (?, ?, now(), date_add(now(), interval 1 hour))';
         $sql .= ' ON DUPLICATE KEY UPDATE `expire` = if(`lastModified` < ?, VALUES(`expire`), `expire`),';
@@ -150,8 +151,8 @@ class ZfExtended_Cache_MySQLMemoryBackend extends Zend_Cache_Backend implements 
         } else {
             $expire = $mktime + $lifetime;
         }
-        $mktime = date(DATE_ISO8601, $mktime);
-        $expire = date(DATE_ISO8601, $expire);
+        $mktime = date(self::DATE_MYSQL, $mktime);
+        $expire = date(self::DATE_MYSQL, $expire);
         $this->db->query('DELETE FROM Zf_memcache WHERE id = ?', [$id]);
         $sql = 'INSERT INTO Zf_memcache (id, content, lastModified, expire) VALUES (?, ?, ?, ?)';
         $sql .= ' ON DUPLICATE KEY UPDATE `content` = VALUES(`content`), `lastModified` = VALUES(`lastModified`),`expire` = VALUES(`expire`)';
@@ -251,7 +252,7 @@ class ZfExtended_Cache_MySQLMemoryBackend extends Zend_Cache_Backend implements 
             case Zend_Cache::CLEANING_MODE_ALL:
                 return $this->db->query('DELETE FROM Zf_memcache');
             case Zend_Cache::CLEANING_MODE_OLD:
-                $mktime = date(DATE_ISO8601, time());
+                $mktime = date(self::DATE_MYSQL, time());
                 return $this->db->query('DELETE FROM Zf_memcache WHERE expire>0 AND expire <= ?', [$mktime]);
             default:
                 break;
