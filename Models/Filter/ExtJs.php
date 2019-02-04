@@ -65,7 +65,9 @@ class ZfExtended_Models_Filter_ExtJs extends ZfExtended_Models_Filter {
     $cleanSort = array();
     foreach($this->sort as $s){
       $dir = strtolower($s->direction);
-      if($this->entity->hasField($s->property) && ($dir == 'asc' || $dir == 'desc')){
+      $isProperty = $this->entity->hasField($s->property);
+      $isMapped = !empty($this->_sortColMap[$s->property]);
+      if(($isProperty || $isMapped) && ($dir == 'asc' || $dir == 'desc')){
         $cleanSort[] = $this->mapSort($s->property).' '.$s->direction;
       }
     }
@@ -148,10 +150,17 @@ class ZfExtended_Models_Filter_ExtJs extends ZfExtended_Models_Filter {
    * @param stdClass $filter
    */
   protected function initFilterData(stdClass $filter) {
+      if($filter->type instanceof ZfExtended_Models_Filter_JoinAbstract) {
+          $join = $filter->type;
+          /* @var $join ZfExtended_Models_Filter_Join */
+          $join->mergeFilter($filter);
+          $join->configureEntityFilter($this);
+      }
     settype($filter->type, 'string');
     settype($filter->field, 'string');
     settype($filter->comparison, 'string');
-    if(isset($this->fieldTableMap[$filter->field])) {
+    //override filter table only if not set explicitly
+    if(empty($filter->table) && isset($this->fieldTableMap[$filter->field])) {
         $filter->table = $this->fieldTableMap[$filter->field];
     }
     else {
@@ -176,7 +185,7 @@ class ZfExtended_Models_Filter_ExtJs extends ZfExtended_Models_Filter {
       if(! preg_match('/[a-z0-9-_]+/i', $field)){
           throw new Zend_Exception('illegal chars in field name '.$field);
       }
-      if(!$this->entity->hasField($field) && empty($filter->table)){
+      if(empty($filter->table) && !$this->entity->hasField($field)){
           throw new Zend_Exception('illegal field requested: '.$field);
       }
   }

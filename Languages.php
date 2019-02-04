@@ -287,6 +287,27 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract {
     }
     
     /***
+     * Return fuzzy languages for the given language id.
+     * Languages with '-' in the rfc field are not searched for fuzzy.
+     * 
+     * ex: 
+     *    de -> de-DE,de-AT,de-CH,de-LI,de-LU
+     *    
+     * @param integer $id
+     * @param string $field: the field name wich will be returned(see languages model for available fields) 
+     * @return array
+     */
+    public function getFuzzyLanguages($id,$field='id'){
+        $rfc=$this->loadLangRfc5646($id);
+        //check if language fuzzy matching is needed
+        if(strpos($rfc, '-') !== false){
+            return  array($id);
+        }
+        $lngs=$this->findLanguageGroup($rfc);
+        return array_column($lngs,$field);
+    }
+    
+    /***
      * Search languages by given search string.
      * The search will provide any match on langName field.
      * 

@@ -39,11 +39,14 @@ class ZfExtended_UserController extends ZfExtended_RestController {
     
     public function init() {
         //add filter type for languages
-        $this->_filterTypeMap = array(
-                array('sourceLanguage' => array('list' => 'listCommaSeparated')),
-                array('targetLanguage' => array('list' => 'listCommaSeparated')),
-                array('customers' => array('list' => 'listCommaSeparated')),
-        );
+        $this->_filterTypeMap = [
+            'sourceLanguage' => ['list' => 'listCommaSeparated'],
+            'targetLanguage' => ['list' => 'listCommaSeparated'],
+            'customers' => [
+                'list' => 'listCommaSeparated',
+                'string' => new ZfExtended_Models_Filter_JoinHard('editor_Models_Db_Customer', 'name', 'id', 'customers', 'listCommaSeparated')
+            ],
+        ];
         parent::init();
     }
     
@@ -159,7 +162,7 @@ class ZfExtended_UserController extends ZfExtended_RestController {
     public function authenticatedAction() {
         $userSession = new Zend_Session_Namespace('user');
         $id = $userSession->data->id;
-        $this->_setParam('id', $id);
+        $this->setParam('id', $id);
         if($this->_request->isPut()){
             $this->entity->load($id);
             $this->filterDataForAuthenticated();
@@ -466,6 +469,10 @@ class ZfExtended_UserController extends ZfExtended_RestController {
      */
     protected function checkAndUpdateSession(){
         $userSession = new Zend_Session_Namespace('user');
+        //ignore the check if session user or the data user is not set
+        if(!isset($userSession->data->id) || !isset($this->data->id)){
+            return;
+        }
         if($userSession->data->id==$this->data->id){
             $this->entity->setUserSessionNamespaceWithoutPwCheck($userSession->data->login);
         }

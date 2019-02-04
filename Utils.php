@@ -40,6 +40,67 @@ END LICENSE AND COPYRIGHT
 class ZfExtended_Utils {
     
     /**
+     * returns an value / array of values found by the xpath similar path.
+     * Currently supported only: 
+     * foo/bar/dada
+     * to get from given root object:
+     * $root->foo->bar->dada with isset checks, if is empty, return null.
+     * if one of the fields is an array, each childnode is searched for the follwing path elements and the results are collected in an array
+     *  
+     * here foo/bar/dada will return ["first","second"]
+     * {
+     *   "foo": [{
+     *      "bar": {
+     *          "dada": "first"
+     *      }
+     *   },{
+     *      "bar": {
+     *          "dada": "second"
+     *      }
+     *   }]
+     * }
+     * 
+     * @param mixed $root
+     * @param string|array $path / separated string or array which contains the single elements 
+     */
+    public static function xpath($root, $path) {
+        if(empty($path)) {
+            return $root;
+        }
+        if(is_string($path)) {
+            $path = explode('/', $path);
+        }
+        if(empty($root)) {
+            return null;
+        }
+        $current = array_shift($path);
+        $matches = null;
+        if(preg_match('/^([^\[]+)\[([0-9]+)\]$/', $current, $matches)) {
+            //since here we assume an array as next step
+            $current = $matches[1];
+            array_unshift($path, $matches[2]);
+        }
+        if(is_object($root)) {
+            if(property_exists($root, $current)) {
+                return self::xpath($root->$current, $path);
+            }
+            //error_log($current.' # '.print_r($root,1));
+            return null;
+        }
+        if(is_array($root)) {
+            if(array_key_exists($current, $root)) {
+                return self::xpath($root[$current], $path);
+            }
+            $result = [];
+            foreach($root as $item) {
+                $result[] = self::xpath($item, $path);
+            }
+            return $result;
+        }
+        return $root;
+    }
+    
+    /**
      * Get an array of all class-constants-names from class $className which begin with $prefix.
      *
      * @param string $className
@@ -148,5 +209,18 @@ class ZfExtended_Utils {
             return join('.', $matches);
         }
         return 'development';
+    }
+    
+    /***
+     * Multibyte safe uppercase first function
+     * @param string $string
+     * @param string $encoding
+     * @return string
+     */
+    public static function mb_ucfirst($string, $encoding='UTF-8'){
+        $strlen = mb_strlen($string, $encoding);
+        $firstChar = mb_substr($string, 0, 1, $encoding);
+        $then = mb_substr($string, 1, $strlen - 1, $encoding);
+        return mb_strtoupper($firstChar, $encoding) . $then;
     }
 }

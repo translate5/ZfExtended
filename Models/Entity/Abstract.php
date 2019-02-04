@@ -243,9 +243,15 @@ abstract class ZfExtended_Models_Entity_Abstract {
       }
       $name = $this->db->info(Zend_Db_Table_Abstract::NAME);
       $schema = $this->db->info(Zend_Db_Table_Abstract::SCHEMA);
-      $s->from($name, array('numrows' => 'count(*)'), $schema);
-      //$s->reset($s::COLUMNS);
-      //$s->columns(array('numrows' => 'count(*)'));
+
+      $from = $s->getPart($s::FROM);
+      if(empty($from[$name])) {
+          $s->from($name, array('numrows' => 'count(*)'), $schema);
+      }
+      else {
+          $s->reset($s::COLUMNS);
+          $s->columns(array('numrows' => 'count(*)'));
+      }
       $totalCount = $this->db->fetchRow($s)->numrows;
       $s->reset($s::COLUMNS);
       $s->reset($s::FROM);
@@ -391,7 +397,7 @@ abstract class ZfExtended_Models_Entity_Abstract {
      * @param ZfExtended_Models_Filter $filter
      */
     public function filterAndSort(ZfExtended_Models_Filter $filter) {
-      $this->filter = $filter;
+        $this->filter = $filter;
     }
 
     /**
@@ -494,6 +500,9 @@ abstract class ZfExtended_Models_Entity_Abstract {
      * @return string the truncated string
      */
     public function truncateLength($field, $value) {
+        if(!is_string($field)) {
+            return $value;
+        }
         $db = $this->db;
         $md = $db->info($db::METADATA);
         if(empty($md[$field]) || empty($md[$field]['LENGTH'])) {

@@ -85,11 +85,6 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
   protected $events = false;
   
   /**
-   * @var Zend_EventManager_StaticEventManager
-   */
-  protected $eventManager;
-  
-  /**
    * @var ZfExtended_Models_Messages
    */
   protected $restMessages;
@@ -134,8 +129,6 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
       $this->_helper->viewRenderer->setNoRender(true);
       $this->_helper->layout->disableLayout();
       $this->events = ZfExtended_Factory::get('ZfExtended_EventManager', array(get_class($this)));
-      $this->eventManager = Zend_EventManager_StaticEventManager::getInstance();
-      
       $this->restMessages = ZfExtended_Factory::get('ZfExtended_Models_Messages');
       Zend_Registry::set('rest_messages', $this->restMessages);
       
@@ -266,10 +259,10 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
     ));
     
     /* @var $filter ZfExtended_Models_Filter_ExtJs */
-    if($this->_hasParam('defaultFilter')) {
+    if($this->hasParam('defaultFilter')) {
         $filter->setDefaultFilter($this->_getParam('defaultFilter'));
     }
-    if($this->_hasParam('sort')) {
+    if($this->hasParam('sort')) {
         $filter->setSort($this->_getParam('sort'));
     }
     $filter->setMappings($this->_sortColMap, $this->_filterTypeMap);
@@ -293,12 +286,19 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
       try {
           parent::dispatch($action);
       }
-      //this is the only usefule place in processing REST request to translate 
+      //this is the only useful place in processing REST request to translate 
       //the entityVersion DB exception to an 409 conflict exception
       catch(Zend_Db_Statement_Exception $e) {
           $m = $e->getMessage();
           if(stripos($m, 'raise_version_conflict does not exist') !== false) {
               throw new ZfExtended_VersionConflictException('', 0, $e);
+          }
+          //FIXME waiting on feedback of Ines-Paul - after that change this here again. 
+          // I assume that it should be "Integrity constraint violation: 1452 Cannot add or update a child row"
+          // not only "Integrity constraint violation" since this is also in the error message for other errors, which should not produce an 406
+          $sendingDataToServer = $this->_request->isPost() || $this->_request->isPut();
+          if($sendingDataToServer && stripos($m, 'Integrity constraint violation') !== false) {
+              throw new ZfExtended_Models_Entity_NotAcceptableException('', 0, $e);
           }
           throw $e;
       }
@@ -484,7 +484,7 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
         $blackListed = $hasField && $mode === self::SET_DATA_BLACKLIST;
         if($this->entity->hasField($key) && $whiteListed && !$blackListed){
             $this->entity->__call('set'.ucfirst($key), array($value));
-            if(isset($this->_sortColMap[$key])){
+            if(isset($this->_sortColMap[$key]) && is_string($this->_sortColMap[$key])){
                 $toSort = $this->_sortColMap[$key];
                 $value = $this->entity->truncateLength($toSort, $value);
                 $this->entity->__call('set'.ucfirst($toSort), array($value));
