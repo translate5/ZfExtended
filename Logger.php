@@ -277,6 +277,15 @@ class ZfExtended_Logger {
     }
     
     /**
+     * Logs the current server request with all request data
+     * @param array $additionalData
+     */
+    public function request(array $additionalData = []) {
+        $additionalData['requestData'] = $_REQUEST;
+        $this->debug('E1012', 'request', $additionalData);
+    }
+    
+    /**
      * @param string $method
      * @param array $arguments
      * @throws InvalidArgumentException

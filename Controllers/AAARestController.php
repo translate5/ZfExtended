@@ -90,7 +90,7 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
   protected $restMessages;
   
   /**
-   *  @var ZfExtended_Log
+   *  @var ZfExtended_Logger
    */
   protected $log = false;
   
@@ -132,7 +132,7 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
       $this->restMessages = ZfExtended_Factory::get('ZfExtended_Models_Messages');
       Zend_Registry::set('rest_messages', $this->restMessages);
       
-      $this->log = ZfExtended_Factory::get('ZfExtended_Log');
+      $this->log = Zend_Registry::get('logger');
       
       //perhaps not working under windows, see comment on php.net
       //enable simple front end interaction with fatal errors

@@ -471,6 +471,14 @@ abstract class ZfExtended_Models_Entity_Abstract {
         return $this->get($field);
     }
     
+    /**
+     * returns the modified values
+     * @return array
+     */
+    public function getModifiedValues() {
+        return $this->modifiedValues;
+    }
+    
     protected function validatorLazyInstatiation() {
       if(empty($this->validator)) {
         $this->validator = ZfExtended_Factory::get($this->validatorInstanceClass);
