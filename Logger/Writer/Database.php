@@ -47,7 +47,14 @@ class ZfExtended_Logger_Writer_Database extends ZfExtended_Logger_Writer_Abstrac
         }
         $data['last'] = NOW_ISO;
         //FIXME json_encode may not produce an error!
-        $data['extra'] = json_encode($event->extra);
+        //flatten entities to their dataobjects
+        $extra = array_map(function($item) {
+            if(is_object($item) && $item instanceof ZfExtended_Models_Entity_Abstract) {
+                return $item->getDataObject();
+            }
+            return $item;
+        }, $event->extra);
+        $data['extra'] = json_encode($extra);
         //$data['count'] = 0; FIXME how to make the duplication recognition?
         $db->insert($data);
     }
