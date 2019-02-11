@@ -73,16 +73,25 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
     public function indexAction() {
         $this->_form->setTranslator($this->_translate);
         if($this->isMaintenanceLoginLock()){
+            //set login status to 'maintenance'
+            $this->view->loginStatus=ZfExtended_Models_SessionUserInterface::LOGIN_STATUS_MAINTENANCE;
             return;
         }
         if($this->isLoginRequest() && $this->isValidLogin()){
+            //set login status to 'valid login'
+            $this->view->loginStatus=ZfExtended_Models_SessionUserInterface::LOGIN_STATUS_SUCCESS;
             return;
         }
         //redirect the user if the session contains already a user
         if($this->isAuthenticated()) {
+            //set login status to 'authenticated'
+            $this->view->loginStatus=ZfExtended_Models_SessionUserInterface::LOGIN_STATUS_AUTHENTICATED;
             $this->initDataAndRedirect();
             return;
         }
+        
+        //set login status to 'login needed'
+        $this->view->loginStatus=ZfExtended_Models_SessionUserInterface::LOGIN_STATUS_REQUIRED;
         $this->view->form = $this->_form;
     }
     
