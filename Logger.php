@@ -218,7 +218,7 @@ class ZfExtended_Logger {
     
     /**
      * replaces the {} placeholders in the message with data from the extra data array
-     * can deal with {0} numeric placeholders an {key} assoc key placeholders
+     * can deal with {0} numeric placeholders and {key} assoc key placeholders
      * @param string $message
      * @param array $extra
      * @return string
@@ -282,7 +282,7 @@ class ZfExtended_Logger {
      */
     public function request(array $additionalData = []) {
         $additionalData['requestData'] = $_REQUEST;
-        $this->debug('E1012', 'request', $additionalData);
+        $this->debug('E1014', 'HTTP request '.$_SERVER['REQUEST_URI'], $additionalData);
     }
     
     /**
