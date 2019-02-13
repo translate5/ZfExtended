@@ -63,7 +63,7 @@ class ZfExtended_ErrorCodeException extends ZfExtended_Exception {
         $ret = [];
         $c = get_called_class();
         do {
-            if($c == 'editor_Models_Import_FileParser_Exception') {
+            if($c == 'ZfExtended_ErrorCodeException') {
                 break;
             }
             $ret = array_merge($c::$localErrorCodes, $ret);
