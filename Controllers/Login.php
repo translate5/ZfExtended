@@ -72,6 +72,13 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
      */
     public function indexAction() {
         $this->_form->setTranslator($this->_translate);
+        //if the user click on the openid redirect link in the login form
+        if($this->isOpenIdRedirect()){
+            //set login status to 'login needed'
+            $this->view->loginStatus=ZfExtended_Models_SessionUserInterface::LOGIN_STATUS_REQUIRED;
+            $this->view->form = $this->_form;
+            return ;
+        }
         if($this->isMaintenanceLoginLock()){
             //set login status to 'maintenance'
             $this->view->loginStatus=ZfExtended_Models_SessionUserInterface::LOGIN_STATUS_MAINTENANCE;
@@ -225,6 +232,14 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
             return true;
         }
         return false;
+    }
+    
+    /***
+     * Check if the current request is openid redirect
+     * @return boolean
+     */
+    protected function isOpenIdRedirect(){
+        return $this->getRequest()->getParam('redirect')!=null && $this->getRequest()->getParam('redirect')=='openid';
     }
     
     abstract protected function initDataAndRedirect();

@@ -38,18 +38,6 @@ class ZfExtended_OpenIDConnectClient extends OpenIDConnectClient{
     public function __construct(Zend_Controller_Request_Abstract $request) {
         $this->setRequest($request);
         $this->initOpenIdData();
-        /*
-         * 
-        $issuer = 'aleksandar.auth0.com';
-        
-        $cid = 'qmT6Ndh6bukLtLohN07Z7na5eR1xwoEF';
-        $secret = '4KgWXuXBdFJ51moTdk-1QvJdH4x_POpT4-0VClPKXtMiwLkfmEz7kNhIOWkzvN7Q';
-
-        $oidc = new ZfExtended_OpenIDConnectClient($this->openIdServer, $cid, $secret);
-        */
-        //parent::__construct('https://accounts.google.com',$this->cid,$this->secret,$this->openIdServer);
-        
-        //parent::__construct($this->getProviderURL(),$this->getClientID(),$this->getClientSecret(),$this->getIssuer());
     }
     
     /***
@@ -67,50 +55,42 @@ class ZfExtended_OpenIDConnectClient extends OpenIDConnectClient{
      * Init openid required data from the request and session.
      */
     protected function initOpenIdData(){
-        /*
-         * google config params
-            $this->setProviderURL('https://accounts.google.com');
-            $this->setClientID('791386982319-bbia7jar0fvroku3li5j202rnje1g92c.apps.googleusercontent.com');
-            $this->setClientSecret('dRKMToH7felCiUL3hn9RNVK9');
-            $this->setIssuer('https://accounts.google.com/o/oauth2/auth');
-    
-            $this->setRedirectURL('http://translate5-openid.com/login');
-            
-            $this->setVerifyHost(false);
-            $this->setVerifyPeer(false);
-            $this->addScope(array('openid','profile','mail'));
-            $this->setAllowImplicitFlow(true);
-            $this->addAuthParam(array('response_mode' => 'form_post'));
-        
-        */
         $this->initCustomerFromDomain();
         //if the openidfields for the customer are not set, stop the init
         if(!$this->isOpenIdCustomerSet()){
             return;
         }
-        $this->setClientIdRequest();
-        $this->setClientSecretRequest();
+        $this->setClientID($this->customer->getOpenIdClientId());
+        $this->setClientSecret($this->customer->getOpenIdClientSecret());
         
-        $this->setSetProviderAndIssuer();
-        $this->setRedirectDomainURL();
+        $this->setProviderURL($this->customer->getOpenIdServer());
+        $this->setIssuer($this->customer->getOpenIdAuth2Url());
+        $this->setRedirectURL($this->getRedirectDomainUrl());
     }
     
     public function authenticate(){
         //authenticate when is login request with username and password or when oauth response callback with code parametar
-        if(empty($this->request->getParam('login')) && empty($this->request->getParam('passwd')) && empty($this->request->getParam('code'))){
-            return false;
-        }
-
+        //if(empty($this->request->getParam('login')) && empty($this->request->getParam('passwd')) && empty($this->request->getParam('code')) && empty($this->request->getParam('id_token'))){
+        
+        
         //if the openidfields for the customer are not set, ignore the auth call
         if(!$this->isOpenIdCustomerSet()){
             return false;
         }
         
+        $isAuthRequest=!empty($this->request->getParam('code')) || !empty($this->request->getParam('id_token'));
+        $isLoginRequest=!empty($this->request->getParam('login')) && !empty($this->request->getParam('passwd'));
+        if(!$isAuthRequest && !$this->customer->getOpenIdRedirectCheckbox() && !$isLoginRequest){
+            return false;
+        }
+
         $this->setVerifyHost(false);
         $this->setVerifyPeer(false);
         $this->addScope(array('openid','profile','email'));
         $this->setAllowImplicitFlow(true);
         $this->addAuthParam(array('response_mode' => 'form_post'));
+        $this->setResponseTypes('id_token');
+        $this->setResponseTypes('code');
         try {
             return parent::authenticate();
         } catch (OpenIDConnectClientException $e) {
@@ -124,74 +104,74 @@ class ZfExtended_OpenIDConnectClient extends OpenIDConnectClient{
      * @return NULL|ZfExtended_Models_User
      */
     public function createUser(){
-        
-        $session = new Zend_Session_Namespace('openid');
-        
         $user=ZfExtended_Factory::get('ZfExtended_Models_User');
         /* @var $user ZfExtended_Models_User */
+        
+        //check if the user exist, so new guid is not created
+        if(!$user->findByLogin($this->getVerifiedClaims('email'))){
+            //it is new user, create guid
+            $guidHelper = ZfExtended_Zendoverwrites_Controller_Action_HelperBroker::getStaticHelper(
+                'Guid'
+                );
+            $user->setUserGuid($guidHelper->create(true));
+        }
+        
         $user->setFirstName($this->getVerifiedClaims('given_name'));
         $user->setSurName($this->getVerifiedClaims('family_name'));
-        $user->setGender($this->requestUserInfo('gender'));
-        $user->setLogin($this->getVerifiedClaims('aud'));
+        
+        //the gender is required in translate5, and in the response can be empty or larger than 1 character
+        $gender=!empty($this->requestUserInfo('gender')) ? substr($this->requestUserInfo('gender'),0,1) : 'f';
+        $user->setGender($gender);
+        
+        $user->setLogin($this->getVerifiedClaims('email'));
         $user->setEmail($this->getVerifiedClaims('email'));
-        $user->setPasswd(md5($session->passwd));
+        
         $user->setEditable(1);
         
         $user->setLocale($this->getVerifiedClaims('locale'));
         
         $user->setCustomers(','.$this->customer->getId().',');
-        $user->setRoles($this->customer->getOpenIdServerRoles());
         
-        $guidHelper = ZfExtended_Zendoverwrites_Controller_Action_HelperBroker::getStaticHelper(
-            'Guid'
-            );
-        $user->setUserGuid($guidHelper->create(true));
+        $user->setRoles($this->mergeUserRoles($this->getVerifiedClaims('roles')));
         
         return $user->save()>0? $user : null;
     }
     
     /***
-     * Set hte client id from the request, when no request parametar is provided the client id will be set from the sessin
+     * Merge the verified role claims from the openid client server for the user.
+     * @param array|string $claimsRoles
+     * @return string
      */
-    protected function setClientIdRequest() {
-        $session = new Zend_Session_Namespace('openid');
-        $login=$this->request->getParam('login');
-        if(empty($login)){
-            $login=$session->login;
-        }else{
-            $session->login=$login;
+    protected function mergeUserRoles($claimsRoles) {
+        //the roles are not defined in the openid client server for the user, use the customer defined roles
+        if(empty($claimsRoles)){
+            return $this->customer->getOpenIdServerRoles();
         }
-        $this->setClientID($login);
-    }
-    
-    /***
-     * * Set hte client secret from the request, when no request parametar is provided the client secret will be set from the sessin
-     */
-    protected  function setClientSecretRequest() {
-        $session = new Zend_Session_Namespace('openid');
-        $passwd=$this->request->getParam('passwd');
-        if(empty($passwd)){
-            $passwd=$session->passwd;
-        }else{
-            $session->passwd=$passwd;
+        
+        if(is_string($claimsRoles)){
+            $claimsRoles=explode(',', $claimsRoles);
         }
-        $this->setClientSecret($passwd);
-    }
-    
-    /***
-     * Set the provider and the issuer from the customer domain.
-     * When no customer domain is found the default customer defined parametars will be used.
-     */
-    protected  function setSetProviderAndIssuer() {
-        $this->setProviderURL($this->customer->getOpenIdServer());
-        $this->setIssuer($this->customer->getOpenIdAuth2Url());
-    }
-    
-    /***
-     * Set the redirect url from the current domain url.
-     */
-    protected function setRedirectDomainURL() {
-        $this->setRedirectURL($this->getRedirectDomainUrl());
+        
+        $claimsRoles=array_filter($claimsRoles, 'strlen');
+        
+        if(empty($claimsRoles)){
+            return '';
+        }
+        
+        $acl = ZfExtended_Acl::getInstance();
+        /* @var $acl ZfExtended_Acl */
+        
+        $allRoles = $acl->getAllRoles();
+        $roles = array();
+        foreach($allRoles as $role) {
+            if($role == 'noRights' || $role == 'basic') {
+                continue;
+            }
+            if(in_array($role, $claimsRoles)){
+                $roles[]=$role;
+            }
+        }
+        return implode(',',$roles);
     }
     
     /***
@@ -229,7 +209,6 @@ class ZfExtended_OpenIDConnectClient extends OpenIDConnectClient{
      * Unset the openid session
      */
     protected function unsetSession(){
-        Zend_Session::namespaceUnset('openid');
         $this->unsetState();
         $this->unsetNonce();
     }
@@ -238,7 +217,7 @@ class ZfExtended_OpenIDConnectClient extends OpenIDConnectClient{
      * Check if the openid fields are set in the customer
      * @return boolean
      */
-    protected function isOpenIdCustomerSet() {
+    public function isOpenIdCustomerSet() {
         if($this->customer->getId()==null){
             return false;
         }
@@ -246,5 +225,9 @@ class ZfExtended_OpenIDConnectClient extends OpenIDConnectClient{
             return false;
         }
         return true;
+    }
+    
+    public function getCustomer() {
+        return $this->customer;
     }
 }

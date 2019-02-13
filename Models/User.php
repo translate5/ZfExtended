@@ -393,4 +393,21 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implement
     public function getUsernameLong() {
         return $this->getSurName().', '.$this->getFirstName().' ('.$this->getLogin().')';
     }
+    
+    
+    /***
+     * Find user by given login
+     * @param string $login
+     * @return Zend_Db_Table_Row_Abstract|NULL
+     */
+    public function findByLogin($login) {
+        $s = $this->db->select();
+        $s->where('login=?',$login);
+        $row=$this->db->fetchRow($s);
+        if(empty($row)){
+            return null;
+        }
+        $this->row =$row;
+        return $row;
+    }
 }
