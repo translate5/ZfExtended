@@ -138,24 +138,26 @@ class ZfExtended_OpenIDConnectClient extends OpenIDConnectClient{
     }
     
     /***
-     * Merge the verified role claims from the openid client server for the user.
+     * Merge the verified role claims from the openid client server and from the customer for the user.
      * @param array|string $claimsRoles
      * @return string
      */
     protected function mergeUserRoles($claimsRoles) {
+        $customerRoles=$this->customer->getOpenIdServerRoles();
+        //no customer roles, the user should be saved without roles
+        if(empty($customerRoles)){
+            return '';
+        }
+        
         //the roles are not defined in the openid client server for the user, use the customer defined roles
         if(empty($claimsRoles)){
-            return $this->customer->getOpenIdServerRoles();
+            return $customerRoles;
         }
+        
+        $customerRoles=explode(',',$customerRoles);
         
         if(is_string($claimsRoles)){
             $claimsRoles=explode(',', $claimsRoles);
-        }
-        
-        $claimsRoles=array_filter($claimsRoles, 'strlen');
-        
-        if(empty($claimsRoles)){
-            return '';
         }
         
         $acl = ZfExtended_Acl::getInstance();
@@ -167,7 +169,8 @@ class ZfExtended_OpenIDConnectClient extends OpenIDConnectClient{
             if($role == 'noRights' || $role == 'basic') {
                 continue;
             }
-            if(in_array($role, $claimsRoles)){
+            //the role exist in the translate5 and the role is valid for the customer
+            if(in_array($role, $claimsRoles) && in_array($role, $customerRoles)){
                 $roles[]=$role;
             }
         }
