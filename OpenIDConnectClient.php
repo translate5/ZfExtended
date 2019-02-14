@@ -128,7 +128,11 @@ class ZfExtended_OpenIDConnectClient extends OpenIDConnectClient{
         
         $user->setEditable(1);
         
-        $user->setLocale($this->getVerifiedClaims('locale'));
+        //use the parrent language if the locale is not one
+        $claimLocale=$this->getVerifiedClaims('locale');
+        $claimLocale=explode('-', $claimLocale);
+        $claimLocale=!empty($claimLocale) ? $claimLocale[0] : 'de';
+        $user->setLocale($claimLocale);
         
         $user->setCustomers(','.$this->customer->getId().',');
         
