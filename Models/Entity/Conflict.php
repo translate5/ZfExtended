@@ -22,5 +22,8 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
-class ZfExtended_Models_Entity_Conflict extends ZfExtended_Conflict {
+class ZfExtended_Models_Entity_Conflict extends ZfExtended_Exception {
+    protected $defaultCode = 409;
+    protected $defaultMessage = 'Die an den Server gesendete Daten verursachen einen Konflikt!';
+    protected $defaultMessageTranslate = true;
 }
