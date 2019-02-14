@@ -201,6 +201,11 @@ class ZfExtended_Utils {
         return iconv($config->runtimeOptions->fileSystemEncoding, 'UTF-8', $path);
     }
     
+    /**
+     * FIXME let the value come from a on deploy auto generated php file instead of reading the text version file
+     * returns the application version
+     * @return string
+     */
     public static function getAppVersion() {
         $versionFile = APPLICATION_PATH.'/../version';
         $regex = '/MAJOR_VER=([0-9]+)\s*MINOR_VER=([0-9]+).*\s*BUILD=([0-9]+).*/';

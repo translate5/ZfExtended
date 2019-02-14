@@ -198,6 +198,9 @@ class ZfExtended_Logger {
     protected function fillStaticData(ZfExtended_Logger_Event $event) {
         $event->levelName = $this->getLevelName($event->level);
         
+        if(!empty($_SERVER['HTTP_HOST'])) {
+            $event->httpHost = $_SERVER['HTTP_HOST'];
+        }
         if(!empty($_SERVER['REQUEST_URI'])) {
             $event->url = $_SERVER['REQUEST_URI'];
         }
@@ -205,7 +208,8 @@ class ZfExtended_Logger {
             $event->method = $_SERVER['REQUEST_METHOD'];
         }
         
-        //FIXME add POST/PUT parameters as additional extraData!
+        $event->appVersion = APPLICATION_VERSION;
+        //FIXME add POST/PUT parameters as additional extraData! → obsolete? see separate request loggin?
         
         if(Zend_Session::isStarted()) {
             $user = new Zend_Session_Namespace('user');

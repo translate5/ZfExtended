@@ -74,6 +74,12 @@ class ZfExtended_Logger_Event {
     public $message;
     
     /**
+     * the current application version
+     * @var string
+     */
+    public $appVersion;
+    
+    /**
      * the file where the error happened
      * @var string
      */
@@ -96,6 +102,12 @@ class ZfExtended_Logger_Event {
      * @var string
      */
     public $trace = '';
+    
+    /**
+     * the called HTTP host of the request
+     * @var string
+     */
+    public $httpHost;
     
     /**
      * the URL of the request

@@ -41,4 +41,9 @@ class ZfExtended_Application extends Zend_Application {
         }
         return parent::setPhpSettings($settings, $prefix);
     }
+    
+    public function run() {
+        define('APPLICATION_VERSION', ZfExtended_Utils::getAppVersion());
+        parent::run();
+    }
 }

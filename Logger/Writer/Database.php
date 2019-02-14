@@ -40,7 +40,7 @@ class ZfExtended_Logger_Writer_Database extends ZfExtended_Logger_Writer_Abstrac
         /* @var $db ZfExtended_Models_Db_ErrorLog */
         
         //get this data directly from the event:
-        $directlyFromEvent = ['level', 'domain', 'worker', 'eventCode', 'message', 'file', 'line', 'trace', 'url', 'method', 'userLogin', 'userGuid'];
+        $directlyFromEvent = ['level', 'domain', 'worker', 'eventCode', 'message', 'appVersion', 'file', 'line', 'trace', 'httpHost', 'url', 'method', 'userLogin', 'userGuid'];
         $data = [];
         foreach($directlyFromEvent as $key) {
             $data[$key] = $event->$key;
@@ -48,13 +48,15 @@ class ZfExtended_Logger_Writer_Database extends ZfExtended_Logger_Writer_Abstrac
         $data['last'] = NOW_ISO;
         //FIXME json_encode may not produce an error!
         //flatten entities to their dataobjects
-        $extra = array_map(function($item) {
-            if(is_object($item) && $item instanceof ZfExtended_Models_Entity_Abstract) {
-                return $item->getDataObject();
-            }
-            return $item;
-        }, $event->extra);
-        $data['extra'] = json_encode($extra);
+        if(!empty($event->extra)) {
+            $extra = array_map(function($item) {
+                if(is_object($item) && $item instanceof ZfExtended_Models_Entity_Abstract) {
+                    return $item->getDataObject();
+                }
+                return $item;
+            }, (array) $event->extra);
+            $data['extra'] = json_encode($extra);
+        }
         //$data['count'] = 0; FIXME how to make the duplication recognition?
         $db->insert($data);
     }
