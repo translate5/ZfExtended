@@ -34,23 +34,10 @@ END LICENSE AND COPYRIGHT
  * ausgegangen wird, dass alles andere nur Infomeldungen sind, bei denen nur die Message relevant ist
  */
 ?>
-<?php
-foreach ($this->errors as $error) {
-    if(empty($error->_errorMessage)) {
-        continue;
-    }
-    ?>
-    <h2><?php echo $error->_errorMessage; ?></h2>
-    <?php
-    if($error->_errorCode > 202){
-        ?>
-        <h3>Stack trace:</h3>
-        <pre><?php echo $error->_errorTrace; ?>
-        </pre>
-        <?php
-    }
-}
-?>
+<h2><?php echo $this->exception->getMessage(); ?></h2>
+<h3>Stack trace:</h3>
+<pre><?php echo $this->exception; ?>
+</pre>
 <h3>Request Parameters:</h3>
-<pre><?php echo var_export($this->getParams, true); ?>
+<pre><?php print_r($_REQUEST, true); ?>
 </pre><?php 

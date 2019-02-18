@@ -25,7 +25,6 @@ END LICENSE AND COPYRIGHT
 /**
  * Schreibt das Errorlog und versendet Mail an Admin bei Fehler
  *
- * - wenn $this->_session->runtimeOptions->showErrorsInBrowser auf 1, wird die Fehlermeldung mit trace im
  *   Browser angezeigt, sonst nur eine allgemein Fehlermeldung mit Kontaktdaten
  * - E_USER_NOTICE wird nicht als Fehler gewertet, aber an allen relevanten Stellen
  *   mit geloggt. D. h., einziger Loggingunterschied ist, dass der Fehler- und
@@ -33,94 +32,21 @@ END LICENSE AND COPYRIGHT
  */
 class ErrorController extends ZfExtended_Controllers_Action
 {
-    protected $_session;
-    /**
-     * @var object errors from errorhandler
-     */
-    protected $_errorhandlerErrors;
-    /**
-     * @var array Zusammengestellt für die Log- und Viewausgabe
-     */
-    protected $_errors;
-    /**
-     * @var ZfExtended_Log
-     */
-    protected $_log;
     /**
      * @var ZfExtended_Zendoverwrites_Translate
      */
     protected $_translate;
     /**
-     * @var array
+     * contains the caught exception
+     * @var Exception
      */
-    protected $_getParams = NULL;
-    /**
-     * @var Zend_Exception | mixed
-     */
-    protected $_exception = NULL;
-    /**
-     * @var string error-script to render
-     */
-    protected $_renderScript = NULL;
-    /**
-     * @var integer
-     */
-    protected $_showErrorsInBrowser = 0;
-    /**
-     * @var boolean this is made to distinguish between 
-     * ZfExtended_Models_Entity_NotFoundException and ZfExtended_NotFoundException
-     * this is a hack, but something else would bean to refactor the whole errorhandling process
-     * @todo refactor errorhandling to be able to catch the ZfExtended_NotFoundException and sent 404 status code
-     */
-    protected $_isHttp404 = false;
+    protected $exception = NULL;
+    
     /**
      *
      * @var string  
      */
     protected $route;
-    /**
-     * @var array Liste aller gültigen httpResponseCodes (status code 409 wird nicht ins error-log geschrieben)
-     *
-     */
-    protected $_httpResponseCodes = array(
-        '100' => 'Continue',
-        '101' => 'Switching Protocols',
-        '200' => 'OK',
-        '201' => 'Created',
-        '202' => 'Accepted',
-        '203' => 'Non-Authoritative Information',
-        '204' => 'No Content',
-        '205' => 'Reset Content',
-        '206' => 'Partial Content',
-        '300' => 'Multiple Choices',
-        '301' => 'Moved Permanently',
-        '302' => 'Moved Temporarily',
-        '303' => 'See Other',
-        '304' => 'Not Modified',
-        '305' => 'Use Proxy',
-        '400' => 'Bad Request',
-        '401' => 'Unauthorized',//no errorlogging on 401, because it is a normal exception on session timeout
-        '402' => 'Payment Required',
-        '403' => 'Forbidden',
-        '404' => 'Not Found',
-        '405' => 'Method Not Allowed',
-        '406' => 'Not Acceptable',
-        '407' => 'Proxy Authentication Required',
-        '408' => 'Request Time-out',
-        '409' => 'Conflict', 
-        '410' => 'Gone',
-        '411' => 'Length Required',
-        '412' => 'Precondition Failed',
-        '413' => 'Request Entity Too Large',
-        '414' => 'Request-URI Too Large',
-        '415' => 'Unsupported Media Type',
-        '500' => 'Internal Server Error',
-        '501' => 'Not Implemented',
-        '502' => 'Bad Gateway',
-        '503' => 'Service Unavailable',
-        '504' => 'Gateway Time-out',
-        '505' => 'HTTP Version not supported'
-    );
 
     /**
      * Initialisiert Variablen
@@ -128,31 +54,8 @@ class ErrorController extends ZfExtended_Controllers_Action
     public function init()
     {
         $this->route = get_class(Zend_Controller_Front::getInstance()->getRouter()->getCurrentRoute());
-        try {
-            $config = Zend_Registry::get('config');
-            $this->_showErrorsInBrowser = !empty($config->runtimeOptions->showErrorsInBrowser);
-        }
-        catch (Exception $e) {
-        }
         $this->_translate = ZfExtended_Zendoverwrites_Translate::getInstance();
-        $this->_log = ZfExtended_Factory::get('ZfExtended_Log');
         $this->exceptionInit();
-        if(count($this->_errors)==0){
-            throw new Zend_Exception('ErrorController ausgeführt, aber keine Fehler übergeben.');
-        }
-        $this->verifyErrorCodes();
-        $this->viewInit();
-    }
-    /**
-     * Prüft errorCodes gegen $this->_httpResponseCodes
-     */
-    protected function verifyErrorCodes()
-    {
-        foreach($this->_errors as $key => &$error){
-            if(!array_key_exists($this->_errors[$key]->_errorCode, $this->_httpResponseCodes)){
-                $this->_errors[$key]->_errorCode = 500;
-            }
-        }
     }
 
     /**
@@ -160,94 +63,95 @@ class ErrorController extends ZfExtended_Controllers_Action
      */
     protected function exceptionInit()
     {
-        $this->_errorhandlerErrors = $this->_getParam('error_handler');
-        try {
-            $this->_getParams = $this->_errorhandlerErrors->request->getParams();
-        }
-        catch (Exception $e) {
-            $this->_getParams = $this->_log->getUrlLogMessage();
-        }
-        $this->_errors[0] = new stdClass();
-        try {
-            $this->_exception = $this->_errorhandlerErrors->exception;
-            $this->_errors[0]->_errorMessage = $this->_exception->getMessage();
-            $this->_errors[0]->_errorCode = (int)$this->_exception->getCode();
-            $this->_errors[0]->_errorTrace = $this->_exception->getTraceAsString();
-        }
-        catch (Exception $e) {
-            $this->_errors[0]->_errorMessage = 'ZfExtended: Unknown Error';
-            $this->_errors[0]->_errorCode = 500;
-            $this->_errors[0]->_errorTrace = debug_backtrace();
-        }
-
-        if($this->_errors[0]->_errorCode != 0){
-            return;
-        }
-        switch($this->_errorhandlerErrors->type) {
+        //the error caught by the Zend_Controller_Plugin_ErrorHandler
+        $caughtError = $this->_getParam('error_handler');
+        //$caughtError->request → the original request
+        //$caughtError->exception → the exception
+        //$caughtError->type as defined in Zend_Controller_Plugin_ErrorHandler
+        $this->exception = $caughtError->exception;
+        
+        switch($caughtError->type) {
             case Zend_Controller_Plugin_ErrorHandler::EXCEPTION_NO_ACTION:
             case Zend_Controller_Plugin_ErrorHandler::EXCEPTION_NO_CONTROLLER:
-                $this->_errors[0]->_errorCode = 404;
+                $httpCode = 404;
                 break;
             default:
-                $this->_errors[0]->_errorCode = 500;
+                $httpCode = $this->exception->getCode();
                 break;
         }
-    }
-    /**
-     * @return object den Fehler mit dem höchsten _errorCode der Fehler aus $this->_errors
-     */
-    protected function getErrorWithHighesErrorCode()
-    {
-        $code = 0;
-        foreach($this->_errors as $error){
-            if($error->_errorCode > $code){
-                $code = $error->_errorCode;
-                $r = $error;
-            }
+        
+        $httpMessage = $this->responseCodeAsText($httpCode);
+        if(empty($httpMessage)) {
+            $httpCode = 500;
+            // get message again if changed
+            $httpMessage = $this->responseCodeAsText($httpCode);
         }
-        return $r;
+        
+        $this->getResponse()->setHttpResponseCode($httpCode);
+        //ExtJS does not parse the HTTP Status well on file uploads.
+        // In this case we deliver the status as additional information
+        //if($this->isRestRoute() && !empty($_FILES)) {
+            $this->view->httpStatus = $httpCode;
+        //}
+        $this->view->errorMessage = $this->exception->getMessage();
+        $this->view->message = $httpMessage;
+        $this->view->success = false;
     }
+    
     /**
-     * Initialisiert den view abhängig von Fehlerart und Art der Route
+     * returns the given HTTP code as text
+     * @param string $code
+     * @return string
      */
-    protected function viewInit()
+    protected function responseCodeAsText($code) {
+        $codeMap = Zend_Http_Response::responseCodeAsText();
+        $codeMap['422'] = 'Unprocessable Entity';
+        if(empty($codeMap[$code])) {
+            return null;
+        }
+        return $codeMap[$code];
+    }
+
+    /**
+     * Wird im Error-Falle ausgeführt
+     */
+    public function errorAction()
     {
-        $this->view->errors = $this->_errors;
-        $this->view->getParams   = $this->_getParams;
+        $this->view->messages = [];
         $this->view->translate = $this->_translate;
-        $missingController = $this->_exception instanceof Zend_Controller_Dispatcher_Exception && strpos($this->_exception->getMessage(), 'Invalid controller specified') !== false;
-        $missingAction = $this->_exception instanceof Zend_Controller_Action_Exception && $this->_exception->getCode() == '404';
-        $notFound = $this->_exception instanceof ZfExtended_NotFoundException;
-        if($this->_exception instanceof ZfExtended_Exception){
-            $errors = $this->_exception->getErrors();
+        
+        $missingController = $this->exception instanceof Zend_Controller_Dispatcher_Exception && strpos($this->exception->getMessage(), 'Invalid controller specified') !== false;
+        $missingAction = $this->exception instanceof Zend_Controller_Action_Exception && $this->exception->getCode() == '404';
+        $notFound = $this->exception instanceof ZfExtended_NotFoundException;
+        $loggingEnabled = true;
+        
+        // add errors
+        if($this->exception instanceof ZfExtended_Exception){
+            $errors = $this->exception->getErrors();
+            $loggingEnabled = $this->exception->isLoggingEnabled();
             if(!empty($errors)) {
-                $this->view->errors[] = $errors;
+                $this->view->messages[] = $errors;
             }
         }
-        if($this->_exception && $this->_exception->getCode() == '503'){
-            Zend_Layout::getMvcInstance()->disableLayout();
-            $this->_renderScript = 'error/maintenance.phtml';
-            return;
-        }
-        if($this->isRestRoute()){
-            Zend_Layout::getMvcInstance()->disableLayout();
-            $this->_renderScript = 'error/errorRest.phtml';
-        }
-        else{
-            $this->_renderScript = 'error/error.phtml';
-            if($this->_showErrorsInBrowser == 1){
-                $this->_renderScript = 'error/errorAdmin.phtml';
-            }
-            if($notFound){
-                $this->_renderScript = 'error/error404.phtml';
-                //FIXME wie machen dass das immer in entwicklungsumgebung??? 
-                //$this->_renderScript = 'error/errorAdmin.phtml';
-            }
-        }
+
+        $isHttp404 = false;
         if(($missingAction || $notFound || $missingController) && !$this->isRestRoute()) {
-            $this->_isHttp404 = true;
-            $this->view->errors[0]->_errorMessage = $this->_translate->_('Seite nicht gefunden: ').$_SERVER['REQUEST_URI'].$this->_translate->_('/ Aufruf erfolgte durch IP: ').$_SERVER['REMOTE_ADDR'];
+            $isHttp404 = true;
+            $this->view->errorMessage = $this->_translate->_('Seite nicht gefunden: ').$_SERVER['REQUEST_URI'].$this->_translate->_('/ Aufruf erfolgte durch IP: ').$_SERVER['REMOTE_ADDR'];
         }
+        
+        $logger = Zend_Registry::get('logger');
+        /* @var $logger ZfExtended_Logger */
+        
+        if($loggingEnabled){
+            if($isHttp404 || ($this->exception instanceof ZfExtended_Models_Entity_NotFoundException && $this->isRestRoute())){
+                $logger->info('E1019', $this->exception->getMessage());
+            }
+            else{
+                $logger->exception($this->exception);
+            }
+        }
+        $this->renderScript($this->initAndGetRenderScript($isHttp404));
     }
     
     /**
@@ -262,31 +166,28 @@ class ErrorController extends ZfExtended_Controllers_Action
     }
     
     /**
-     * Wird im Error-Falle ausgeführt
+     * returns the error script to render
+     * @param boolean $is404
+     * @return string
      */
-    public function errorAction()
-    {
-        $logger = Zend_Registry::get('logger');
-        /* @var $logger ZfExtended_Logger */
-        $highestError = $this->getErrorWithHighesErrorCode();
-        $loggingDisabled = (($this->_exception instanceof ZfExtended_Exception) && ! $this->_exception->isLoggingEnabled());
-        
-        if($loggingDisabled){
-            //do nothing here
+    protected function initAndGetRenderScript($is404) {
+        if($this->exception && $this->exception->getCode() == '503'){
+            Zend_Layout::getMvcInstance()->disableLayout();
+            return 'error/maintenance.phtml';
         }
-        elseif($this->_isHttp404 || ($this->_exception instanceof ZfExtended_Models_Entity_NotFoundException && $this->isRestRoute())){
-            $this->_log->log404($highestError->_errorMessage);
+        if($this->isRestRoute()){
+            Zend_Layout::getMvcInstance()->disableLayout();
+            return 'error/errorRest.phtml';
         }
-        else{
-            $logger->exception($this->_exception);
+        $config = Zend_Registry::get('config');
+        if(!empty($config->runtimeOptions->showErrorsInBrowser)){
+            $this->view->exception = $this->exception;
+            return 'error/errorAdmin.phtml';
         }
-        $this->getResponse()->setHttpResponseCode($highestError->_errorCode);
-        //ExtJS does not parse the HTTP Status well on file uploads. 
-        // In this case we deliver the status as additional information
-        if($this->isRestRoute() && !empty($_FILES)) {
-            $this->view->httpStatus = $highestError->_errorCode;
+        if($is404 || $this->exception instanceof ZfExtended_NotFoundException){
+            return 'error/error404.phtml';
         }
-        $this->renderScript($this->_renderScript);
+        return 'error/error.phtml';
     }
 }
 /**
