@@ -27,7 +27,13 @@ require APPLICATION_PATH.'/../library/OpenID-Connect-PHP/vendor/autoload.php';
 use Jumbojett\OpenIDConnectClient;
 use Jumbojett\OpenIDConnectClientException;
 
-class ZfExtended_OpenIDConnectClient extends OpenIDConnectClient{
+class ZfExtended_OpenIDConnectClient{
+    
+    /***
+     * 
+     * @var Zend_Controller_Request_Abstract
+     */
+    protected $request;
     
     /***
      * Current customer used in the request domain
@@ -35,16 +41,18 @@ class ZfExtended_OpenIDConnectClient extends OpenIDConnectClient{
      */
     protected $customer;
     
+    /***
+     * Open id client instance
+     * @var OpenIDConnectClient
+     */
+    protected $openIdClient;
+    
     public function __construct(Zend_Controller_Request_Abstract $request) {
+        $this->openIdClient=new OpenIDConnectClient();
         $this->setRequest($request);
         $this->initOpenIdData();
     }
     
-    /***
-     * 
-     * @var Zend_Controller_Request_Abstract
-     */
-    protected $request;
     
 
     public function setRequest(Zend_Controller_Request_Abstract $request){
@@ -60,18 +68,15 @@ class ZfExtended_OpenIDConnectClient extends OpenIDConnectClient{
         if(!$this->isOpenIdCustomerSet()){
             return;
         }
-        $this->setClientID($this->customer->getOpenIdClientId());
-        $this->setClientSecret($this->customer->getOpenIdClientSecret());
+        $this->openIdClient->setClientID($this->customer->getOpenIdClientId());
+        $this->openIdClient->setClientSecret($this->customer->getOpenIdClientSecret());
         
-        $this->setProviderURL($this->customer->getOpenIdServer());
-        $this->setIssuer($this->customer->getOpenIdAuth2Url());
-        $this->setRedirectURL($this->getRedirectDomainUrl());
+        $this->openIdClient->setProviderURL($this->customer->getOpenIdServer());
+        $this->openIdClient->setIssuer($this->customer->getOpenIdAuth2Url());
+        $this->openIdClient->setRedirectURL($this->getRedirectDomainUrl());
     }
     
     public function authenticate(){
-        //authenticate when is login request with username and password or when oauth response callback with code parametar
-        //if(empty($this->request->getParam('login')) && empty($this->request->getParam('passwd')) && empty($this->request->getParam('code')) && empty($this->request->getParam('id_token'))){
-        
         
         //if the openidfields for the customer are not set, ignore the auth call
         if(!$this->isOpenIdCustomerSet()){
@@ -84,15 +89,15 @@ class ZfExtended_OpenIDConnectClient extends OpenIDConnectClient{
             return false;
         }
 
-        $this->setVerifyHost(false);
-        $this->setVerifyPeer(false);
-        $this->addScope(array('openid','profile','email'));
-        $this->setAllowImplicitFlow(true);
-        $this->addAuthParam(array('response_mode' => 'form_post'));
-        $this->setResponseTypes('id_token');
-        $this->setResponseTypes('code');
+        $this->openIdClient->setVerifyHost(true);
+        $this->openIdClient->setVerifyPeer(true);
+        $this->openIdClient->addScope(array('openid','profile','email'));
+        $this->openIdClient->setAllowImplicitFlow(true);
+        $this->openIdClient->addAuthParam(array('response_mode' => 'form_post'));
+        $this->openIdClient->setResponseTypes('id_token');
+        $this->openIdClient->setResponseTypes('code');
         try {
-            return parent::authenticate();
+            return $this->openIdClient->authenticate();
         } catch (OpenIDConnectClientException $e) {
             $this->unsetSession();
             throw $e;
@@ -104,39 +109,60 @@ class ZfExtended_OpenIDConnectClient extends OpenIDConnectClient{
      * @return NULL|ZfExtended_Models_User
      */
     public function createUser(){
+        
         $user=ZfExtended_Factory::get('ZfExtended_Models_User');
         /* @var $user ZfExtended_Models_User */
         
-        //check if the user exist, so new guid is not created
-        if(!$user->findByLogin($this->getVerifiedClaims('email'))){
+        $issuer=$this->openIdClient->getVerifiedClaims('iss');
+        $subject=$this->openIdClient->getVerifiedClaims('sub');
+        
+        //check if the user exist
+        if(!$user->loadByIssuerAndSubject($issuer,$subject)){
             //it is new user, create guid
             $guidHelper = ZfExtended_Zendoverwrites_Controller_Action_HelperBroker::getStaticHelper(
                 'Guid'
                 );
-            $user->setUserGuid($guidHelper->create(true));
+            $userGuid=$guidHelper->create(true);
+            
+            $user->setUserGuid($userGuid);
+            $user->setOpenIdIssuer($issuer);
+            $user->setOpenIdSubject($subject);
+            $user->setLogin($userGuid);
+            
+            //save the user so we get userid
+            $userId=$user->save();
+            
+            //update the login with the openid as prefix
+            $user->setLogin('OID-'.$userId);
         }
         
-        $user->setFirstName($this->getVerifiedClaims('given_name'));
-        $user->setSurName($this->getVerifiedClaims('family_name'));
+        $user->setFirstName($this->openIdClient->getVerifiedClaims('given_name'));
+        $user->setSurName($this->openIdClient->getVerifiedClaims('family_name'));
         
         //the gender is required in translate5, and in the response can be empty or larger than 1 character
-        $gender=!empty($this->requestUserInfo('gender')) ? substr($this->requestUserInfo('gender'),0,1) : 'f';
+        $gender=!empty($this->openIdClient->requestUserInfo('gender')) ? substr($this->openIdClient->requestUserInfo('gender'),0,1) : 'f';
         $user->setGender($gender);
         
-        $user->setLogin($this->getVerifiedClaims('email'));
-        $user->setEmail($this->getVerifiedClaims('email'));
+        $user->setEmail($this->openIdClient->getVerifiedClaims('email'));
         
-        $user->setEditable(1);
+        $user->setEditable(0);
+        
+        //find the default locale from the config
+        $localeConfig = Zend_Registry::get('config')->runtimeOptions->translation;
+        $appLocale=!empty($localeConfig->applicationLocale) ? $localeConfig->applicationLocale : null;
+        $fallbackLocale=!empty($localeConfig->fallbackLocale) ? $localeConfig->fallbackLocale : null;
+        
+        $defaultLocale=empty($appLocale) ? (empty($fallbackLocale) ? 'en' : $fallbackLocale) : $appLocale;
         
         //use the parrent language if the locale is not one
-        $claimLocale=$this->getVerifiedClaims('locale');
+        $claimLocale=$this->openIdClient->getVerifiedClaims('locale');
         $claimLocale=explode('-', $claimLocale);
-        $claimLocale=!empty($claimLocale) ? $claimLocale[0] : 'de';
+        $claimLocale=!empty($claimLocale) ? $claimLocale[0] : $defaultLocale;
         $user->setLocale($claimLocale);
         
         $user->setCustomers(','.$this->customer->getId().',');
         
-        $user->setRoles($this->mergeUserRoles($this->getVerifiedClaims('roles')));
+        $user->setRoles($this->mergeUserRoles($this->openIdClient->getVerifiedClaims('roles')));
         
         return $user->save()>0? $user : null;
     }
@@ -193,17 +219,11 @@ class ZfExtended_OpenIDConnectClient extends OpenIDConnectClient{
     
     /***
      * Get the customer from the current used domain.
-     * Ex: if thranslate5 is called from mittagqi.translate5.com, the customer will be mittagqi
      * @return editor_Models_Customer
      */
     protected function initCustomerFromDomain(){
-        $tmp = explode('.',  $_SERVER['HTTP_HOST']); // split into parts
-        $domain = current($tmp);
         $customer=ZfExtended_Factory::get('editor_Models_Customer');
-        /* @var $customer editor_Models_Customer */
-        if($domain!='www'){
-            $customer->findByDomain($domain);
-        }
+        $customer->loadByDomain($this->getRedirectDomainUrl());
         //the customer for the domain does not exist, load the default customer
         if($customer->getId()==null){
             $customer->loadByDefaultCustomer();
@@ -216,8 +236,8 @@ class ZfExtended_OpenIDConnectClient extends OpenIDConnectClient{
      * Unset the openid session
      */
     protected function unsetSession(){
-        $this->unsetState();
-        $this->unsetNonce();
+        $this->openIdClient->unsetState();
+        $this->openIdClient->unsetNonce();
     }
     
     /***

@@ -53,6 +53,7 @@ class ZfExtended_SessionController extends ZfExtended_RestController {
         $this->view->state = self::STATE_AUTHENTICATED;
         $this->view->user = clone $user->data;
         $this->view->user->passwd = '********';
+        $this->view->user->openIdSubject = '';
     }
     
     /**
