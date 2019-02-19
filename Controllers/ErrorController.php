@@ -47,6 +47,11 @@ class ErrorController extends ZfExtended_Controllers_Action
      * @var string  
      */
     protected $route;
+    
+    /**
+     * @var ZfExtended_Logger
+     */
+    protected $logger;
 
     /**
      * Initialisiert Variablen
@@ -55,6 +60,7 @@ class ErrorController extends ZfExtended_Controllers_Action
     {
         $this->route = get_class(Zend_Controller_Front::getInstance()->getRouter()->getCurrentRoute());
         $this->_translate = ZfExtended_Zendoverwrites_Translate::getInstance();
+        $this->logger = Zend_Registry::get('logger');
         $this->exceptionInit();
     }
 
@@ -76,7 +82,13 @@ class ErrorController extends ZfExtended_Controllers_Action
                 $httpCode = 404;
                 break;
             default:
-                $httpCode = $this->exception->getCode();
+                $e = $this->exception;
+                if($e instanceof ZfExtended_ErrorCodeException){
+                    $httpCode = $e->getHttpReturnCode();
+                }
+                else {
+                    $httpCode = $e->getCode();
+                }
                 break;
         }
         
@@ -93,7 +105,12 @@ class ErrorController extends ZfExtended_Controllers_Action
         //if($this->isRestRoute() && !empty($_FILES)) {
             $this->view->httpStatus = $httpCode;
         //}
-        $this->view->errorMessage = $this->exception->getMessage();
+        if($this->exception instanceof ZfExtended_Exception){
+            $this->view->errorMessage = $this->logger->formatMessage($this->exception->getMessage(), $this->exception->getErrors());
+        }
+        else {
+            $this->view->errorMessage = $this->exception->getMessage();
+        }
         $this->view->message = $httpMessage;
         $this->view->success = false;
     }
@@ -118,6 +135,7 @@ class ErrorController extends ZfExtended_Controllers_Action
     public function errorAction()
     {
         $this->view->messages = [];
+        $this->view->extra = null;
         $this->view->translate = $this->_translate;
         
         $missingController = $this->exception instanceof Zend_Controller_Dispatcher_Exception && strpos($this->exception->getMessage(), 'Invalid controller specified') !== false;
@@ -130,7 +148,7 @@ class ErrorController extends ZfExtended_Controllers_Action
             $errors = $this->exception->getErrors();
             $loggingEnabled = $this->exception->isLoggingEnabled();
             if(!empty($errors)) {
-                $this->view->messages[] = $errors;
+                $this->view->extra = $errors;
             }
         }
 
@@ -140,15 +158,15 @@ class ErrorController extends ZfExtended_Controllers_Action
             $this->view->errorMessage = $this->_translate->_('Seite nicht gefunden: ').$_SERVER['REQUEST_URI'].$this->_translate->_('/ Aufruf erfolgte durch IP: ').$_SERVER['REMOTE_ADDR'];
         }
         
-        $logger = Zend_Registry::get('logger');
-        /* @var $logger ZfExtended_Logger */
-        
         if($loggingEnabled){
             if($isHttp404 || ($this->exception instanceof ZfExtended_Models_Entity_NotFoundException && $this->isRestRoute())){
-                $logger->info('E1019', $this->exception->getMessage());
+                $this->logger->exception($this->exception, [
+                    'level' => ZfExtended_Logger::LEVEL_INFO,
+                    'eventCode' => 'E1019',
+                ]);
             }
             else{
-                $logger->exception($this->exception);
+                $this->logger->exception($this->exception);
             }
         }
         $this->renderScript($this->initAndGetRenderScript($isHttp404));

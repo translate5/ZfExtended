@@ -25,16 +25,21 @@ END LICENSE AND COPYRIGHT
 /**
  * Should be used if the request to the server contains data which is not valid
  * points to HTTP 422 Unprocessable Entity
- * @deprecated use ZfExtended_UnprocessableEntity instead
  */
-class ZfExtended_ValidateException extends ZfExtended_Exception {
-    /**
-     * @var string
-     */
-    protected $defaultMessage = 'Nicht validiert!';
-    
+class ZfExtended_UnprocessableEntity extends ZfExtended_ErrorCodeException {
     /**
      * @var integer
      */
-    protected $defaultCode = 422;
+    protected $httpReturnCode = 422;
+    
+    protected static $localErrorCodes = ['E1025' => '422 Unprocessable Entity'];
+    
+    /**
+     * Fixed to errorcode E1025
+     * @param array $invalidFields associative array of invalid fieldnames and an error string what is wrong with the field
+     * @param Exception $previous
+     */
+    public function __construct(array $invalidFields, Exception $previous = null) {
+        parent::__construct('E1025', $invalidFields, $previous);
+    }
 }

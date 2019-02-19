@@ -114,7 +114,12 @@ class ZfExtended_Logger {
         $this->processEvent($event, is_null($writerNames) ? [] : $writerNames);
     }
     
-    public function exception(Exception $exception) {
+    /**
+     * Log the given exception
+     * @param Exception $exception
+     * @param array $eventOverride array to override the event generated from the exception
+     */
+    public function exception(Exception $exception, array $eventOverride = []) {
         $event = new ZfExtended_Logger_Event();
         $event->created = NOW_ISO;
         
@@ -129,6 +134,8 @@ class ZfExtended_Logger {
             $extraData = [];
             $event->domain = $this->domain;
         }
+        //for developing it is easier when we have the exception class somewhere
+        $extraData['exception'] = get_class($exception);
         
         $event->exception = $exception;
         $event->eventCode = $exception instanceof ZfExtended_ErrorCodeException ? 'E'.$exception->getCode() : $exception->getCode();
@@ -137,6 +144,7 @@ class ZfExtended_Logger {
         $event->extra = $extraData;
         
         $this->fillStaticData($event);
+        $event->mergeFromArray($eventOverride);
         $this->processEvent($event);
     }
     
@@ -227,7 +235,7 @@ class ZfExtended_Logger {
      * @param array $extra
      * @return string
      */
-    protected function formatMessage($message, array $extra = null){
+    public function formatMessage($message, array $extra = null){
         if(empty($extra)) {
             return $message;
         }

@@ -29,6 +29,11 @@ END LICENSE AND COPYRIGHT
  * After that the two classes can be merged, and all occurences of ZfExtended_ErrorCodeException replaced with ZfExtended_Exception
  */
 class ZfExtended_ErrorCodeException extends ZfExtended_Exception {
+    /**
+     * default HTTP return code
+     * @var integer
+     */
+    protected $httpReturnCode = 500;
     
     /**
      * Into this field all errorcodes of the class hierarchy is merged
@@ -46,6 +51,14 @@ class ZfExtended_ErrorCodeException extends ZfExtended_Exception {
         $this->allErrorCodes = $this->mergeErrorCodes();
         parent::__construct($this->getErrorMessage($errorCode), substr($errorCode, 1), $previous);
         $this->setErrors($extra);
+    }
+    
+    /**
+     * returns the desired HTTP return code for that Execption
+     * @return string
+     */
+    public function getHttpReturnCode() {
+        return $this->httpReturnCode;
     }
     
     protected function getErrorMessage($errorCode) {
