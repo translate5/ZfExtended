@@ -32,7 +32,12 @@ class ZfExtended_UnprocessableEntity extends ZfExtended_ErrorCodeException {
      */
     protected $httpReturnCode = 422;
     
-    protected static $localErrorCodes = ['E1025' => '422 Unprocessable Entity'];
+    protected $errorCodeToUse = 'E1025';
+    
+    protected static $localErrorCodes = [
+        'E1025' => '422 Unprocessable Entity',
+        'E1026' => '422 Unprocessable Entity on FileUpload',
+    ];
     
     /**
      * Fixed to errorcode E1025
@@ -40,6 +45,21 @@ class ZfExtended_UnprocessableEntity extends ZfExtended_ErrorCodeException {
      * @param Exception $previous
      */
     public function __construct(array $invalidFields, Exception $previous = null) {
-        parent::__construct('E1025', $invalidFields, $previous);
+        $data = [
+            'errors' => [],
+            'errorsTranslated' => [],
+        ];
+        //if one field has multiple errors, this must be a plain array 
+        foreach($invalidFields as $field => $error) {
+            if(is_array($error)) {
+                $data['errors'][$field] = array_keys($error);
+                $data['errorsTranslated'][$field] = array_values($error);
+            }
+            else {
+                $data['errors'][$field] = [$error];
+                $data['errorsTranslated'][$field] = [$error];
+            }
+        }
+        parent::__construct($this->errorCodeToUse, $data, $previous);
     }
 }

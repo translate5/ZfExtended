@@ -135,7 +135,6 @@ class ErrorController extends ZfExtended_Controllers_Action
     public function errorAction()
     {
         $this->view->messages = [];
-        $this->view->extra = null;
         $this->view->translate = $this->_translate;
         
         $missingController = $this->exception instanceof Zend_Controller_Dispatcher_Exception && strpos($this->exception->getMessage(), 'Invalid controller specified') !== false;
@@ -147,8 +146,11 @@ class ErrorController extends ZfExtended_Controllers_Action
         if($this->exception instanceof ZfExtended_Exception){
             $errors = $this->exception->getErrors();
             $loggingEnabled = $this->exception->isLoggingEnabled();
-            if(!empty($errors)) {
-                $this->view->extra = $errors;
+            if(!empty($errors) && !empty($errors['errors'])) {
+                $this->view->errors = $errors['errors'];
+            }
+            if(!empty($errors) && !empty($errors['errorsTranslated'])) {
+                $this->view->errorsTranslated = $errors['errorsTranslated'];
             }
         }
 
@@ -189,6 +191,12 @@ class ErrorController extends ZfExtended_Controllers_Action
      * @return string
      */
     protected function initAndGetRenderScript($is404) {
+        $error = error_get_last();
+        if(!empty($error)) {
+            //if there were warnings or notices before, we have to clear them to get valid browser output
+            ob_get_length() && ob_clean(); 
+        }
+        
         if($this->exception && $this->exception->getCode() == '503'){
             Zend_Layout::getMvcInstance()->disableLayout();
             return 'error/maintenance.phtml';
