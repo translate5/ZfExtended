@@ -338,17 +338,15 @@ class ZfExtended_UserController extends ZfExtended_RestController {
      * @throws ZfExtended_Models_Entity_Exceptions_IntegrityDuplicateKey
      */
     protected function handleLoginDuplicates(ZfExtended_Models_Entity_Exceptions_IntegrityDuplicateKey $e) {
-        $t = ZfExtended_Zendoverwrites_Translate::getInstance();
-        /* @var $t ZfExtended_Zendoverwrites_Translate */
         $errors = [
             'login' => []
         ];
         
         if($e->isInMessage("for key 'login'")) {
-            $errors['login']['duplicateLogin'] = $t->_('Dieser Anmeldename wird bereits verwendet.');
+            $errors['login']['duplicateLogin'] = 'Dieser Anmeldename wird bereits verwendet.';
         }
         elseif($e->isInMessage("for key 'userGuid'")) {
-            $errors['login']['duplicateUserGuid'] = $t->_('Diese UserGuid wird bereits verwendet.');
+            $errors['login']['duplicateUserGuid'] = 'Diese UserGuid wird bereits verwendet.';
         }
         else {
             throw $e; //otherwise throw this again

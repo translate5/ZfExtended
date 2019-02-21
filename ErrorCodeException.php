@@ -54,6 +54,16 @@ class ZfExtended_ErrorCodeException extends ZfExtended_Exception {
     }
     
     /**
+     * returns the internally used error code of that exception instance
+     * @return string
+     */
+    public function getErrorCode() {
+        //since the original exception can store only an integer we have to add the e here.
+        $code = parent::getCode();
+        return 'E'.str_pad($code, 4, '0', STR_PAD_LEFT);
+    }
+    
+    /**
      * returns the desired HTTP return code for that Execption
      * @return string
      */
