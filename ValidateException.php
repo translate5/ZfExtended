@@ -24,7 +24,7 @@ END LICENSE AND COPYRIGHT
 
 /**
  * Should be used if the request to the server contains data which is not valid
- * points to HTTP 422 Unprocessable Entity
+ * points to HTTP "422 Unprocessable Entity"
  * @deprecated use ZfExtended_UnprocessableEntity instead
  */
 class ZfExtended_ValidateException extends ZfExtended_Exception {

@@ -352,7 +352,7 @@ class ZfExtended_UserController extends ZfExtended_RestController {
             throw $e; //otherwise throw this again
         }
         
-        throw new ZfExtended_UnprocessableEntity($errors);
+        throw ZfExtended_UnprocessableEntity::createResponse($errors);
     }
 
     /**

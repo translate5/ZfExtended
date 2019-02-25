@@ -26,8 +26,6 @@ END LICENSE AND COPYRIGHT
  * 
  */
 class ZfExtended_FileUploadException extends ZfExtended_UnprocessableEntity {
-    protected $errorCodeToUse = 'E1026';
-    
     //Since such errors are mainly intresting for the uploading user, we just log it as debug
     protected $level = ZfExtended_Logger::LEVEL_DEBUG;
     
