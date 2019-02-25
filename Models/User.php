@@ -67,6 +67,19 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implement
     
   protected $dbInstanceClass = 'ZfExtended_Models_Db_User';
   protected $validatorInstanceClass = 'ZfExtended_Models_Validator_User';
+  
+  
+      /**
+       * Loads user by a given list of userGuids
+       * @param array $guids
+       * @return array
+       */
+    public function loadByGuids(array $guids){
+         $s=$this->db->select()
+         ->where('userGuid IN (?)', array_unique($guids));
+         return $this->loadFilterdCustom($s);
+     }
+  
     /**
      * sets the user in Zend_Session_Namespace('user')
      *
