@@ -67,8 +67,8 @@ class ZfExtended_BaseIndex{
      *
      */
     protected function  __construct($indexpath) {
-        if (version_compare(PHP_VERSION, '5.6.0', '<') || version_compare(PHP_VERSION, '7.0.0', '>=')) {
-            $msg = array('Please use PHP in a version > 5.6.0 and < 7.0.0!');
+        if (version_compare(PHP_VERSION, '7.0.0', '<=') || version_compare(PHP_VERSION, '7.2.0', '>=')) {
+            $msg = array('Please use PHP in version 7.1!');
             if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
                 $msg[] = 'Please update your xampp package manually or reinstall Translate5 with the latest windows installer from http://www.translate5.net';
                 $msg[] = 'Warning: Reinstallation can lead to data loss! Please contact support@translate5.net when you need assistance in data conversion!';

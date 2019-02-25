@@ -74,7 +74,7 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
             Zend_Session::setId($_POST[$resconf['name']]);
         }
         
-        Zend_Session::setSaveHandler(new Zend_Session_SaveHandler_DbTable($this->_sessionConfig));
+        Zend_Session::setSaveHandler(new ZfExtended_Session_SaveHandler_DbTable($this->_sessionConfig));
 
         $this->handleAuthToken(); //makes a redirect if successfull!
         

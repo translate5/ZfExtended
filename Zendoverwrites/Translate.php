@@ -335,7 +335,7 @@ class  ZfExtended_Zendoverwrites_Translate extends Zend_Translate
         }
         return $s;
     }
-    public function setJsonEncode(boolean $val) {
+    public function setJsonEncode(bool $val) {
         $this->_jsonEncode = $val;
     }
     public function getJsonEncode(){
