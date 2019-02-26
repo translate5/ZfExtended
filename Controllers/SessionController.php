@@ -159,7 +159,8 @@ class ZfExtended_SessionController extends ZfExtended_RestController {
         /* @var $SessionMapInternalUniqIdTable ZfExtended_Models_Db_SessionMapInternalUniqId */
         
         //longer as 30 (32) means that it is the sessionMapInternalUniqId, so we have to fetch the real session_id before
-        if(strlen($sessionId) > 30) {
+        $this->acl = ZfExtended_Acl::getInstance();
+        if($this->isAllowed('backend', 'sessionDeleteByInternalId') && strlen($sessionId) > 30) {
             $result = $SessionMapInternalUniqIdTable->fetchRow(['internalSessionUniqId = ?' => $sessionId]);
             if(!$result) {
                 //we dont throw any information about the success here due security reasons, we just do nothing
