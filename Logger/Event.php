@@ -139,6 +139,18 @@ class ZfExtended_Logger_Event {
      */
     public $extra;
     
+    /**
+     * Merge the data defined in the associative array into the current event
+     * @param array $dataToMerge
+     */
+    public function mergeFromArray(array $dataToMerge) {
+        foreach($dataToMerge as $key => $value) {
+            if(property_exists($this, $key)) {
+                $this->$key = $value;
+            }
+        }
+    }
+    
     public function __toString() {
         $msg = [];
         $e = empty($this->exception) ? '' : ' '.get_class($this->exception);

@@ -100,21 +100,69 @@ class ZfExtended_Logger {
      * @param array $writerNames optional, if given uses this writer(s) only (names as given in config)
      */
     protected function log($code, $message, $level = self::LEVEL_INFO, array $extraData = null, array $writerNames = null) {
+        $event = $this->prepareEvent($level, $code, $extraData);
+        $event->message = $this->formatMessage($message, $extraData);
+        $this->processEvent($event, is_null($writerNames) ? [] : $writerNames);
+    }
+    
+    /**
+     * The error handler for finally caught PHP errors
+     * @param string $code
+     * @param string $message
+     * @param integer $level
+     * @param array $error
+     */
+    public function finalError($code, $message, $level, array $error) {
+        $level = $this->levelFromString($level);
+        
+        settype($error['type'], 'integer');
+        settype($error['message'], 'string');
+        settype($error['file'], 'string');
+        settype($error['line'], 'integer');
+        
+        $file = $error['file'];
+        $line = $error['line'];
+        $message .= $error['message'];
+        //delete the standard infos from extraData, since they are stored in event directly
+        unset($error['file']);
+        unset($error['line']);
+        unset($error['message']);
+        unset($error['type']); //processed outside
+        $event = $this->prepareEvent($level, $code, $error);
+        $event->message = $message;
+        $event->file = $file;
+        $event->line = $line;
+        $this->processEvent($event);
+    }
+    
+    /**
+     * Prepares the event instance
+     * @param integer $level
+     * @param string $code
+     * @param array $extraData or null
+     * @return ZfExtended_Logger_Event
+     */
+    protected function prepareEvent($level, $code, $extraData) {
         $event = new ZfExtended_Logger_Event();
         $event->created = NOW_ISO;
         
         $event->domain = $this->domain;
         $event->level = $level;
         $event->eventCode = $code;
-        $event->message = $this->formatMessage($message, $extraData);
         $this->fillTrace($event);
         $event->extra = $extraData;
         
         $this->fillStaticData($event);
-        $this->processEvent($event, is_null($writerNames) ? [] : $writerNames);
+        return $event;
     }
+
     
-    public function exception(Exception $exception) {
+    /**
+     * Log the given exception
+     * @param Exception $exception
+     * @param array $eventOverride array to override the event generated from the exception
+     */
+    public function exception(Exception $exception, array $eventOverride = []) {
         $event = new ZfExtended_Logger_Event();
         $event->created = NOW_ISO;
         
@@ -137,6 +185,7 @@ class ZfExtended_Logger {
         $event->extra = $extraData;
         
         $this->fillStaticData($event);
+        $event->mergeFromArray($eventOverride);
         $this->processEvent($event);
     }
     
@@ -227,7 +276,7 @@ class ZfExtended_Logger {
      * @param array $extra
      * @return string
      */
-    protected function formatMessage($message, array $extra = null){
+    public function formatMessage($message, array $extra = null){
         if(empty($extra)) {
             return $message;
         }
@@ -295,10 +344,7 @@ class ZfExtended_Logger {
      * @throws InvalidArgumentException
      */
     public function __call($method, $arguments) {
-        $level = 'LEVEL_'.strtoupper($method);
-        if (($level = array_search($level, $this->logLevels)) === false) {
-            $level = self::LEVEL_INFO; //default level on invalid level given
-        }
+        $level = $this->levelFromString($method);
         switch (count($arguments)) {
             case 0:
             case 1:
@@ -324,5 +370,18 @@ class ZfExtended_Logger {
                 break;
         }
         $this->log($code, $message, $level, $extra, $writer);
+    }
+    
+    /**
+     * returns the numeric level to the given string, example 'fatal' returns 1
+     * @param $level string
+     * @return integer
+     */
+    protected function levelFromString($level) {
+        $level = 'LEVEL_'.strtoupper($level);
+        if (($level = array_search($level, $this->logLevels)) === false) {
+            return self::LEVEL_INFO; //default level on invalid level given
+        }
+        return $level;
     }
 }

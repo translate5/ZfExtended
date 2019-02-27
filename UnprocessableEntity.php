@@ -22,11 +22,15 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
-class ZfExtended_Models_Entity_Conflict  extends ZfExtended_ErrorCodeException {
+/**
+ * Should be used if the request to the server contains data which is not valid
+ * points to HTTP 422 Unprocessable Entity
+ */
+class ZfExtended_UnprocessableEntity extends ZfExtended_ErrorCodeException {
     /**
      * @var integer
      */
-    protected $httpReturnCode = 409;
+    protected $httpReturnCode = 422;
     
     /**
      * By default we log that as INFO, if created as response then the level is set to DEBUG
@@ -35,7 +39,8 @@ class ZfExtended_Models_Entity_Conflict  extends ZfExtended_ErrorCodeException {
     protected $level = ZfExtended_Logger::LEVEL_INFO;
     
     protected static $localErrorCodes = [
-        'E1041' => '409 Conflict',
+        'E1025' => '422 Unprocessable Entity',
+        'E1026' => '422 Unprocessable Entity on FileUpload',
     ];
     
 }

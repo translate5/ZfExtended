@@ -330,6 +330,7 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
   /**
    * handles a ZfExtended_ValidateException
    * @param ZfExtended_ValidateException $e
+   * @deprecated should be obsolete if new error loggin refactoring is done
    */
   protected function handleValidateException(ZfExtended_ValidateException $e) {
       $this->view->errors = $this->transformErrors($e->getErrors());
@@ -339,6 +340,7 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
   /**
    * handles a general ZfExtended_Exception
    * @param ZfExtended_Exception $e
+   * @deprecated should be obsolete if new error loggin refactoring is done
    */
   protected function handleException(ZfExtended_Exception $e) {
       $this->log->logException($e);
@@ -353,6 +355,7 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
   /**
    * prepares the result in case of an error
    * @param integer $httpStatus
+   * @deprecated should be obsolete if new error loggin refactoring is done
    */
   protected function handleErrorResponse($httpStatus) {
       $this->view->message = "NOT OK";
