@@ -147,8 +147,6 @@ class ZfExtended_Controller_Helper_General extends Zend_Controller_Action_Helper
         $session = new Zend_Session_Namespace();
         $internalSessionUniqId = $session->internalSessionUniqId;
         $sessionId = Zend_Session::getId();
-        $sessionTable = ZfExtended_Factory::get('ZfExtended_Models_Db_Session');
-        $sessionTable->delete("session_id = '".$sessionId."'");
         $SessionMapInternalUniqIdTable = ZfExtended_Factory::get('ZfExtended_Models_Db_SessionMapInternalUniqId');
         $SessionMapInternalUniqIdTable->delete("internalSessionUniqId  = '".$internalSessionUniqId."'");
         $auth = Zend_Auth::getInstance();

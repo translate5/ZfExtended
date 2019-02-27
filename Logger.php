@@ -211,7 +211,7 @@ class ZfExtended_Logger {
         $event->appVersion = APPLICATION_VERSION;
         //FIXME add POST/PUT parameters as additional extraData! → obsolete? see separate request loggin?
         
-        if(Zend_Session::isStarted()) {
+        if(Zend_Session::isStarted() && !Zend_Session::isDestroyed()) {
             $user = new Zend_Session_Namespace('user');
             if(!empty($user->data->userGuid)){
                 $event->userGuid = $user->data->userGuid;

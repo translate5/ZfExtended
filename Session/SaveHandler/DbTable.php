@@ -36,35 +36,24 @@ class ZfExtended_Session_SaveHandler_DbTable
     
     /**
      * Write session data.
+     * Overwrite initial method for using INSERT ON DUPLICATE KEY UPDATE instead.
      *
      * @param string $id
      * @param string $data
-     * @return boolean
+     * @return true
      */
     public function write($id, $data)
     {
-        $return = false;
-        
         $data = array($this->_modifiedColumn => time(),
                       $this->_dataColumn     => (string) $data);
         
-        $rows = call_user_func_array(array(&$this, 'find'), $this->_getPrimary($id));
-
-        // TODO: use INSERT ON DUPLICATE KEY UPDATE instead
-        if (count($rows)) {
-            $data[$this->_lifetimeColumn] = $this->_getLifetime($rows->current());
-            
-            if ($this->update($data, $this->_getPrimary($id, self::PRIMARY_TYPE_WHERECLAUSE))) {
-                $return = true;
-            }
-        } else {
-            $data[$this->_lifetimeColumn] = $this->_lifetime;
-
-            if ($this->insert(array_merge($this->_getPrimary($id, self::PRIMARY_TYPE_ASSOC), $data))) {
-                $return = true;
-            }
-        }
-
-        return $return;
+        $sql = 'INSERT INTO `session` (`session_id`, `name`, `modified`, `lifetime`, `session_data`) VALUES (?,?,?,?,?)
+                ON DUPLICATE KEY UPDATE `modified` = ?, `session_data` = ?';
+        $bindings = array($id,$this->_sessionName,intval($data[$this->_modifiedColumn]),intval($this->_lifetime),$data[$this->_dataColumn],intval($data[$this->_modifiedColumn]),$data[$this->_dataColumn]);
+        
+        $db = Zend_Db_Table_Abstract::getDefaultAdapter();
+        $db->query($sql, $bindings);
+        
+        return true; // session_write_close(): Session callback expects true/false return value
     }
 }
