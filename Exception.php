@@ -97,7 +97,7 @@ class ZfExtended_Exception extends Zend_Exception {
     /**
      * sets the internal exception message
      * @param string $msg
-     * @param boolean $translate optional, set to true if the message should be translated 
+     * @param bool $translate optional, set to true if the message should be translated 
      */
     public function setMessage($msg, $translate = false) {
         if($translate){
@@ -233,7 +233,7 @@ class ZfExtended_Exception extends Zend_Exception {
     
     /**
      * enables / disables the logging for this exception
-     * @param boolean $enabled
+     * @param bool $enabled
      */
     public function setLogging($enabled = true) {
         $this->loggingEnabled = $enabled;

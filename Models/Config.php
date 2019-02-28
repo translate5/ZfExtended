@@ -29,9 +29,9 @@ END LICENSE AND COPYRIGHT
  *
  */
 /**
- * @method void setId() setId(integer $id)
+ * @method void setId() setId(int $id)
  * @method void setName() setName(string $name)
- * @method void setConfirmed() setConfirmed(boolean $confirmed)
+ * @method void setConfirmed() setConfirmed(bool $confirmed)
  * @method void setModule() setModule(string $module)
  * @method void setCategory() setCategory(string $category)
  * @method void setValue() setValue(string $value)

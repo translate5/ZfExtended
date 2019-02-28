@@ -206,35 +206,35 @@ class ZfExtended_Models_Filter_ExtJs extends ZfExtended_Models_Filter {
   }
   /**
    * @param string $field
-   * @param integer $value
+   * @param int $value
    */
   protected function applyNumeric_lt($field, $value) {
     $this->where($field.' < ?', $value);
   }
   /**
    * @param string $field
-   * @param integer $value
+   * @param int $value
    */
   protected function applyNumeric_gt($field, $value) {
     $this->where($field.' > ?', $value);
   }
   /**
    * @param string $field
-   * @param integer $value
+   * @param int $value
    */
   protected function applyNumeric_lteq($field, $value) {
     $this->where($field.' <= ?', $value);
   }
   /**
    * @param string $field
-   * @param integer $value
+   * @param int $value
    */
   protected function applyNumeric_gteq($field, $value) {
     $this->where($field.' >= ?', $value);
   }
   /**
    * @param string $field
-   * @param integer $value
+   * @param int $value
    */
   protected function applyNumeric_eq($field, $value) {
     $this->where($field.' = ?', $value);

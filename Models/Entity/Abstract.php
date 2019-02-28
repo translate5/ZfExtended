@@ -134,7 +134,7 @@ abstract class ZfExtended_Models_Entity_Abstract {
     
     /**
      * loads the Entity by Primary Key Id
-     * @param integer $id
+     * @param int $id
      */
     public function load($id) {
         try {
@@ -354,7 +354,7 @@ abstract class ZfExtended_Models_Entity_Abstract {
 
     /**
      * sets the entity version to be compared against
-     * @param integer $version
+     * @param int $version
      */
     public function setEntityVersion($version) {
         if($this->hasField(self::VERSION_FIELD)) {
@@ -423,8 +423,8 @@ abstract class ZfExtended_Models_Entity_Abstract {
 
     /**
      * limits the result set of the loadAll Request
-     * @param integer $offset
-     * @param integer $limit
+     * @param int $offset
+     * @param int $limit
      */
     public function limit($offset, $limit) {
       $this->offset = $offset;

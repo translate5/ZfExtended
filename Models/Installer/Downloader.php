@@ -198,7 +198,7 @@ class ZfExtended_Models_Installer_Downloader {
     /**
      * fetches the dependency and unzips it locally
      * @param stdClass $dependency
-     * @param boolean $cleanBefore
+     * @param bool $cleanBefore
      * @return boolean
      */
     protected function fetch(stdClass $dependency, $cleanBefore = false) {
@@ -305,8 +305,8 @@ class ZfExtended_Models_Installer_Downloader {
     /**
      * Install the package as defined in the dependency file
      * @param stdClass $dependency
-     * @param boolean $cleanBefore
-     * @param boolean $overwrite
+     * @param bool $cleanBefore
+     * @param bool $overwrite
      * @return boolean
      */
     protected function install(stdClass $dependency, $cleanBefore = false, $overwrite = false) {

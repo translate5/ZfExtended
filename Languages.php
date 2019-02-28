@@ -65,7 +65,7 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract {
 
     /**
      * loads the language by the given DB ID
-     * @param integer $id
+     * @param int $id
      * @return Zend_Db_Table_Row_Abstract | null
      */
     public function loadById($id){
@@ -293,7 +293,7 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract {
      * ex: 
      *    de -> de-DE,de-AT,de-CH,de-LI,de-LU
      *    
-     * @param integer $id
+     * @param int $id
      * @param string $field: the field name wich will be returned(see languages model for available fields) 
      * @return array
      */

@@ -47,7 +47,7 @@ class ZfExtended_Controller_RestLikeRoute extends Zend_Controller_Router_Route {
      * returns an array of variables on a successful match.
      *
      * @param string  $path Path used to match against this routing map
-     * @param boolean $partial
+     * @param bool $partial
      * @throws Zend_Controller_Router_Exception
      * @return array|false An array of assigned values or a false on a mismatch
      */

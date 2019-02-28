@@ -29,7 +29,7 @@ END LICENSE AND COPYRIGHT
  *
  */
 /**
- * @method void setId() setId(integer $id)
+ * @method void setId() setId(int $id)
  * @method void setUserGuid() setUserGuid(string $guid)
  * @method void setFirstName() setFirstName(string $name)
  * @method void setSurName() setSurName(string $name)
@@ -329,7 +329,7 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implement
     
     /**
      * @param mixed $newPasswd string or null
-     * @param boolean $save
+     * @param bool $save
      */
     public function setNewPasswd($newPasswd, $save = true) {
         if(!is_null($newPasswd))

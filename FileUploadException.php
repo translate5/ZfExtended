@@ -32,7 +32,7 @@ class ZfExtended_FileUploadException extends ZfExtended_UnprocessableEntity {
     /**
      * returns a german error message to the given file upload error code 
      * TODO currently not used by the excption itself.
-     * @param integer $errorNr
+     * @param int $errorNr
      */
     public static function getUploadErrorMessage($errorNr) {
         switch ($errorNr) {

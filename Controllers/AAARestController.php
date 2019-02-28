@@ -354,7 +354,7 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
   
   /**
    * prepares the result in case of an error
-   * @param integer $httpStatus
+   * @param int $httpStatus
    * @deprecated should be obsolete if new error loggin refactoring is done
    */
   protected function handleErrorResponse($httpStatus) {
@@ -468,7 +468,7 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
    * sets the entity data out of given post / put data.
    * - setzt für in _sortColMap gesetzten Spalten den übergebenen Wert für beide Spalten
    * @param array $reject list of fieldnames to ignore
-   * @param boolean $mode defines if given fields are a black (false) or a whitelist (true)
+   * @param bool $mode defines if given fields are a black (false) or a whitelist (true)
    */
   protected function setDataInEntity(array $fields = null, $mode = self::SET_DATA_BLACKLIST) {
     settype($fields, 'array');

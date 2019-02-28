@@ -241,7 +241,7 @@ class ZfExtended_BaseIndex{
      * 
      *
      * @param string module
-     * @param boolean $withAcl default true, enables resetting the ACLs, false to prevent this 
+     * @param bool $withAcl default true, enables resetting the ACLs, false to prevent this 
      * @return string the old module
      */
     public function setModule($module, $withAcl = true){

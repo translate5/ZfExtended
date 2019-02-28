@@ -112,7 +112,7 @@ class  ZfExtended_Zendoverwrites_Translate extends Zend_Translate
     
     /**
      * always sets jsonEncode to false to ensure strings are only jsonencoded if explicitly set after instance is fetched
-     * @param boolean $init causes getInstance, to create the singleton new
+     * @param bool $init causes getInstance, to create the singleton new
      * @return ZfExtended_Zendoverwrites_Translate
      */
     public static function getInstance($init = false)

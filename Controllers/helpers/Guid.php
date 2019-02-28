@@ -38,7 +38,7 @@ class ZfExtended_Controller_Helper_Guid extends Zend_Controller_Action_Helper_Ab
 
     /**
      * creates a guid as defined in the config
-     * @param boolean addBrackets to add {}-brackets around the GUID, defaults to false
+     * @param bool addBrackets to add {}-brackets around the GUID, defaults to false
      * @return string $guid 
      */
     public function create($addBrackets = false) {
@@ -56,7 +56,7 @@ class ZfExtended_Controller_Helper_Guid extends Zend_Controller_Action_Helper_Ab
     
     /**
      * creates a GUID
-     * @param boolean $addBrackets
+     * @param bool $addBrackets
      * @return string
      */
     protected function guid($addBrackets = false) {

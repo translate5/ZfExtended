@@ -187,7 +187,7 @@ class ErrorController extends ZfExtended_Controllers_Action
     
     /**
      * returns the error script to render
-     * @param boolean $is404
+     * @param bool $is404
      * @return string
      */
     protected function initAndGetRenderScript($is404) {

@@ -45,7 +45,7 @@ class ZfExtended_Worker_TriggerByHttp {
      * Trigger worker with id = $id.
      * To run mutex-save, the current hash is needed
      * 
-     * @param integer $id
+     * @param int $id
      * @param string $hash
      */
     public function triggerWorker($id, string $hash) {

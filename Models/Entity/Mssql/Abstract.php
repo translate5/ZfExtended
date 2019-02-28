@@ -54,7 +54,7 @@ abstract class ZfExtended_Models_Entity_Mssql_Abstract extends ZfExtended_Models
      * sets the value of the given data field
      * @param string $name
      * @param mixed $value
-     * @param boolean $binary
+     * @param bool $binary
      */
     protected function set($name, $value,$binary = false) {
         $field = $this->_getMappedRowField($name);

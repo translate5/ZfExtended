@@ -330,7 +330,7 @@ class ZfExtended_Models_Entity_ExcelExport {
      *		Set to true (the default) to advise the Writer to calculate all formulae on save
      *		Set to false to prevent precalculation of formulae on save.
      *
-     * @param boolean $pValue	Pre-Calculate Formulas?
+     * @param bool $pValue	Pre-Calculate Formulas?
      * @return	PHPExcel_Writer_IWriter
      */
     public function setPreCalculateFormulas($pValue = TRUE) {

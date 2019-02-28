@@ -61,7 +61,7 @@ class  ZfExtended_Log extends ZfExtended_Mail {
     /**
      * initiiert das interne Mail und View Object
      *
-     *  @param boolean initView entscheidet, ob view initialisiert wird
+     *  @param bool initView entscheidet, ob view initialisiert wird
      *      (Achtung: Bei false ist die Verwendung von Mailtemplates mit ZfExtended_Mail nicht möglich)
      *      Default: true
      */

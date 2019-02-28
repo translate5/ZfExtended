@@ -95,7 +95,7 @@ class ZfExtended_Logger {
      * logs the given stuff
      * @param string $message unformatted message
      * @param string $code    event code / error code, optional, since for logging of debug output not necessary, only for errors
-     * @param integer $level event level
+     * @param int $level event level
      * @param array $extraData optional extra data / info to the event
      * @param array $writerNames optional, if given uses this writer(s) only (names as given in config)
      */
@@ -109,7 +109,7 @@ class ZfExtended_Logger {
      * The error handler for finally caught PHP errors
      * @param string $code
      * @param string $message
-     * @param integer $level
+     * @param int $level
      * @param array $error
      */
     public function finalError($code, $message, $level, array $error) {
@@ -137,7 +137,7 @@ class ZfExtended_Logger {
     
     /**
      * Prepares the event instance
-     * @param integer $level
+     * @param int $level
      * @param string $code
      * @param array $extraData or null
      * @return ZfExtended_Logger_Event
@@ -317,7 +317,7 @@ class ZfExtended_Logger {
     
     /**
      * returns the levelname to the given LEVEL_CONST integer
-     * @param integer $level
+     * @param int $level
      * @return string
      */
     public function getLevelName($level) {
