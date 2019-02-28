@@ -110,6 +110,7 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
         if(empty($_REQUEST['sessionToken']) || !preg_match('/[a-zA-Z0-9]{32}/', $_REQUEST['sessionToken'])) {
             return;
         }
+throw new Exception("sessionToken AUTH currently disabled due security reasons.");
         $sessionUniq = ZfExtended_Factory::get('ZfExtended_Models_Db_SessionMapInternalUniqId');
         /* @var $sessionUniq ZfExtended_Models_Db_SessionMapInternalUniqId */
         $row = $sessionUniq->fetchRow(['internalSessionUniqId = ?' => $_REQUEST['sessionToken']]);
