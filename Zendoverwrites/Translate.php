@@ -69,6 +69,8 @@ class  ZfExtended_Zendoverwrites_Translate extends Zend_Translate
     protected $config;
     
     public function __construct($targetLang = null) {
+        $this->config = Zend_Registry::get('config');
+        
         //this is to have an translation adapter set if an error occurs inside translation
         //process before translation adapter is set - but errorcontroller needs one
         parent::__construct('Zend_Translate_Adapter_Array', array('' => ''), 'en');
@@ -81,7 +83,6 @@ class  ZfExtended_Zendoverwrites_Translate extends Zend_Translate
         $this->setTargetLang($targetLang);
         $this->getLogPath();
         
-        $this->config = Zend_Registry::get('config');
         
         try {
             $log = Zend_Registry::get('translationLog');
