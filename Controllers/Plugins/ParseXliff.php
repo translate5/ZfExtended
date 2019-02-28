@@ -48,30 +48,33 @@ class ZfExtended_Controllers_Plugins_ParseXliff extends Zend_Controller_Plugin_A
         $this->translate = ZfExtended_Zendoverwrites_Translate::getInstance();
         $logPath = $this->translate->getLogPath();
         $logArr = $this->parseXliff($logPath);
-        if(!empty($logArr)){
-            $tLang = $this->translate->getTargetLang();
-            $sLang = $this->translate->getSourceCodeLocale();
-            if($tLang===$sLang){
-                $session = new Zend_Session_Namespace();
-                
-                $xliffPath = APPLICATION_PATH.DIRECTORY_SEPARATOR.'modules'.
-                        DIRECTORY_SEPARATOR.APPLICATION_MODULE.DIRECTORY_SEPARATOR.
-                        'locales'.DIRECTORY_SEPARATOR.$sLang.'.xliff';
-                $integratedPath = $session->runtimeOptions->dir->logs.'/integratedTranslations-'.
-                        APPLICATION_MODULE.'-'.$sLang.'-'.$tLang.'.xliff';
-                
-                $xliffArr = $this->parseXliff($xliffPath);
-                $xliffArr = array_merge($xliffArr,$logArr);
-                $this->saveXliff($xliffArr, $xliffPath);
-                
-                $integratedArr = $this->parseXliff($integratedPath);
-                $integratedArr = array_merge($integratedArr,$logArr);
-                $this->saveXliff($integratedArr, $integratedPath);
-                unlink($logPath);
-                return;
-            }
-            $this->saveXliff($logArr, $logPath);
+        $config = Zend_Registry::get('config');
+        /* @var $config Zend_Config */
+        
+        if(empty($logArr)){
+           return; 
         }
+        $tLang = $this->translate->getTargetLang();
+        $sLang = $this->translate->getSourceCodeLocale();
+        if($tLang !== $sLang){
+            $this->saveXliff($logArr, $logPath);
+            return;
+        }
+        
+        $xliffPath = APPLICATION_PATH.DIRECTORY_SEPARATOR.'modules'.
+                DIRECTORY_SEPARATOR.APPLICATION_MODULE.DIRECTORY_SEPARATOR.
+                'locales'.DIRECTORY_SEPARATOR.$sLang.'.xliff';
+                $integratedPath = $config->runtimeOptions->dir->logs.'/integratedTranslations-'.
+                APPLICATION_MODULE.'-'.$sLang.'-'.$tLang.'.xliff';
+        
+        $xliffArr = $this->parseXliff($xliffPath);
+        $xliffArr = array_merge($xliffArr,$logArr);
+        $this->saveXliff($xliffArr, $xliffPath);
+        
+        $integratedArr = $this->parseXliff($integratedPath);
+        $integratedArr = array_merge($integratedArr,$logArr);
+        $this->saveXliff($integratedArr, $integratedPath);
+        unlink($logPath);
     }
     
     protected function saveXliff(array $fileArr,string $path) {

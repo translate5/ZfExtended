@@ -43,15 +43,7 @@ class ZfExtended_Controllers_Plugins_ConfigureApplication extends Zend_Controlle
      */
     public function RouteShutdown(Zend_Controller_Request_Abstract $request)
     {
-        $module = $request->getModuleName();
         Zend_Registry::set('controller',$request->getControllerName() );
         Zend_Registry::set('action',$request->getActionName() );
-        $session = new Zend_Session_Namespace();
-        $config = Zend_Registry::get('config');
-        $session->runtimeOptions = $config->runtimeOptions;
-        //nicht innerhalb des if-blocks davor, da die defines sonst in unechten forks nicht gesetzt sind
-        foreach ($session->runtimeOptions->defines as $key => $val) {
-            defined($key)|| define($key,$val);
-        }
     }
 }
