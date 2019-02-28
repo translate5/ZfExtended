@@ -47,7 +47,7 @@ class ZfExtended_ErrorCodeException extends ZfExtended_Exception {
      * @param array $extra
      * @param Exception $previous
      */
-    public function __construct($errorCode, array $extra = null, Exception $previous = null) {
+    public function __construct($errorCode, array $extra = [], Exception $previous = null) {
         $this->allErrorCodes = $this->mergeErrorCodes();
         parent::__construct($this->getErrorMessage($errorCode), substr($errorCode, 1), $previous);
         $this->setErrors($extra);
@@ -59,6 +59,15 @@ class ZfExtended_ErrorCodeException extends ZfExtended_Exception {
      */
     public static function addCodes(array $codes) {
         static::$localErrorCodes = array_merge(static::$localErrorCodes, $codes);
+    }
+    
+    /**
+     * Add additonal extra data to an existing exception instance
+     * @param array $extraData
+     */
+    public function addExtraData(array $extraData) {
+        $origData = $this->getErrors();
+        $this->setErrors(array_merge($origData, $extraData));
     }
     
     /**

@@ -116,6 +116,8 @@ class ZfExtended_Exception extends Zend_Exception {
     /**
      * stores the given errors internally
      * @param array $errors
+     * @deprecated refactor the called exception instance to errorCodeException and use the extra/data container there  
+     * //FIXME searc for usages and refactor it 
      */
     public function setErrors(array $errors) {
         $this->errors = $errors;
@@ -123,6 +125,7 @@ class ZfExtended_Exception extends Zend_Exception {
 
     /**
      * return the internally stored errors
+     * @deprecated refactor the called exception instance to errorCodeException and use the extra/data container there  
      * @return array
      */
     public function getErrors() {

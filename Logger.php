@@ -162,7 +162,7 @@ class ZfExtended_Logger {
      * @param Exception $exception
      * @param array $eventOverride array to override the event generated from the exception
      */
-    public function exception(Exception $exception, array $eventOverride = []) {
+    public function exception(Exception $exception, array $eventOverride = [], $returnEvent = false) {
         $event = new ZfExtended_Logger_Event();
         $event->created = NOW_ISO;
         
@@ -186,6 +186,13 @@ class ZfExtended_Logger {
         
         $this->fillStaticData($event);
         $event->mergeFromArray($eventOverride);
+        $previous = $exception->getPrevious();
+        if(!empty($previous)) {
+            $event->previous = $this->exception($previous, [], true);
+        }
+        if($returnEvent) {
+            return $event;
+        }
         $this->processEvent($event);
     }
     
@@ -260,7 +267,7 @@ class ZfExtended_Logger {
         $event->appVersion = APPLICATION_VERSION;
         //FIXME add POST/PUT parameters as additional extraData! → obsolete? see separate request loggin?
         
-        if(Zend_Session::isStarted()) {
+        if(Zend_Session::isStarted() && !Zend_Session::isDestroyed()) {
             $user = new Zend_Session_Namespace('user');
             if(!empty($user->data->userGuid)){
                 $event->userGuid = $user->data->userGuid;

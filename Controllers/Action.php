@@ -51,7 +51,9 @@ abstract class ZfExtended_Controllers_Action extends Zend_Controller_Action {
     public function __construct(Zend_Controller_Request_Abstract $request, Zend_Controller_Response_Abstract $response, array $invokeArgs = array()) {
         parent::__construct($request, $response, $invokeArgs);
         $this->_helper = new ZfExtended_Zendoverwrites_Controller_Action_HelperBroker($this);
-        $this->_session = new Zend_Session_Namespace();
+        if(!Zend_Session::isDestroyed()) {
+            $this->_session = new Zend_Session_Namespace();
+        }
         $this->events = ZfExtended_Factory::get('ZfExtended_EventManager', array(get_class($this)));
         $this->init();
     }
