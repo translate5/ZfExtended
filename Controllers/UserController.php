@@ -232,7 +232,7 @@ class ZfExtended_UserController extends ZfExtended_RestController {
     }
     
     /**
-     * remove password hashes from output
+     * remove password hashes and openid subject from output
      */
     protected function credentialCleanup() {
         if(is_object($this->view->rows) && property_exists($this->view->rows, 'passwd')) {
@@ -240,6 +240,14 @@ class ZfExtended_UserController extends ZfExtended_RestController {
         }
         if(is_array($this->view->rows) && isset($this->view->rows['passwd'])) {
             unset($this->view->rows['passwd']);
+        }
+        
+        if(is_object($this->view->rows) && property_exists($this->view->rows, 'openIdSubject')) {
+            unset($this->view->rows->openIdSubject);
+        }
+        
+        if(is_array($this->view->rows) && isset($this->view->rows['openIdSubject'])) {
+            unset($this->view->rows['openIdSubject']);
         }
     }
     
