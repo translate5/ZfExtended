@@ -82,10 +82,12 @@ class ZfExtended_OpenIDConnectClient{
         if(!$this->isOpenIdCustomerSet()){
             return false;
         }
-        
+
         $isAuthRequest=!empty($this->request->getParam('code')) || !empty($this->request->getParam('id_token'));
         $isLoginRequest=!empty($this->request->getParam('login')) && !empty($this->request->getParam('passwd'));
-        if(!$isAuthRequest && !$this->customer->getOpenIdRedirectCheckbox() && !$isLoginRequest){
+        $isRedirectRequest=$this->request->getParam('redirect')!=null;
+        $isShowLoginScreen=$this->customer->getOpenIdRedirectCheckbox();
+        if(!$isAuthRequest && !$isRedirectRequest && !$isLoginRequest && !$isShowLoginScreen){
             return false;
         }
 
