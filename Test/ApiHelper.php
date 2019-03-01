@@ -200,7 +200,7 @@ class ZfExtended_Test_ApiHelper {
             if(isset($json->success)) {
                 $t::assertEquals(true, $json->success);
             }
-            return isset($json->rows) ? $json->rows : $json;
+            return $json->rows ?? $json;
         }
         return false;
     }

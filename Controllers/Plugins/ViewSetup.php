@@ -99,14 +99,14 @@ class ZfExtended_Controllers_Plugins_ViewSetup extends Zend_Controller_Plugin_Ab
         $config = Zend_Registry::get('config');
         $rop = $config->runtimeOptions;
         //maintenance start date
-        $maintenanceStartDate = isset($rop->maintenance->startDate)?$rop->maintenance->startDate:'';
+        $maintenanceStartDate = $rop->maintenance->startDate ?? '';
         $maintenanceStartDate = date(DATE_ISO8601, strtotime($maintenanceStartDate));
         $view->Php2JsVars()->set('maintenance.startDate',$maintenanceStartDate);
         //maintenance warning panel is showed
-        $view->Php2JsVars()->set('maintenance.timeToNotify',isset($rop->maintenance->timeToNotify)?$rop->maintenance->timeToNotify:'');
+        $view->Php2JsVars()->set('maintenance.timeToNotify', $rop->maintenance->timeToNotify ?? '');
         //minutes before the point in time of the update the application is locked for new log-ins
-        $view->Php2JsVars()->set('maintenance.timeToLoginLock',isset($rop->maintenance->timeToLoginLock)?$rop->maintenance->timeToLoginLock:'');
-        $view->Php2JsVars()->set('maintenance.message',isset($rop->maintenance->message)?$rop->maintenance->message:'');
+        $view->Php2JsVars()->set('maintenance.timeToLoginLock', $rop->maintenance->timeToLoginLock ?? '');
+        $view->Php2JsVars()->set('maintenance.message', $rop->maintenance->message ?? '');
       $format = $view->translate->_('In Kürze wird eine Systemwartung durchgeführt werden. Die Anwendung ist dann für einige Zeit gesperrt. Datum und Uhrzeit des Starts der Systemwartung: %s');
       $view->Php2JsVars()->set('maintenance.message',sprintf($format, $maintenanceStartDate));
     }
