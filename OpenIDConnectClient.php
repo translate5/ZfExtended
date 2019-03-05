@@ -227,9 +227,7 @@ class ZfExtended_OpenIDConnectClient{
      * @return string
      */
     protected function getBaseUrl() {
-        return (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ?
-            "https" : "http") . "://" . $_SERVER['HTTP_HOST'] .
-            $this->request->getBaseUrl().'/';
+        return $_SERVER['HTTP_HOST'].$this->request->getBaseUrl().'/';
     }
     
     /***
