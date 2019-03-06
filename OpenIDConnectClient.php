@@ -31,7 +31,7 @@ class ZfExtended_OpenIDConnectClient{
     
     /***
      * 
-     * @var Zend_Controller_Request_Abstract
+     * @var Zend_Controller_Request_Http
      */
     protected $request;
     
@@ -47,8 +47,14 @@ class ZfExtended_OpenIDConnectClient{
      */
     protected $openIdClient;
     
+    /***
+     * @var 
+     */
+    protected $config;
+    
     public function __construct(Zend_Controller_Request_Abstract $request) {
         $this->openIdClient=new OpenIDConnectClient();
+        $this->config=Zend_Registry::get('config');
         $this->setRequest($request);
         $this->initOpenIdData();
     }
@@ -82,10 +88,12 @@ class ZfExtended_OpenIDConnectClient{
         if(!$this->isOpenIdCustomerSet()){
             return false;
         }
-        
+
         $isAuthRequest=!empty($this->request->getParam('code')) || !empty($this->request->getParam('id_token'));
         $isLoginRequest=!empty($this->request->getParam('login')) && !empty($this->request->getParam('passwd'));
-        if(!$isAuthRequest && !$this->customer->getOpenIdRedirectCheckbox() && !$isLoginRequest){
+        $isRedirectRequest=$this->request->getParam('redirect')!=null;
+        $isShowLoginScreen=$this->customer->getOpenIdRedirectCheckbox();
+        if(!$isAuthRequest && !$isRedirectRequest && !$isLoginRequest && !$isShowLoginScreen){
             return false;
         }
 
@@ -99,7 +107,6 @@ class ZfExtended_OpenIDConnectClient{
         try {
             return $this->openIdClient->authenticate();
         } catch (OpenIDConnectClientException $e) {
-            $this->unsetSession();
             throw $e;
         }
     }
@@ -148,7 +155,7 @@ class ZfExtended_OpenIDConnectClient{
         $user->setEditable(0);
         
         //find the default locale from the config
-        $localeConfig = Zend_Registry::get('config')->runtimeOptions->translation;
+        $localeConfig = $this->config->runtimeOptions->translation;
         $appLocale=!empty($localeConfig->applicationLocale) ? $localeConfig->applicationLocale : null;
         $fallbackLocale=!empty($localeConfig->fallbackLocale) ? $localeConfig->fallbackLocale : null;
         
@@ -208,7 +215,6 @@ class ZfExtended_OpenIDConnectClient{
     }
     
     /***
-     * Get the redirect url from the current domain url.
      * @return string
      */
     protected function getRedirectDomainUrl() {
@@ -218,26 +224,25 @@ class ZfExtended_OpenIDConnectClient{
     }
     
     /***
+     * @return string
+     */
+    protected function getBaseUrl() {
+        return $_SERVER['HTTP_HOST'].$this->request->getBaseUrl().'/';
+    }
+    
+    /***
      * Get the customer from the current used domain.
      * @return editor_Models_Customer
      */
     protected function initCustomerFromDomain(){
         $customer=ZfExtended_Factory::get('editor_Models_Customer');
-        $customer->loadByDomain($this->getRedirectDomainUrl());
+        $customer->loadByDomain($this->getBaseUrl());
         //the customer for the domain does not exist, load the default customer
         if($customer->getId()==null){
             $customer->loadByDefaultCustomer();
         }
         $this->customer=$customer;
         return $this->customer;
-    }
-    
-    /***
-     * Unset the openid session
-     */
-    protected function unsetSession(){
-        $this->openIdClient->unsetState();
-        $this->openIdClient->unsetNonce();
     }
     
     /***
