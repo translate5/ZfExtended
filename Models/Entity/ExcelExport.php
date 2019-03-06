@@ -367,7 +367,7 @@ class ZfExtended_Models_Entity_ExcelExport {
         $objWriter->save('php://output');
         exit;
     }
-    public function getPhpExcel(){
+    public function getSpreadsheet(){
     	return $this->spreadsheet;
     }
 }
