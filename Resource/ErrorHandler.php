@@ -32,7 +32,6 @@ END LICENSE AND COPYRIGHT
  * Eigener Errorhandler
  *
  * - Wirft für alle abfangbaren Fehler eine Zend_Exception
- * - Ermöglicht TypeHinting für alle Typen in PHP
  * - E_USER_NOTICE wird nicht als Fehler gewertet, aber an allen relevanten Stellen 
  *   mit geloggt. D. h., einziger Loggingunterschied ist, dass der Fehler- und 
  *   http-Responsecode nicht auf 500 sondern auf 200 steht
@@ -69,7 +68,6 @@ class ZfExtended_Resource_ErrorHandler extends Zend_Application_Resource_Resourc
         $bootstrap->bootstrap('ZfExtended_Resource_InitRegistry');
         $config = Zend_Registry::get('config');
         register_shutdown_function(array($this, 'handleFatalError'), $config);
-        set_error_handler(array('ZfExtended_Resource_ErrorHandler', 'errorHandler'));
     }
     
     /**
@@ -107,34 +105,6 @@ class ZfExtended_Resource_ErrorHandler extends Zend_Application_Resource_Resourc
             ob_get_length() && ob_clean(); //show only a white page
         }
         echo '<h1>Internal Server Error</h1>'."\n".$out;
-    }
-    
-    /**
-     * TODO remove me with PHP7!
-     * - Führt typehinting für alle Types ein auch für die Types, für die php es von Haus aus nicht unterstützt
-     * - E_USER_NOTICE wird nicht als Fehler gewertet, aber an allen relevanten Stellen 
-     *   mit geloggt. D. h., einziger Loggingunterschied ist, dass der Fehler- und 
-     *   http-Responsecode nicht auf 500 sondern auf 200 steht
-     *
-     */
-    public static function errorHandler($errno, $errstr, $errfile, $errline ) {
-        $regex = '/^Argument (\d)+ passed to (?:(\w+)::)?([\w{}]+)\(\) must be an instance of (\w+), (\w+) given/';
-        if($errno == E_RECOVERABLE_ERROR && preg_match($regex, $errstr, $match)) {
-            
-            //ensure upwards compatibility to PHP 7 we need this mapping here!
-            switch ($match[4]) {
-                case 'bool':
-                    $match[4] = 'boolean';
-                    break;
-                case 'int':
-                    $match[4] = 'integer';
-                    break;
-            }
-            if($match[4] == $match[5]) {
-                return true;
-            }
-        }
-        throw new Zend_Exception($errstr."; File: ".$errfile."; Line: ".$errline."; errno: ".$errno, 0 );
     }
     
     /**

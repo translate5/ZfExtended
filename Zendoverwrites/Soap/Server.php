@@ -29,12 +29,11 @@ END LICENSE AND COPYRIGHT
  *
  */
 /**
- * Überschreibt den Zend Soap Server, erweitert ihn um das Type Hinting
+ * Überschreibt den Zend Soap Server
  */
 class  ZfExtended_Zendoverwrites_Soap_Server extends Zend_Soap_Server
 {
     /**
-     * integriert das ZFExt TypeHinting
      * Throw PHP errors as SoapFaults
      *
      * @param int $errno
@@ -51,7 +50,7 @@ class  ZfExtended_Zendoverwrites_Soap_Server extends Zend_Soap_Server
             parent::handlePhpErrors($errno, $errstr, $errfile, $errline, $errcontext);
             return;
         }
-        ZfExtended_Resource_ErrorHandler::errorHandler($errno, $errstr, $errfile, $errline);
+        throw new Zend_Exception($errstr."; File: ".$errfile."; Line: ".$errline."; errno: ".$errno, 0);
     }
     
     /**
