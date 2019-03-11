@@ -199,6 +199,9 @@ class ErrorController extends ZfExtended_Controllers_Action
         
         if($this->exception && $this->exception->getCode() == '503'){
             Zend_Layout::getMvcInstance()->disableLayout();
+            if($this->_getParam('controller') === 'cron') {
+                return 'error/maintenance_cron.phtml';
+            }
             return 'error/maintenance.phtml';
         }
         if($this->isRestRoute()){

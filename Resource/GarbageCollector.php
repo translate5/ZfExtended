@@ -47,7 +47,8 @@ class ZfExtended_Resource_GarbageCollector extends Zend_Application_Resource_Res
         $interval = 15 * 60;
         $key = 'ZfExtended_Resource_GarbageCollector::cleanByInterval';
         //using cache backend as time based mutex to ensure that cleanup is not done more often as each 15 minutes:
-        if($this->checkOrigin(self::ORIGIN_REQUEST) && $backend->updateIfOlderThen($key, $_SERVER['REQUEST_URI'], $interval)) {
+        $url = substr($_SERVER['REQUEST_URI'], 0, 4000); //restrict the URL length
+        if($this->checkOrigin(self::ORIGIN_REQUEST) && $backend->updateIfOlderThen($key, $url, $interval)) {
             $this->cleanUp(self::ORIGIN_REQUEST);
         }
     }
