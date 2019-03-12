@@ -85,15 +85,17 @@ class  ZfExtended_Mail {
      *      Default: true
      */
     public function __construct($initView = true) {
-        try {
-            $this->_session = new Zend_Session_Namespace();
-            $this->sendingDisabled = $this->_session->runtimeOptions->sendMailDisabled;
-            $this->_sendMailLocally = $this->_session->runtimeOptions->sendMailLocally;
-            if(isset($this->_session->runtimeOptions->mail->generalBcc)){
-                $this->_sendBcc = true;
+        if (isset($this->_session->runtimeOptions)) {
+            try {
+                    $this->_session = new Zend_Session_Namespace();
+                    $this->sendingDisabled = $this->_session->runtimeOptions->sendMailDisabled;
+                    $this->_sendMailLocally = $this->_session->runtimeOptions->sendMailLocally;
+                    if(isset($this->_session->runtimeOptions->mail->generalBcc)){
+                        $this->_sendBcc = true;
+                    }
             }
-        }
-        catch (Exception $e) {
+            catch (Exception $e) {
+            }
         }
         if($initView){
             $this->initView();
