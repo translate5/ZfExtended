@@ -472,9 +472,9 @@ abstract class ZfExtended_Models_Entity_Abstract {
     }
     
     protected function validatorLazyInstatiation() {
-      if(empty($this->validator)) {
-        $this->validator = ZfExtended_Factory::get($this->validatorInstanceClass);
-      }
+        if(empty($this->validator)) {
+            $this->validator = ZfExtended_Factory::get($this->validatorInstanceClass, [$this]);
+        }
     }
 
     /**
