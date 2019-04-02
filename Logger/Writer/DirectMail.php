@@ -34,7 +34,7 @@ class ZfExtended_Logger_Writer_DirectMail extends ZfExtended_Logger_Writer_Abstr
         parent::__construct($options);
         $this->mail = new Zend_Mail();
         $this->mail->addTo($options['receiver']);
-        $this->mail->setFrom('fixme@localhost');
+        $this->mail->setFrom($options['sender']);
     }
     
     public function write(ZfExtended_Logger_Event $event) {
@@ -58,6 +58,9 @@ class ZfExtended_Logger_Writer_DirectMail extends ZfExtended_Logger_Writer_Abstr
     
     public function validateOptions(array $options) {
         parent::validateOptions($options);
+        if(empty($options['sender'])) {
+            throw new ZfExtended_Logger_Exception(__CLASS__.': Missing option sender!');
+        }
         if(empty($options['receiver'])) {
             throw new ZfExtended_Logger_Exception(__CLASS__.': Missing option receiver!');
         }
