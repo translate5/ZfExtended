@@ -34,6 +34,12 @@ abstract class ZfExtended_Logger_Writer_Abstract {
     protected $options;
     
     /**
+     * filter instance
+     * @var ZfExtended_Logger_Filter
+     */
+    protected $filter;
+    
+    /**
      * creates a Logger writer as defined in the given options array, possible values 
      * @param array $options 
      * @return ZfExtended_Logger_Writer_Abstract
@@ -52,6 +58,7 @@ abstract class ZfExtended_Logger_Writer_Abstract {
     public function __construct(array $options) {
         $this->validateOptions($options);
         $this->options = $options;
+        $this->filter = ZfExtended_Factory::get('ZfExtended_Logger_Filter', [$options['filter']]);
     }
     
     /**
@@ -66,14 +73,18 @@ abstract class ZfExtended_Logger_Writer_Abstract {
      * @return boolean
      */
     public function isAccepted(ZfExtended_Logger_Event $event) {
-        //FIXME implement basic filter here!
-        return true;
+        return $this->filter->testEvent($event);
     }
     
     /**
      * Validates the given options
      */
-    abstract public function validateOptions(array $options); 
+    public function validateOptions(array $options) {
+        if(!empty($options['filter']) && !is_array($options['filter'])) {
+            throw new ZfExtended_Logger_Exception(__CLASS__.': option filter is not an array!');
+        }
+        settype($options['filter'], 'array'); //ensure that if it was empty, that it is an array afterwards
+    }
     
     /**
      * Converts data to JSON, uses the data object of entities, on JSON errors the error and the raw data is returned

@@ -79,10 +79,6 @@ class ZfExtended_Logger_Writer_ChromeLogger extends ZfExtended_Logger_Writer_Abs
         self::$rows[] = [$row, $trace, $type];
     }
     
-    public function validateOptions(array $options) {
-        //no special options needed at the moment
-    }
-    
     public static function writeHeader() {
         if(empty(self::$rows)) {
             return;

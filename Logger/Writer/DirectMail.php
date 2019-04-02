@@ -57,6 +57,7 @@ class ZfExtended_Logger_Writer_DirectMail extends ZfExtended_Logger_Writer_Abstr
     }
     
     public function validateOptions(array $options) {
+        parent::validateOptions($options);
         if(empty($options['receiver'])) {
             throw new ZfExtended_Logger_Exception(__CLASS__.': Missing option receiver!');
         }

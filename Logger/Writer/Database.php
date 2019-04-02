@@ -51,9 +51,4 @@ class ZfExtended_Logger_Writer_Database extends ZfExtended_Logger_Writer_Abstrac
         //$data['count'] = 0; FIXME how to make the duplication recognition?
         $db->insert($data);
     }
-    
-    public function validateOptions(array $options) {
-        
-    }
-    
 }
