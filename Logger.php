@@ -180,7 +180,7 @@ class ZfExtended_Logger {
         if($exception instanceof ZfExtended_Exception){
             $event->level = $exception->getLevel();
             $extraData = $exception->getErrors();
-            $event->domain = $exception->getOrigin();
+            $event->domain = $exception->getDomain();
         }
         else {
             //exceptions not defined and not catched by us are of type error 

@@ -42,7 +42,7 @@ class ZfExtended_ErrorCodeException extends ZfExtended_Exception {
     protected $allErrorCodes = [
     ];
     
-    protected static $errorCodeOriginOverride = [];
+    protected static $errorCodeDomainOverride = [];
     
     /**
      * @param string $errorCode
@@ -56,27 +56,27 @@ class ZfExtended_ErrorCodeException extends ZfExtended_Exception {
     }
     
     /**
-     * return the internally stored origin
+     * return the internally stored domain
      * @return string
      */
-    public function getOrigin() {
+    public function getDomain() {
         $code = $this->getErrorCode();
-        if(empty(self::$errorCodeOriginOverride[$code])) {
-            return $this->origin;
+        if(empty(self::$errorCodeDomainOverride[$code])) {
+            return $this->domain;
         }
-        return self::$errorCodeOriginOverride[$code];
+        return self::$errorCodeDomainOverride[$code];
     }
     
     /**
      * Its not always making sense to create a separate Exception class - therefore via that function the needed error codes can be set dynamically
      * @param array $codes
-     * @param string $origin optional, defines a different origin for the added codes
+     * @param string $domain optional, defines a different domain for the added codes
      */
-    public static function addCodes(array $codes, $origin = null) {
+    public static function addCodes(array $codes, $domain = null) {
         static::$localErrorCodes = array_merge(static::$localErrorCodes, $codes);
-        if(!empty($origin)) {
+        if(!empty($domain)) {
             $codeKeys = array_keys($codes);
-            self::$errorCodeOriginOverride = array_merge(self::$errorCodeOriginOverride, array_fill_keys($codeKeys, $origin));
+            self::$errorCodeDomainOverride = array_merge(self::$errorCodeDomainOverride, array_fill_keys($codeKeys, $domain));
         }
     }
     
