@@ -27,6 +27,8 @@ END LICENSE AND COPYRIGHT
  * points to HTTP 422 Unprocessable Entity
  */
 class ZfExtended_UnprocessableEntity extends ZfExtended_ErrorCodeException {
+    use ZfExtended_ResponseExceptionTrait;
+    
     /**
      * @var integer
      */

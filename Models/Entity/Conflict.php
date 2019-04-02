@@ -23,6 +23,8 @@ END LICENSE AND COPYRIGHT
 */
 
 class ZfExtended_Models_Entity_Conflict  extends ZfExtended_ErrorCodeException {
+    use ZfExtended_ResponseExceptionTrait;
+    
     /**
      * @var integer
      */

@@ -142,7 +142,7 @@ class ZfExtended_Exception extends Zend_Exception {
 
     /**
      * return the internally stored origin
-     * @return array
+     * @return string
      */
     public function getOrigin() {
         return $this->origin;
