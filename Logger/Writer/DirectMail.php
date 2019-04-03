@@ -25,18 +25,6 @@
 /**
  */
 class ZfExtended_Logger_Writer_DirectMail extends ZfExtended_Logger_Writer_Abstract {
-    /**
-     * @var Zend_Mail
-     */
-    protected $mail; 
-    
-    public function __construct(array $options) {
-        parent::__construct($options);
-        $this->mail = new Zend_Mail();
-        $this->mail->addTo($options['receiver']);
-        $this->mail->setFrom($options['sender']);
-    }
-    
     public function write(ZfExtended_Logger_Event $event) {
         if(!empty($_SERVER['HTTP_HOST'])) {
             $subject = $_SERVER['HTTP_HOST'].': ';
@@ -50,10 +38,13 @@ class ZfExtended_Logger_Writer_DirectMail extends ZfExtended_Logger_Writer_Abstr
         }
         $subject .= $event->message;
         
-        $this->mail->setSubject($subject);
-        $this->mail->setBodyText($event);
-        $this->mail->setBodyHtml($event->toHtml());
-        $this->mail->send();
+        $mail = new Zend_Mail();
+        $mail->addTo($this->options['receiver']);
+        $mail->setFrom($this->options['sender']);
+        $mail->setSubject($subject);
+        $mail->setBodyText($event);
+        $mail->setBodyHtml($event->toHtml());
+        $mail->send();
     }
     
     public function validateOptions(array $options) {
