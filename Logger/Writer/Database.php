@@ -35,7 +35,8 @@ class ZfExtended_Logger_Writer_Database extends ZfExtended_Logger_Writer_Abstrac
     }
     
     public function write(ZfExtended_Logger_Event $event) {
-        //FIXME wie implementiere ich die duplikat erkennung? URL kann nicht rein (wegen dem dc parameter). Extra sollte rein, 
+        //FIXME how to implement the duplication recognition (especially in the email logger)
+        // same technique, here for counting up the counter, in the email logger to prevent mails. But how?
         $db = ZfExtended_Factory::get('ZfExtended_Models_Db_ErrorLog');
         /* @var $db ZfExtended_Models_Db_ErrorLog */
         
