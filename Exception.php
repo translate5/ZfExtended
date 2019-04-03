@@ -39,7 +39,7 @@ class ZfExtended_Exception extends Zend_Exception {
      * internal errors store
      * @var array
      */
-    protected $errors;
+    protected $errors = [];
     
     /**
      * internal domain store (domain in the sense of area)

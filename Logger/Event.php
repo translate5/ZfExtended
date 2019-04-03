@@ -142,7 +142,7 @@ class ZfExtended_Logger_Event {
      * extra data to the event as associated error
      * @var array
      */
-    public $extra;
+    public $extra = [];
     
     /**
      * overwrites the data defined in the associative array into the current event
@@ -234,10 +234,14 @@ class ZfExtended_Logger_Event {
             $msg[] = '<td>Worker:</td><td>'.$this->worker.'</td>';
         }
         if(!empty($this->extra)) {
-            if(is_object($item) && $item instanceof ZfExtended_Models_Entity_Abstract) {
-                $item = $item->getDataObject();
+            $extra = [];
+            foreach($this->extra as $item) {
+                if(is_object($item) && $item instanceof ZfExtended_Models_Entity_Abstract) {
+                    $item = $item->getDataObject();
+                }
+                $extra[] = $item;
             }
-            $msg[] = '<td>Extra:</td><td>'.htmlspecialchars(print_r($this->extra,1)).'</td>';
+            $msg[] = '<td>Extra:</td><td>'.htmlspecialchars(print_r($extra,1)).'</td>';
         }
         if(!empty($this->trace)) {
             $msg[] = '<td colspan="2">Trace:</td>';
