@@ -77,8 +77,8 @@ class ZfExtended_Controllers_Plugins_ViewSetup extends Zend_Controller_Plugin_Ab
         $view->cache = Zend_Registry::get('cache');
         $view->session = $this->_session;
         $view->module = Zend_Registry::get('module');
-        $view->action = Zend_Registry::get('action');
-        $view->controller = Zend_Registry::get('controller');
+        $view->action = $request->getActionName();
+        $view->controller = $request->getControllerName();
         $this->_viewRenderer->setView($view);
         $this->_viewRenderer->setNoRender(true);
         $this->setPhp2Js();

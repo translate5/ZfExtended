@@ -192,9 +192,12 @@ class ZfExtended_Exception extends Zend_Exception {
          * the names of needed parts (module, action, etc)
          */
         $exception = get_class($this);
+        
         $mod = Zend_Registry::get('module'); //warning this can be changed be BaseIndex::setModule
-        $contr = Zend_Registry::get('controller');
-        $action = Zend_Registry::get('action');
+        $f = Zend_Registry::get('frontController');
+        /* @var $f Zend_Controller_Front */
+        $contr = $f->getRequest()->getControllerName();
+        $action = $f->getRequest()->getActionName();
         
         /**
          * all possible config paths are defined in this array
