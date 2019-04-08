@@ -95,6 +95,10 @@ class ZfExtended_Logger_Filter {
                 return function($givenValue) use ($configValue) {
                     return (int) $givenValue >= (int) $configValue;
                 };
+            case '!=': 
+                return function($givenValue) use ($configValue) {
+                    return (int) $givenValue != (int) $configValue;
+                };
             case '=': 
                 return function($givenValue) use ($configValue) {
                     return (int) $givenValue == (int) $configValue;
@@ -114,6 +118,10 @@ class ZfExtended_Logger_Filter {
             case '=':
                 return function($givenValue) use ($configValue) {
                     return $givenValue == $configValue;
+                };
+            case '!=':
+                return function($givenValue) use ($configValue) {
+                    return $givenValue != $configValue;
                 };
             case '*=':
                 return function($givenValue) use ($configValue) {
@@ -135,6 +143,10 @@ class ZfExtended_Logger_Filter {
             case '=': 
                 return function($givenValue) use ($configValue) {
                     return (string) $givenValue == (string) $configValue;
+                };
+            case '!=': 
+                return function($givenValue) use ($configValue) {
+                    return (string) $givenValue != (string) $configValue;
                 };
             case '^=': 
                 return function($givenValue) use ($configValue) {
