@@ -65,8 +65,8 @@ class ZfExtended_Controller_Helper_ExtJs extends Zend_Controller_Action_Helper_A
         if(!empty($extConfig)) {
             // In der Reihenfolge wie die Bestandteile abgearbeitet werden sollen hinzufügen
             $mcaPath[] = Zend_Registry::get('module');
-            $mcaPath[] = Zend_Registry::get('controller');
-            $mcaPath[] = Zend_Registry::get('action'); 
+            $mcaPath[] = $this->getRequest()->getControllerName();
+            $mcaPath[] = $this->getRequest()->getActionName(); 
             $this->_extVersion = $this->getVersionRecursive($mcaPath, $extConfig);
         }
         

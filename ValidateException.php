@@ -22,6 +22,11 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
+/**
+ * Should be used if the request to the server contains data which is not valid
+ * points to HTTP "422 Unprocessable Entity"
+ * @deprecated use ZfExtended_UnprocessableEntity instead
+ */
 class ZfExtended_ValidateException extends ZfExtended_Exception {
     /**
      * @var string
@@ -31,5 +36,5 @@ class ZfExtended_ValidateException extends ZfExtended_Exception {
     /**
      * @var integer
      */
-    protected $defaultCode = 400;
+    protected $defaultCode = 422;
 }

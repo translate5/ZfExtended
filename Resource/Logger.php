@@ -22,22 +22,42 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
-class ZfExtended_Models_Entity_Conflict  extends ZfExtended_ErrorCodeException {
-    use ZfExtended_ResponseExceptionTrait;
-    
+/**
+ * @see Zend_Application_Resource_ResourceAbstract
+ */
+require_once 'Zend/Application/Resource/ResourceAbstract.php';
+
+/**
+ */
+class ZfExtended_Resource_Logger extends Zend_Application_Resource_ResourceAbstract {
     /**
-     * @var integer
+     * @var ZfExtended_Logger
      */
-    protected $httpReturnCode = 409;
-    
+    protected $log;
+
     /**
-     * By default we log that as INFO, if created as response then the level is set to DEBUG
-     * @var integer
+     * Defined by Zend_Application_Resource_Resource
+     *
+     * @return Zend_Log
      */
-    protected $level = ZfExtended_Logger::LEVEL_INFO;
-    
-    protected static $localErrorCodes = [
-        'E1041' => '409 Conflict',
-    ];
-    
+    public function init()
+    {
+        return $this->getLog();
+    }
+
+    /**
+     * Retrieve logger object
+     *
+     * @return ZfExtended_Logger
+     */
+    public function getLog()
+    {
+        if (null === $this->log) {
+            $options = $this->getOptions();
+            //parse options here to configure the logger?
+            $this->log = ZfExtended_Factory::get('ZfExtended_Logger', [$options]);
+            Zend_Registry::set('logger', $this->log);
+        }
+        return $this->log;
+    }
 }

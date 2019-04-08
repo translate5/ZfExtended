@@ -23,31 +23,18 @@ END LICENSE AND COPYRIGHT
 */
 
 /**
- * TODO currently this exception is not usable, it provides only a mapping between upload error code and error message
+ * 
  */
-class ZfExtended_FileUploadException extends ZfExtended_Exception {
-    /**
-     * @var string
-     */
-    protected $defaultMessage = 'Fehler beim Datei Upload: ';
-    
-    /**
-     * @var integer
-     */
-    protected $defaultCode = 400;
-    
-    public function __construct($msg = '', $code = 0, Exception $previous = null, $origin = 'core') {
-        //This class is not implemented yet for direct usage.
-        // On creation of this class we needed just a place to put a ERROR_CODE to MSG map (getErrorMessage)
-        // In future it makes sense to use this class for file uploads
-        die("IMPLEMENT ME");
-    }
+class ZfExtended_FileUploadException extends ZfExtended_UnprocessableEntity {
+    //Since such errors are mainly intresting for the uploading user, we just log it as debug
+    protected $level = ZfExtended_Logger::LEVEL_INFO;
     
     /**
      * returns a german error message to the given file upload error code 
-     * @param unknown $errorNr
+     * TODO currently not used by the excption itself.
+     * @param integer $errorNr
      */
-    public static function getErrorMessage($errorNr) {
+    public static function getUploadErrorMessage($errorNr) {
         switch ($errorNr) {
             case UPLOAD_ERR_OK:
                 return 'Es liegt kein Fehler vor, die Datei wurde erfolgreich hochgeladen.';

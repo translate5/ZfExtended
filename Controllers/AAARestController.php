@@ -90,7 +90,7 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
   protected $restMessages;
   
   /**
-   *  @var ZfExtended_Log
+   *  @var ZfExtended_Logger
    */
   protected $log = false;
   
@@ -132,7 +132,7 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
       $this->restMessages = ZfExtended_Factory::get('ZfExtended_Models_Messages');
       Zend_Registry::set('rest_messages', $this->restMessages);
       
-      $this->log = ZfExtended_Factory::get('ZfExtended_Log');
+      $this->log = Zend_Registry::get('logger');
       
       //perhaps not working under windows, see comment on php.net
       //enable simple front end interaction with fatal errors
@@ -293,13 +293,6 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
           if(stripos($m, 'raise_version_conflict does not exist') !== false) {
               throw new ZfExtended_VersionConflictException('', 0, $e);
           }
-          //FIXME waiting on feedback of Ines-Paul - after that change this here again. 
-          // I assume that it should be "Integrity constraint violation: 1452 Cannot add or update a child row"
-          // not only "Integrity constraint violation" since this is also in the error message for other errors, which should not produce an 406
-          $sendingDataToServer = $this->_request->isPost() || $this->_request->isPut();
-          if($sendingDataToServer && stripos($m, 'Integrity constraint violation') !== false) {
-              throw new ZfExtended_Models_Entity_NotAcceptableException('', 0, $e);
-          }
           throw $e;
       }
       catch(ZfExtended_BadGateway $e) {
@@ -337,6 +330,7 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
   /**
    * handles a ZfExtended_ValidateException
    * @param ZfExtended_ValidateException $e
+   * @deprecated should be obsolete if new error loggin refactoring is done
    */
   protected function handleValidateException(ZfExtended_ValidateException $e) {
       $this->view->errors = $this->transformErrors($e->getErrors());
@@ -346,6 +340,7 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
   /**
    * handles a general ZfExtended_Exception
    * @param ZfExtended_Exception $e
+   * @deprecated should be obsolete if new error loggin refactoring is done
    */
   protected function handleException(ZfExtended_Exception $e) {
       $this->log->logException($e);
@@ -360,6 +355,7 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
   /**
    * prepares the result in case of an error
    * @param integer $httpStatus
+   * @deprecated should be obsolete if new error loggin refactoring is done
    */
   protected function handleErrorResponse($httpStatus) {
       $this->view->message = "NOT OK";

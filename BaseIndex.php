@@ -143,21 +143,7 @@ class ZfExtended_BaseIndex{
         Zend_Registry::set('cache', $cache);
         Zend_Registry::set('module',$this->currentModule );
     }
-    /**
-     * (re-)configures the session based on the config in the Zend_Registry
-     *
-     * @param Zend_Application_Bootstrap_Bootstrap bootstrap
-     * @return void
-     */
-    public function reConfigureSession(Zend_Application_Bootstrap_Bootstrap $bootstrap) {
-        $config = Zend_Registry::get('config');
-        $session = new Zend_Session_Namespace();
-        $session->runtimeOptions = $config->runtimeOptions;
-        //nicht innerhalb des if-blocks davor, da die defines sonst in unechten forks nicht gesetzt sind
-        foreach ($session->runtimeOptions->defines as $key => $val) {
-            defined($key)|| define($key,$val);
-        }
-    }
+
     /**
      * Singleton Instanz auf NULL setzen, um sie neu initialiseren zu können
      *
@@ -280,7 +266,6 @@ class ZfExtended_BaseIndex{
         $bootstrap->getApplication()->setOptions($options);
         $bootstrap->setOptions($bootstrap->getApplication()->getOptions());
         $this->initRegistry($bootstrap);
-        $this->reConfigureSession($bootstrap);
     }
     /**
      * Definiert APPLICATION_MODULE und gibt aktuelles Modul zurück

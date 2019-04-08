@@ -30,6 +30,7 @@ END LICENSE AND COPYRIGHT
  */
 /**
  * Klasse zur Kapselung des Loggings und Mailversands von Logmeldungen
+ * @deprecated Use ZfExtended_Logger where possible
  */
 class  ZfExtended_Log extends ZfExtended_Mail {
     /**

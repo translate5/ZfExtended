@@ -35,7 +35,7 @@ END LICENSE AND COPYRIGHT
  * - Näheres zur Interaktion siehe ZfExtended_Controllers_Helper_GeneralHelper->forkHttp
  * - ein Hacking des Benutzerzugangs durch diese Funktion wird ausgeschlossen durch
  *   den Vergleich der $_GET['forkNoRegenerateId'] mit
- *   $session->runtimeOptions->forkNoRegenerateId. Sprich nur wer den in application.ini
+ *   $config->runtimeOptions->forkNoRegenerateId. Sprich nur wer den in application.ini
  *   gesetzten Wert runtimeOptions->forkNoRegenerateId kennt kann sich mittels dieser
  *   Klasse einloggen und auch dies nur, wenn ein cache der zu $_GET['uniqid'] passt
  *   vorhanden ist

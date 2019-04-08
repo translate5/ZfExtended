@@ -40,17 +40,35 @@ END LICENSE AND COPYRIGHT
  *
  */
 class ZfExtended_Resource_ErrorHandler extends Zend_Application_Resource_ResourceAbstract {
+    
+    /**
+     * Mapping of error codes to there speakable name, and the level how it should be logged in the application
+     * @var array
+     */
+    protected $errorCodes = [
+        1 => ['E_ERROR', 'fatal'],                 //FATAL
+        2 => ['E_WARNING', 'info'],                //info
+        4 => ['E_PARSE', 'fatal'],                 //FATAL
+        8 => ['E_NOTICE', 'info'],                 //info
+        16 => ['E_CORE_ERROR', 'fatal'],           //FATAL
+        32 => ['E_CORE_WARNING', 'info'],          //info
+        64 => ['E_COMPILE_ERROR', 'fatal'],        //FATAL
+        128 => ['E_COMPILE_WARNING', 'warn'],      //warn
+        256 => ['E_USER_ERROR', 'fatal'],          //FATAL → should be an exception
+        512 => ['E_USER_WARNING', 'info'],         //info
+        1024 => ['E_USER_NOTICE', 'info'],         //info
+        2048 => ['E_STRICT', 'debug'],             //debug
+        4096 => ['E_RECOVERABLE_ERROR', 'fatal'],  //FATAL
+        8192 => ['E_DEPRECATED', 'debug'],         //debug
+        16384 => ['E_USER_DEPRECATED', 'debug'],   //debug
+    ];
+    
     public function init()
     {
         $bootstrap = $this->getBootstrap();
         $bootstrap->bootstrap('ZfExtended_Resource_InitRegistry');
         $config = Zend_Registry::get('config');
         register_shutdown_function(array($this, 'handleFatalError'), $config);
-        Zend_Registry::set('errorCollect', false);
-        if(isset($config->runtimeOptions->errorCollect)){
-            Zend_Registry::set('errorCollect', (boolean) $config->runtimeOptions->errorCollect);
-            Zend_Registry::set('errorCollector', array());
-        }
         set_error_handler(array('ZfExtended_Resource_ErrorHandler', 'errorHandler'));
     }
     
@@ -60,6 +78,22 @@ class ZfExtended_Resource_ErrorHandler extends Zend_Application_Resource_Resourc
     public function handleFatalError(Zend_Config $config) {
         $error = error_get_last();
         if(empty($error)) {
+            return;
+        }
+        
+        $type = empty($error['type']) ? E_ERROR : $error['type'];
+        
+        $label = $this->errorCodes[$type][0];
+        $level = $this->errorCodes[$type][1];
+        $msg = 'PHP '.$label.': ';
+        
+        $codes = ['fatal' => 'E1027', 'warn' => 'E1029', 'info' => 'E1030', 'debug' => 'E1030'];
+        $logger = Zend_Registry::get('logger');
+        /* @var $logger ZfExtended_Logger */
+        $logger->finalError($codes[$level], $msg, $level, $error);
+        
+        //on fatal errors we assume that there is no usable out put, so we overwrite it
+        if($level != 'fatal') {
             return;
         }
         if(!headers_sent()) {
@@ -73,13 +107,11 @@ class ZfExtended_Resource_ErrorHandler extends Zend_Application_Resource_Resourc
             ob_get_length() && ob_clean(); //show only a white page
         }
         echo '<h1>Internal Server Error</h1>'."\n".$out;
-        $log = new ZfExtended_Log(false);
-        $log->logFatal($error);
     }
     
     /**
+     * TODO remove me with PHP7!
      * - Führt typehinting für alle Types ein auch für die Types, für die php es von Haus aus nicht unterstützt
-     * - Kümmert sich ums errorCollecting, wenn aktiviert in Zend_Registry "errorCollect"
      * - E_USER_NOTICE wird nicht als Fehler gewertet, aber an allen relevanten Stellen 
      *   mit geloggt. D. h., einziger Loggingunterschied ist, dass der Fehler- und 
      *   http-Responsecode nicht auf 500 sondern auf 200 steht
@@ -102,23 +134,6 @@ class ZfExtended_Resource_ErrorHandler extends Zend_Application_Resource_Resourc
                 return true;
             }
         }
-        $errorCollect = Zend_Registry::get('errorCollect');
-        if($errorCollect){
-            $errors = Zend_Registry::get('errorCollector');
-            $error = new stdClass();
-            $error->errno = $errno;
-            $error->_errorMessage = 'ErrorCollect: '.$errstr;
-            $error->_errorTrace = self::getTrace();
-            $error->_errorCode = 500;
-            if($errno == E_USER_NOTICE) {
-                $error->_errorCode = 200; 
-            }
-            $error->errfile = $errfile;
-            $error->errline = $errline;
-            $errors[] = $error;
-            Zend_Registry::set('errorCollector', $errors);
-            return true;
-        }
         throw new Zend_Exception($errstr."; File: ".$errfile."; Line: ".$errline."; errno: ".$errno, 0 );
     }
     
@@ -126,10 +141,7 @@ class ZfExtended_Resource_ErrorHandler extends Zend_Application_Resource_Resourc
      * @return Gibt debug_backtrace als var_dump in einem String zurück 
      */
     public static function getTrace(){
-        try {
-            throw new Zend_Exception();
-        } catch (Zend_Exception $e) {
-            return $e->getTraceAsString();
-        }
+        $e = new Zend_Exception();
+        return $e->getTraceAsString();
     }
 }
