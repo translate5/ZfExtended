@@ -79,7 +79,7 @@ abstract class ZfExtended_Logger_Writer_Abstract {
     /**
      * Validates the given options
      */
-    public function validateOptions(array $options) {
+    public function validateOptions(array &$options) {
         if(!empty($options['filter']) && !is_array($options['filter'])) {
             throw new ZfExtended_Logger_Exception(__CLASS__.': option filter is not an array!');
         }

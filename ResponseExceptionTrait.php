@@ -34,9 +34,9 @@ trait ZfExtended_ResponseExceptionTrait {
      *
      * @param string $errorCode
      * @param array $invalidFields associative array of invalid fieldnames and an error string what is wrong with the field
-     * @param Exception $previous
+     * @param Exception $previous 
      * @param array data
-     * @return ZfExtended_UnprocessableEntity
+     * @return ZfExtended_ErrorCodeException
      */
     public static function createResponse($errorCode, array $invalidFields, array $data = [], Exception $previous = null) {
         $t = ZfExtended_Zendoverwrites_Translate::getInstance();
@@ -72,5 +72,23 @@ trait ZfExtended_ResponseExceptionTrait {
         $e = new static($errorCode, $data, $previous);
         $e->level = ZfExtended_Logger::LEVEL_DEBUG;
         return $e;
+    }
+    
+    /**
+     * This function creates a response exception, initialized with the data of a usual ErrorCodeException 
+     * This is useful in situations where the underlying code produces an error which can be handled in the frontend. 
+     *   This implies an answer to the GUI as response exception.
+     *   
+     * @param ZfExtended_ErrorCodeException $previous
+     * @param array $invalidFields
+     * @param array $data optional, additional data.
+     * @return ZfExtended_ErrorCodeException
+     */
+    public static function createResponseFromOtherException(ZfExtended_ErrorCodeException $previous, array $invalidFields, array $data = []) {
+        static::addCodes([
+            $previous->getErrorCode() => $previous->getMessage()
+        ], $previous->getDomain());
+        $data = array_merge($previous->getErrors(), $data);
+        return static::createResponse($previous->getErrorCode(), $invalidFields, $data, $previous);
     }
 }

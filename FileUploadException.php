@@ -27,7 +27,7 @@ END LICENSE AND COPYRIGHT
  */
 class ZfExtended_FileUploadException extends ZfExtended_UnprocessableEntity {
     //Since such errors are mainly intresting for the uploading user, we just log it as debug
-    protected $level = ZfExtended_Logger::LEVEL_DEBUG;
+    protected $level = ZfExtended_Logger::LEVEL_INFO;
     
     /**
      * returns a german error message to the given file upload error code 

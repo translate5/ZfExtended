@@ -30,7 +30,7 @@ class ZfExtended_Logger_Filter {
      * The or connected filter rules, each row (evaluates to one row in the ini) contains an array again, with the and connected rules.
      * @var array
      */
-    protected $rules;
+    protected $rules = [];
     
     /**
      * Cache for the current filter instance
@@ -190,6 +190,10 @@ class ZfExtended_Logger_Filter {
         }
         if(is_string($level) && !is_numeric($level)) {
             $level = $this->levelStringToInt($level);
+        }
+        //if there are no filter rules, that means all events are logged
+        if(empty($this->rules)) {
+            return $this->filterCache[$cacheKey] = true;
         }
         foreach($this->rules as $rule) {
             //mostly there will be level filters, so we check them first

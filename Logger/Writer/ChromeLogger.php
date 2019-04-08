@@ -32,7 +32,8 @@ class ZfExtended_Logger_Writer_ChromeLogger extends ZfExtended_Logger_Writer_Abs
     protected static $rows = [];
     protected static $registered = false;
     
-    public function __construct() {
+    public function __construct($options) {
+        parent::__construct($options);
         if(self::$registered) {
             return;
         }
@@ -87,7 +88,7 @@ class ZfExtended_Logger_Writer_ChromeLogger extends ZfExtended_Logger_Writer_Abs
         $data->version = "0.1";
         $data->columns = ["log", "backtrace", "type"];
         $data->rows = self::$rows;
-        header('X-ChromeLogger-Data: '.base64_encode(json_encode(self::$rows)));
+        header('X-ChromeLogger-Data: '.base64_encode(json_encode($data)));
     }
     
 }
