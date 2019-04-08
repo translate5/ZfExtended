@@ -37,6 +37,13 @@ abstract class ZfExtended_Models_Validator_Abstract {
   protected $nullAllowed = array();
 
   protected $messages = array();
+  
+  /**
+   * A reference to the entity it self
+   * ATTENTION not the entity instance is validated, but the data given in isValid() !
+   * @var ZfExtended_Models_Entity_Abstract
+   */
+  protected $entity; 
 
   /**
    * Example for defining Validators:
@@ -44,14 +51,19 @@ abstract class ZfExtended_Models_Validator_Abstract {
    */
   abstract protected function defineValidators();
 
-  public function __construct() {
-    $this->defineValidators();
-    $version = ZfExtended_Models_Entity_Abstract::VERSION_FIELD;
-    if(empty($this->validators[$version])) {
-        $this->addValidator($version, 'int');
-    }
+  /**
+   * create the validator, add a reference to the entity (the data of the entity is NOT used for validation, just to have a reference!)
+   * @param ZfExtended_Models_Entity_Abstract $entity
+   */
+  public function __construct(ZfExtended_Models_Entity_Abstract $entity) {
+      $this->entity = $entity;
+      $this->defineValidators();
+      $version = ZfExtended_Models_Entity_Abstract::VERSION_FIELD;
+      if(empty($this->validators[$version])) {
+          $this->addValidator($version, 'int');
+      }
   }
-
+  
   /**
    * validates the given assoc array against the defined Validators
    * @param array $data

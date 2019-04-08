@@ -118,7 +118,10 @@ class ZfExtended_SessionController extends ZfExtended_RestController {
             $session = new Zend_Session_Namespace();
             $this->setLocale($session, $userModel);
             $this->view->sessionId = session_id();
-            $this->view->sessionToken = $session->internalSessionUniqId;
+            
+            $sessionDb = ZfExtended_Factory::get('ZfExtended_Models_Db_Session');
+            $this->view->sessionToken = $sessionDb->updateAuthToken($this->view->sessionId);
+            
             $userSession = new Zend_Session_Namespace('user');
             //set a flag to identify that this session was started by API 
             $userSession->loginByApiAuth = true;
