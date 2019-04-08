@@ -84,6 +84,18 @@ class ZfExtended_Logger {
         $this->logLevels = array_flip($r->getConstants());
     }
     
+    /**
+     * Clones the logger instance and resets the domain in the returned instance.
+     * The purpose of this is to provide a convenience way to set a separate domain for multiple log calls
+     * @param string $domain
+     * @return ZfExtended_Logger
+     */
+    public function cloneMe($domain) {
+        $clone = clone $this;
+        $clone->domain = $domain;
+        return $clone;
+    }
+    
     /*
     id 	int, auto_inc. 	automatically
     created 	date, first occurence 	automatically
