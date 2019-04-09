@@ -58,6 +58,11 @@ class ZfExtended_Logger_Event {
      */
     public $exception;
     
+    /**
+     * @var ZfExtended_Logger_Event
+     */
+    public $previous;
+    
     //worker 	worker class (loop over debug_backtrace, and ue is_subclass_of) 	automatically
     // → FIXME is the domain usable for that? 
     
@@ -137,14 +142,19 @@ class ZfExtended_Logger_Event {
      * extra data to the event as associated error
      * @var array
      */
-    public $extra;
+    public $extra = [];
     
     /**
-     * Merge the data defined in the associative array into the current event
+     * overwrites the data defined in the associative array into the current event
+     * The extra array is merged - same named keys in the extra array are overwritten
      * @param array $dataToMerge
      */
     public function mergeFromArray(array $dataToMerge) {
         foreach($dataToMerge as $key => $value) {
+            if($key == 'extra') {
+                $this->extra = array_merge($this->extra, $value);
+                continue;
+            }
             if(property_exists($this, $key)) {
                 $this->$key = $value;
             }
@@ -174,6 +184,11 @@ class ZfExtended_Logger_Event {
             $msg[] = $this->trace;
         }
         
+        if(!empty($this->previous)) {
+            $msg[] = "\nPrevious Exception: \n";
+            $msg[] = (string) $this->previous;
+        }
+        
         //FIXME implement a nice, flexible, changeable formatter here
         return join("\n", $msg);
     }
@@ -199,7 +214,8 @@ class ZfExtended_Logger_Event {
      * @return string
      */
     public function toHtml() {
-        $msg = ['<table><tr>'];
+        $start = '<table><tr>';
+        $msg = [];
         if(!empty($this->exception)) {
             $msg[] = '<td>Exception:</td><td>'.get_class($this->exception).'</td>';
         }
@@ -218,10 +234,14 @@ class ZfExtended_Logger_Event {
             $msg[] = '<td>Worker:</td><td>'.$this->worker.'</td>';
         }
         if(!empty($this->extra)) {
-            if(is_object($item) && $item instanceof ZfExtended_Models_Entity_Abstract) {
-                $item = $item->getDataObject();
+            $extra = [];
+            foreach($this->extra as $item) {
+                if(is_object($item) && $item instanceof ZfExtended_Models_Entity_Abstract) {
+                    $item = $item->getDataObject();
+                }
+                $extra[] = $item;
             }
-            $msg[] = '<td>Extra:</td><td>'.htmlspecialchars(print_r($this->extra,1)).'</td>';
+            $msg[] = '<td>Extra:</td><td>'.htmlspecialchars(print_r($extra,1)).'</td>';
         }
         if(!empty($this->trace)) {
             $msg[] = '<td colspan="2">Trace:</td>';
@@ -231,9 +251,12 @@ class ZfExtended_Logger_Event {
             $msg[] = '<td colspan="2">Request:</td>';
             $msg[] = '<td colspan="2"><pre>'.htmlspecialchars(print_r($_REQUEST,1)).'</pre></td>';
         }
-        $msg[] = '</tr></table>';
+        $end = '</tr></table>';
+        if(!empty($this->previous)) {
+            $end .= $this->previous->toHtml();
+        }
         
         //FIXME implement a nice, flexible, changeable formatter here
-        return join("</tr>\n<tr>", $msg);
+        return $start.join("</tr>\n<tr>", $msg).$end;
     }
 }

@@ -24,13 +24,12 @@ END LICENSE AND COPYRIGHT
 
 /**
  * design facts:
- * - Inside the logger no translation is needed, since logging and transporting messages to the customer are two different parts
  * - since we are not only logging errors but also warnings, infos etc, we are talking about events not errors to be logged.
- *
+ * 
  * @method void fatal() fatal(string $code, string $message)
  * @method void error() error(string $code, string $message)
- * @method void warn() warn(string $code, string $message)
- * @method void info() info(string $code, string $message)
+ * @method void warn() warn  (string $code, string $message)
+ * @method void info() info  (string $code, string $message)
  * @method void debug() debug(string $code, string $message)
  * @method void trace() trace(string $code, string $message)
  */
@@ -57,10 +56,23 @@ class ZfExtended_Logger {
     protected $writer = [];
     
     /**
+     * before a trace is created, the current events level is compared on bit level against this value, 
+     *  if it does match, then the trace is created
+     *  This value can be overridden via config  
+     * @var integer
+     */
+    protected $enableTraceFor = 51; // 1 + 2 + 16 + 32
+    
+    /**
+     * Config options - mostly given by configuration in ini
+     * @param array $options
      */
     public function __construct($options = null) {
         if(empty($options) || empty($options['writer'])) {
             $options[] = ['type' => 'ErrorLog', 'level' => self::LEVEL_WARN];
+        }
+        if(array_key_exists('enableTraceFor', $options)) {
+            $this->enableTraceFor = (int) $options['enableTraceFor'];
         }
         foreach($options['writer'] as $name => $writerConfig) {
             if($writerConfig instanceof Zend_Config) {
@@ -70,6 +82,18 @@ class ZfExtended_Logger {
         }
         $r = new ReflectionClass($this);
         $this->logLevels = array_flip($r->getConstants());
+    }
+    
+    /**
+     * Clones the logger instance and resets the domain in the returned instance.
+     * The purpose of this is to provide a convenience way to set a separate domain for multiple log calls
+     * @param string $domain
+     * @return ZfExtended_Logger
+     */
+    public function cloneMe($domain) {
+        $clone = clone $this;
+        $clone->domain = $domain;
+        return $clone;
     }
     
     /*
@@ -155,21 +179,20 @@ class ZfExtended_Logger {
         $this->fillStaticData($event);
         return $event;
     }
-
     
     /**
      * Log the given exception
      * @param Exception $exception
      * @param array $eventOverride array to override the event generated from the exception
      */
-    public function exception(Exception $exception, array $eventOverride = []) {
+    public function exception(Exception $exception, array $eventOverride = [], $returnEvent = false) {
         $event = new ZfExtended_Logger_Event();
         $event->created = NOW_ISO;
         
         if($exception instanceof ZfExtended_Exception){
             $event->level = $exception->getLevel();
             $extraData = $exception->getErrors();
-            $event->domain = $exception->getOrigin();
+            $event->domain = $exception->getDomain();
         }
         else {
             //exceptions not defined and not catched by us are of type error 
@@ -186,6 +209,13 @@ class ZfExtended_Logger {
         
         $this->fillStaticData($event);
         $event->mergeFromArray($eventOverride);
+        $previous = $exception->getPrevious();
+        if(!empty($previous)) {
+            $event->previous = $this->exception($previous, [], true);
+        }
+        if($returnEvent) {
+            return $event;
+        }
         $this->processEvent($event);
     }
     
@@ -205,8 +235,15 @@ class ZfExtended_Logger {
         }
     }
     
-    //FIXME fillTrace only if needed, depending on the LEVEL!
+    /**
+     * The trace information is set if 
+     * @param ZfExtended_Logger_Event $event
+     * @param Exception $e
+     */
     protected function fillTrace(ZfExtended_Logger_Event $event, Exception $e = null) {
+        if($this->enableTraceFor & $event->level == 0) {
+            return;
+        }
         if(empty($e)) {
             $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
             $stepBefore = [];
@@ -258,7 +295,6 @@ class ZfExtended_Logger {
         }
         
         $event->appVersion = APPLICATION_VERSION;
-        //FIXME add POST/PUT parameters as additional extraData! → obsolete? see separate request loggin?
         
         if(Zend_Session::isStarted() && !Zend_Session::isDestroyed()) {
             $user = new Zend_Session_Namespace('user');

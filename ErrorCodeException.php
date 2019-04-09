@@ -42,23 +42,51 @@ class ZfExtended_ErrorCodeException extends ZfExtended_Exception {
     protected $allErrorCodes = [
     ];
     
+    protected static $errorCodeDomainOverride = [];
+    
     /**
      * @param string $errorCode
      * @param array $extra
      * @param Exception $previous
      */
-    public function __construct($errorCode, array $extra = null, Exception $previous = null) {
+    public function __construct($errorCode, array $extra = [], Exception $previous = null) {
         $this->allErrorCodes = $this->mergeErrorCodes();
         parent::__construct($this->getErrorMessage($errorCode), substr($errorCode, 1), $previous);
         $this->setErrors($extra);
     }
     
     /**
+     * return the internally stored domain
+     * @return string
+     */
+    public function getDomain() {
+        $code = $this->getErrorCode();
+        if(empty(self::$errorCodeDomainOverride[$code])) {
+            return $this->domain;
+        }
+        return self::$errorCodeDomainOverride[$code];
+    }
+    
+    /**
      * Its not always making sense to create a separate Exception class - therefore via that function the needed error codes can be set dynamically
      * @param array $codes
+     * @param string $domain optional, defines a different domain for the added codes
      */
-    public static function addCodes(array $codes) {
+    public static function addCodes(array $codes, $domain = null) {
         static::$localErrorCodes = array_merge(static::$localErrorCodes, $codes);
+        if(!empty($domain)) {
+            $codeKeys = array_keys($codes);
+            self::$errorCodeDomainOverride = array_merge(self::$errorCodeDomainOverride, array_fill_keys($codeKeys, $domain));
+        }
+    }
+    
+    /**
+     * Add additonal extra data to an existing exception instance
+     * @param array $extraData
+     */
+    public function addExtraData(array $extraData) {
+        $origData = $this->getErrors();
+        $this->setErrors(array_merge($origData, $extraData));
     }
     
     /**
@@ -100,55 +128,5 @@ class ZfExtended_ErrorCodeException extends ZfExtended_Exception {
             $ret = array_merge($c::$localErrorCodes, $ret);
         } while(($c = get_parent_class($c)) !== false);
         return $ret;
-    }
-    
-    /**
-     * Creates this exceptions as a response, that means:
-     * its an error that can be recovered by the user, therefore the user should receive information about the error in the Frontend.
-     * The exception level is set to debug, the given error messages must be given in german, since they are translated into the GUI language automatically
-     * The errorcode is fix to defined value in the exception
-     *
-     * FIXME this function should be currently only available from 422 and 409 exceptions. Solve that via trait or intermediate class?
-     *
-     * @param string $errorCode
-     * @param array $invalidFields associative array of invalid fieldnames and an error string what is wrong with the field
-     * @param Exception $previous
-     * @param array data
-     * @return ZfExtended_UnprocessableEntity
-     */
-    public static function createResponse($errorCode, array $invalidFields, array $data = [], Exception $previous = null) {
-        $t = ZfExtended_Zendoverwrites_Translate::getInstance();
-        /* @var $t ZfExtended_Zendoverwrites_Translate */
-        $logger = Zend_Registry::get('logger');
-        /* @var $logger ZfExtended_Logger */
-        
-        $data['errors'] = [];
-        $data['errorsTranslated'] = [];
-        $numericKeysOnly = true;
-        
-        //if one field has multiple errors, this must be a plain array
-        foreach($invalidFields as $field => $error) {
-            if(is_array($error)) {
-                $data['errors'][$field] = array_keys($error);
-                $data['errorsTranslated'][$field] = array_values($error);
-                $numericKeysOnly = $numericKeysOnly && ($data['errorsTranslated'][$field] === $error);
-            }
-            else {
-                $data['errors'][$field] = [$error];
-                $data['errorsTranslated'][$field] = [$error];
-            }
-            //translate the field
-            $data['errorsTranslated'][$field] = array_map(function($text) use ($t, $logger, $data){
-                $text = $t->_($text);
-                return $logger->formatMessage($text, $data);
-            }, $data['errorsTranslated'][$field]);
-        }
-        //if there are no untranslated error strings, we don't send them
-        if($numericKeysOnly) {
-            unset($data['errors']);
-        }
-        $e = new static($errorCode, $data, $previous);
-        $e->level = ZfExtended_Logger::LEVEL_DEBUG;
-        return $e;
     }
 }

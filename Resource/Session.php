@@ -110,22 +110,21 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
         if(empty($_REQUEST['sessionToken']) || !preg_match('/[a-zA-Z0-9]{32}/', $_REQUEST['sessionToken'])) {
             return;
         }
-        $sessionUniq = ZfExtended_Factory::get('ZfExtended_Models_Db_SessionMapInternalUniqId');
-        /* @var $sessionUniq ZfExtended_Models_Db_SessionMapInternalUniqId */
-        $row = $sessionUniq->fetchRow(['internalSessionUniqId = ?' => $_REQUEST['sessionToken']]);
+        $sessionDb = ZfExtended_Factory::get('ZfExtended_Models_Db_Session');
+        /* @var $sessionDb ZfExtended_Models_Db_Session */
+        $row = $sessionDb->fetchRow(['authToken = ?' => $_REQUEST['sessionToken']]);
         if(empty($row) || empty($row->session_id)) {
             $this->authTokenLog('No matching sessionToken found in DB: '.$_REQUEST['sessionToken']);
             $this->reload(); //making exit
         }
-        $sessionId = $row->session_id;
-        $row->delete(); //delete this internalSessionUniqId and create later a new one
-        Zend_Session::setId($sessionId);
+        Zend_Session::setId($row->session_id);
         Zend_Session::start();
+        $sessionDb->updateAuthToken($row->session_id);
         $session = new Zend_Session_Namespace();
-        //after using the internalUniqId as sessionToken we throw it away and trigger creating a new one here
-        unset($session->internalSessionUniqId); 
         $user = new Zend_Session_Namespace('user');
         $this->authTokenLog('Spawning session for sessionToken '.$_REQUEST['sessionToken'].' user: '.print_r($user->data,1));
+        //since we changed the sessionId, we have to reset the internalSessionUniqId too
+        unset($session->internalSessionUniqId); 
         $this->setInternalSessionUniqId();
         //reload redirect to remove authToken from parameter
         //or doing this in access plugin because there are several helpers?

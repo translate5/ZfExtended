@@ -39,13 +39,13 @@ class ZfExtended_Exception extends Zend_Exception {
      * internal errors store
      * @var array
      */
-    protected $errors;
+    protected $errors = [];
     
     /**
-     * internal origin store
+     * internal domain store (domain in the sense of area)
      * @var string
      */
-    protected $origin = 'core';
+    protected $domain = 'core';
     
     /**
      * FIXME should be replaced with a loglevel based way
@@ -76,10 +76,10 @@ class ZfExtended_Exception extends Zend_Exception {
      * @param  string $msg (Message gets translated by ZfExtended_Exception)
      * @param  int $code
      * @param  Exception $previous
-     * @param  string $origin optional, defaults to core. Can be the plugin name, or another system identifier
+     * @param  string $domain optional, defaults to core. Can be the plugin name, or another system identifier
      * @return void
      */
-    public function __construct($msg = '', $code = 0, Exception $previous = null, $origin = 'core')
+    public function __construct($msg = '', $code = 0, Exception $previous = null, $domain = 'core')
     {
         if((int)$code === 0){
             $code = $this->defaultCode;
@@ -90,7 +90,7 @@ class ZfExtended_Exception extends Zend_Exception {
         else {
             $this->setMessage($msg);
         }
-        $this->setOrigin($origin);
+        $this->setDomain($domain);
         parent::__construct($this->message, (int) $code, $previous);
     }
     
@@ -116,6 +116,8 @@ class ZfExtended_Exception extends Zend_Exception {
     /**
      * stores the given errors internally
      * @param array $errors
+     * @deprecated refactor the called exception instance to errorCodeException and use the extra/data container there  
+     * //FIXME searc for usages and refactor it 
      */
     public function setErrors(array $errors) {
         $this->errors = $errors;
@@ -123,6 +125,7 @@ class ZfExtended_Exception extends Zend_Exception {
 
     /**
      * return the internally stored errors
+     * @deprecated refactor the called exception instance to errorCodeException and use the extra/data container there  
      * @return array
      */
     public function getErrors() {
@@ -130,19 +133,19 @@ class ZfExtended_Exception extends Zend_Exception {
     }
     
     /**
-     * stores the origin of the exception (plugin name, etc), defaults to core
-     * @param string $origin
+     * stores the domain of the exception (plugin name, etc), defaults to core
+     * @param string $domain
      */
-    public function setOrigin(string $origin) {
-        $this->origin = $origin;
+    public function setDomain($domain) {
+        $this->domain = $domain;
     }
 
     /**
-     * return the internally stored origin
-     * @return array
+     * return the internally stored domain
+     * @return string
      */
-    public function getOrigin() {
-        return $this->origin;
+    public function getDomain() {
+        return $this->domain;
     }
     
     /**
@@ -189,9 +192,12 @@ class ZfExtended_Exception extends Zend_Exception {
          * the names of needed parts (module, action, etc)
          */
         $exception = get_class($this);
+        
         $mod = Zend_Registry::get('module'); //warning this can be changed be BaseIndex::setModule
-        $contr = Zend_Registry::get('controller');
-        $action = Zend_Registry::get('action');
+        $f = Zend_Registry::get('frontController');
+        /* @var $f Zend_Controller_Front */
+        $contr = $f->getRequest()->getControllerName();
+        $action = $f->getRequest()->getActionName();
         
         /**
          * all possible config paths are defined in this array

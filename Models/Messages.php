@@ -91,8 +91,8 @@ class ZfExtended_Models_Messages {
     public function addException(ZfExtended_Exception $e) {
         $msg = $e->getMessage();
         $data = $e->getErrors();
-        if(method_exists($e, 'getOrigin')) {
-            $origin = $e->getOrigin();
+        if(method_exists($e, 'getDomain')) {
+            $origin = $e->getDomain();
         }
         else {
             $origin = 'core';

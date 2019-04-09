@@ -289,8 +289,10 @@ class ZfExtended_Controller_Helper_General extends Zend_Controller_Action_Helper
     	if(preg_match('"[^a-zA-Z0-9_]"', $forkHttpId)){
     		throw new Zend_Exception('$forkHttpId enthält Zeichen, die nicht der Menge [a-zA-Z0-9_] entstammen', 0);
     	}
+    	$config = Zend_Registry::get('config');
+    	/* @var $config Zend_Config */
     	$session = new Zend_Session_Namespace();
-    	$ro = $session->runtimeOptions;
+    	$ro = $config->runtimeOptions;
     	$cache = Zend_Registry::get('cache');
     	if(!isset($session->forkHttpCalls)){
     		$session->forkHttpCalls = array();

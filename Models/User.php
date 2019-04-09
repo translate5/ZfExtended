@@ -41,6 +41,8 @@ END LICENSE AND COPYRIGHT
  * @method void setTargetLanguage() setTargetLanguage(string $targetLanguage)
  * @method void setParentIds() setParentIds(string $parentIds)
  * @method void setCustomers() setCustomers(string $customers)
+ * @method void setOpenIdIssuer() setOpenIdIssuer(string $openIdIssuer)
+ * @method void setOpenIdSubject() setOpenIdSubject(string $openIdsubject)
  * 
  * @method void setLogin() setLogin(string $login)
  * @method integer getId() getId()
@@ -55,7 +57,9 @@ END LICENSE AND COPYRIGHT
  * @method void getSourceLanguage() getSourceLanguage()
  * @method void getTargetLanguage() getTargetLanguage() 
  * @method void getParentIds() getParentIds() 
- * @method void getCustomers() getCustomers() 
+ * @method void getCustomers() getCustomers()
+ * @method void getOpenIdIssuer() getOpenIdIssuer()
+ * @method void getOpenIdSubject() getOpenIdSubject()
  */
 class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implements ZfExtended_Models_SessionUserInterface {
     const SYSTEM_LOGIN = 'system';
@@ -63,6 +67,19 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implement
     
   protected $dbInstanceClass = 'ZfExtended_Models_Db_User';
   protected $validatorInstanceClass = 'ZfExtended_Models_Validator_User';
+  
+  
+      /**
+       * Loads user by a given list of userGuids
+       * @param array $guids
+       * @return array
+       */
+    public function loadByGuids(array $guids){
+         $s=$this->db->select()
+         ->where('userGuid IN (?)', array_unique($guids));
+         return $this->loadFilterdCustom($s);
+     }
+  
     /**
      * sets the user in Zend_Session_Namespace('user')
      *
@@ -107,6 +124,7 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implement
         $userData->userName = $userData->firstName.' '.$userData->surName;
         $userData->loginTimeStamp = $_SERVER['REQUEST_TIME'];
         $userData->passwd = '********'; // We don't need and don't want the PW hash in the session
+        $userData->openIdIssuer='';
         foreach ($userData as &$value) {
             if(is_numeric($value)){
                 $value = (int)$value;
@@ -256,6 +274,7 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implement
         $db = $this->db;
         $cols = array_flip($db->info($db::COLS));
         unset($cols['passwd']);
+        unset($cols['openIdSubject']);
         $s = $db->select()->from($db->info($db::NAME), array_flip($cols));
         $s->where('login != ?', self::SYSTEM_LOGIN); //filter out the system user
         if($this->filter && !$this->filter->hasSort()){
@@ -392,5 +411,23 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implement
      */
     public function getUsernameLong() {
         return $this->getSurName().', '.$this->getFirstName().' ('.$this->getLogin().')';
+    }
+    
+    
+    /***
+     * Load user by given issuer and subject (the issuer and subject are openid specific fields)
+     * @param string $login
+     * @return Zend_Db_Table_Row_Abstract|NULL
+     */
+    public function loadByIssuerAndSubject($issuer,$subject) {
+        $s = $this->db->select();
+        $s->where('openIdIssuer=?',$issuer);
+        $s->where('openIdSubject=?',$subject);
+        $row=$this->db->fetchRow($s);
+        if(empty($row)){
+            return null;
+        }
+        $this->row =$row;
+        return $row;
     }
 }

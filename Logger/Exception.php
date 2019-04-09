@@ -24,6 +24,7 @@ END LICENSE AND COPYRIGHT
 
 /**
  * This Exception is thrown in the context of the Logger
+ * This Exception is intentionally no ErrorCodeException, since all the logging stuff is either not ready, or there is an error in the logger iself
  */
 class ZfExtended_Logger_Exception extends ZfExtended_Exception {
 }
