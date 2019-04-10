@@ -44,7 +44,9 @@ class ZfExtended_Models_Db_Session extends Zend_Db_Table_Abstract {
      */
     public function updateAuthToken($sessionId) {
         $token = bin2hex(openssl_random_pseudo_bytes(16));
-        $this->update(['authToken' => $token], ['session_id = ?' => $sessionId]);
+        $sql = 'INSERT INTO '.$this->_name.' (authToken, session_id, name, lifetime) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE authToken = VALUES(authToken)';
+        $lifetime = Zend_Session::getSaveHandler()->getLifeTime();
+        $this->getAdapter()->query($sql, [$token, $sessionId, Zend_Session::getOptions('name'), $lifetime]);
         return $token;
     }
 }
