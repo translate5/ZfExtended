@@ -29,11 +29,6 @@ class ZfExtended_Session_SaveHandler_DbTable
     extends Zend_Session_SaveHandler_DbTable
 {
 
-    public function __construct($config)
-    {
-        parent::__construct($config);
-    }
-    
     /**
      * Write session data.
      * Overwrite initial method for using INSERT ON DUPLICATE KEY UPDATE instead.

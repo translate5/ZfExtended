@@ -294,7 +294,12 @@ class ZfExtended_Logger {
             $event->method = $_SERVER['REQUEST_METHOD'];
         }
         
-        $event->appVersion = APPLICATION_VERSION;
+        if(defined('APPLICATION_VERSION')) {
+            $event->appVersion = APPLICATION_VERSION;
+        }
+        else {
+            $event->appVersion = 'not defined yet';
+        }
         
         if(Zend_Session::isStarted() && !Zend_Session::isDestroyed()) {
             $user = new Zend_Session_Namespace('user');
