@@ -37,6 +37,7 @@ class ZfExtended_Logger_Writer_DirectMail extends ZfExtended_Logger_Writer_Abstr
             $subject .= $event->eventCode.' - ';
         }
         $subject .= $event->message;
+        $subject = substr($subject, 0, 80);//max length of 80, the whole message is in the body
         
         $mail = new Zend_Mail();
         $mail->addTo($this->options['receiver']);
