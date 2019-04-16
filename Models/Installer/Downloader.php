@@ -115,7 +115,7 @@ class ZfExtended_Models_Installer_Downloader {
     }
     
     /**
-     * @param $zipOverride an own application zip can be provided for manual overrides
+     * @param string $zipOverride an own application zip can be provided for manual overrides
      */
     protected function updateApplication($zipOverride = null) {
         $app = $this->dependencies->getNeeded()->application;
@@ -326,7 +326,7 @@ class ZfExtended_Models_Installer_Downloader {
                 $this->log('Could not unzip target directory for dependency package '.$dependency->name.' already exists! ZipFile:'.$dependency->targetFile);
                 return false;
             }
-            $this->removeRecursive($targetDir);
+            self::removeRecursive($targetDir);
         }
         if (!$zip->open($dependency->targetFile)) {
             $this->log('Could not find downloaded zip file for dependency package '.$dependency->name.'! ZipFile:'.$dependency->targetFile);
@@ -361,7 +361,7 @@ class ZfExtended_Models_Installer_Downloader {
         return true;
     }
     
-    protected function removeRecursive($toRemove) {
+    public static function removeRecursive($toRemove) {
         $iterator = new RecursiveIteratorIterator(new \RecursiveDirectoryIterator($toRemove, \FilesystemIterator::SKIP_DOTS), \RecursiveIteratorIterator::CHILD_FIRST);
         foreach ($iterator as $filename => $fileInfo) {
             if ($fileInfo->isDir()) {
