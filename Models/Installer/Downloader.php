@@ -273,6 +273,7 @@ class ZfExtended_Models_Installer_Downloader {
     protected function checkMemoryLimit() {
         $bytes = function ($string) {
             $last = strtolower(substr(trim($string), -1, 1));
+            $string = substr(trim($string), 0, -1);
             switch($last) {
                 case 'g':
                     $string *= 1024;
