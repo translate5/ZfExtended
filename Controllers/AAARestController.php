@@ -343,7 +343,7 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
    * @deprecated should be obsolete if new error loggin refactoring is done
    */
   protected function handleException(ZfExtended_Exception $e) {
-      $this->log->logException($e);
+      $this->log->exception($e);
       $this->restMessages->addException($e);
       $this->handleErrorResponse($e->getCode());
       //this postDispatch and notifyPostDispatch calls are needed to finish 
