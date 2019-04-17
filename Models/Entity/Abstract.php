@@ -458,12 +458,14 @@ abstract class ZfExtended_Models_Entity_Abstract {
 
     /**
      * Throws Exception if data is invalid. Does nothing if all is valid.
-     * @todo aktuell wirden die Fehlermeldungen nirgends verwendet. Daher ist die Verarbeitung momentan nur für Debug Zwecke eingerichtet.
      * @throws ZfExtended_ValidateException
      */
     public function validate(){
         $this->validatorLazyInstatiation();
         if(!$this->validator->isValid($this->getModifiedData())) {
+            //TODO the here thrown exception is the legacy fallback. 
+            // Each Validator should implement an own isValid which throws a UnprocessableEntity Exception it self.
+            // See Segment Validator for an example
             $errors = $this->validator->getMessages();
             $error = print_r($errors, 1);
             $e = new ZfExtended_ValidateException($error);

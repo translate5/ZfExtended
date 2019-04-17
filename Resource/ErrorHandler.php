@@ -78,8 +78,13 @@ class ZfExtended_Resource_ErrorHandler extends Zend_Application_Resource_Resourc
         if(empty($error)) {
             return;
         }
-        
         $type = empty($error['type']) ? E_ERROR : $error['type'];
+        if(($type & (E_ERROR | E_PARSE | E_CORE_ERROR | E_COMPILE_ERROR | E_USER_ERROR | E_RECOVERABLE_ERROR)) === 0) {
+            //we may catch here only the above listed errors, since they stop execution. 
+            // all warnings and notices are not logged here, since they are logged automatically in the error_log, 
+            // so logging them here would log them twice. Also all errors / warnings protected with @ are logged then again
+            return;
+        }
         
         $label = $this->errorCodes[$type][0];
         $level = $this->errorCodes[$type][1];
@@ -108,7 +113,8 @@ class ZfExtended_Resource_ErrorHandler extends Zend_Application_Resource_Resourc
     }
     
     /**
-     * @return Gibt debug_backtrace als var_dump in einem String zurück 
+     * returns a backtrace as string
+     * @return string  
      */
     public static function getTrace(){
         $e = new Zend_Exception();

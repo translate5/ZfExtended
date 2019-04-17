@@ -28,7 +28,7 @@ class ZfExtended_Models_Entity_Exceptions_IntegrityConstraint extends ZfExtended
     /**
      * @var string
      */
-    protected $origin = 'core.entity';
+    protected $domain = 'core.entity';
     
     static protected $localErrorCodes = [
         'E1016' => 'Integrity Constraint Violation on saving/deleting {entity}',

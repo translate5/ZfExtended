@@ -28,7 +28,7 @@ class ZfExtended_Models_Entity_Exceptions_IntegrityDuplicateKey extends ZfExtend
     /**
      * @var string
      */
-    protected $origin = 'core.entity';
+    protected $domain = 'core.entity';
     
     static protected $localErrorCodes = [
         'E1015' => 'Duplicate Key on saving {entity}',

@@ -32,7 +32,7 @@ try {
     error_log('Could not load phpunit.phar'); //On debugging only
 }
 
-abstract class ZfExtended_Test_Testcase extends \PHPUnit_Framework_TestCase {
+abstract class ZfExtended_Test_Testcase extends \PHPUnit\Framework\TestCase {
     /**
      * @var array
      */

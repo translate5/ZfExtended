@@ -192,6 +192,10 @@ class ZfExtended_Test_ApiHelper {
     public function decodeJsonResponse(Zend_Http_Response $resp) {
         $status = $resp->getStatus();
         if(200 <= $status && $status < 300) {
+            $body = $resp->getBody();
+            if(empty($body)) {
+                return null;
+            }
             $json = json_decode($resp->getBody());
             $t = $this->testClass;
             //error_log('#'.json_last_error_msg().'#');

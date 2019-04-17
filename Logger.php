@@ -26,12 +26,12 @@ END LICENSE AND COPYRIGHT
  * design facts:
  * - since we are not only logging errors but also warnings, infos etc, we are talking about events not errors to be logged.
  * 
- * @method void fatal() fatal(string $code, string $message)
- * @method void error() error(string $code, string $message)
- * @method void warn() warn  (string $code, string $message)
- * @method void info() info  (string $code, string $message)
- * @method void debug() debug(string $code, string $message)
- * @method void trace() trace(string $code, string $message)
+ * @method void fatal() fatal(string $code, string $message, $extra = null, $writer = [])
+ * @method void error() error(string $code, string $message, $extra = null, $writer = [])
+ * @method void warn() warn  (string $code, string $message, $extra = null, $writer = [])
+ * @method void info() info  (string $code, string $message, $extra = null, $writer = [])
+ * @method void debug() debug(string $code, string $message, $extra = null, $writer = [])
+ * @method void trace() trace(string $code, string $message, $extra = null, $writer = [])
  */
 class ZfExtended_Logger {
     /**
@@ -294,7 +294,12 @@ class ZfExtended_Logger {
             $event->method = $_SERVER['REQUEST_METHOD'];
         }
         
-        $event->appVersion = APPLICATION_VERSION;
+        if(defined('APPLICATION_VERSION')) {
+            $event->appVersion = APPLICATION_VERSION;
+        }
+        else {
+            $event->appVersion = 'not defined yet';
+        }
         
         if(Zend_Session::isStarted() && !Zend_Session::isDestroyed()) {
             $user = new Zend_Session_Namespace('user');

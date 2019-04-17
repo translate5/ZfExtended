@@ -235,19 +235,27 @@ class ZfExtended_UserController extends ZfExtended_RestController {
      * remove password hashes and openid subject from output
      */
     protected function credentialCleanup() {
-        if(is_object($this->view->rows) && property_exists($this->view->rows, 'passwd')) {
-            unset($this->view->rows->passwd);
+        if(is_object($this->view->rows)) {
+            if(property_exists($this->view->rows, 'passwd')) {
+                unset($this->view->rows->passwd);
+            }
+            if(property_exists($this->view->rows, 'openIdSubject')) {
+                unset($this->view->rows->openIdSubject);
+            }
+            if(property_exists($this->view->rows, 'openIdIssuer')) {
+                unset($this->view->rows->openIdIssuer);
+            }
         }
-        if(is_array($this->view->rows) && isset($this->view->rows['passwd'])) {
-            unset($this->view->rows['passwd']);
-        }
-        
-        if(is_object($this->view->rows) && property_exists($this->view->rows, 'openIdSubject')) {
-            unset($this->view->rows->openIdSubject);
-        }
-        
-        if(is_array($this->view->rows) && isset($this->view->rows['openIdSubject'])) {
-            unset($this->view->rows['openIdSubject']);
+        if(is_array($this->view->rows)) {
+            if(isset($this->view->rows['passwd'])) {
+                unset($this->view->rows['passwd']);
+            }
+            if(isset($this->view->rows['openIdSubject'])) {
+                unset($this->view->rows['openIdSubject']);
+            }
+            if(isset($this->view->rows['openIdIssuer'])) {
+                unset($this->view->rows['openIdIssuer']);
+            }
         }
     }
     
@@ -263,6 +271,9 @@ class ZfExtended_UserController extends ZfExtended_RestController {
         $this->alreadyDecoded = true;
         $this->_request->isPost() || $this->checkIsEditable(); //checkEditable only if not POST
         parent::decodePutData();
+        //openId data may not be manipulated via API
+        unset($this->data->openIdSubject);
+        unset($this->data->openIdIssuer);
         $this->convertDecodedFields();
         if($this->_request->isPost()) {
             unset($this->data->id);
