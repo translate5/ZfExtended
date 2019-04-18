@@ -25,6 +25,15 @@
 /**
  */
 class ZfExtended_Logger_Writer_DirectMail extends ZfExtended_Logger_Writer_Abstract {
+    /**
+     * @var Zend_Config
+     */
+    protected $config; 
+    
+    /**
+     * {@inheritDoc}
+     * @see ZfExtended_Logger_Writer_Abstract::write()
+     */
     public function write(ZfExtended_Logger_Event $event) {
         if(!empty($_SERVER['HTTP_HOST'])) {
             $subject = $_SERVER['HTTP_HOST'].': ';
@@ -39,22 +48,33 @@ class ZfExtended_Logger_Writer_DirectMail extends ZfExtended_Logger_Writer_Abstr
         $subject .= $event->message;
         $subject = substr($subject, 0, 80);//max length of 80, the whole message is in the body
         
-        $mail = new Zend_Mail();
+        $mail = new Zend_Mail('utf-8');
         $mail->addTo($this->options['receiver']);
         $mail->setFrom($this->options['sender']);
+        
+        if(isset($this->config->runtimeOptions->mail->generalBcc)) {
+            foreach($this->config->runtimeOptions->mail->generalBcc as $bcc){
+                $mail->addBcc($bcc);
+            }
+        }
+        
         $mail->setSubject($subject);
         $mail->setBodyText($event);
         $mail->setBodyHtml($event->toHtml());
         $mail->send();
     }
     
-    public function validateOptions(array $options) {
+    public function validateOptions(array &$options) {
         parent::validateOptions($options);
+        $this->config = Zend_Registry::get('config');
         if(empty($options['sender'])) {
-            throw new ZfExtended_Logger_Exception(__CLASS__.': Missing option sender!');
+            $options['sender'] = $this->config->resources->mail->defaultFrom->email;
         }
         if(empty($options['receiver'])) {
-            throw new ZfExtended_Logger_Exception(__CLASS__.': Missing option receiver!');
+            $options['receiver'] = $this->config->resources->mail->defaultFrom->email;
+        }
+        if(empty($options['sender']) || empty($options['receiver'])) {
+            throw new ZfExtended_Logger_Exception(__CLASS__.': Missing option receiver or sender and no defaultFrom is defined!');
         }
         
     }

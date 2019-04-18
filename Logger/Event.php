@@ -241,7 +241,7 @@ class ZfExtended_Logger_Event {
                 }
                 $extra[] = $item;
             }
-            $msg[] = '<td>Extra:</td><td>'.htmlspecialchars(print_r($extra,1)).'</td>';
+            $msg[] = '<td>Extra:</td><td><pre>'.htmlspecialchars(print_r($extra,1)).'</pre></td>';
         }
         if(!empty($this->trace)) {
             $msg[] = '<td colspan="2">Trace:</td>';
