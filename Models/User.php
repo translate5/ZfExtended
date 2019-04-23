@@ -431,4 +431,15 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implement
         $this->row =$row;
         return $row;
     }
+    
+    /**
+     * Does the user have any of the roles admin, pm or api?
+     * @returns bool
+     */
+    public function isAdminOrPMOrApi() {
+        $rolesToCheck = ['admin','api','pm'];
+        $rolesGiven = explode(',', $this->getRoles());
+        $rolesFound = array_intersect($rolesToCheck, $rolesGiven);
+        return !empty($rolesFound);
+    }
 }
