@@ -119,6 +119,9 @@ class ZfExtended_Resource_DbConfig extends Zend_Application_Resource_ResourceAbs
     }
     
     protected function jsonDecode($value) {
+        if ($value === '') {
+            return null;
+        }
         $result = json_decode($value);
         if(json_last_error() != JSON_ERROR_NONE) {
             $message = __CLASS__.'::'.__FUNCTION__.' given JSON from config '.$this->currentPath.' could not be decoded, error was: ';

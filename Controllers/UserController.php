@@ -39,11 +39,14 @@ class ZfExtended_UserController extends ZfExtended_RestController {
     
     public function init() {
         //add filter type for languages
-        $this->_filterTypeMap = array(
-                array('sourceLanguage' => array('list' => 'listCommaSeparated')),
-                array('targetLanguage' => array('list' => 'listCommaSeparated')),
-                array('customers' => array('list' => 'listCommaSeparated')),
-        );
+        $this->_filterTypeMap = [
+            'sourceLanguage' => ['list' => 'listCommaSeparated'],
+            'targetLanguage' => ['list' => 'listCommaSeparated'],
+            'customers' => [
+                'list' => 'listCommaSeparated',
+                'string' => new ZfExtended_Models_Filter_JoinHard('editor_Models_Db_Customer', 'name', 'id', 'customers', 'listCommaSeparated')
+            ],
+        ];
         parent::init();
     }
     
@@ -99,8 +102,9 @@ class ZfExtended_UserController extends ZfExtended_RestController {
             if($this->wasValid) {
                 $this->csvToArray();
             }
+            $this->checkAndUpdateSession();
         }
-        catch(Zend_Db_Statement_Exception $e) {
+        catch(ZfExtended_Models_Entity_Exceptions_IntegrityDuplicateKey $e) {
             $this->handleLoginDuplicates($e);
         }
     }
@@ -118,7 +122,7 @@ class ZfExtended_UserController extends ZfExtended_RestController {
                 $this->csvToArray();
             }
         }
-        catch(Zend_Db_Statement_Exception $e) {
+        catch(ZfExtended_Models_Entity_Exceptions_IntegrityDuplicateKey $e) {
             $this->handleLoginDuplicates($e);
         }
     }
@@ -158,7 +162,7 @@ class ZfExtended_UserController extends ZfExtended_RestController {
     public function authenticatedAction() {
         $userSession = new Zend_Session_Namespace('user');
         $id = $userSession->data->id;
-        $this->_setParam('id', $id);
+        $this->setParam('id', $id);
         if($this->_request->isPut()){
             $this->entity->load($id);
             $this->filterDataForAuthenticated();
@@ -228,14 +232,30 @@ class ZfExtended_UserController extends ZfExtended_RestController {
     }
     
     /**
-     * remove password hashes from output
+     * remove password hashes and openid subject from output
      */
     protected function credentialCleanup() {
-        if(is_object($this->view->rows) && property_exists($this->view->rows, 'passwd')) {
-            unset($this->view->rows->passwd);
+        if(is_object($this->view->rows)) {
+            if(property_exists($this->view->rows, 'passwd')) {
+                unset($this->view->rows->passwd);
+            }
+            if(property_exists($this->view->rows, 'openIdSubject')) {
+                unset($this->view->rows->openIdSubject);
+            }
+            if(property_exists($this->view->rows, 'openIdIssuer')) {
+                unset($this->view->rows->openIdIssuer);
+            }
         }
-        if(is_array($this->view->rows) && isset($this->view->rows['passwd'])) {
-            unset($this->view->rows['passwd']);
+        if(is_array($this->view->rows)) {
+            if(isset($this->view->rows['passwd'])) {
+                unset($this->view->rows['passwd']);
+            }
+            if(isset($this->view->rows['openIdSubject'])) {
+                unset($this->view->rows['openIdSubject']);
+            }
+            if(isset($this->view->rows['openIdIssuer'])) {
+                unset($this->view->rows['openIdIssuer']);
+            }
         }
     }
     
@@ -251,6 +271,9 @@ class ZfExtended_UserController extends ZfExtended_RestController {
         $this->alreadyDecoded = true;
         $this->_request->isPost() || $this->checkIsEditable(); //checkEditable only if not POST
         parent::decodePutData();
+        //openId data may not be manipulated via API
+        unset($this->data->openIdSubject);
+        unset($this->data->openIdIssuer);
         $this->convertDecodedFields();
         if($this->_request->isPost()) {
             unset($this->data->id);
@@ -330,31 +353,25 @@ class ZfExtended_UserController extends ZfExtended_RestController {
     
     /**
      * handles the exception if its an duplication of the login field
-     * @param Zend_Db_Statement_Exception $e
-     * @throws Zend_Db_Statement_Exception
+     * @param ZfExtended_Models_Entity_Exceptions_IntegrityDuplicateKey $e
+     * @throws ZfExtended_Models_Entity_Exceptions_IntegrityDuplicateKey
      */
-    protected function handleLoginDuplicates(Zend_Db_Statement_Exception $e) {
-        $msg = $e->getMessage();
-        if(stripos($msg, 'duplicate entry') === false) {
-            throw $e; //otherwise throw this again
-        }
+    protected function handleLoginDuplicates(ZfExtended_Models_Entity_Exceptions_IntegrityDuplicateKey $e) {
+        $errors = [
+            'login' => []
+        ];
         
-        $t = ZfExtended_Zendoverwrites_Translate::getInstance();
-        /* @var $t ZfExtended_Zendoverwrites_Translate */;;
-        
-        if(stripos($msg, "for key 'login'") !== false) {
-            $errors = array('login' => $t->_('Dieser Anmeldename wird bereits verwendet.'));
+        if($e->isInMessage("for key 'login'")) {
+            $errors['login']['duplicateLogin'] = 'Dieser Anmeldename wird bereits verwendet.';
         }
-        elseif (stripos($msg, "for key 'userGuid") !== false) {
-            $errors = array('login' => $t->_('Diese UserGuid wird bereits verwendet.'));
+        elseif($e->isInMessage("for key 'userGuid'")) {
+            $errors['login']['duplicateUserGuid'] = 'Diese UserGuid wird bereits verwendet.';
         }
         else {
             throw $e; //otherwise throw this again
         }
         
-        $e = new ZfExtended_ValidateException();
-        $e->setErrors($errors);
-        $this->handleValidateException($e);
+        throw ZfExtended_UnprocessableEntity::createResponse($errors);
     }
 
     /**
@@ -458,5 +475,19 @@ class ZfExtended_UserController extends ZfExtended_RestController {
         //merge the old roles and the allowed roles from the request
         $requestAclsArray=array_merge($requestAclsArray,$oldRoles);
         $this->data->roles=implode(',', $requestAclsArray);
+    }
+
+    /***
+     * Check and update user session if the current modefied user is the one in the session
+     */
+    protected function checkAndUpdateSession(){
+        $userSession = new Zend_Session_Namespace('user');
+        //ignore the check if session user or the data user is not set
+        if(!isset($userSession->data->id) || !isset($this->data->id)){
+            return;
+        }
+        if($userSession->data->id==$this->data->id){
+            $this->entity->setUserSessionNamespaceWithoutPwCheck($userSession->data->login);
+        }
     }
 }

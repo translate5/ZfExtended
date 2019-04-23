@@ -32,7 +32,6 @@ END LICENSE AND COPYRIGHT
  * Eigener Errorhandler
  *
  * - Wirft für alle abfangbaren Fehler eine Zend_Exception
- * - Ermöglicht TypeHinting für alle Typen in PHP
  * - E_USER_NOTICE wird nicht als Fehler gewertet, aber an allen relevanten Stellen 
  *   mit geloggt. D. h., einziger Loggingunterschied ist, dass der Fehler- und 
  *   http-Responsecode nicht auf 500 sondern auf 200 steht
@@ -40,18 +39,35 @@ END LICENSE AND COPYRIGHT
  *
  */
 class ZfExtended_Resource_ErrorHandler extends Zend_Application_Resource_ResourceAbstract {
+    
+    /**
+     * Mapping of error codes to there speakable name, and the level how it should be logged in the application
+     * @var array
+     */
+    protected $errorCodes = [
+        1 => ['E_ERROR', 'fatal'],                 //FATAL
+        2 => ['E_WARNING', 'info'],                //info
+        4 => ['E_PARSE', 'fatal'],                 //FATAL
+        8 => ['E_NOTICE', 'info'],                 //info
+        16 => ['E_CORE_ERROR', 'fatal'],           //FATAL
+        32 => ['E_CORE_WARNING', 'info'],          //info
+        64 => ['E_COMPILE_ERROR', 'fatal'],        //FATAL
+        128 => ['E_COMPILE_WARNING', 'warn'],      //warn
+        256 => ['E_USER_ERROR', 'fatal'],          //FATAL → should be an exception
+        512 => ['E_USER_WARNING', 'info'],         //info
+        1024 => ['E_USER_NOTICE', 'info'],         //info
+        2048 => ['E_STRICT', 'debug'],             //debug
+        4096 => ['E_RECOVERABLE_ERROR', 'fatal'],  //FATAL
+        8192 => ['E_DEPRECATED', 'debug'],         //debug
+        16384 => ['E_USER_DEPRECATED', 'debug'],   //debug
+    ];
+    
     public function init()
     {
         $bootstrap = $this->getBootstrap();
         $bootstrap->bootstrap('ZfExtended_Resource_InitRegistry');
         $config = Zend_Registry::get('config');
         register_shutdown_function(array($this, 'handleFatalError'), $config);
-        Zend_Registry::set('errorCollect', false);
-        if(isset($config->runtimeOptions->errorCollect)){
-            Zend_Registry::set('errorCollect', (boolean) $config->runtimeOptions->errorCollect);
-            Zend_Registry::set('errorCollector', array());
-        }
-        set_error_handler(array('ZfExtended_Resource_ErrorHandler', 'errorHandler'));
     }
     
     /**
@@ -60,6 +76,27 @@ class ZfExtended_Resource_ErrorHandler extends Zend_Application_Resource_Resourc
     public function handleFatalError(Zend_Config $config) {
         $error = error_get_last();
         if(empty($error)) {
+            return;
+        }
+        $type = empty($error['type']) ? E_ERROR : $error['type'];
+        if(($type & (E_ERROR | E_PARSE | E_CORE_ERROR | E_COMPILE_ERROR | E_USER_ERROR | E_RECOVERABLE_ERROR)) === 0) {
+            //we may catch here only the above listed errors, since they stop execution. 
+            // all warnings and notices are not logged here, since they are logged automatically in the error_log, 
+            // so logging them here would log them twice. Also all errors / warnings protected with @ are logged then again
+            return;
+        }
+        
+        $label = $this->errorCodes[$type][0];
+        $level = $this->errorCodes[$type][1];
+        $msg = 'PHP '.$label.': ';
+        
+        $codes = ['fatal' => 'E1027', 'warn' => 'E1029', 'info' => 'E1030', 'debug' => 'E1030'];
+        $logger = Zend_Registry::get('logger');
+        /* @var $logger ZfExtended_Logger */
+        $logger->finalError($codes[$level], $msg, $level, $error);
+        
+        //on fatal errors we assume that there is no usable out put, so we overwrite it
+        if($level != 'fatal') {
             return;
         }
         if(!headers_sent()) {
@@ -73,63 +110,14 @@ class ZfExtended_Resource_ErrorHandler extends Zend_Application_Resource_Resourc
             ob_get_length() && ob_clean(); //show only a white page
         }
         echo '<h1>Internal Server Error</h1>'."\n".$out;
-        $log = new ZfExtended_Log(false);
-        $log->logFatal($error);
     }
     
     /**
-     * - Führt typehinting für alle Types ein auch für die Types, für die php es von Haus aus nicht unterstützt
-     * - Kümmert sich ums errorCollecting, wenn aktiviert in Zend_Registry "errorCollect"
-     * - E_USER_NOTICE wird nicht als Fehler gewertet, aber an allen relevanten Stellen 
-     *   mit geloggt. D. h., einziger Loggingunterschied ist, dass der Fehler- und 
-     *   http-Responsecode nicht auf 500 sondern auf 200 steht
-     *
-     */
-    public static function errorHandler($errno, $errstr, $errfile, $errline ) {
-        $regex = '/^Argument (\d)+ passed to (?:(\w+)::)?([\w{}]+)\(\) must be an instance of (\w+), (\w+) given/';
-        if($errno == E_RECOVERABLE_ERROR && preg_match($regex, $errstr, $match)) {
-            
-            //ensure upwards compatibility to PHP 7 we need this mapping here!
-            switch ($match[4]) {
-                case 'bool':
-                    $match[4] = 'boolean';
-                    break;
-                case 'int':
-                    $match[4] = 'integer';
-                    break;
-            }
-            if($match[4] == $match[5]) {
-                return true;
-            }
-        }
-        $errorCollect = Zend_Registry::get('errorCollect');
-        if($errorCollect){
-            $errors = Zend_Registry::get('errorCollector');
-            $error = new stdClass();
-            $error->errno = $errno;
-            $error->_errorMessage = 'ErrorCollect: '.$errstr;
-            $error->_errorTrace = self::getTrace();
-            $error->_errorCode = 500;
-            if($errno == E_USER_NOTICE) {
-                $error->_errorCode = 200; 
-            }
-            $error->errfile = $errfile;
-            $error->errline = $errline;
-            $errors[] = $error;
-            Zend_Registry::set('errorCollector', $errors);
-            return true;
-        }
-        throw new Zend_Exception($errstr."; File: ".$errfile."; Line: ".$errline."; errno: ".$errno, 0 );
-    }
-    
-    /**
-     * @return Gibt debug_backtrace als var_dump in einem String zurück 
+     * returns a backtrace as string
+     * @return string  
      */
     public static function getTrace(){
-        try {
-            throw new Zend_Exception();
-        } catch (Zend_Exception $e) {
-            return $e->getTraceAsString();
-        }
+        $e = new Zend_Exception();
+        return $e->getTraceAsString();
     }
 }

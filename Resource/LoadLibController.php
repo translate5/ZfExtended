@@ -64,7 +64,7 @@ class ZfExtended_Resource_LoadLibController extends Zend_Application_Resource_Re
         foreach($dirs as $dir){
             foreach (scandir($dir) as $file) {
                 if (strpos($file.'#', "Controller.php#") !== false && 
-                        !class_exists(preg_replace('"(.*).php$"', '\\1', $file))){
+                        !class_exists(preg_replace('"(.*).php$"', '\\1', $file),false)){
                     include_once $dir . DIRECTORY_SEPARATOR . $file;
                 }
             }

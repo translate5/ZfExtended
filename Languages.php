@@ -37,6 +37,7 @@ END LICENSE AND COPYRIGHT
 * @method int getLcid() getLcid()
 * @method int getId() getId()
 * @method string getIso3166Part1alpha2() getIso3166Part1alpha2()
+* @method string getIso6393() getIso6393()
 */
 abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract {
 
@@ -64,7 +65,7 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract {
 
     /**
      * loads the language by the given DB ID
-     * @param integer $id
+     * @param int $id
      * @return Zend_Db_Table_Row_Abstract | null
      */
     public function loadById($id){
@@ -283,5 +284,61 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract {
             return [];
         }
         return $retval;
+    }
+    
+    /***
+     * Return fuzzy languages for the given language id.
+     * Languages with '-' in the rfc field are not searched for fuzzy.
+     * 
+     * ex: 
+     *    de -> de-DE,de-AT,de-CH,de-LI,de-LU
+     *    
+     * @param int $id
+     * @param string $field: the field name wich will be returned(see languages model for available fields) 
+     * @return array
+     */
+    public function getFuzzyLanguages($id,$field='id'){
+        $rfc=$this->loadLangRfc5646($id);
+        //check if language fuzzy matching is needed
+        if(strpos($rfc, '-') !== false){
+            return  array($id);
+        }
+        $lngs=$this->findLanguageGroup($rfc);
+        return array_column($lngs,$field);
+    }
+    
+    /***
+     * Search languages by given search string.
+     * The search will provide any match on langName field.
+     * 
+     * @param string $searchString
+     * @return array|array
+     */
+    public function search($searchString,$fields=array()) {
+        $s = $this->db->select();
+        if(!empty($fields)){
+            $s->from($this->tableName,$fields);
+        }
+        $s->where('lower(langName) LIKE lower(?)','%'.$searchString.'%');
+        return $this->db->fetchAll($s)->toArray();
+    }
+    
+    /***
+     * Load all languages where the return array will be with $key(lek_languages field) as key and $value(lek_languages field) as value
+     *  
+     * @param string $key
+     * @param string $value
+     * @return array
+     */
+    public function loadAllKeyValueCustom($key,$value){
+        $rfcToIsoLanguage=array();
+        if(!isset($key) || !isset($value)){
+            return $rfcToIsoLanguage;
+        }
+        $lngs=$this->loadAll();
+        foreach($lngs as $l){
+            $rfcToIsoLanguage[$l[$key]]=$l[$value];
+        }
+        return $rfcToIsoLanguage;
     }
 }

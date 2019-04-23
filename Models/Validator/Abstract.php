@@ -37,6 +37,13 @@ abstract class ZfExtended_Models_Validator_Abstract {
   protected $nullAllowed = array();
 
   protected $messages = array();
+  
+  /**
+   * A reference to the entity it self
+   * ATTENTION not the entity instance is validated, but the data given in isValid() !
+   * @var ZfExtended_Models_Entity_Abstract
+   */
+  protected $entity; 
 
   /**
    * Example for defining Validators:
@@ -44,14 +51,19 @@ abstract class ZfExtended_Models_Validator_Abstract {
    */
   abstract protected function defineValidators();
 
-  public function __construct() {
-    $this->defineValidators();
-    $version = ZfExtended_Models_Entity_Abstract::VERSION_FIELD;
-    if(empty($this->validators[$version])) {
-        $this->addValidator($version, 'int');
-    }
+  /**
+   * create the validator, add a reference to the entity (the data of the entity is NOT used for validation, just to have a reference!)
+   * @param ZfExtended_Models_Entity_Abstract $entity
+   */
+  public function __construct(ZfExtended_Models_Entity_Abstract $entity) {
+      $this->entity = $entity;
+      $this->defineValidators();
+      $version = ZfExtended_Models_Entity_Abstract::VERSION_FIELD;
+      if(empty($this->validators[$version])) {
+          $this->addValidator($version, 'int');
+      }
   }
-
+  
   /**
    * validates the given assoc array against the defined Validators
    * @param array $data
@@ -141,7 +153,7 @@ abstract class ZfExtended_Models_Validator_Abstract {
    * adds a custom validation Function (Closure). Must return boolean. First Parameter is the Value. Multiple Validators are allowed
    * @param string $fieldname
    * @param Closure $validationFunction
-   * @param boolean $allowNull optional allows null as valid value
+   * @param bool $allowNull optional allows null as valid value
    */
   public function addValidatorCustom($fieldname, Closure $validationFunction, $allowNull = false){
     settype($this->customValidators[$fieldname], 'array');
@@ -167,7 +179,7 @@ abstract class ZfExtended_Models_Validator_Abstract {
    * @param string $fieldname
    * @param string $type
    * @param array $parameters optional Construction Parameters
-   * @param boolean $allowNull optional allows null as valid value
+   * @param bool $allowNull optional allows null as valid value
    * @throws Zend_Exception
    */
   public function addValidator($fieldname, $type, array $parameters = array(), $allowNull = false){

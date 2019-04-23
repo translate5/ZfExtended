@@ -60,13 +60,13 @@ class ZfExtended_Validate_Guid extends Zend_Validate_Abstract
         }
 
         if (is_array($options) && array_key_exists('allowEmpty', $options)) {
-            $this->setAllowEmpty((boolean) $options['allowEmpty']);
+            $this->setAllowEmpty((bool) $options['allowEmpty']);
         }
 
     }
     
     /**
-     * @param boolean $allow
+     * @param bool $allow
      */
     public function setAllowEmpty($allow) {
         $this->allowEmpty = $allow;

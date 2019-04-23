@@ -22,5 +22,22 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
-class ZfExtended_Models_Entity_Conflict extends ZfExtended_Conflict {
+class ZfExtended_Models_Entity_Conflict  extends ZfExtended_ErrorCodeException {
+    use ZfExtended_ResponseExceptionTrait;
+    
+    /**
+     * @var integer
+     */
+    protected $httpReturnCode = 409;
+    
+    /**
+     * By default we log that as INFO, if created as response then the level is set to DEBUG
+     * @var integer
+     */
+    protected $level = ZfExtended_Logger::LEVEL_INFO;
+    
+    protected static $localErrorCodes = [
+        'E1041' => '409 Conflict',
+    ];
+    
 }

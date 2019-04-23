@@ -32,20 +32,20 @@ class ZfExtended_Worker_TriggerByHttp {
     private $getParameters = '?cleanupSessionAfterRun=1';
     
    /**
-    * @var ZfExtended_Log
+    * @var ZfExtended_Logger
     */
     protected $log;
     
     
     public function __construct() {
-        $this->log = ZfExtended_Factory::get('ZfExtended_Log');
+        $this->log = Zend_Registry::get('logger')->cloneMe('core.worker');
     }
     
     /**
      * Trigger worker with id = $id.
      * To run mutex-save, the current hash is needed
      * 
-     * @param integer $id
+     * @param int $id
      * @param string $hash
      */
     public function triggerWorker($id, string $hash) {
@@ -71,10 +71,16 @@ class ZfExtended_Worker_TriggerByHttp {
     public function triggerUrl(string $url, $postParameters = array(), $method = 'GET') {
         
         $host = $this->triggerInit($url, $postParameters, $method);
-        
+        $errno = 0;
+        $errstr = '';
         $fsock = fsockopen($host, $this->port, $errno, $errstr, 30);
         if ($fsock === false) {
-            $this->log->logError(__CLASS__.'->'.__FUNCTION__.'; Can not trigger url:  '.$host.':'.$this->port.' Error: '.$errstr.' ('.$errno.')');
+            $this->log->error('E1072', 'Can not trigger worker URL: {host}:{port} Error: {errorName} ({errorNumber})', [
+                'host' => $host,
+                'port' => $this->port,
+                'errorName' => $errstr,
+                'errorNumber' => $errno,
+            ]);
             return false;
         }
         
@@ -107,7 +113,10 @@ class ZfExtended_Worker_TriggerByHttp {
                 return true; //a real timeout is mostly OK. 
                 //TODO can we identify timeouts because of target does not exist?
             }
-            $this->log->logError(__CLASS__.'->'.__FUNCTION__.'; Worker URL result is no HTTP answer!: '.$host.':'.$this->port);
+            $this->log->error('E1073', 'Worker URL result is no HTTP answer!: {host}:{port}', [
+                'host' => $host,
+                'port' => $this->port,
+            ]);
             // if not (URL responds immediately with an empty result) this means the called URL is not properly configured!
             // → make a dedicated log entry, since the log below would be bogus for this situation
             return false; 
@@ -116,9 +125,13 @@ class ZfExtended_Worker_TriggerByHttp {
         fclose($fsock);
         
         if ($state < 200 || $state >= 300) {
-            $msg = __CLASS__.'->'.__FUNCTION__.'; Worker HTTP response state was not 2XX but '.$state.'; called URL:  '.$host.':'.$this->port;
-            $longMsg = 'Method: '.$method.'; Post-Parameter: '.print_r($postParameters, true);
-            $this->log->logError($msg, $longMsg);
+            $this->log->warn('E1074', 'Worker HTTP response state was not 2XX but {state}.', [
+                'state' => $state,
+                'method' => $method,
+                'postParameters' => $postParameters,
+                'host' => $host,
+                'port' => $this->port,
+            ]);
             return false;
         }
         

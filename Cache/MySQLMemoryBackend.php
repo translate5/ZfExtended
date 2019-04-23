@@ -36,6 +36,7 @@ require_once 'Zend/Cache/Backend.php';
  */
 class ZfExtended_Cache_MySQLMemoryBackend extends Zend_Cache_Backend implements Zend_Cache_Backend_Interface
 {
+    const DATE_MYSQL = 'Y-m-d H:i:s';
     /**
      * Available options
      * @var array Available options
@@ -66,7 +67,7 @@ class ZfExtended_Cache_MySQLMemoryBackend extends Zend_Cache_Backend implements 
      * Test if a cache is available for the given id and (if yes) return it (false else)
      *
      * @param  string  $id                     Cache id
-     * @param  boolean $doNotTestCacheValidity If set to true, the cache validity won't be tested
+     * @param  bool    $doNotTestCacheValidity If set to true, the cache validity won't be tested
      * @return string|false Cached datas
      */
     public function load($id, $doNotTestCacheValidity = false)
@@ -91,19 +92,18 @@ class ZfExtended_Cache_MySQLMemoryBackend extends Zend_Cache_Backend implements 
      * 
      * @param string $id
      * @param string $value
-     * @param integer $seconds
+     * @param int $seconds
      * @return boolean
      */
     public function updateIfOlderThen($id, $value, $seconds) {
         $this->checkLength($id, $value);
         $now = time();
-        $elapsed = date(DATE_ISO8601, $now - $seconds);
+        $elapsed = date(self::DATE_MYSQL, $now - $seconds);
         $sql = 'INSERT INTO `Zf_memcache` (`id`, `content`, `lastModified`, `expire`)';
         $sql .= ' VALUES (?, ?, now(), date_add(now(), interval 1 hour))';
         $sql .= ' ON DUPLICATE KEY UPDATE `expire` = if(`lastModified` < ?, VALUES(`expire`), `expire`),';
         $sql .= ' `content` = if(`lastModified` < ?, VALUES(`content`), `content`)';
         $res = $this->db->query($sql, [$id, $value, $elapsed, $elapsed]);
-        $res2 = $this->db->query('SELECT * FROM Zf_memcache WHERE id = ?', [$id]);
         if($res && $res->rowCount() > 0) {
             return true;
         }
@@ -119,7 +119,7 @@ class ZfExtended_Cache_MySQLMemoryBackend extends Zend_Cache_Backend implements 
      */
     public function test($id)
     {
-        $sql = 'SELECT `lastModified` FROM `Zf_memcache` WHERE `id` = ? AND (`expire` = 0 OR `expire` > ? )';
+        $sql = 'SELECT `lastModified` FROM `Zf_memcache` WHERE `id` = ? AND (`expire` is null OR `expire` > ? )';
         $res = $this->db->query($sql, [$id, time()]);
         $row = $res->fetchObject();
         if ($row) {
@@ -151,10 +151,11 @@ class ZfExtended_Cache_MySQLMemoryBackend extends Zend_Cache_Backend implements 
         } else {
             $expire = $mktime + $lifetime;
         }
-        $mktime = date(DATE_ISO8601, $mktime);
-        $expire = date(DATE_ISO8601, $expire);
+        $mktime = date(self::DATE_MYSQL, $mktime);
+        $expire = date(self::DATE_MYSQL, $expire);
         $this->db->query('DELETE FROM Zf_memcache WHERE id = ?', [$id]);
         $sql = 'INSERT INTO Zf_memcache (id, content, lastModified, expire) VALUES (?, ?, ?, ?)';
+        $sql .= ' ON DUPLICATE KEY UPDATE `content` = VALUES(`content`), `lastModified` = VALUES(`lastModified`),`expire` = VALUES(`expire`)';
         $res = $this->db->query($sql, [$id, $data, $mktime, $expire]);
         if (!$res) {
             $this->_log("ZfExtended_Cache_MySQLMemoryBackend::save() : impossible to store the cache id=$id");
@@ -251,10 +252,26 @@ class ZfExtended_Cache_MySQLMemoryBackend extends Zend_Cache_Backend implements 
             case Zend_Cache::CLEANING_MODE_ALL:
                 return $this->db->query('DELETE FROM Zf_memcache');
             case Zend_Cache::CLEANING_MODE_OLD:
-                $mktime = time();
+                $mktime = date(self::DATE_MYSQL, time());
                 return $this->db->query('DELETE FROM Zf_memcache WHERE expire>0 AND expire <= ?', [$mktime]);
             default:
                 break;
+        }
+        return false;
+    }
+    
+    /**
+     * Returns all rows where the given idPart is in the id.
+     * @param  string  $idPart Part of cache id
+     * @return array|false
+     */
+    public function getAllForPartOfId (string $idPart)
+    {
+        $sql = 'SELECT * FROM `Zf_memcache` WHERE `id` LIKE ?';
+        $params = ['%'.$idPart.'%']; 
+        $res = $this->db->query($sql, $params);
+        if($res && $res->rowCount() > 0) {
+            return $res->fetchAll();
         }
         return false;
     }

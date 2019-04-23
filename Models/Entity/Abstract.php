@@ -134,7 +134,7 @@ abstract class ZfExtended_Models_Entity_Abstract {
     
     /**
      * loads the Entity by Primary Key Id
-     * @param integer $id
+     * @param int $id
      */
     public function load($id) {
         try {
@@ -243,9 +243,15 @@ abstract class ZfExtended_Models_Entity_Abstract {
       }
       $name = $this->db->info(Zend_Db_Table_Abstract::NAME);
       $schema = $this->db->info(Zend_Db_Table_Abstract::SCHEMA);
-      $s->from($name, array('numrows' => 'count(*)'), $schema);
-      //$s->reset($s::COLUMNS);
-      //$s->columns(array('numrows' => 'count(*)'));
+
+      $from = $s->getPart($s::FROM);
+      if(empty($from[$name])) {
+          $s->from($name, array('numrows' => 'count(*)'), $schema);
+      }
+      else {
+          $s->reset($s::COLUMNS);
+          $s->columns(array('numrows' => 'count(*)'));
+      }
       $totalCount = $this->db->fetchRow($s)->numrows;
       $s->reset($s::COLUMNS);
       $s->reset($s::FROM);
@@ -261,16 +267,52 @@ abstract class ZfExtended_Models_Entity_Abstract {
                 'model' => $this, //FIXME model usage is deprecated and should be removed in future (today 2016-08-10) 
                 'entity' => $this,
         ));
-        return $this->row->save();
+        try {
+            return $this->row->save();
+        }
+        catch (Zend_Db_Statement_Exception $e) {
+            $this->handleIntegrityConstraintException($e);
+        }
     }
-
+    
     /**
      * löscht das aktuelle Entity
      */
     public function delete() {
-        $this->row->delete();
+        try {
+            $this->row->delete();
+        }
+        catch (Zend_Db_Statement_Exception $e) {
+            $this->handleIntegrityConstraintException($e);
+        }
     }
 
+    /**
+     * Handles DB Exceptions: encapsualates Integrity constraint violation into separate expcetions, all others are thrown directly
+     */
+    protected function handleIntegrityConstraintException(Zend_Db_Statement_Exception $e) {
+        $msg = $e->getMessage();
+        if(strpos($msg, 'Integrity constraint violation:') === false) {
+            throw $e;
+        }
+        if(strpos($msg, '1062 Duplicate entry') !== false) {
+            throw new ZfExtended_Models_Entity_Exceptions_IntegrityDuplicateKey('E1015', [
+                'entity' => get_class($this),
+                'data' => $this->getDataObject(),
+            ], $e);
+        }
+        
+        $is1451 = strpos($msg, '1451 Cannot delete or update a parent row: a foreign key constraint fails') !== false;
+        $is1452 = strpos($msg, '1452 Cannot add or update a child row: a foreign key constraint fails') !== false;
+        if($is1451 || $is1452) {
+            throw new ZfExtended_Models_Entity_Exceptions_IntegrityConstraint('E1016', [
+                'entity' => get_class($this),
+                'data' => $this->getDataObject(),
+            ], $e);
+        }
+        throw $e;
+    }
+    
     /**
      * checks if given data field exists in entity
      * @param string $field
@@ -288,6 +330,9 @@ abstract class ZfExtended_Models_Entity_Abstract {
      * @return mixed
      */
     public function __call($name, array $arguments) {
+        if($name == 'get' || $name == 'set') {
+            throw new Zend_Exception('Method ' . $name . ' is trapped by call but it is a protected function. use __call('.$name.'.ucfirst($field)) instead!');
+        }
         $method = substr($name, 0, 3);
         $fieldName = lcfirst(substr($this->_getMappedRowField($name), 3));
         switch ($method) {
@@ -309,7 +354,7 @@ abstract class ZfExtended_Models_Entity_Abstract {
 
     /**
      * sets the entity version to be compared against
-     * @param integer $version
+     * @param int $version
      */
     public function setEntityVersion($version) {
         if($this->hasField(self::VERSION_FIELD)) {
@@ -378,8 +423,8 @@ abstract class ZfExtended_Models_Entity_Abstract {
 
     /**
      * limits the result set of the loadAll Request
-     * @param integer $offset
-     * @param integer $limit
+     * @param int $offset
+     * @param int $limit
      */
     public function limit($offset, $limit) {
       $this->offset = $offset;
@@ -391,7 +436,7 @@ abstract class ZfExtended_Models_Entity_Abstract {
      * @param ZfExtended_Models_Filter $filter
      */
     public function filterAndSort(ZfExtended_Models_Filter $filter) {
-      $this->filter = $filter;
+        $this->filter = $filter;
     }
 
     /**
@@ -413,12 +458,14 @@ abstract class ZfExtended_Models_Entity_Abstract {
 
     /**
      * Throws Exception if data is invalid. Does nothing if all is valid.
-     * @todo aktuell wirden die Fehlermeldungen nirgends verwendet. Daher ist die Verarbeitung momentan nur für Debug Zwecke eingerichtet.
      * @throws ZfExtended_ValidateException
      */
     public function validate(){
         $this->validatorLazyInstatiation();
         if(!$this->validator->isValid($this->getModifiedData())) {
+            //TODO the here thrown exception is the legacy fallback. 
+            // Each Validator should implement an own isValid which throws a UnprocessableEntity Exception it self.
+            // See Segment Validator for an example
             $errors = $this->validator->getMessages();
             $error = print_r($errors, 1);
             $e = new ZfExtended_ValidateException($error);
@@ -465,10 +512,18 @@ abstract class ZfExtended_Models_Entity_Abstract {
         return $this->get($field);
     }
     
+    /**
+     * returns the modified values
+     * @return array
+     */
+    public function getModifiedValues() {
+        return $this->modifiedValues;
+    }
+    
     protected function validatorLazyInstatiation() {
-      if(empty($this->validator)) {
-        $this->validator = ZfExtended_Factory::get($this->validatorInstanceClass);
-      }
+        if(empty($this->validator)) {
+            $this->validator = ZfExtended_Factory::get($this->validatorInstanceClass, [$this]);
+        }
     }
 
     /**
@@ -494,6 +549,9 @@ abstract class ZfExtended_Models_Entity_Abstract {
      * @return string the truncated string
      */
     public function truncateLength($field, $value) {
+        if(!is_string($field)) {
+            return $value;
+        }
         $db = $this->db;
         $md = $db->info($db::METADATA);
         if(empty($md[$field]) || empty($md[$field]['LENGTH'])) {

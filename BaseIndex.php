@@ -67,8 +67,8 @@ class ZfExtended_BaseIndex{
      *
      */
     protected function  __construct($indexpath) {
-        if (version_compare(PHP_VERSION, '5.6.0', '<') || version_compare(PHP_VERSION, '7.0.0', '>=')) {
-            $msg = array('Please use PHP in a version > 5.6.0 and < 7.0.0!');
+        if (version_compare(PHP_VERSION, '7.3', '<')) {
+            $msg = array('Please use PHP version >= 7.3!');
             if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
                 $msg[] = 'Please update your xampp package manually or reinstall Translate5 with the latest windows installer from http://www.translate5.net';
                 $msg[] = 'Warning: Reinstallation can lead to data loss! Please contact support@translate5.net when you need assistance in data conversion!';
@@ -143,21 +143,7 @@ class ZfExtended_BaseIndex{
         Zend_Registry::set('cache', $cache);
         Zend_Registry::set('module',$this->currentModule );
     }
-    /**
-     * (re-)configures the session based on the config in the Zend_Registry
-     *
-     * @param Zend_Application_Bootstrap_Bootstrap bootstrap
-     * @return void
-     */
-    public function reConfigureSession(Zend_Application_Bootstrap_Bootstrap $bootstrap) {
-        $config = Zend_Registry::get('config');
-        $session = new Zend_Session_Namespace();
-        $session->runtimeOptions = $config->runtimeOptions;
-        //nicht innerhalb des if-blocks davor, da die defines sonst in unechten forks nicht gesetzt sind
-        foreach ($session->runtimeOptions->defines as $key => $val) {
-            defined($key)|| define($key,$val);
-        }
-    }
+
     /**
      * Singleton Instanz auf NULL setzen, um sie neu initialiseren zu können
      *
@@ -241,7 +227,7 @@ class ZfExtended_BaseIndex{
      * 
      *
      * @param string module
-     * @param boolean $withAcl default true, enables resetting the ACLs, false to prevent this 
+     * @param bool $withAcl default true, enables resetting the ACLs, false to prevent this 
      * @return string the old module
      */
     public function setModule($module, $withAcl = true){
@@ -280,7 +266,6 @@ class ZfExtended_BaseIndex{
         $bootstrap->getApplication()->setOptions($options);
         $bootstrap->setOptions($bootstrap->getApplication()->getOptions());
         $this->initRegistry($bootstrap);
-        $this->reConfigureSession($bootstrap);
     }
     /**
      * Definiert APPLICATION_MODULE und gibt aktuelles Modul zurück

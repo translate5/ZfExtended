@@ -32,6 +32,10 @@ END LICENSE AND COPYRIGHT
  * defines the methods needed by a user object to be usable in the session
  */
 interface ZfExtended_Models_SessionUserInterface {
+    CONST LOGIN_STATUS_MAINTENANCE='maintenance';
+    CONST LOGIN_STATUS_SUCCESS='success';
+    CONST LOGIN_STATUS_AUTHENTICATED='authenticated';
+    CONST LOGIN_STATUS_REQUIRED='required';
     /**
      * sets the user in Zend_Session_Namespace('user')
      *

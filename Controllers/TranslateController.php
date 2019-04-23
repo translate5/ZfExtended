@@ -134,9 +134,10 @@ class TranslateController extends ZfExtended_Controllers_Action
      * migrates xliff with IDs that are not base64-encoded to those where they are
      */
     public function migratexliffAction() {
+        $config = Zend_Registry::get('config');
+        /* @var $config Zend_Config */
         $this->view->layout()->disableLayout();
         $this->_helper->viewRenderer->setNoRender(true);
-        $session = new Zend_Session_Namespace();
         $index = ZfExtended_BaseIndex::getInstance();
         /* @var $index ZfExtended_BaseIndex */
         $dirs = $index->getModuleDirs();
@@ -145,7 +146,7 @@ class TranslateController extends ZfExtended_Controllers_Action
             $dir = APPLICATION_PATH.DIRECTORY_SEPARATOR.'modules'.DIRECTORY_SEPARATOR.$dir.DIRECTORY_SEPARATOR.'locales';
         }
         unset($dir);
-        $dirs[] = $session->runtimeOptions->dir->locales;
+        $dirs[] = $config->runtimeOptions->dir->locales;
         foreach ($dirs as $dir) {
             if(!is_dir($dir))continue;
             $xliffs = scandir($dir);

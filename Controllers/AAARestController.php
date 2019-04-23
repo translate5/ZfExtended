@@ -90,7 +90,7 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
   protected $restMessages;
   
   /**
-   *  @var ZfExtended_Log
+   *  @var ZfExtended_Logger
    */
   protected $log = false;
   
@@ -129,11 +129,10 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
       $this->_helper->viewRenderer->setNoRender(true);
       $this->_helper->layout->disableLayout();
       $this->events = ZfExtended_Factory::get('ZfExtended_EventManager', array(get_class($this)));
-      
       $this->restMessages = ZfExtended_Factory::get('ZfExtended_Models_Messages');
       Zend_Registry::set('rest_messages', $this->restMessages);
       
-      $this->log = ZfExtended_Factory::get('ZfExtended_Log');
+      $this->log = Zend_Registry::get('logger');
       
       //perhaps not working under windows, see comment on php.net
       //enable simple front end interaction with fatal errors
@@ -260,10 +259,10 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
     ));
     
     /* @var $filter ZfExtended_Models_Filter_ExtJs */
-    if($this->_hasParam('defaultFilter')) {
+    if($this->hasParam('defaultFilter')) {
         $filter->setDefaultFilter($this->_getParam('defaultFilter'));
     }
-    if($this->_hasParam('sort')) {
+    if($this->hasParam('sort')) {
         $filter->setSort($this->_getParam('sort'));
     }
     $filter->setMappings($this->_sortColMap, $this->_filterTypeMap);
@@ -287,7 +286,7 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
       try {
           parent::dispatch($action);
       }
-      //this is the only usefule place in processing REST request to translate 
+      //this is the only useful place in processing REST request to translate 
       //the entityVersion DB exception to an 409 conflict exception
       catch(Zend_Db_Statement_Exception $e) {
           $m = $e->getMessage();
@@ -331,6 +330,7 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
   /**
    * handles a ZfExtended_ValidateException
    * @param ZfExtended_ValidateException $e
+   * @deprecated should be obsolete if new error loggin refactoring is done
    */
   protected function handleValidateException(ZfExtended_ValidateException $e) {
       $this->view->errors = $this->transformErrors($e->getErrors());
@@ -340,9 +340,10 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
   /**
    * handles a general ZfExtended_Exception
    * @param ZfExtended_Exception $e
+   * @deprecated should be obsolete if new error loggin refactoring is done
    */
   protected function handleException(ZfExtended_Exception $e) {
-      $this->log->logException($e);
+      $this->log->exception($e);
       $this->restMessages->addException($e);
       $this->handleErrorResponse($e->getCode());
       //this postDispatch and notifyPostDispatch calls are needed to finish 
@@ -353,7 +354,8 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
   
   /**
    * prepares the result in case of an error
-   * @param integer $httpStatus
+   * @param int $httpStatus
+   * @deprecated should be obsolete if new error loggin refactoring is done
    */
   protected function handleErrorResponse($httpStatus) {
       $this->view->message = "NOT OK";
@@ -466,7 +468,7 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
    * sets the entity data out of given post / put data.
    * - setzt für in _sortColMap gesetzten Spalten den übergebenen Wert für beide Spalten
    * @param array $reject list of fieldnames to ignore
-   * @param boolean $mode defines if given fields are a black (false) or a whitelist (true)
+   * @param bool $mode defines if given fields are a black (false) or a whitelist (true)
    */
   protected function setDataInEntity(array $fields = null, $mode = self::SET_DATA_BLACKLIST) {
     settype($fields, 'array');
@@ -478,7 +480,7 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
         $blackListed = $hasField && $mode === self::SET_DATA_BLACKLIST;
         if($this->entity->hasField($key) && $whiteListed && !$blackListed){
             $this->entity->__call('set'.ucfirst($key), array($value));
-            if(isset($this->_sortColMap[$key])){
+            if(isset($this->_sortColMap[$key]) && is_string($this->_sortColMap[$key])){
                 $toSort = $this->_sortColMap[$key];
                 $value = $this->entity->truncateLength($toSort, $value);
                 $this->entity->__call('set'.ucfirst($toSort), array($value));

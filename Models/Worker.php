@@ -25,18 +25,18 @@ END LICENSE AND COPYRIGHT
 /**
  * Abstract Worker Class
  * 
- * @method void setId() setId(integer $id)
- * @method void setParentId() setParentId(integer $id)
+ * @method void setId() setId(int $id)
+ * @method void setParentId() setParentId(int $id)
  * @method void setState() setState(string $state)
  * @method void setWorker() setWorker(string $phpClassName)
  * @method void setResource() setResource(string $resource)
  * @method void setSlot() setSlot(string $slotName)
  * @method void setTaskGuid() setTaskGuid(string $taskGuid)
- * @method void setPid() setPid(integer $pid)
+ * @method void setPid() setPid(int $pid)
  * @method void setStarttime() setStarttime(string $starttime)
  * @method void setMaxRuntime() setMaxRuntime(string $maxRuntime)
  * @method void setHash() setHash(string $hash)
- * @method void setMaxParallelProcesses() setMaxParallelProcesses(integer $maxParallelProcesses)
+ * @method void setMaxParallelProcesses() setMaxParallelProcesses(int $maxParallelProcesses)
  * @method void setBlockingType() setBlockingType(string $blockingType)
  * 
  * @method integer getId()
