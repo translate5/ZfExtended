@@ -191,7 +191,7 @@ abstract class ZfExtended_Models_Filter {
   /**
    * applies the filter and sort statements to the given select and return it
    * @param Zend_Db_Select $select
-   * @param boolean $applySort [optional] default true
+   * @param bool $applySort [optional] default true
    * @return Zend_Db_Select
    */
   public function applyToSelect(Zend_Db_Select $select, $applySort = true) {
@@ -309,8 +309,8 @@ abstract class ZfExtended_Models_Filter {
   /**
    * adds a field to the sortlist  
    * @param string $field
-   * @param boolean $desc [optional] per default sort ASC, if true here sort DESC 
-   * @param boolean $prepend [optional] per default add field to the end of fieldlist to sort after. set to true to prepend the field to the beginning of the list
+   * @param bool $desc [optional] per default sort ASC, if true here sort DESC 
+   * @param bool $prepend [optional] per default add field to the end of fieldlist to sort after. set to true to prepend the field to the beginning of the list
    */
   public function addSort($field, $desc = false, $prepend = false){
     $sort = new stdClass();
@@ -411,13 +411,13 @@ abstract class ZfExtended_Models_Filter {
    * provide a way to produce parenthesized OR/AND where statements like: 
    * where foo and (bar OR (baz AND bof))
    * @param stdClass $filter
-   * @param boolean $isOr defines if is a OR or an AND expression (if param is false)
+   * @param bool $isOr defines if is a OR or an AND expression (if param is false)
    */
   abstract protected function applyExpression(stdClass $filter, $isOr = true);
   
   /**
    * @param string $field
-   * @param integer $value
+   * @param int $value
    */
   protected function applyBoolean($field, $value) {
     if($value){

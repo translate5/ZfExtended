@@ -29,10 +29,5 @@ END LICENSE AND COPYRIGHT
  *
  */
 /* @var $this Zend_View */
-echo $this->errors[0]->_errorMessage;
-if(isset($this->errors[0]) && isset($this->errors[0]->_errorTrace)) {
-    unset($this->errors[0]->_errorTrace);
-}
+echo $this->errorMessage;
 unset($this->translate);
-unset($this->getParams);
-unset($this->errorCollect);

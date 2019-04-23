@@ -147,8 +147,6 @@ class ZfExtended_Controller_Helper_General extends Zend_Controller_Action_Helper
         $session = new Zend_Session_Namespace();
         $internalSessionUniqId = $session->internalSessionUniqId;
         $sessionId = Zend_Session::getId();
-        $sessionTable = ZfExtended_Factory::get('ZfExtended_Models_Db_Session');
-        $sessionTable->delete("session_id = '".$sessionId."'");
         $SessionMapInternalUniqIdTable = ZfExtended_Factory::get('ZfExtended_Models_Db_SessionMapInternalUniqId');
         $SessionMapInternalUniqIdTable->delete("internalSessionUniqId  = '".$internalSessionUniqId."'");
         $auth = Zend_Auth::getInstance();
@@ -265,7 +263,7 @@ class ZfExtended_Controller_Helper_General extends Zend_Controller_Action_Helper
      * @param string forkHttpId Eine eindeutige ID, die für alle artgleichen Kindprozesse gleich
      *               sein sollte und als Session-Index auf der Ebene $session->forkHttpCalls[$forkHttpId]
      *               verwendet wird. forkHttpId darf nur Zeichen aus der Menge [a-zA-Z0-9_] enthalten
-     * @param boolean callOnlyOnce forkHttp prüft bei callOnlyOnce true, ob ein
+     * @param bool   callOnlyOnce forkHttp prüft bei callOnlyOnce true, ob ein
      *   File mit der Namen 'callOnlyOnce_'.$forkHttpId.'_'.$session->internalSessionUniqId
      *   im tmp-Verzeichnis existiert. Falls ja, gibt forkHttp false zurück
      *   und setzt keinen Fork ab. Falls das File nicht existiert wird es angelegt
@@ -287,12 +285,14 @@ class ZfExtended_Controller_Helper_General extends Zend_Controller_Action_Helper
      *
      *
      */
-    function forkHttp(string $controller, string $action, string $forkHttpId, boolean $callOnlyOnce, string $uniqid, array $getParams) {
+    function forkHttp(string $controller, string $action, string $forkHttpId, bool $callOnlyOnce, string $uniqid, array $getParams) {
     	if(preg_match('"[^a-zA-Z0-9_]"', $forkHttpId)){
     		throw new Zend_Exception('$forkHttpId enthält Zeichen, die nicht der Menge [a-zA-Z0-9_] entstammen', 0);
     	}
+    	$config = Zend_Registry::get('config');
+    	/* @var $config Zend_Config */
     	$session = new Zend_Session_Namespace();
-    	$ro = $session->runtimeOptions;
+    	$ro = $config->runtimeOptions;
     	$cache = Zend_Registry::get('cache');
     	if(!isset($session->forkHttpCalls)){
     		$session->forkHttpCalls = array();

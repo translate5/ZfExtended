@@ -31,9 +31,9 @@ END LICENSE AND COPYRIGHT
 /**
  * handles passwd reset
  *
- * @method void setId() setId(integer $id)
- * @method void setUserId() setUserId(integer $userId)
- * @method void setExpiration() setExpiration(integer $expiration)
+ * @method void setId() setId(int $id)
+ * @method void setUserId() setUserId(int $userId)
+ * @method void setExpiration() setExpiration(int $expiration)
  * @method void setResetHash() setResetHash(string $resetHash)
  * @method integer getId() getId()
  * @method integer getUserId() getUserId()

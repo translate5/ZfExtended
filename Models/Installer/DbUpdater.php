@@ -346,7 +346,7 @@ class ZfExtended_Models_Installer_DbUpdater {
      * creates a shell exec command 
      * @param string $mysqlExecutable
      * @param mixed $credentials
-     * @param boolean $addFileParam optional, default true. If false the file to import is omitted
+     * @param bool $addFileParam optional, default true. If false the file to import is omitted
      * @return string
      */
     protected function makeSqlCmd($mysqlExecutable, $credentials, $addFileParam = true) {

@@ -39,7 +39,7 @@ trait ZfExtended_Models_Db_MetaTrait {
      * @param string $type
      * @param mixed $default
      * @param string $comment
-     * @param integer $length
+     * @param int $length
      */
     public function addColumn($columnname, $type, $default, $comment, $length = 0) {
         switch($type) {

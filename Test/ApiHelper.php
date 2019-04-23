@@ -192,6 +192,10 @@ class ZfExtended_Test_ApiHelper {
     public function decodeJsonResponse(Zend_Http_Response $resp) {
         $status = $resp->getStatus();
         if(200 <= $status && $status < 300) {
+            $body = $resp->getBody();
+            if(empty($body)) {
+                return null;
+            }
             $json = json_decode($resp->getBody());
             $t = $this->testClass;
             //error_log('#'.json_last_error_msg().'#');
@@ -200,7 +204,7 @@ class ZfExtended_Test_ApiHelper {
             if(isset($json->success)) {
                 $t::assertEquals(true, $json->success);
             }
-            return isset($json->rows) ? $json->rows : $json;
+            return $json->rows ?? $json;
         }
         return false;
     }
@@ -285,7 +289,7 @@ class ZfExtended_Test_ApiHelper {
         );
      * 
      * @param array $task
-     * @param boolean $failOnError default true
+     * @param bool $failOnError default true
      * @return boolean;
      */
     public function import(array $task, $failOnError = true) {
@@ -444,7 +448,7 @@ class ZfExtended_Test_ApiHelper {
      * Returns an absolute file path to a approval file
      * @param string $approvalFile
      * @param string $class The directory name in editorAPI where the testfiles are
-     * @param boolean $assert false to skip file existence check
+     * @param bool $assert false to skip file existence check
      * @return string
      */
     public function getFile($approvalFile, $class = null, $assert = true) {

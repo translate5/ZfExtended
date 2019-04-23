@@ -348,7 +348,7 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
             $this->view->form = $this->_form;
             return;
         }
-        $this->_redirect('/login');
+        $this->redirect('/login');
     }
     
     /**

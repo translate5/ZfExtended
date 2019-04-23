@@ -52,7 +52,7 @@ class ZfExtended_Debug {
      * compares the given debug level binary with the configured one for the given category and section
      * @param string $category
      * @param string $section
-     * @param integer $level default is level 1
+     * @param int $level default is level 1
      * @return boolean
      */
     public static function hasLevel($category, $section, $level = 1) {

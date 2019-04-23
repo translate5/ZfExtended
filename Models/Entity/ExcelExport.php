@@ -22,14 +22,16 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
-require_once('ZfExtended/ThirdParty/PHPExcel/PHPExcel.php');
+require APPLICATION_PATH.'/../library/PhpSpreadsheet/vendor/autoload.php';
+
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
 
 class ZfExtended_Models_Entity_ExcelExport {
     
     /**
-     * @var PHPExcel
+     * @var PhpOffice\PhpSpreadsheet\Spreadsheet
      */
-    private $PHPExcel = false;
+    private $spreadsheet = false;
     
     /**
      * Container to hold document properties like filename etc. (properties->name->value)
@@ -56,7 +58,7 @@ class ZfExtended_Models_Entity_ExcelExport {
     private $callbacks = array();
     
     /**
-     * Container to hold fieldType-Definitions (like PHPExcel_Style_NumberFormat::FORMAT_DATE_YYYYMMDDSLASH)
+     * Container to hold fieldType-Definitions (like \PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_DATE_YYYYMMDDSLASH)
      * @var stdClass
      */
     private $fieldTypes = false;
@@ -66,7 +68,7 @@ class ZfExtended_Models_Entity_ExcelExport {
      * Default format for date fields
      * @var string
      */
-    private $_defaultFieldTypeDate = PHPExcel_Style_NumberFormat::FORMAT_DATE_YYYYMMDD2;
+    private $_defaultFieldTypeDate = \PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_DATE_YYYYMMDD2;
     
     /**
      * Default format for percent fields
@@ -78,12 +80,12 @@ class ZfExtended_Models_Entity_ExcelExport {
      * Default format for currency fields
      * @var string
      */
-    private $_defaultFieldTypeCurrency = PHPExcel_Style_NumberFormat::FORMAT_CURRENCY_EUR_SIMPLE;
+    private $_defaultFieldTypeCurrency = \PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_CURRENCY_EUR_SIMPLE;
     
     
     /**
      * Pre-calculate formulas
-     * Forces PHPExcel to recalculate all formulae in a workbook when saving, so that the pre-calculated values are
+     * Forces PhpSpreadsheet to recalculate all formulae in a workbook when saving, so that the pre-calculated values are
      *    immediately available to MS Excel or other office spreadsheet viewer when opening the file
      *
      * @var boolean
@@ -93,7 +95,7 @@ class ZfExtended_Models_Entity_ExcelExport {
     
     
     public function __construct() {
-        $this->PHPExcel  = ZfExtended_Factory::get('PHPExcel');
+        $this->spreadsheet  = new Spreadsheet();
         
         $this->properties = new stdClass();
         $this->properties->filename = 'ERP-Export';
@@ -111,8 +113,8 @@ class ZfExtended_Models_Entity_ExcelExport {
      * @param Closure $callback
      */
     public function simpleArrayToExcel ($data, Closure $callback = null) {
-        $this->PHPExcel->setActiveSheetIndex(0);
-        $tempSheet = $this->PHPExcel->getActiveSheet();
+        $this->spreadsheet->setActiveSheetIndex(0);
+        $tempSheet = $this->spreadsheet->getActiveSheet();
         
         $rowCount = 1;
         foreach ($data as $row)
@@ -143,10 +145,10 @@ class ZfExtended_Models_Entity_ExcelExport {
         }
         
         // Set active sheet index to the first sheet, so Excel opens this as the first sheet
-        $this->PHPExcel->setActiveSheetIndex(0);
+        $this->spreadsheet->setActiveSheetIndex(0);
         
         if($callback!==null){
-        	$callback($this->PHPExcel);
+        	$callback($this->spreadsheet);
         }
         
         $this->sendDownload();
@@ -277,7 +279,7 @@ class ZfExtended_Models_Entity_ExcelExport {
         // for date fields the following callback must be set
         $stringToDate = function($string) {
             $date = strtotime($string);
-            $date = PHPExcel_Shared_Date::PHPToExcel($date,true);
+            $date = \PhpOffice\PhpSpreadsheet\Shared\Date::PHPToExcel($date,true);
             return $date;
         };
         
@@ -316,7 +318,7 @@ class ZfExtended_Models_Entity_ExcelExport {
      *     If this is true (the default), then the writer will recalculate all formulae in a workbook when saving,
      *        so that the pre-calculated values are immediately available to MS Excel or other office spreadsheet
      *        viewer when opening the file
-     *     If false, then formulae are not calculated on save. This is faster for saving in PHPExcel, but slower
+     *     If false, then formulae are not calculated on save. This is faster for saving in PhpSpreadsheet, but slower
      *        when opening the resulting file in MS Excel, because Excel has to recalculate the formulae itself
      *
      * @return boolean
@@ -330,8 +332,8 @@ class ZfExtended_Models_Entity_ExcelExport {
      *		Set to true (the default) to advise the Writer to calculate all formulae on save
      *		Set to false to prevent precalculation of formulae on save.
      *
-     * @param boolean $pValue	Pre-Calculate Formulas?
-     * @return	PHPExcel_Writer_IWriter
+     * @param bool $pValue	Pre-Calculate Formulas?
+     * @return ZfExtended_Models_Entity_ExcelExport
      */
     public function setPreCalculateFormulas($pValue = TRUE) {
         $this->_preCalculateFormulas = (boolean) $pValue;
@@ -344,13 +346,8 @@ class ZfExtended_Models_Entity_ExcelExport {
     public function sendDownload () {
         $fileName = $this->getProperty('filename').date('-Y-d-m');
         
-        // XLS Excel5 output
-        //$objWriter = PHPExcel_IOFactory::createWriter($this->PHPExcel, 'Excel5');
-        //header('Content-Type: application/vnd.ms-excel');
-        //header('Content-Disposition: attachment;filename="'.$fileName.'.xls"');
-        
-        // XLSX Excel2007 output
-        $objWriter = PHPExcel_IOFactory::createWriter($this->PHPExcel, 'Excel2007');
+        // XLSX Excel 2010 output
+        $objWriter = \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($this->spreadsheet, 'Xlsx');
         
         $objWriter->setPreCalculateFormulas($this->getPreCalculateFormulas());
 
@@ -370,7 +367,7 @@ class ZfExtended_Models_Entity_ExcelExport {
         $objWriter->save('php://output');
         exit;
     }
-    public function getPhpExcel(){
-    	return $this->PHPExcel;
+    public function getSpreadsheet(){
+    	return $this->spreadsheet;
     }
 }

@@ -67,7 +67,7 @@ class ZfExtended_Cache_MySQLMemoryBackend extends Zend_Cache_Backend implements 
      * Test if a cache is available for the given id and (if yes) return it (false else)
      *
      * @param  string  $id                     Cache id
-     * @param  boolean $doNotTestCacheValidity If set to true, the cache validity won't be tested
+     * @param  bool    $doNotTestCacheValidity If set to true, the cache validity won't be tested
      * @return string|false Cached datas
      */
     public function load($id, $doNotTestCacheValidity = false)
@@ -92,7 +92,7 @@ class ZfExtended_Cache_MySQLMemoryBackend extends Zend_Cache_Backend implements 
      * 
      * @param string $id
      * @param string $value
-     * @param integer $seconds
+     * @param int $seconds
      * @return boolean
      */
     public function updateIfOlderThen($id, $value, $seconds) {

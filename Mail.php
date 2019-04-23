@@ -55,14 +55,17 @@ class  ZfExtended_Mail {
      * @var string
      */
     protected $template;
+    
     /**
-     * @var Zend_Session_Namespace
+     * @var Zend_Config
      */
-    protected $_session;
+    protected $config;
+    
     /**
      * @var integer
      */
     protected $_sendMailLocally = 0;
+    
     /**
      * @var boolean
      */
@@ -80,16 +83,16 @@ class  ZfExtended_Mail {
     /**
      * initiiert das interne Mail und View Object
      *
-     * @param boolean initView entscheidet, ob view initialisiert wird
+     * @param bool initView entscheidet, ob view initialisiert wird
      *      (Achtung: Bei false ist die Verwendung von Mailtemplates mit ZfExtended_Mail nicht möglich)
      *      Default: true
      */
     public function __construct($initView = true) {
         try {
-            $this->_session = new Zend_Session_Namespace();
-            $this->sendingDisabled = $this->_session->runtimeOptions->sendMailDisabled;
-            $this->_sendMailLocally = $this->_session->runtimeOptions->sendMailLocally;
-            if(isset($this->_session->runtimeOptions->mail->generalBcc)){
+            $this->config = Zend_Registry::get('config');
+            $this->sendingDisabled = $this->config->runtimeOptions->sendMailDisabled;
+            $this->_sendMailLocally = $this->config->runtimeOptions->sendMailLocally;
+            if(isset($this->config->runtimeOptions->mail->generalBcc)){
                 $this->_sendBcc = true;
             }
         }
@@ -121,8 +124,7 @@ class  ZfExtended_Mail {
         //cache translation instance per language to be able to send the mail in the users language 
         self::$translationInstances[$this->initialLocale] = $this->view->translate;
         
-        $config = Zend_Registry::get('config');
-        $libs = array_reverse($config->runtimeOptions->libraries->order->toArray());
+        $libs = array_reverse($this->config->runtimeOptions->libraries->order->toArray());
         foreach ($libs as $lib) {
             $this->view->addHelperPath(APPLICATION_PATH.'/../library/'.$lib.
                     '/views/helpers/', $lib.'_View_Helper_');
@@ -371,8 +373,8 @@ class  ZfExtended_Mail {
 
         $this->mail->addTo($toMail, $toName);
         if($this->_sendBcc){
-            foreach($this->_session->runtimeOptions->mail->generalBcc as $bcc){
-                if(preg_match($this->_session->runtimeOptions->defines->EMAIL_REGEX, $bcc)){
+            foreach($this->config->runtimeOptions->mail->generalBcc as $bcc){
+                if(preg_match($this->config->runtimeOptions->defines->EMAIL_REGEX, $bcc)){
                     $this->mail->addBcc($bcc);
                 }
             }
@@ -415,14 +417,13 @@ class  ZfExtended_Mail {
         if(!empty($locale)) {
             return $locale;
         }
-        $config = Zend_Registry::get('config');
         //if an applicationLocale is configured use that
-        $locale = $config->runtimeOptions->translation->applicationLocale;
+        $locale = $this->config->runtimeOptions->translation->applicationLocale;
         if(!empty($locale)) {
             return $locale;
         }
         //finally use the fallback:
-        return $config->runtimeOptions->translation->fallbackLocale;
+        return $this->config->runtimeOptions->translation->fallbackLocale;
     }
 
     /**

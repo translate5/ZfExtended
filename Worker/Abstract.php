@@ -307,7 +307,7 @@ abstract class ZfExtended_Worker_Abstract {
      * 
      * @param number $parentId optional, defaults to 0. Should contain the workerId of the parent worker.
      * @param string $state optional, defaults to null. Designed to queue a worker with a desired state.
-     * @param boolean $startNext defaults to true, if true starts directly the queued worker. False to prevent this.
+     * @param bool $startNext defaults to true, if true starts directly the queued worker. False to prevent this.
      * @return integer returns the id of the newly created worker DB entry
      */
     public function queue($parentId = 0, $state = NULL, $startNext = true) {

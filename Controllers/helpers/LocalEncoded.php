@@ -30,12 +30,12 @@ END LICENSE AND COPYRIGHT
  */
 
 /**
- * codiert oder decodiert den übergebenen String mit $session->runtimeOptions->fileSystemEncoding ausgehend von utf-8
+ * codiert oder decodiert den übergebenen String mit $config->runtimeOptions->fileSystemEncoding ausgehend von utf-8
  * @deprecated use ZfExtended_Utils instead
  */
 class ZfExtended_Controller_Helper_LocalEncoded extends Zend_Controller_Action_Helper_Abstract {
     /**
-     * codiert den übergebenen String mit $session->runtimeOptions->fileSystemEncoding ausgehend von utf-8
+     * codiert den übergebenen String mit $config->runtimeOptions->fileSystemEncoding ausgehend von utf-8
      * @param string $path
      * @return string $path 
      * @see ZfExtended_Utils::filesystemEncode
@@ -44,7 +44,7 @@ class ZfExtended_Controller_Helper_LocalEncoded extends Zend_Controller_Action_H
         return ZfExtended_Utils::filesystemEncode($path);
     }
     /**
-     * decodiert den übergebenen String mit $session->runtimeOptions->fileSystemEncoding ausgehend von utf-8
+     * decodiert den übergebenen String mit $config->runtimeOptions->fileSystemEncoding ausgehend von utf-8
      * 
      * @param string $path
      * @return string $path 

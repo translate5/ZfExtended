@@ -22,8 +22,26 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
-class ZfExtended_NotAcceptableException extends ZfExtended_Exception {
-    protected $defaultCode = 406;
-    protected $defaultMessage = 'Die an den Server gesendete Daten sind ungültig oder unvollständig!';
-    protected $defaultMessageTranslate = true;
+/**
+ */
+class ZfExtended_Models_Entity_Exceptions_IntegrityDuplicateKey extends ZfExtended_ErrorCodeException {
+    /**
+     * @var string
+     */
+    protected $domain = 'core.entity';
+    
+    static protected $localErrorCodes = [
+        'E1015' => 'Duplicate Key on saving {entity}',
+    ];
+    
+    public function setErrors($errors) {
+        if(!empty($errors['entity'])) {
+            $this->origin .= '.'.$errors['entity'];
+        }
+        return parent::setErrors($errors);
+    }
+    
+    public function isInMessage($fragment) {
+        return strpos($this->getMessage(), $fragment) !== false || strpos($this->getPrevious()->getMessage(), $fragment) !== false;
+    }
 }

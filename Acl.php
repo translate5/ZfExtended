@@ -50,7 +50,7 @@ class ZfExtended_Acl extends Zend_Acl {
      * - prüft, ob bereits eine Instanz erstellt wurde;
      *   falls ja, wird diese zurückgegeben
      *
-     * @param boolean $init causes getInstance, to create the singleton new
+     * @param bool $init causes getInstance, to create the singleton new
      * @return ZfExtended_Acl
      */
     public static function getInstance($init = false)

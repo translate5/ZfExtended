@@ -22,8 +22,9 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
-class ZfExtended_Conflict extends ZfExtended_Exception {
-    protected $defaultCode = 409;
-    protected $defaultMessage = 'Die an den Server gesendete Daten verursachen einen Konflikt!';
-    protected $defaultMessageTranslate = true;
+/**
+ * This Exception is thrown in the context of the Logger
+ * This Exception is intentionally no ErrorCodeException, since all the logging stuff is either not ready, or there is an error in the logger iself
+ */
+class ZfExtended_Logger_Exception extends ZfExtended_Exception {
 }
