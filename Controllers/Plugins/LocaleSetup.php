@@ -144,8 +144,13 @@ class ZfExtended_Controllers_Plugins_LocaleSetup extends Zend_Controller_Plugin_
         $sessionUser = new Zend_Session_Namespace('user');
         $user = ZfExtended_Factory::get('ZfExtended_Models_User');
         /* @var $user ZfExtended_Models_User */
-        $user->load($sessionUser->data->id);
-        $user->setLocale($locale);
-        $user->save();
+        try {
+            $user->load($sessionUser->data->id);
+            $user->setLocale($locale);
+            $user->save();
+        }
+        catch(ZfExtended_Models_Entity_NotFoundException $e) {
+            //if the user does not exist (anymore) do nothing here
+        }
     }
 }
