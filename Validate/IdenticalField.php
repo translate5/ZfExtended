@@ -91,7 +91,7 @@ class ZfExtended_Validate_IdenticalField extends Zend_Validate_Abstract {
    * Sets the field name.
    *
    * @param  string $fieldName
-   * @return Zend_Validate_IdenticalField Provides a fluent interface
+   * @return Zend_Validate_Abstract Provides a fluent interface
   */
   public function setFieldName($fieldName) {
     $this->_fieldName = $fieldName;
@@ -111,7 +111,7 @@ class ZfExtended_Validate_IdenticalField extends Zend_Validate_Abstract {
    * Sets the field title.
    *
    * @param  string:null $fieldTitle
-   * @return Zend_Validate_IdenticalField Provides a fluent interface
+   * @return Zend_Validate_Abstract Provides a fluent interface
   */
   public function setFieldTitle($fieldTitle = null) {
     $this->_fieldTitle = $fieldTitle ? $fieldTitle : $this->_fieldName;

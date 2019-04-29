@@ -65,7 +65,7 @@ abstract class ZfExtended_Worker_Abstract {
     
     /**
      * Blocking-typ for this certain worker
-     * @var const blocking-type BLOCK_XYZ
+     * @var string blocking-type BLOCK_XYZ
      */
     protected $blockingType = self::BLOCK_SLOT;
     
@@ -232,8 +232,8 @@ abstract class ZfExtended_Worker_Abstract {
      * creates the internal worker model ready for DB storage if it not already exists.
      * The latter case happens when using instanceByModels
      * 
-     * @param unknown $taskGuid
-     * @param unknown $parameters
+     * @param string $taskGuid
+     * @param array $parameters
      */
     private function initWorkerModel($taskGuid, $parameters) {
         if(!empty($this->workerModel)) {

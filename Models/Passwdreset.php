@@ -53,10 +53,10 @@ class ZfExtended_Models_Passwdreset extends ZfExtended_Models_Entity_Abstract {
           }
       }
   }
+  
   /**
-   * 
    * @param string $hash
-   * @return type
+   * @return boolean
    */
   public function hashMatches($hash) {
       try {

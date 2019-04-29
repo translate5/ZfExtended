@@ -102,7 +102,7 @@ abstract class ZfExtended_Plugin_Abstract {
     /**
      * reusable function to filter frontend controlles by ACL
      * This is not used by default.
-     * @return unknown[]
+     * @return array
      */
     protected function getFrontendControllersFromAcl() {
         $result = array();

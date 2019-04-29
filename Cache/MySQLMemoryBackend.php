@@ -228,7 +228,8 @@ class ZfExtended_Cache_MySQLMemoryBackend extends Zend_Cache_Backend implements 
     /**
      * Since MySQL engine memory is limited to varchar fields and is not able to use blobs 
      *  we have to ensure the string length is not exceeding that limit to avoid cut off serialized strings.
-     * @param unknown $value
+     * @param string $id
+     * @param string $data
      */
     protected function checkLength($id, $data) {
         if(strlen($data) > 4096) {

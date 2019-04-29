@@ -53,7 +53,7 @@ abstract class ZfExtended_Test_ApiTestcase extends \ZfExtended_Test_Testcase {
     /**
      * asserts that a certain user is loggedin
      * @param string $user
-     * @return the login/status JSON for further processing
+     * @return stdClass the login/status JSON for further processing
      */
     public static function assertLogin($user) {
         $json = self::$api->requestJson('editor/session/'.self::$api->getAuthCookie());
