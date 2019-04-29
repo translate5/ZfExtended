@@ -62,7 +62,7 @@ class ZfExtended_View_Helper_Php2JsVars extends Zend_View_Helper_Abstract{
      * akzeptiert als Parameter array(foo, bar) oder 'foo.bar' erzeugt den Objektbaum, und gibt bar zurück
      * @param mixed $name string oder array
      * @throws Zend_Exception
-     * @return stdObject
+     * @return stdClass
      */
     public function create($name){
         if(is_string($name)){

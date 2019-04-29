@@ -299,7 +299,7 @@ class  ZfExtended_Mail {
     /**
      * setzt den Templatenamen der verwendet werden soll
      * weitere Infos siehe setContentByTemplate
-     * @see setContentByTemplate
+     * @see self::setContentByTemplate
      * @param string $template
      */
     public function setTemplate(string $template){

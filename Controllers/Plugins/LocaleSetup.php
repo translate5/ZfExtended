@@ -124,7 +124,7 @@ class ZfExtended_Controllers_Plugins_LocaleSetup extends Zend_Controller_Plugin_
     
     /**
      * registers the given locale in the application as locale to be used
-     * @param unknown $locale
+     * @param string $locale
      */
     protected function registerLocale($locale) {
         // Speicher locale und translation-object in Registry - so gilt sie für alle locale und

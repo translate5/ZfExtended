@@ -156,7 +156,7 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract {
     /**
      * Gibt die interne Sprach ID anhand der übergebenen Sprache im spezifizierten Typ zurück
      * @param mixed $lang
-     * @param unknown_type $lang
+     * @param string $type
      */
     public function getLangId($lang, $type = self::LANG_TYPE_RFC5646) {
         $this->loadLang($lang, $type);
@@ -206,7 +206,7 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract {
     /**
      * Gibt ein Language-Entity anhand der übergebenen Sprache im spezifizierten Typ zurück
      * @param mixed $lang
-     * @param unknown_type $lang
+     * @param string $type
      * @return Zend_Db_Table_Row_Abstract | null
      */
     public function loadLang($lang, $type = self::LANG_TYPE_RFC5646) {
