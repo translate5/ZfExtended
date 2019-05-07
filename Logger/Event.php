@@ -165,32 +165,33 @@ class ZfExtended_Logger_Event {
         $msg = [];
         $e = empty($this->exception) ? '' : ' '.get_class($this->exception);
         $msg[] = $this->levelName.$e.': '.$this->eventCode.' - '.$this->message;
-        $msg[] = 'in '.$this->domain.' '.$this->file.' ('.$this->line.') ';
+        $msg[] = '  in '.$this->domain.' '.$this->file.' ('.$this->line.') ';
         if(!empty($this->userGuid)) {
-            $msg[] = 'User: '.$this->userLogin.' ('.$this->userGuid.') ';
+            $msg[] = '  User: '.$this->userLogin.' ('.$this->userGuid.') ';
         }
         if(!empty($this->url)) {
-            $msg[] = 'Request: '.$this->method.' '.$this->url;
+            $msg[] = '  Request: '.$this->method.' '.$this->url;
         }
         if(!empty($this->worker)) {
-            $msg[] = 'Worker: '.$this->worker;
+            $msg[] = '  Worker: '.$this->worker;
         }
         $extra = $this->convertExtra();
         if(!empty($extra)) {
-            $msg[] = 'Extra: '.print_r($extra,1);
+            $msg[] = '  Extra: '.print_r($extra,1);
         }
         if(!empty($this->trace)) {
-            $msg[] = 'Trace: ';
+            $msg[] = '  Trace: ';
+            $this->trace = '    '.join("\n    ", explode("\n", $this->trace));
             $msg[] = $this->trace;
         }
         
         if(!empty($this->previous)) {
-            $msg[] = "\nPrevious Exception: \n";
+            $msg[] = "\n Previous Exception: \n";
             $msg[] = (string) $this->previous;
         }
         
         //FIXME implement a nice, flexible, changeable formatter here
-        return join("\n", $msg);
+        return join("\n", $msg)."\n";
     }
     
     /**
