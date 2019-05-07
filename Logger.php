@@ -178,6 +178,7 @@ class ZfExtended_Logger {
         $event->extra = $extraData;
         
         $this->fillStaticData($event);
+        $event->levelName = $this->getLevelName($event->level);
         return $event;
     }
     
@@ -210,6 +211,7 @@ class ZfExtended_Logger {
         
         $this->fillStaticData($event);
         $event->mergeFromArray($eventOverride);
+        $event->levelName = $this->getLevelName($event->level);
         $previous = $exception->getPrevious();
         if(!empty($previous)) {
             $event->previous = $this->exception($previous, [], true);
@@ -330,8 +332,6 @@ class ZfExtended_Logger {
      * @param ZfExtended_Logger_Event $event
      */
     protected function fillStaticData(ZfExtended_Logger_Event $event) {
-        $event->levelName = $this->getLevelName($event->level);
-        
         if(!empty($_SERVER['HTTP_HOST'])) {
             $event->httpHost = $_SERVER['HTTP_HOST'];
         }
@@ -425,6 +425,14 @@ class ZfExtended_Logger {
     public function request(array $additionalData = []) {
         $additionalData['requestData'] = $_REQUEST;
         $this->debug('E1014', 'HTTP request '.$_SERVER['REQUEST_URI'], $additionalData);
+    }
+    
+    /**
+     * returns the internally configured domain
+     * @return string
+     */
+    public function getDomain() {
+        return $this->domain;
     }
     
     /**
