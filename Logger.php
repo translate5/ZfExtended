@@ -30,8 +30,8 @@ END LICENSE AND COPYRIGHT
  * @method void error() error(string $code, string $message, $extra = null, $writer = [])
  * @method void warn() warn  (string $code, string $message, $extra = null, $writer = [])
  * @method void info() info  (string $code, string $message, $extra = null, $writer = [])
- * @method void debug() debug(string $code, string $message, $extra = null, $writer = [])
- * @method void trace() trace(string $code, string $message, $extra = null, $writer = [])
+ * @method void debug() debug(string $code, string $message, $extra = null, $writer = []) is only processed if filters are configured to do so (match domain and level)
+ * @method void trace() trace(string $code, string $message, $extra = null, $writer = []) is only processed if filters are configured to do so (match domain and level)
  */
 class ZfExtended_Logger {
     /**
@@ -43,7 +43,8 @@ class ZfExtended_Logger {
     const LEVEL_ERROR = 2;
     const LEVEL_WARN = 4;
     const LEVEL_INFO = 8;
-    const LEVEL_DEBUG = 16;
+    //DEBUG and TRACE log calls are only processed if there is on writer configured with a filter consuming debug logs of the current domain
+    const LEVEL_DEBUG = 16; 
     const LEVEL_TRACE = 32;
     
     protected $logLevels = [];
@@ -233,6 +234,21 @@ class ZfExtended_Logger {
             $writer = $this->writer[$name];
             $writer->isAccepted($event) && $writer->write($event);
         }
+    }
+    
+    /**
+     * test if current logger has writers consuming the given combination of level and domain.
+     * Can be used for example in plug-in init Methods to enable the processing of debug statements in the plugin.  
+     * @param integer $level
+     * @param string $domain
+     */
+    public function isEnabledFor(int $level, string $domain) {
+        foreach($this->writer as $writer) {
+            if($writer->isAcceptingBasicly($level, $domain)) {
+                return true;
+            }
+        }
+        return false;
     }
     
     /**

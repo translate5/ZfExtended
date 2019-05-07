@@ -235,11 +235,11 @@ class ZfExtended_Logger_Event {
         }
         if(!empty($this->extra)) {
             $extra = [];
-            foreach($this->extra as $item) {
+            foreach($this->extra as $key => $item) {
                 if(is_object($item) && $item instanceof ZfExtended_Models_Entity_Abstract) {
                     $item = $item->getDataObject();
                 }
-                $extra[] = $item;
+                $extra[$key] = $item;
             }
             $msg[] = '<td>Extra:</td><td><pre>'.htmlspecialchars(print_r($extra,1)).'</pre></td>';
         }

@@ -77,6 +77,18 @@ abstract class ZfExtended_Logger_Writer_Abstract {
     }
     
     /**
+     * returns true if the current writer accepts events for the given level and domain
+     * Attention: returns also true if writer is configured for domain foo.bar.xxx and here is checked for foo only. 
+     * @param int $level
+     * @param string $domain
+     */
+    public function isAcceptingBasicly(int $level, string $domain): bool {
+        //attention: returns true also if given domain is foo and the filter is configured to listen to foo.bar!
+        // The reason is, that this method is used in bootstraping to check if debugging is enabled for the whole given domain part
+        return $this->filter->testBasic($level, $domain);
+    }
+    
+    /**
      * Validates the given options
      */
     public function validateOptions(array &$options) {

@@ -124,18 +124,25 @@ class ZfExtended_Worker_TriggerByHttp {
         
         fclose($fsock);
         
-        if ($state < 200 || $state >= 300) {
-            $this->log->warn('E1074', 'Worker HTTP response state was not 2XX but {state}.', [
-                'state' => $state,
-                'method' => $method,
-                'postParameters' => $postParameters,
-                'host' => $host,
-                'port' => $this->port,
-            ]);
-            return false;
+        if ($state >= 200 && $state < 300) {
+            return true;
         }
+        if($state == 500) {
+            //since on a 500 the real exception was logged in the worker, we just log that here as debug info
+            $method = 'debug';
+        }
+        else {
+            $method = 'warn';
+        }
+        $this->log->__call($method, ['E1074', 'Worker HTTP response state was not 2XX but {state}.', [
+            'state' => $state,
+            'method' => $method,
+            'postParameters' => $postParameters,
+            'host' => $host,
+            'port' => $this->port,
+        ]]);
+        return false;
         
-        return true;
     }
     
     /**

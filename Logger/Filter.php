@@ -39,9 +39,21 @@ class ZfExtended_Logger_Filter {
     protected $filterCache = [];
     
     /**
+     * a dedicated filter instance which keeps a separate filter for the debug/trace filter checks on bootstraping 
+     * @var ZfExtended_Logger_Filter
+     */
+    protected $filterForBasicCheck;
+    
+    protected $lastAddedOrigins = [];
+    
+    /**
      * @param array $filterRules
      */
     public function __construct(array $filterRules) {
+        if(empty($filterRules)) {
+           return;  
+        }
+        $this->filterForBasicCheck = new self([]);
         foreach($filterRules as $rule) {
             $this->rules[] = $this->parseRule($rule);
         }
@@ -55,9 +67,11 @@ class ZfExtended_Logger_Filter {
      */
     protected function parseRule($rule){
         $expressions = explode(';', $rule);
-        $andConnected = ['level' => [], 'origin' => [], 'exception' => []];
+        $andConnected = ['level' => [], 'domain' => [], 'exception' => []];
         foreach($expressions as $expression) {
+            $this->lastAddedOrigins = [];
             $matches = null;
+            $expression = trim($expression);
             if(!preg_match('/^([a-zA-Z0-9]+)[\s]*(<=|=|>=|\\*=|\\^=|\\$=)[\s]*([^\s]+)$/', $expression, $matches)) {
                 throw new ZfExtended_Logger_Exception('ZfExtended_Logger_Filter invalid expression: "'.$expression.'"');
             }
@@ -66,7 +80,7 @@ class ZfExtended_Logger_Filter {
             $operator = $matches[2];
             $value = trim($matches[3]);
             if(!method_exists($this, $addKeyword)) {
-                throw new ZfExtended_Logger_Exception('ZfExtended_Logger_Filter invalid keyword in expression: "'.$expression.'"');
+                throw new ZfExtended_Logger_Exception('ZfExtended_Logger_Filter invalid keyword "'.$keyword.'" in expression: "'.$expression.'"');
             }
             try {
                 $andConnected[$keyword][] = call_user_func([$this, $addKeyword], $operator, $value);
@@ -75,7 +89,24 @@ class ZfExtended_Logger_Filter {
                 throw new ZfExtended_Logger_Exception("ZfExtended_Logger_Filter invalid ".$e->getMessage().' operator in expression: "'.$expression.'"');
             }
         }
+        $this->addLastAddedToInitFilter($andConnected);
         return $andConnected;
+    }
+    
+    /**
+     * Adds a subset of the current filters to the filterForBasicCheck filter
+     * @param array $andFilters
+     */
+    protected function addLastAddedToInitFilter(array $andFilters) {
+        //since the init filters are for debugging only, exception stuff can be ignored:
+        unset ($andFilters['exception']);
+        if(empty($this->lastAddedOrigins)) {
+            unset ($andFilters['domain']);
+        }
+        else {
+            $andFilters['domain'] = $this->lastAddedOrigins;
+        }
+        $this->filterForBasicCheck->rules[] = $andFilters;
     }
     
     /**
@@ -138,27 +169,36 @@ class ZfExtended_Logger_Filter {
      * @param string $configValue
      * @return boolean
      */
-    protected function add_origin($operator, $configValue) {
+    protected function add_domain($operator, $configValue) {
+        //for the initial check we flip the values, we assume the given value (foo) in the initial check is at least a subpart of the configured one (foo.bar)
+        $lastAddedOrigin = function($givenValue) use ($configValue) {
+            return mb_strpos($configValue, $givenValue) !== false;
+        };
         switch ($operator) {
             case '=': 
+                $this->lastAddedOrigins[] = $lastAddedOrigin;
                 return function($givenValue) use ($configValue) {
                     return (string) $givenValue == (string) $configValue;
                 };
-            case '!=': 
+            case '!=':
+                //for the not equals operator we just don't add any lassAddedOrigin checks
                 return function($givenValue) use ($configValue) {
                     return (string) $givenValue != (string) $configValue;
                 };
             case '^=': 
+                $this->lastAddedOrigins[] = $lastAddedOrigin;
                 return function($givenValue) use ($configValue) {
-                    return mb_strpos($configValue, $givenValue) === 0;
+                    return mb_strpos($givenValue, $configValue) === 0;
                 };
             case '$=': 
+                $this->lastAddedOrigins[] = $lastAddedOrigin;
                 return function($givenValue) use ($configValue) {
-                    return mb_strpos(strrev($configValue), strrev($givenValue)) === 0;
+                    return mb_strpos(strrev($givenValue), strrev($configValue)) === 0;
                 };
             case '*=': 
+                $this->lastAddedOrigins[] = $lastAddedOrigin;
                 return function($givenValue) use ($configValue) {
-                    return mb_strpos($configValue, $givenValue) !== false;
+                    return mb_strpos($givenValue, $configValue) !== false;
                 };
         }
         //is caught and another exception with meaningful message is thrown there
@@ -178,15 +218,27 @@ class ZfExtended_Logger_Filter {
         }
         return $this->test($event->level, $event->domain, $cls);
     }
+    
+    /**
+     * Checks if the current filter accepts the given level with the given origin as starting part.
+     * So, returns true for the parameters "debug" and "foo.bar" if there exists a rule allowing "trace" and "foo.bar.baz"
+     *   This is because trace contains debug, and foo.bar.baz contains foo.bar
+     * @param int $level
+     * @param string $domain
+     * @return boolean
+     */
+    public function testBasic(int $level, string $domain): bool {
+        return $this->filterForBasicCheck->testLevelDomain($level, $domain);
+    }
 
     /**
      * returns true if the given level and origin matches the configured filters
      * @param integer $level
-     * @param string $origin
+     * @param string $domain
      * @return boolean
      */
-    public function test($level, $origin) {
-        return $this->testLevelOrigin($level, $origin);
+    public function test($level, $domain): bool {
+        return $this->testLevelDomain($level, $domain);
     }
     
     /**
@@ -195,8 +247,8 @@ class ZfExtended_Logger_Filter {
      * @param string $origin
      * @return boolean
      */
-    protected function testLevelOrigin($level, $origin, $exception = null) {
-        $cacheKey = $this->cacheFilterKey($level, $origin, $exception);
+    protected function testLevelDomain($level, $domain, $exception = null) {
+        $cacheKey = $this->cacheFilterKey($level, $domain, $exception);
         if(array_key_exists($cacheKey, $this->filterCache)) {
             return $this->filterCache[$cacheKey];
         }
@@ -213,10 +265,9 @@ class ZfExtended_Logger_Filter {
                 if(!$levelTest($level)) {
                     continue 2; //since the tests are and connected we step over the whole role if one test fails
                 }
-                
             }
-            foreach($rule['origin'] as $originTest) {
-                if(!$originTest($origin)) {
+            foreach($rule['domain'] as $originTest) {
+                if(!$originTest($domain)) {
                     continue 2; //since the tests are and connected we step over the whole role if one test fails
                 }
             }
