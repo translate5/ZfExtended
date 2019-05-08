@@ -228,8 +228,14 @@ class ZfExtended_OpenIDConnectClient{
         if(empty($claimLocale)){
             $claimLocale=!empty($userInfo->locale) ? $userInfo->locale : null;
         }
-        $claimLocale=explode('-', $claimLocale);
-        $claimLocale=!empty($claimLocale) ? $claimLocale[0] : $defaultLocale;
+        
+        //if the claim locale is empty, use the default user locale
+        if(empty($claimLocale)){
+            $claimLocale=$defaultLocale;
+        }else{
+            $claimLocale=explode('-', $claimLocale);
+            $claimLocale=$claimLocale[0];
+        }
         $user->setLocale($claimLocale);
         
         $user->setCustomers(','.$this->customer->getId().',');
