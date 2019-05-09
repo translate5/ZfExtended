@@ -550,15 +550,20 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
    */
   public function operationAction() {
       $action = $this->getParam('operation').'Operation';
+      $hasPlainOperation = method_exists($this, $action);
       $this->getAction();
       
-      if(method_exists($this, $action)) {
+      if($hasPlainOperation) {
           $this->$action();
       }
-      $this->events->trigger($action, $this, [
+      $response = $this->events->trigger($action, $this, [
           'entity' => $this->entity,
           'params' => $this->getAllParams(),
           'controller' => $this
       ]);
+      if($response->isEmpty() && !$hasPlainOperation) {
+          unset($this->view->rows);
+          throw new ZfExtended_NotFoundException('Operation not supported');
+      }
   }
 }
