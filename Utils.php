@@ -228,4 +228,16 @@ class ZfExtended_Utils {
         $then = mb_substr($string, 1, $strlen - 1, $encoding);
         return mb_strtoupper($firstChar, $encoding) . $then;
     }
+    
+    /**
+     * returns an hash unique for the current installation, based on IP Adress and used DB
+     * @param string $salt
+     */
+    public static function installationHash(string $salt = '') {
+        $db = Zend_Db_Table::getDefaultAdapter();
+        $c = $db->getConfig();
+        //FIXME on cluster installations this would fail, since the SERVER_ADDR is different for the different web servers.
+        // no solution here, since putting a random value into the config would not prevent same ids on cloning installations. 
+        return md5($salt.$_SERVER['SERVER_ADDR'].$c['host'].$c['username'].$c['dbname']);
+    }
 }

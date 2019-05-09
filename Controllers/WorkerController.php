@@ -83,9 +83,16 @@ class ZfExtended_WorkerController extends ZfExtended_RestController {
      */
     public function putAction() {
         try {
-            $this->entity->load($this->_getParam('id'));
+            $this->entity->load($this->getParam('id'));
         }
         catch (ZfExtended_Models_Entity_NotFoundException $workerLoad) {
+            //we catch the not found here, since it can just happen in normal handling that a worker is triggered which is already deleted
+            // to prevent unwanted 404s here we just catch that not found messages and do nothing instead 
+            // to prevent false positives when having multiple translate5 installations (and one has wrong server.name) it can happen, 
+            // that the worker requests go to the wrong translate5 installation. Since no 404 is logged, we don't find out that easily. 
+            // as soplution we send additionally a server id which must match in order to run workers.
+            $this->decodePutData();
+            $this->testServerId($this->data->serverId);
             return false;
         }
         
@@ -95,6 +102,7 @@ class ZfExtended_WorkerController extends ZfExtended_RestController {
         $this->view->rows = $oldWorker->getDataObject();
         
         $this->decodePutData();
+        $this->testServerId($this->data->serverId);
         $this->setDataInEntity();
         
         if( $oldWorker->getState() == ZfExtended_Models_Worker::STATE_WAITING
@@ -120,7 +128,19 @@ class ZfExtended_WorkerController extends ZfExtended_RestController {
             return;
         }
     }
-    
+
+    /**
+     * tests if the given serverId is the one from the current installation
+     * @param string $givenId
+     * @throws ZfExtended_Models_Entity_NotFoundException
+     */
+    protected function testServerId($givenId) {
+        $localId = ZfExtended_Utils::installationHash('ZfExtended_Worker_Abstract');
+        $this->_response->setHeader(ZfExtended_Models_Worker::WORKER_SERVERID_HEADER, $localId);
+        if($givenId !== $localId) {
+            throw new ZfExtended_Models_Entity_NotFoundException('Server ID does not match, called worker on wrong server.');
+        }
+    }
     
     //if using this method, it must be ensured that the caller is allowed to see the stored hash values!
     public function indexAction() {
@@ -141,6 +161,8 @@ class ZfExtended_WorkerController extends ZfExtended_RestController {
      * Interface-function to trigger the application-wide workerQueue-Process
      */
     public function queueAction () {
+        $this->_response->setHeader(ZfExtended_Models_Worker::WORKER_SERVERID_HEADER, ZfExtended_Utils::installationHash('ZfExtended_Worker_Abstract'));
+        $this->_response->sendHeaders();
         $this->_helper->viewRenderer->setNoRender(false);
         $workerQueue = ZfExtended_Factory::get('ZfExtended_Worker_Queue');
         /* @var $workerQueue ZfExtended_Worker_Queue */
