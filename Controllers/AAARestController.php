@@ -544,16 +544,26 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
        throw $e;
   }
   
-  /***
-   * TODO: desc me
+  /**
+   * Operations extend the REST world about function calls on a given REST entity.
+   * Therefore a fooOperation function must exist in the controller.
    */
   public function operationAction() {
-      $action = $this->getParam('operation');
+      $action = $this->getParam('operation').'Operation';
+      $hasPlainOperation = method_exists($this, $action);
       $this->getAction();
-      $this->events->trigger($action.'Operation', $this, [
+      
+      if($hasPlainOperation) {
+          $this->$action();
+      }
+      $response = $this->events->trigger($action, $this, [
           'entity' => $this->entity,
           'params' => $this->getAllParams(),
           'controller' => $this
       ]);
+      if($response->isEmpty() && !$hasPlainOperation) {
+          unset($this->view->rows);
+          throw new ZfExtended_NotFoundException('Operation not supported');
+      }
   }
 }
