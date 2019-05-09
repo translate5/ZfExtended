@@ -75,7 +75,7 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
         //if the user click on the openid redirect link in the login form
         if($this->isOpenIdRedirect()){
             //set login status to 'login needed'
-            $this->view->loginStatus=ZfExtended_Models_SessionUserInterface::LOGIN_STATUS_REQUIRED;
+            $this->view->loginStatus=ZfExtended_Models_SessionUserInterface::LOGIN_STATUS_OPENID;
             $this->view->form = $this->_form;
             return ;
         }
@@ -84,9 +84,11 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
             $this->view->loginStatus=ZfExtended_Models_SessionUserInterface::LOGIN_STATUS_MAINTENANCE;
             return;
         }
-        if($this->isLoginRequest() && $this->isValidLogin()){
-            //set login status to 'valid login'
-            $this->view->loginStatus=ZfExtended_Models_SessionUserInterface::LOGIN_STATUS_SUCCESS;
+        
+        if($this->isLoginRequest()){
+            //set the translate5 login status
+            $this->view->loginStatus= $this->isValidLogin() ? ZfExtended_Models_SessionUserInterface::LOGIN_STATUS_SUCCESS : ZfExtended_Models_SessionUserInterface::LOGIN_STATUS_REQUIRED;
+            $this->view->form = $this->_form;
             return;
         }
         //redirect the user if the session contains already a user
@@ -97,8 +99,8 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
             return;
         }
         
-        //set login status to 'login needed'
-        $this->view->loginStatus=ZfExtended_Models_SessionUserInterface::LOGIN_STATUS_REQUIRED;
+        //set login status to 'login with openid'
+        $this->view->loginStatus=ZfExtended_Models_SessionUserInterface::LOGIN_STATUS_OPENID;
         $this->view->form = $this->_form;
     }
     

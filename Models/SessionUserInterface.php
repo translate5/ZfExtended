@@ -36,6 +36,7 @@ interface ZfExtended_Models_SessionUserInterface {
     CONST LOGIN_STATUS_SUCCESS='success';
     CONST LOGIN_STATUS_AUTHENTICATED='authenticated';
     CONST LOGIN_STATUS_REQUIRED='required';
+    CONST LOGIN_STATUS_OPENID='openid';
     /**
      * sets the user in Zend_Session_Namespace('user')
      *

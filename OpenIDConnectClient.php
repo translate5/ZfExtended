@@ -173,8 +173,11 @@ class ZfExtended_OpenIDConnectClient{
         }
         $user->setSurName($familyNameClaims);
         
-        //the gender is required in translate5, and in the response can be empty or larger than 1 character
-        $gender=!empty($userInfo->gender) ? substr($userInfo->gender,0,1) : 'f';
+        $gender='f';
+        if(!empty($userInfo) && array_key_exists('gender', $userInfo)){
+            //the gender is required in translate5, and in the response can be empty or larger than 1 character
+            $gender=substr($userInfo->gender,0,1);
+        }
         $user->setGender($gender);
         
         $emailClaims=!empty($this->openIdClient->getVerifiedClaims('email')) ? $this->openIdClient->getVerifiedClaims('email') : null;
@@ -211,7 +214,7 @@ class ZfExtended_OpenIDConnectClient{
         
         $user->setEmail($emailClaims);
         
-        $user->setEditable(0);
+        $user->setEditable(1);
         
         //find the default locale from the config
         $localeConfig = $this->config->runtimeOptions->translation;
@@ -225,17 +228,23 @@ class ZfExtended_OpenIDConnectClient{
         if(empty($claimLocale)){
             $claimLocale=!empty($userInfo->locale) ? $userInfo->locale : null;
         }
-        $claimLocale=explode('-', $claimLocale);
-        $claimLocale=!empty($claimLocale) ? $claimLocale[0] : $defaultLocale;
+        
+        //if the claim locale is empty, use the default user locale
+        if(empty($claimLocale)){
+            $claimLocale=$defaultLocale;
+        }else{
+            $claimLocale=explode('-', $claimLocale);
+            $claimLocale=$claimLocale[0];
+        }
         $user->setLocale($claimLocale);
         
         $user->setCustomers(','.$this->customer->getId().',');
         
-        $claimRoles=!empty($this->openIdClient->getVerifiedClaims('roles')) ? $this->openIdClient->getVerifiedClaims('roles') : null;
-        if(empty($claimRoles)){
-            $claimRoles=!empty($userInfo->roles) ? $userInfo->roles : null;
+        $roles=$this->openIdClient->getVerifiedClaims('roles');
+        if(empty($roles)){
+            $roles=$this->openIdClient->getVerifiedClaims('role');
         }
-        $user->setRoles($this->mergeUserRoles($claimRoles));
+        $user->setRoles($this->mergeUserRoles($roles));
         
         return $user->save()>0? $user : null;
     }
