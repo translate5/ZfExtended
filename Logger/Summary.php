@@ -137,7 +137,7 @@ class ZfExtended_Logger_Summary {
     protected function getSummaryLastDay($date) {
         $s = $this->db->select()
             ->from($this->db, ['level', 'cnt' => 'count(*)'])
-            ->where('(? - INTERVAL 10 DAY) <= created AND created <= ?', $date)
+            ->where('(? - INTERVAL 1 DAY) <= created AND created <= ?', $date)
             ->group('level');
         return $this->db->fetchAll($s)->toArray();
     }
@@ -150,7 +150,7 @@ class ZfExtended_Logger_Summary {
     protected function getOverviewLastDay($date, array $level) {
         $s = $this->db->select()
             ->from($this->db, ['created', 'level', 'message', 'eventCode', 'appVersion'])
-            ->where('(? - INTERVAL 10 DAY) <= created AND created <= ?', $date)
+            ->where('(? - INTERVAL 1 DAY) <= created AND created <= ?', $date)
             ->where('level in (?)', $level);
         return $this->db->fetchAll($s)->toArray();
     }

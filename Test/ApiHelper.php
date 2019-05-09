@@ -511,7 +511,7 @@ class ZfExtended_Test_ApiHelper {
     }
     /**
      * 
-     * @param type $directory
+     * @param string $directory
      * @return boolean false if directory did not exist
      * @throws Exception if directory is a file
      */
@@ -656,8 +656,8 @@ class ZfExtended_Test_ApiHelper {
     
     /**
      * creates zipfile with testfiles in tmpDir and returns the path to it
-     * @param $pathToTestFiles relative to testcases folder
-     * @param $nameOfZipFile which is created
+     * @param string $pathToTestFiles relative to testcases folder
+     * @param string $nameOfZipFile which is created
      * @return string path to zipfile
      * @throws Zend_Exception
      */

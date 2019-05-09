@@ -76,9 +76,8 @@ class ZfExtended_OpenIDConnectClient{
         }
         $this->openIdClient->setClientID($this->customer->getOpenIdClientId());
         $this->openIdClient->setClientSecret($this->customer->getOpenIdClientSecret());
-        
         $this->openIdClient->setProviderURL($this->customer->getOpenIdServer());
-        $this->openIdClient->setIssuer($this->customer->getOpenIdAuth2Url());
+        $this->openIdClient->setIssuer($this->customer->getOpenIdIssuer());
         $this->openIdClient->setRedirectURL($this->getRedirectDomainUrl());
     }
     
@@ -109,6 +108,21 @@ class ZfExtended_OpenIDConnectClient{
         } catch (OpenIDConnectClientException $e) {
             throw $e;
         }
+    }
+    
+    /**
+     * It calls the end-session endpoint of the OpenID Connect provider to notify the OpenID
+     * Connect provider that the end-user has logged out of the relying party site
+     * (the client application).
+     *
+     * @param string $accessToken ID token (obtained at login)
+     * @param string $redirect URL to which the RP is requesting that the End-User's User Agent
+     * be redirected after a logout has been performed. The value MUST have been previously
+     * registered with the OP. Value can be null.
+     *
+     */
+    public function signOut($accessToken, $redirect) {
+        $this->openIdClient->signOut($accessToken, $redirect);
     }
     
     /***
@@ -143,16 +157,64 @@ class ZfExtended_OpenIDConnectClient{
             $user->setLogin('OID-'.$userId);
         }
         
-        $user->setFirstName($this->openIdClient->getVerifiedClaims('given_name'));
-        $user->setSurName($this->openIdClient->getVerifiedClaims('family_name'));
         
-        //the gender is required in translate5, and in the response can be empty or larger than 1 character
-        $gender=!empty($this->openIdClient->requestUserInfo('gender')) ? substr($this->openIdClient->requestUserInfo('gender'),0,1) : 'f';
+        //load the user info
+        $userInfo=$this->openIdClient->requestUserInfo();
+        
+        $firstNameClaims=!empty($this->openIdClient->getVerifiedClaims('given_name')) ? $this->openIdClient->getVerifiedClaims('given_name') : null;
+        if(empty($firstNameClaims)){
+            $firstNameClaims=!empty($userInfo->given_name) ? $userInfo->given_name : null;
+        }
+        $user->setFirstName($firstNameClaims);
+        
+        $familyNameClaims=!empty($this->openIdClient->getVerifiedClaims('family_name')) ? $this->openIdClient->getVerifiedClaims('family_name') : null;
+        if(empty($familyNameClaims)){
+            $familyNameClaims=!empty($userInfo->family_name) ? $userInfo->family_name : null;
+        }
+        $user->setSurName($familyNameClaims);
+        
+        $gender='f';
+        if(!empty($userInfo) && array_key_exists('gender', $userInfo)){
+            //the gender is required in translate5, and in the response can be empty or larger than 1 character
+            $gender=substr($userInfo->gender,0,1);
+        }
         $user->setGender($gender);
         
-        $user->setEmail($this->openIdClient->getVerifiedClaims('email'));
+        $emailClaims=!empty($this->openIdClient->getVerifiedClaims('email')) ? $this->openIdClient->getVerifiedClaims('email') : null;
+        if(empty($emailClaims)){
+            $emailClaims=!empty($userInfo->email) ? $userInfo->email : null;
+        }
         
-        $user->setEditable(0);
+        //if the email is not found from the standard claims, try to get it from 'upn'
+        if(empty($emailClaims)){
+            $emailClaims=!empty($this->openIdClient->getVerifiedClaims('upn')) ? $this->openIdClient->getVerifiedClaims('upn') : null;
+
+            if(!empty($emailClaims)){
+                //the upn is defined, chech if it is valid email
+                $valid = filter_var($emailClaims, FILTER_VALIDATE_EMAIL) !== false;
+                if(!$valid){
+                    //it is not valid email, reset it
+                    $emailClaims=null;
+                }
+            }
+        }
+        
+        //if the email is empty again, try to find if it is defined as preferred_username claim
+        if(empty($emailClaims)){
+            $emailClaims=!empty($this->openIdClient->getVerifiedClaims('preferred_username')) ? $this->openIdClient->getVerifiedClaims('preferred_username') : null;
+            if(!empty($emailClaims)){
+                //the preferred_username is defined, chech if it is valid email
+                $valid = filter_var($emailClaims, FILTER_VALIDATE_EMAIL) !== false;
+                if(!$valid){
+                    //it is not valid email, reset it
+                    $emailClaims=null;
+                }
+            }
+        }
+        
+        $user->setEmail($emailClaims);
+        
+        $user->setEditable(1);
         
         //find the default locale from the config
         $localeConfig = $this->config->runtimeOptions->translation;
@@ -161,15 +223,28 @@ class ZfExtended_OpenIDConnectClient{
         
         $defaultLocale=empty($appLocale) ? (empty($fallbackLocale) ? 'en' : $fallbackLocale) : $appLocale;
         
-        //use the parrent language if the locale is not one
-        $claimLocale=$this->openIdClient->getVerifiedClaims('locale');
-        $claimLocale=explode('-', $claimLocale);
-        $claimLocale=!empty($claimLocale) ? $claimLocale[0] : $defaultLocale;
+        
+        $claimLocale=!empty($this->openIdClient->getVerifiedClaims('locale')) ? $this->openIdClient->getVerifiedClaims('locale') : null;
+        if(empty($claimLocale)){
+            $claimLocale=!empty($userInfo->locale) ? $userInfo->locale : null;
+        }
+        
+        //if the claim locale is empty, use the default user locale
+        if(empty($claimLocale)){
+            $claimLocale=$defaultLocale;
+        }else{
+            $claimLocale=explode('-', $claimLocale);
+            $claimLocale=$claimLocale[0];
+        }
         $user->setLocale($claimLocale);
         
         $user->setCustomers(','.$this->customer->getId().',');
         
-        $user->setRoles($this->mergeUserRoles($this->openIdClient->getVerifiedClaims('roles')));
+        $roles=$this->openIdClient->getVerifiedClaims('roles');
+        if(empty($roles)){
+            $roles=$this->openIdClient->getVerifiedClaims('role');
+        }
+        $user->setRoles($this->mergeUserRoles($roles));
         
         return $user->save()>0? $user : null;
     }
@@ -217,7 +292,7 @@ class ZfExtended_OpenIDConnectClient{
     /***
      * @return string
      */
-    protected function getRedirectDomainUrl() {
+    public function getRedirectDomainUrl() {
         return (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ?
             "https" : "http") . "://" . $_SERVER['HTTP_HOST'] .
             $_SERVER['REQUEST_URI'];

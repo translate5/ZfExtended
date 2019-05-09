@@ -76,7 +76,7 @@ class ZfExtended_Models_Installer_Downloader {
 
     /**
      * pulls the application from server and returns dependencies where the license has to be accepted
-     * @param $zipOverride an own application zip can be provided for manual overrides
+     * @param string $zipOverride an own application zip can be provided for manual overrides
      * @return array
      */
     public function pullApplication($zipOverride = null) {

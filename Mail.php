@@ -133,8 +133,10 @@ class  ZfExtended_Mail {
         }
         $this->view->addHelperPath(APPLICATION_PATH.'/modules/'.
                 Zend_Registry::get('module').'/views/helpers', 'View_Helper_');
-        $this->view->addScriptPath(APPLICATION_PATH.'/modules/'.
-                Zend_Registry::get('module') . self::MAIL_TEMPLATE_BASEPATH);
+        
+        $this->view->addScriptPath(APPLICATION_PATH.'/modules/'.Zend_Registry::get('module') . self::MAIL_TEMPLATE_BASEPATH);
+        
+        $this->view->addScriptPath(APPLICATION_PATH.'/../client-specific/views/'.Zend_Registry::get('module').'/scripts/mail/');
         
         $events = ZfExtended_Factory::get('ZfExtended_EventManager', array(__CLASS__));
         /* @var $events ZfExtended_EventManager */
@@ -297,7 +299,7 @@ class  ZfExtended_Mail {
     /**
      * setzt den Templatenamen der verwendet werden soll
      * weitere Infos siehe setContentByTemplate
-     * @see setContentByTemplate
+     * @see self::setContentByTemplate
      * @param string $template
      */
     public function setTemplate(string $template){

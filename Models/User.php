@@ -432,6 +432,23 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implement
         return $row;
     }
     
+    /***
+     * Load user by user login
+     * 
+     * @param string $login
+     * @return Zend_Db_Table_Row_Abstract|NULL
+     */
+    public function loadByLogin($login) {
+        $s = $this->db->select();
+        $s->where('login=?',$login);
+        $row=$this->db->fetchRow($s);
+        if(empty($row)){
+            return null;
+        }
+        $this->row =$row;
+        return $row;
+    }
+    
     /**
      * Does the user have any of the roles admin, pm or api?
      * @returns bool

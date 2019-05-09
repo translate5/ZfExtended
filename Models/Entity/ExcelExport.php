@@ -224,7 +224,7 @@ class ZfExtended_Models_Entity_ExcelExport {
     /**
      * Set callback-function used in the excelsheet to manipulate the $value for a certain $key of data[$key] = $value
      * @param string $name
-     * @param $function as closure function variable
+     * @param Closure $function as closure function variable
      */
     public function setCallback(string $name, $function) {
         $this->callbacks->$name = $function;

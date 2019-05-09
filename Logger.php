@@ -30,8 +30,8 @@ END LICENSE AND COPYRIGHT
  * @method void error() error(string $code, string $message, $extra = null, $writer = [])
  * @method void warn() warn  (string $code, string $message, $extra = null, $writer = [])
  * @method void info() info  (string $code, string $message, $extra = null, $writer = [])
- * @method void debug() debug(string $code, string $message, $extra = null, $writer = [])
- * @method void trace() trace(string $code, string $message, $extra = null, $writer = [])
+ * @method void debug() debug(string $code, string $message, $extra = null, $writer = []) is only processed if filters are configured to do so (match domain and level)
+ * @method void trace() trace(string $code, string $message, $extra = null, $writer = []) is only processed if filters are configured to do so (match domain and level)
  */
 class ZfExtended_Logger {
     /**
@@ -43,7 +43,8 @@ class ZfExtended_Logger {
     const LEVEL_ERROR = 2;
     const LEVEL_WARN = 4;
     const LEVEL_INFO = 8;
-    const LEVEL_DEBUG = 16;
+    //DEBUG and TRACE log calls are only processed if there is on writer configured with a filter consuming debug logs of the current domain
+    const LEVEL_DEBUG = 16; 
     const LEVEL_TRACE = 32;
     
     protected $logLevels = [];
@@ -177,6 +178,7 @@ class ZfExtended_Logger {
         $event->extra = $extraData;
         
         $this->fillStaticData($event);
+        $event->levelName = $this->getLevelName($event->level);
         return $event;
     }
     
@@ -209,6 +211,7 @@ class ZfExtended_Logger {
         
         $this->fillStaticData($event);
         $event->mergeFromArray($eventOverride);
+        $event->levelName = $this->getLevelName($event->level);
         $previous = $exception->getPrevious();
         if(!empty($previous)) {
             $event->previous = $this->exception($previous, [], true);
@@ -236,34 +239,83 @@ class ZfExtended_Logger {
     }
     
     /**
+     * test if current logger has writers consuming the given combination of level and domain.
+     * Can be used for example in plug-in init Methods to enable the processing of debug statements in the plugin.  
+     * @param integer $level
+     * @param string $domain
+     */
+    public function isEnabledFor(int $level, string $domain) {
+        foreach($this->writer as $writer) {
+            if($writer->isAcceptingBasicly($level, $domain)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    /**
      * The trace information is set if 
      * @param ZfExtended_Logger_Event $event
      * @param Exception $e
      */
     protected function fillTrace(ZfExtended_Logger_Event $event, Exception $e = null) {
-        if($this->enableTraceFor & $event->level == 0) {
+        if(($this->enableTraceFor & $event->level) == 0) {
             return;
         }
         if(empty($e)) {
-            $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
-            $stepBefore = [];
-            while($step = array_shift($trace)) {
-                if(empty($step['class']) || $step['class'] !== 'ZfExtended_Logger') {
-                    break;
-                }
-                $stepBefore = $step;
-            }
-            settype($stepBefore['file'], 'string');
-            settype($stepBefore['line'], 'string');
-            $event->file = $stepBefore['file'];
-            $event->line = $stepBefore['line'];
+            $this->generateTrace($event);
         }
         else {
             $trace = $e->getTrace();
             $event->trace = $e->getTraceAsString();
             $event->file = $e->getFile();
             $event->line = $e->getLine();
+            $this->fillWorker($event, $trace);
         }
+    }
+    
+    /**
+     * If we don't have an exception, we have to fill the trace from debug_backtrace
+     * @param ZfExtended_Logger_Event $event
+     */
+    protected function generateTrace(ZfExtended_Logger_Event $event) {
+        $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
+        $stepBefore = [];
+        $i = 0;
+        while($step = array_shift($trace)) {
+            if(empty($step['class']) || $step['class'] !== 'ZfExtended_Logger') {
+                break;
+            }
+            $i++;
+            $stepBefore = $step;
+        }
+        $this->fillWorker($event, $trace);
+        settype($stepBefore['file'], 'string');
+        settype($stepBefore['line'], 'string');
+        $event->file = $stepBefore['file'];
+        $event->line = $stepBefore['line'];
+        if(($event->level & self::LEVEL_TRACE) !== self::LEVEL_TRACE) {
+            return;
+        }
+        //if we are in level trace we want to have the trace in the log
+        // the exception trace is more readable
+        $e = new Exception();
+        $trace = explode("\n", $e->getTraceAsString());
+        $event->trace = [];
+        //we cut off the stack frames where we are in the logger and renumber the output
+        array_splice($trace, 0, $i);
+        foreach($trace as $key => $value) {
+            $event->trace[] = preg_replace('/^#[0-9]+ /', '#'.$key.' ', $value);
+        }
+        $event->trace = join("\n", $event->trace);
+    }
+    
+    /**
+     * If we have a trace, we also can set the worker we are in
+     * @param ZfExtended_Logger_Event $event
+     * @param array $trace
+     */
+    protected function fillWorker(ZfExtended_Logger_Event $event, array $trace) {
         foreach($trace as $step) {
             if(empty($step['class'])){
                 continue;
@@ -275,15 +327,11 @@ class ZfExtended_Logger {
         }
     }
     
-    
-    
     /**
      * Fills up log data about the request and the current user
      * @param ZfExtended_Logger_Event $event
      */
     protected function fillStaticData(ZfExtended_Logger_Event $event) {
-        $event->levelName = $this->getLevelName($event->level);
-        
         if(!empty($_SERVER['HTTP_HOST'])) {
             $event->httpHost = $_SERVER['HTTP_HOST'];
         }
@@ -377,6 +425,14 @@ class ZfExtended_Logger {
     public function request(array $additionalData = []) {
         $additionalData['requestData'] = $_REQUEST;
         $this->debug('E1014', 'HTTP request '.$_SERVER['REQUEST_URI'], $additionalData);
+    }
+    
+    /**
+     * returns the internally configured domain
+     * @return string
+     */
+    public function getDomain() {
+        return $this->domain;
     }
     
     /**
