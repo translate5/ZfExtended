@@ -79,7 +79,7 @@ class ZfExtended_Exception extends Zend_Exception {
      * @param  string $domain optional, defaults to core. Can be the plugin name, or another system identifier
      * @return void
      */
-    public function __construct($msg = '', $code = 0, Exception $previous = null, $domain = 'core')
+    public function __construct($msg = '', $code = 0, Exception $previous = null, $domain = null)
     {
         if((int)$code === 0){
             $code = $this->defaultCode;
@@ -89,6 +89,9 @@ class ZfExtended_Exception extends Zend_Exception {
         }
         else {
             $this->setMessage($msg);
+        }
+        if(empty($domain)) {
+            $domain = $this->domain;
         }
         $this->setDomain($domain);
         parent::__construct($this->message, (int) $code, $previous);
