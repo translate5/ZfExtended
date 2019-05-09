@@ -69,7 +69,7 @@ class ZfExtended_Worker_TriggerByHttp {
      * @return boolean true if everything is OK
      */
     public function triggerUrl(string $url, $postParameters = array(), $method = 'GET') {
-        
+        $postParameters['serverId'] = ZfExtended_Utils::installationHash('ZfExtended_Worker_Abstract');
         $host = $this->triggerInit($url, $postParameters, $method);
         $errno = 0;
         $errstr = '';
@@ -91,6 +91,7 @@ class ZfExtended_Worker_TriggerByHttp {
         
         $header = '';
         $state = 0;
+        $serverId = '';
         while ($line = fgets($fsock)) {
             if ($line == "\r\n") {
                 break;
@@ -98,8 +99,16 @@ class ZfExtended_Worker_TriggerByHttp {
             $header .= $line;
             if (strpos($line, "HTTP") !== false) {
                 $infos = explode(' ', $line);
-                $state = $infos[1];
+                $state = (int) $infos[1];
             }
+            if (stripos($line, ZfExtended_Models_Worker::WORKER_SERVERID_HEADER) !== false) {
+                $infos = explode(' ', $line);
+                $serverId = $infos[1];
+            }
+        }
+        //if the other server does not send a server id, or an invalid server id, the target server is not the current system!
+        if($postParameters['serverId'] != trim($serverId)) {
+            $state = 404;
         }
         
         $info = stream_get_meta_data($fsock);
@@ -127,22 +136,31 @@ class ZfExtended_Worker_TriggerByHttp {
         if ($state >= 200 && $state < 300) {
             return true;
         }
-        if($state == 500) {
-            //since on a 500 the real exception was logged in the worker, we just log that here as debug info
-            $method = 'debug';
+        $code = 'E1074';
+        $msg = 'Worker HTTP response state was not 2XX but {state}.';
+        switch ($state) {
+            case 500:
+                //since on a 500 the real exception was logged in the worker, we just log that here as debug info
+                $method = 'debug';
+                break;
+            case 404:
+                //a 404 means we are requesting the wrong server! 
+                $method = 'error';
+                $code = 'E1107';
+                $msg = 'Worker HTTP response state was 404, the worker system requests probably the wrong server!';
+                break;
+            default:
+                $method = 'warn';
+                break;
         }
-        else {
-            $method = 'warn';
-        }
-        $this->log->__call($method, ['E1074', 'Worker HTTP response state was not 2XX but {state}.', [
+        $this->log->__call($method, [$code, $msg, [
             'state' => $state,
             'method' => $method,
             'postParameters' => $postParameters,
-            'host' => $host,
+            'host' => $host.$this->path,
             'port' => $this->port,
         ]]);
         return false;
-        
     }
     
     /**

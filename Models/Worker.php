@@ -66,6 +66,8 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
     const STATE_DEFUNCT = 'defunct';
     const STATE_DONE    = 'done';
     
+    const WORKER_SERVERID_HEADER = 'X-Translate5-Worker-Serverid';
+    
     /**
      * @var ZfExtended_Models_Db_Worker
      */
