@@ -220,7 +220,7 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
             error_log(__CLASS__.' -> '.__FUNCTION__.' workerModel can not be set to mutex (id-Error, state-Error, hash-Error)');
             return false;
         }
-        $data = array('hash' => uniqid(NULL, true));
+        $data = array('hash' => bin2hex(random_bytes(32)));
         
         $whereStatements = array();
         $whereStatements[] = 'id = "'.$this->getId().'"';

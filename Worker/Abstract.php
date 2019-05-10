@@ -245,8 +245,7 @@ abstract class ZfExtended_Worker_Abstract {
         $this->workerModel->setWorker(get_class($this));
         $this->workerModel->setTaskGuid($taskGuid);
         $this->workerModel->setParameters($parameters);
-        //FIXME see TRANSLATE-337
-        $this->workerModel->setHash(uniqid(NULL, true));
+        $this->workerModel->setHash(bin2hex(random_bytes(32)));
         
         $this->workerModel->setBlockingType($this->blockingType);
     }
