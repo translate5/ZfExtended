@@ -453,7 +453,7 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implement
      * Does the currently logged in user have the right to read the real unanonymized user-data?
      * @returns bool
      */
-    public function readAnonymyzedUsers() {
+    public function readAnonymizedUsers() {
         return $this->isAllowed("frontend","readAnonymyzedUsers");
     }
 }
