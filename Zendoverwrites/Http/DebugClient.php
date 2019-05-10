@@ -39,11 +39,13 @@ class  ZfExtended_Zendoverwrites_Http_DebugClient extends Zend_Http_Client {
         
         error_log("Method ($randKey): ".(empty($method) ? $this->method : $method));
         error_log("URL ($randKey):".$this->getUri(true));
-        //error_log("\n\nDATA ($randKey): \n".$this->raw_post_data."\n\n");
+        error_log("\n\nDATA ($randKey): \n".$this->raw_post_data."\n\n");
         error_log("Bytes ($randKey):".mb_strlen($this->raw_post_data));
+        error_log("Headers ".print_r($this->headers,1));
         $response = parent::request($method);
         error_log("Status ($randKey): ".print_r($response->getStatus(),1));
         error_log("Raw Body ($randKey):".print_r($response->getRawBody(),1));
+        error_log("Body ($randKey):".print_r($response->getBody(),1));
         error_log("Headers ($randKey):".($response->getHeadersAsString()));
         return $response;
     }
