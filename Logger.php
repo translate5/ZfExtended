@@ -47,6 +47,8 @@ class ZfExtended_Logger {
     const LEVEL_DEBUG = 16; 
     const LEVEL_TRACE = 32;
     
+    const ECODE_LEGACY_ERRORS = 'E9999';
+    
     protected $logLevels = [];
     
     protected $domain = 'core';
@@ -204,7 +206,7 @@ class ZfExtended_Logger {
         }
         
         $event->exception = $exception;
-        $event->eventCode = $exception instanceof ZfExtended_ErrorCodeException ? 'E'.$exception->getCode() : $exception->getCode();
+        $event->eventCode = $exception instanceof ZfExtended_ErrorCodeException ? 'E'.$exception->getCode() : self::ECODE_LEGACY_ERRORS;
         $event->message = $this->formatMessage($exception->getMessage(), $extraData);
         $this->fillTrace($event, $exception);
         $event->extra = $extraData;
