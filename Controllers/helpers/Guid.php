@@ -46,7 +46,7 @@ class ZfExtended_Controller_Helper_Guid extends Zend_Controller_Action_Helper_Ab
         switch (true) {
             //some intallations are using md5 formatted UUIDs
             case $validator->isValid('ca473dc489b0b126b3769cd8921b66b5'): 
-                return md5(uniqid(rand()));
+                return md5(random_bytes(32));
             //the default GUID format:
             case $validator->isValid('{C1D11C25-45D2-11D0-B0E2-201801180001}'):
             default:
@@ -55,26 +55,19 @@ class ZfExtended_Controller_Helper_Guid extends Zend_Controller_Action_Helper_Ab
     }
     
     /**
-     * creates a GUID
+     * creates a GUID (v4)
      * @param bool $addBrackets
      * @return string
      */
     protected function guid($addBrackets = false) {
-        $guid = sprintf('%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
-            // 32 bits for "time_low"
-            mt_rand(0, 0xffff), mt_rand(0, 0xffff),
-            // 16 bits for "time_mid"
-            mt_rand(0, 0xffff),
-            // 16 bits for "time_hi_and_version",
-            // four most significant bits holds version number 4
-            mt_rand(0, 0x0fff) | 0x4000,
-            // 16 bits, 8 bits for "clk_seq_hi_res",
-            // 8 bits for "clk_seq_low",
-            // two most significant bits holds zero and one for variant DCE1.1
-            mt_rand(0, 0x3fff) | 0x8000,
-            // 48 bits for "node"
-            mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff)
-            );
+        $rand = random_bytes(16);
+        
+        //see https://stackoverflow.com/a/15875555/1749200
+        $rand[6] = chr(ord($rand[6]) & 0x0f | 0x40); // set version to 0100
+        $rand[8] = chr(ord($rand[8]) & 0x3f | 0x80); // set bits 6-7 to 10
+        
+        $guid = vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($rand), 4));
+        
         if ($addBrackets){
             return '{' . $guid . '}';
         }
