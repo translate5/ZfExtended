@@ -182,11 +182,11 @@ abstract class ZfExtended_Models_Validator_Abstract {
    * @param bool $allowNull optional allows null as valid value
    * @throws Zend_Exception
    */
-  public function addValidator($fieldname, $type, array $parameters = array(), $allowNull = false){
+  public function addValidator(string $fieldname, string $type, array $parameters = [], bool $allowNull = false){
     $this->addValidatorInstance($fieldname, $this->validatorFactory($type, $parameters));
     $this->nullAllowed[$fieldname] = (boolean) $allowNull;
   }
-
+  
   /**
    * the given fieldname will be ignored by the validator
    * @param string $fieldname
