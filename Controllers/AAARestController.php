@@ -556,6 +556,16 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
       $hasPlainOperation = method_exists($this, $action);
       $this->getAction();
       
+      $module = Zend_Registry::get('module');
+      $controller = $this->_request->getControllerName();
+      if($module !== 'default'){
+          $controller = $module.'_'.$controller;
+      }
+      
+      if(!$this->isAllowed($controller, $action)) {
+          throw new ZfExtended_NoAccessException('Access to Operation not permitted');
+      }
+      
       if($hasPlainOperation) {
           $this->$action();
       }

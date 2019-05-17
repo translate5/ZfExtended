@@ -228,7 +228,7 @@ class ZfExtended_Logger_Filter {
      * @return boolean
      */
     public function testBasic(int $level, string $domain): bool {
-        return $this->filterForBasicCheck->testLevelDomain($level, $domain);
+        return isset($this->filterForBasicCheck) ? $this->filterForBasicCheck->testLevelDomain($level, $domain) : true;
     }
 
     /**
