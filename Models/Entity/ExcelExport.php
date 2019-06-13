@@ -25,6 +25,7 @@ END LICENSE AND COPYRIGHT
 require APPLICATION_PATH.'/../library/PhpSpreadsheet/vendor/autoload.php';
 
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 
 class ZfExtended_Models_Entity_ExcelExport {
     
@@ -32,7 +33,7 @@ class ZfExtended_Models_Entity_ExcelExport {
      * @var PhpOffice\PhpSpreadsheet\Spreadsheet
      */
     private $spreadsheet = false;
-    
+     
     /**
      * Container to hold document properties like filename etc. (properties->name->value)
      * @var stdClass
@@ -119,7 +120,7 @@ class ZfExtended_Models_Entity_ExcelExport {
         $rowCount = 1;
         foreach ($data as $row)
         {
-            $colCount = 0;
+            $colCount = 1;
             foreach ($row as $key => $value) {
                 // don't show hidden fields
                 if ($this->isHiddenField($key)) {
@@ -367,7 +368,19 @@ class ZfExtended_Models_Entity_ExcelExport {
         $objWriter->save('php://output');
         exit;
     }
+    
     public function getSpreadsheet(){
     	return $this->spreadsheet;
+    }
+    
+    /**
+     * Column index from string.
+     *
+     * @param string $pString eg 'A'
+     *
+     * @return int Column index (A = 1)
+     */
+    public function columnIndexFromString($pString) {
+        return Coordinate::columnIndexFromString($pString);
     }
 }
