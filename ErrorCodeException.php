@@ -125,7 +125,9 @@ class ZfExtended_ErrorCodeException extends ZfExtended_Exception {
             if($c == 'ZfExtended_ErrorCodeException') {
                 break;
             }
-            $ret = array_merge($c::$localErrorCodes, $ret);
+            if(property_exists($c, 'localErrorCodes')) {
+                $ret = array_merge($c::$localErrorCodes, $ret);
+            }
         } while(($c = get_parent_class($c)) !== false);
         return $ret;
     }
