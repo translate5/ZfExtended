@@ -484,13 +484,10 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implement
     }
     
     /**
-     * Does the user have any of the roles admin, pm or api?
+     * Does the currently logged in user have the right to read the real unanonymized user-data?
      * @returns bool
      */
-    public function isAdminOrPMOrApi() {
-        $rolesToCheck = ['admin','api','pm'];
-        $rolesGiven = explode(',', $this->getRoles());
-        $rolesFound = array_intersect($rolesToCheck, $rolesGiven);
-        return !empty($rolesFound);
+    public function readAnonymizedUsers() {
+        return $this->isAllowed("frontend","readAnonymyzedUsers");
     }
 }
