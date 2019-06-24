@@ -72,7 +72,7 @@ class ZfExtended_UserController extends ZfExtended_RestController {
     }
     
     /**
-     * Loads a list of all users with role 'pm'
+     * Loads a list of all users with role 'pm'. If 'pmRoles' is set, all users with roles listed in 'pmRoles' will be loaded
      */
     public function pmAction()
     {
@@ -84,8 +84,15 @@ class ZfExtended_UserController extends ZfExtended_RestController {
             $userSession = new Zend_Session_Namespace('user');
             $parentId = $userSession->data->id;
         }
-        $this->view->rows = $this->entity->loadAllByRole('pm', $parentId);
-        $this->view->total = $this->entity->getTotalByRole('pm', $parentId);
+        $pmRoles='pm';
+        $requestRoles=$this->getParam('pmRoles');
+        if(!empty($requestRoles)){
+            $requestRoles=explode(',',$requestRoles);
+            $pmRoles=array_merge([$pmRoles],$requestRoles);
+            $pmRoles=array_unique($pmRoles);
+        }
+        $this->view->rows = $this->entity->loadAllByRole($pmRoles, $parentId);
+        $this->view->total = $this->entity->getTotalByRole($pmRoles, $parentId);
         $this->csvToArray();
     }
     
