@@ -84,13 +84,9 @@ class ZfExtended_UserController extends ZfExtended_RestController {
             $userSession = new Zend_Session_Namespace('user');
             $parentId = $userSession->data->id;
         }
-        $pmRoles='pm';
-        $requestRoles=$this->getParam('pmRoles');
-        if(!empty($requestRoles)){
-            $requestRoles=explode(',',$requestRoles);
-            $pmRoles=array_merge([$pmRoles],$requestRoles);
-            $pmRoles=array_unique($pmRoles);
-        }
+        $pmRoles = explode(',', $this->getParam('pmRoles', ''));
+        $pmRoles[] = 'pm'; 
+        $pmRoles = array_unique(array_filter($pmRoles));
         $this->view->rows = $this->entity->loadAllByRole($pmRoles, $parentId);
         $this->view->total = $this->entity->getTotalByRole($pmRoles, $parentId);
         $this->csvToArray();

@@ -211,77 +211,53 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implement
     /**
      * loads all users without the passwd field
      * with role $role
-     * @param mixed - acl role or acl role array
-     * @param parentIdFilter - the parent id which the select should check
+     * @param array $roles - acl roles
+     * @param integer $parentIdFilter - the parent id which the select should check
      * @return array
      */
-    public function loadAllByRole($role, $parentIdFilter = false) {
+    public function loadAllByRole(array $roles, $parentIdFilter = false) {
         $s = $this->_loadAll();
-        if(is_string($role)){
-            $this->addByRoleSql($s, $role, $parentIdFilter);
-        }
-        if(is_array($role)){
-            foreach ($role as $r){
-                $adapter = $this->db->getAdapter();
-                $sLike = sprintf('roles like %s OR roles like %s OR roles like %s OR roles=%s',
-                    $adapter->quote($r.',%'),
-                    $adapter->quote('%,'.$r.',%'),
-                    $adapter->quote('%,'.$r),
-                    $adapter->quote($r)
-                    );
-                $s->orWhere($sLike);
-            }
-            if($parentIdFilter !== false){
-                $s->where('parentIds like "%,'.$parentIdFilter.',%" OR id='.$adapter->quote($parentIdFilter));
-            }
-        }
+        $this->addByRoleSql($s, $roles, $parentIdFilter);
         return $this->loadFilterdCustom($s);
     }
     
     /**
      * loads all users without the passwd field
      * with role $role
-     * @param string - acl role
-     * @param parentIdFilter - the parent id which the select should check
+     * @param array $roles - acl roles
+     * @param integer $parentIdFilter - the parent id which the select should check
      * @return array
      */
-    public function getTotalByRole($role, $parentIdFilter = false) {
+    public function getTotalByRole(array $roles, $parentIdFilter = false) {
         $s = $this->_loadAll();
         $s->reset($s::COLUMNS);
         $s->reset($s::FROM);
-        if(is_string($role)){
-            $this->addByRoleSql($s, $role, $parentIdFilter);
-        }
-        if(is_array($role)){
-            foreach ($role as $r){
-                $adapter = $this->db->getAdapter();
-                $sLike = sprintf('roles like %s OR roles like %s OR roles like %s OR roles=%s',
-                    $adapter->quote($r.',%'),
-                    $adapter->quote('%,'.$r.',%'),
-                    $adapter->quote('%,'.$r),
-                    $adapter->quote($r)
-                    );
-                $s->orWhere($sLike);
-            }
-            if($parentIdFilter !== false){
-                $s->where('parentIds like "%,'.$parentIdFilter.',%" OR id='.$adapter->quote($parentIdFilter));
-            }
-        }
+        $this->addByRoleSql($s, $roles, $parentIdFilter);
         return $this->computeTotalCount($s);
     }
-    
-    protected function addByRoleSql(&$s, $role, $parentIdFilter) {
+
+    /**
+     * Adds a role selector and parent id filter to an exising user SELECT query
+     * @param Zend_Db_Select $s
+     * @param array $roles
+     * @param integer $parentIdFilter or false if no filter to be used
+     */
+    protected function addByRoleSql(&$s, array $roles, $parentIdFilter) {
         $adapter = $this->db->getAdapter();
-        $sLike = sprintf('roles like %s OR roles like %s OR roles like %s OR roles=%s',
-            $adapter->quote($role.',%'),
-            $adapter->quote('%,'.$role.',%'),
-            $adapter->quote('%,'.$role),
-            $adapter->quote($role)
-            );
+        $first = true;
+        foreach ($roles as $role) {
+            $sLike = sprintf('roles like %s OR roles like %s OR roles like %s OR roles=%s',
+                $adapter->quote($role.',%'),
+                $adapter->quote('%,'.$role.',%'),
+                $adapter->quote('%,'.$role),
+                $adapter->quote($role)
+                );
+            $first ? $s->where($sLike) : $s->orWhere($sLike);
+            $first = false;
+        }
         if($parentIdFilter !== false){
             $s->where('parentIds like "%,'.$parentIdFilter.',%" OR id='.$adapter->quote($parentIdFilter));
         }
-        $s->where($sLike);
     }
     
     /**
