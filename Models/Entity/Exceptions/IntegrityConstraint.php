@@ -36,7 +36,7 @@ class ZfExtended_Models_Entity_Exceptions_IntegrityConstraint extends ZfExtended
     
     public function setErrors($errors) {
         if(!empty($errors['entity'])) {
-            $this->origin .= '.'.$errors['entity'];
+            $this->domain .= '.'.$errors['entity'];
         }
         return parent::setErrors($errors);
     }
