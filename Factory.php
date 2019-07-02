@@ -38,17 +38,21 @@ class ZfExtended_Factory {
      * returns a $className instance, currently only for models
      * ControllerHelper are loaded automagicly by ZfExtended_Zendoverwrites_Controller_Action_HelperBroker
      *
-     * @param string className
-     * @param array params optional; parameters for class constructor
+     * @param string $className
+     * @param array $params optional; parameters for class constructor
+     * @param array $executeContructor optional; if false no constructor is called
      * @return mixed
      */
-    public static function get(string $className, array $params = array()){
+    public static function get(string $className, array $params = array(), bool $executeContructor = true){
         self::initOverwrites();
         if(isset(self::$overwrites[$className])){
             $className = self::$overwrites[$className];
         }
         $rc = new ReflectionClass($className);
-        return $rc->newInstanceArgs($params);
+        if($executeContructor) {
+            return $rc->newInstanceArgs($params);
+        }
+        return $rc->newInstanceWithoutConstructor();
     }
     
     /**
