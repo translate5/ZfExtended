@@ -46,6 +46,7 @@ class ZfExtended_Logger_Writer_Database extends ZfExtended_Logger_Writer_Abstrac
         foreach($directlyFromEvent as $key) {
             $data[$key] = $event->$key;
         }
+        $data['message'] = mb_substr($data['message'], 0, 512);
         $data['last'] = NOW_ISO;
         //flatten entities to their dataobjects and handles JSON errors:
         $data['extra'] = $this->toJson($event->extra);
