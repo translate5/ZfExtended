@@ -453,12 +453,11 @@ class ZfExtended_UserController extends ZfExtended_RestController {
             /* @var $userModel ZfExtended_Models_User */
             $userModel->load($this->data->id);
             
-            $oldRoles=empty($userModel->getRoles()) ? [] : $userModel->getRoles();
+            $oldRoles = $userModel->getRoles();
         }
         
         //if there are old roles, remove the roles for which the user isAllowed for setaclrole
         if(!empty($oldRoles)){
-            $oldRoles=explode(',', $oldRoles);
             $toRemove=[];
             foreach ($oldRoles as $old){
                 $isAllowed=$this->isAllowed('setaclrole', $old);

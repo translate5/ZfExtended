@@ -252,9 +252,9 @@ class ZfExtended_OpenIDConnectClient{
     /***
      * Merge the verified role claims from the openid client server and from the customer for the user.
      * @param array|string $claimsRoles
-     * @return string
+     * @return array
      */
-    protected function mergeUserRoles($claimsRoles) {
+    protected function mergeUserRoles($claimsRoles): array {
         $customerRoles=$this->customer->getOpenIdServerRoles();
         //no customer roles, the user should be saved without roles
         if(empty($customerRoles)){
@@ -286,7 +286,7 @@ class ZfExtended_OpenIDConnectClient{
                 $roles[]=$role;
             }
         }
-        return implode(',',$roles);
+        return $roles;
     }
     
     /***
