@@ -264,7 +264,6 @@ abstract class ZfExtended_Models_Entity_Abstract {
      */
     public function save() {
         $this->events->trigger("beforeSave", $this, array(
-                'model' => $this, //FIXME model usage is deprecated and should be removed in future (today 2016-08-10) 
                 'entity' => $this,
         ));
         try {
@@ -475,7 +474,7 @@ abstract class ZfExtended_Models_Entity_Abstract {
     }
 
     /**
-     * returns an assoc array of the modified fields and values
+     * returns an assoc array of the modified fields and (new) values
      * @return array
      */
     protected function getModifiedData() {
@@ -513,7 +512,7 @@ abstract class ZfExtended_Models_Entity_Abstract {
     }
     
     /**
-     * returns the modified values
+     * returns the modified values (the old values)
      * @return array
      */
     public function getModifiedValues() {
