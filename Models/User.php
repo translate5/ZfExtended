@@ -34,7 +34,6 @@ END LICENSE AND COPYRIGHT
  * @method void setFirstName() setFirstName(string $name)
  * @method void setSurName() setSurName(string $name)
  * @method void setEmail() setEmail(string $email)
- * @method void setRoles() setRoles(string $roles)
  * @method void setPasswd() setPassword(string $passwd)
  * @method void setGender() setGender(string $gender)
  * @method void setSourceLanguage() setSourceLanguage(string $sourceLanguage)
@@ -50,7 +49,6 @@ END LICENSE AND COPYRIGHT
  * @method string getFirstName() getFirstName()
  * @method string getSurName() getSurName()
  * @method string getEmail() getEmail()
- * @method string getRoles() getRoles()
  * @method string getPasswd() getPasswd()
  * @method string getGender() getGender()
  * @method string getLogin() getLogin()
@@ -117,7 +115,7 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implement
         $userSession = new Zend_Session_Namespace('user');
         $this->loadRowBySelect($s);
         $userData = $this->getDataObject();
-        $userData->roles = explode(',',$userData->roles);
+        $userData->roles = $this->getRoles();
         $userData->roles[] = 'basic';
         $userData->roles[] = 'noRights'; //the user always has this roles
         $userData->roles = array_unique($userData->roles);
@@ -149,6 +147,23 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implement
     public function getLocale() {
         //piping the method to __call, declaration is needed for interface
         return $this->__call('getLocale', []);
+    }
+    
+    /**
+     * set the user roles
+     * @param array $roles
+     */
+    public function setRoles(array $roles): void {
+        //piping the method to __call, declaration is needed for interface
+        $this->__call('setRoles', [join(',',$roles)]);
+    }
+    
+    /**
+     * get the user roles
+     */
+    public function getRoles(): array {
+        //piping the method to __call, declaration is needed for interface
+        return explode(',', trim($this->__call('getRoles', []), ', '));
     }
     
     /**
@@ -211,43 +226,53 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implement
     /**
      * loads all users without the passwd field
      * with role $role
-     * @param string - acl role
-     * @param parentIdFilter - the parent id which the select should check
+     * @param array $roles - acl roles
+     * @param integer $parentIdFilter - the parent id which the select should check
      * @return array
      */
-    public function loadAllByRole($role, $parentIdFilter = false) {
+    public function loadAllByRole(array $roles, $parentIdFilter = false) {
         $s = $this->_loadAll();
-        $this->addByRoleSql($s, $role, $parentIdFilter);
+        $this->addByRoleSql($s, $roles, $parentIdFilter);
         return $this->loadFilterdCustom($s);
     }
     
     /**
      * loads all users without the passwd field
      * with role $role
-     * @param string - acl role
-     * @param parentIdFilter - the parent id which the select should check
+     * @param array $roles - acl roles
+     * @param integer $parentIdFilter - the parent id which the select should check
      * @return array
      */
-    public function getTotalByRole($role, $parentIdFilter = false) {
+    public function getTotalByRole(array $roles, $parentIdFilter = false) {
         $s = $this->_loadAll();
         $s->reset($s::COLUMNS);
         $s->reset($s::FROM);
-        $this->addByRoleSql($s, $role, $parentIdFilter);
+        $this->addByRoleSql($s, $roles, $parentIdFilter);
         return $this->computeTotalCount($s);
     }
-    
-    protected function addByRoleSql($s, $role, $parentIdFilter) {
+
+    /**
+     * Adds a role selector and parent id filter to an exising user SELECT query
+     * @param Zend_Db_Select $s
+     * @param array $roles
+     * @param integer $parentIdFilter or false if no filter to be used
+     */
+    protected function addByRoleSql(&$s, array $roles, $parentIdFilter) {
         $adapter = $this->db->getAdapter();
-        $sLike = sprintf('roles like %s OR roles like %s OR roles like %s OR roles=%s',
-            $adapter->quote($role.',%'),
-            $adapter->quote('%,'.$role.',%'),
-            $adapter->quote('%,'.$role),
-            $adapter->quote($role)
-            );
+        $first = true;
+        foreach ($roles as $role) {
+            $sLike = sprintf('roles like %s OR roles like %s OR roles like %s OR roles=%s',
+                $adapter->quote($role.',%'),
+                $adapter->quote('%,'.$role.',%'),
+                $adapter->quote('%,'.$role),
+                $adapter->quote($role)
+                );
+            $first ? $s->where($sLike) : $s->orWhere($sLike);
+            $first = false;
+        }
         if($parentIdFilter !== false){
             $s->where('parentIds like "%,'.$parentIdFilter.',%" OR id='.$adapter->quote($parentIdFilter));
         }
-        $s->where($sLike);
     }
     
     /**
@@ -341,7 +366,7 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implement
      */
     public function isParentOf(ZfExtended_Models_User $user) {
         $parentIds = explode(',', trim($user->getParentIds(), ' ,'));
-        $toCheck = explode(',', trim($this->getRoles(), ' ,'));
+        $toCheck = $this->getRoles();
         $toCheck[] = $this->getId();
         $parentFound = array_intersect($toCheck, $parentIds);
         return !empty($parentFound);

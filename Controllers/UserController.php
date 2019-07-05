@@ -72,7 +72,7 @@ class ZfExtended_UserController extends ZfExtended_RestController {
     }
     
     /**
-     * Loads a list of all users with role 'pm'
+     * Loads a list of all users with role 'pm'. If 'pmRoles' is set, all users with roles listed in 'pmRoles' will be loaded
      */
     public function pmAction()
     {
@@ -84,8 +84,11 @@ class ZfExtended_UserController extends ZfExtended_RestController {
             $userSession = new Zend_Session_Namespace('user');
             $parentId = $userSession->data->id;
         }
-        $this->view->rows = $this->entity->loadAllByRole('pm', $parentId);
-        $this->view->total = $this->entity->getTotalByRole('pm', $parentId);
+        $pmRoles = explode(',', $this->getParam('pmRoles', ''));
+        $pmRoles[] = 'pm'; 
+        $pmRoles = array_unique(array_filter($pmRoles));
+        $this->view->rows = $this->entity->loadAllByRole($pmRoles, $parentId);
+        $this->view->total = $this->entity->getTotalByRole($pmRoles, $parentId);
         $this->csvToArray();
     }
     
@@ -450,12 +453,11 @@ class ZfExtended_UserController extends ZfExtended_RestController {
             /* @var $userModel ZfExtended_Models_User */
             $userModel->load($this->data->id);
             
-            $oldRoles=empty($userModel->getRoles()) ? [] : $userModel->getRoles();
+            $oldRoles = $userModel->getRoles();
         }
         
         //if there are old roles, remove the roles for which the user isAllowed for setaclrole
         if(!empty($oldRoles)){
-            $oldRoles=explode(',', $oldRoles);
             $toRemove=[];
             foreach ($oldRoles as $old){
                 $isAllowed=$this->isAllowed('setaclrole', $old);

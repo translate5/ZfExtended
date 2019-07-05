@@ -156,7 +156,13 @@ class ZfExtended_Logger {
         unset($error['message']);
         unset($error['type']); //processed outside
         $event = $this->prepareEvent($level, $code, $error);
-        $event->message = $message;
+        $tracePos = strpos($message, "Stack trace:\n#0");
+        if($tracePos === false) {
+            $event->message = $message;
+        } else {
+            $event->message = substr($message, 0, $tracePos);
+            $event->trace = substr($message, $tracePos);
+        }
         $event->file = $file;
         $event->line = $line;
         $this->processEvent($event);

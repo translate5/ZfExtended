@@ -220,12 +220,12 @@ class ZfExtended_Logger_Event {
         if(!empty($this->exception)) {
             $msg[] = '<td>Exception:</td><td>'.get_class($this->exception).'</td>';
         }
-        $msg[] = '<td>Level:</td><td>'.$this->levelName.'</td>';
+        $msg[] = '<td>Level:</td><td>'.$this->getColorizedLevel().'</td>';
         $config = Zend_Registry::get('config');
         $link = '<a href="%s">%s</a>';
         $link = sprintf($link, str_replace('{0}', $this->eventCode, $config->runtimeOptions->errorCodesUrl), $this->eventCode);
         $msg[] = '<td>Errorcode:</td><td>'.$link.'</td>';
-        $msg[] = '<td>Message:</td><td>'.$this->message.'</td>';
+        $msg[] = '<td style="vertical-align:top;">Message:</td><td>'.$this->messageToHtml($this->message).'</td>';
         $msg[] = '<td>Domain:</td><td>'.$this->domain.'</td>';
         $msg[] = '<td>File (Line):</td><td>'.$this->file.' ('.$this->line.')</td>';
         if(!empty($this->userGuid)) {
@@ -262,5 +262,32 @@ class ZfExtended_Logger_Event {
         
         //FIXME implement a nice, flexible, changeable formatter here
         return $start.join("</tr>\n<tr>", $msg).$end;
+    }
+    
+    /**
+     * returns the levelname colorized
+     * @return string
+     */
+    protected function getColorizedLevel() {
+        switch ($this->level) {
+            case ZfExtended_Logger::LEVEL_FATAL:
+                return '<b style="color:#b60000;">'.$this->levelName.'</b>';
+            case ZfExtended_Logger::LEVEL_ERROR:
+                return '<span style="color:#b60000;">'.$this->levelName.'</span>';
+            case ZfExtended_Logger::LEVEL_WARN:
+                return '<span style="color:#e89b00;">'.$this->levelName.'</span>';
+        }
+        return $this->levelName;
+    }
+    
+    /**
+     * Does some magic formatting for the event message converted to HTML
+     * @param string $message
+     */
+    protected function messageToHtml(string $message) : string {
+        $message = str_replace("\n", "<br>\n", $message);
+        $message = preg_replace('/([^a-zA-Z]|^)(OFFLINE)([^a-zA-Z]|$)/s', '$1<span style="font-weight:bold;color:#c83335;">$2</span>$3', $message);
+        $message = preg_replace('/([^a-zA-Z]|^)(ONLINE)([^a-zA-Z]|$)/s', '$1<span style="font-weight:bold;color:#00aa00;">$2</span>$3', $message);
+        return $message;
     }
 }

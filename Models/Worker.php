@@ -181,7 +181,6 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
                 WHERE u.id = s.id;'; 
         
         $bindings = array(self::STATE_SCHEDULED, self::STATE_WAITING,self::STATE_RUNNING,self::STATE_SCHEDULED,self::STATE_PREPARE,self::STATE_WAITING);
-        
         $res = $adapter->query($sql, $bindings);
     }
     

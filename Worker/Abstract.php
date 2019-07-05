@@ -419,32 +419,26 @@ abstract class ZfExtended_Worker_Abstract {
     
     
     /**
-     * if function is needed public, you have to define a public function in the concrete worker
+     * Direct run of a worker, if a worker should be runnable directly, define this function public in the in the concrete worker
      * and call this by parent::run();
-     * 
      * direct calls per run are not mutex-save!
-     * 
+     *
+     * @throws Exception
      * @return boolean true if $this->work() runs without errors
      */
-    protected function run($slot = false) {
+    protected function run() {
+        $this->isWorkerThread = false;
         $this->checkIsInitCalled();
         Zend_Registry::set('affected_taskGuid', $this->taskGuid); //for TRANSLATE-600 only
         
-        if(!$slot){
-            $tempSlot = $this->calculateDirectSlot();
-            $this->workerModel->setResource($tempSlot['resource']);
-            $this->workerModel->setSlot($tempSlot['slot']);
-        }
-        if ($slot) {
-            $this->workerModel->setResource($slot['resource']);
-            $this->workerModel->setSlot($slot['slot']);
-        }
+        $tempSlot = $this->calculateDirectSlot();
+        $this->workerModel->setResource($tempSlot['resource']);
+        $this->workerModel->setSlot($tempSlot['slot']);
         
         $result = $this->_run();
         
         if(!empty($this->workerException)) {
-            $this->log->logError('Exception logged in direct run of '.get_class($this).'::work');
-            $this->log->logException($this->workerException);
+            throw $this->workerException;
         }
         
         $this->wakeUpAndStartNextWorkers();
