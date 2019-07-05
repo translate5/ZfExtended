@@ -330,16 +330,21 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract {
      *  
      * @param string $key
      * @param string $value
+     * @param bool $lowercase: lowercase key and value
      * @return array
      */
-    public function loadAllKeyValueCustom($key,$value){
+    public function loadAllKeyValueCustom(string $key,string $value,bool $lowercase=false){
         $rfcToIsoLanguage=array();
         if(!isset($key) || !isset($value)){
             return $rfcToIsoLanguage;
         }
         $lngs=$this->loadAll();
         foreach($lngs as $l){
-            $rfcToIsoLanguage[$l[$key]]=$l[$value];
+            if($lowercase){
+                $rfcToIsoLanguage[strtolower($l[$key])]=strtolower($l[$value]);
+            }else{
+                $rfcToIsoLanguage[$l[$key]]=$l[$value];
+            }
         }
         return $rfcToIsoLanguage;
     }
