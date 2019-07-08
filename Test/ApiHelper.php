@@ -582,6 +582,9 @@ class ZfExtended_Test_ApiHelper {
             }
             $segmentContent->metaCache = json_encode($meta, JSON_FORCE_OBJECT);
         }
+        $segmentContent->comments = preg_replace('/<span class="modified">[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}</', '<span class="modified">NOT_TESTABLE<', $segmentContent->comments);
+        $segmentContent->targetEdit = preg_replace('/data-usertrackingid="[0-9]+"/', 'data-usertrackingid="NOT_TESTABLE"', $segmentContent->targetEdit);
+        $segmentContent->targetEdit = preg_replace('/data-timestamp="[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\+[0-9]{2}:[0-9]{2}"/', 'data-timestamp="NOT_TESTABLE"', $segmentContent->targetEdit);
         return $segmentContent;
     }
     
