@@ -55,10 +55,15 @@ class ZfExtended_Controller_Helper_Workflow extends Zend_Controller_Action_Helpe
             /* @var $workflow editor_Workflow_Abstract */
         }
         $tua = $workflow->getTaskUserAssoc($taskGuid, $userGuid);
-        if(! $workflow->isWritingAllowedForState($tua->getUsedState())) {
+        if(empty($tua) || ! $workflow->isWritingAllowedForState($tua->getUsedState())) {
             $e = new ZfExtended_NoAccessException();
             $e->setLogging(false); //TODO info level logging
-            $e->setMessage("Die Aufgabe wurde zwischenzeitlich im nur Lesemodus geöffnet.", true);
+            if(empty($tua)) {
+                $e->setMessage("Die Aufgabe wurde zwischenzeitlich in einem anderen Fenster durch ihren Benutzer verlassen.", true);
+            }
+            else {
+                $e->setMessage("Die Aufgabe wurde zwischenzeitlich im nur Lesemodus geöffnet.", true);
+            }
             throw $e;
         }
     }
