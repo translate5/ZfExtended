@@ -158,7 +158,7 @@ abstract class ZfExtended_Models_Entity_Abstract {
      * @param string whereValue OPTIONAL Entspricht dem zweiten Parameter einer Zend_Db_Select-Where-Methode
      * @param string whereType OPTIONAL Entspricht dem dritten Parameter einer Zend_Db_Select-Where-Methode
      * @param string|array $order OPTIONAL An SQL ORDER clause.
-     * @return Zend_Db_Table_Row_Abstract|null
+     * @return Zend_Db_Table_Row_Abstract
      */
     public function loadRow($where=NULL, $whereValue=NULL, $whereType=NULL, $order=NULL) {
         $s = NULL;

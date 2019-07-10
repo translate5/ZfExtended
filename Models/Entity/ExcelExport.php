@@ -25,6 +25,7 @@ END LICENSE AND COPYRIGHT
 require APPLICATION_PATH.'/../library/PhpSpreadsheet/vendor/autoload.php';
 
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 
 class ZfExtended_Models_Entity_ExcelExport {
     
@@ -32,7 +33,7 @@ class ZfExtended_Models_Entity_ExcelExport {
      * @var PhpOffice\PhpSpreadsheet\Spreadsheet
      */
     private $spreadsheet = false;
-    
+     
     /**
      * Container to hold document properties like filename etc. (properties->name->value)
      * @var stdClass
@@ -112,14 +113,28 @@ class ZfExtended_Models_Entity_ExcelExport {
      * @param array $data
      * @param Closure $callback
      */
-    public function simpleArrayToExcel ($data, Closure $callback = null) {
+    public function simpleArrayToExcel (array $data, Closure $callback = null) {
+        //set spreadsheet cells data from the array
+        $this->loadArrayData($data);
+        
+        if($callback!==null){
+        	$callback($this->spreadsheet);
+        }
+        $this->sendDownload();
+        
+    }
+    
+    /***
+     * Loads the array data in the excel spreadsheet
+     * @param array $data
+     */
+    public function loadArrayData(array $data){
         $this->spreadsheet->setActiveSheetIndex(0);
         $tempSheet = $this->spreadsheet->getActiveSheet();
-        
         $rowCount = 1;
         foreach ($data as $row)
         {
-            $colCount = 0;
+            $colCount = 1;
             foreach ($row as $key => $value) {
                 // don't show hidden fields
                 if ($this->isHiddenField($key)) {
@@ -143,16 +158,8 @@ class ZfExtended_Models_Entity_ExcelExport {
             }
             $rowCount++;
         }
-        
         // Set active sheet index to the first sheet, so Excel opens this as the first sheet
         $this->spreadsheet->setActiveSheetIndex(0);
-        
-        if($callback!==null){
-        	$callback($this->spreadsheet);
-        }
-        
-        $this->sendDownload();
-        
     }
     
     
@@ -367,7 +374,30 @@ class ZfExtended_Models_Entity_ExcelExport {
         $objWriter->save('php://output');
         exit;
     }
+    
+    /***
+     * Save the current spreadsheet to the given path
+     * @param string $path
+     */
+    public function saveToDisc(string $path){
+        // XLSX Excel 2010 output
+        $objWriter = \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($this->spreadsheet, 'Xlsx');
+        $objWriter->setPreCalculateFormulas($this->getPreCalculateFormulas());
+        $objWriter->save($path);
+    }
+    
     public function getSpreadsheet(){
     	return $this->spreadsheet;
+    }
+    
+    /**
+     * Column index from string.
+     *
+     * @param string $pString eg 'A'
+     *
+     * @return int Column index (A = 1)
+     */
+    public function columnIndexFromString($pString) {
+        return Coordinate::columnIndexFromString($pString);
     }
 }

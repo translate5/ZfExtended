@@ -22,23 +22,25 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
-/**#@+
- * @author Marc Mittag
-* @package editor
-* @version 1.0
-*
-*/
 /**
- * Diese Klasse muss mittels factoryOverwrites überschrieben werden,
-* da die Herkunft der Sprachinformationen nicht Teil des Editor-Moduls ist,
-* sondern vom Default-Modul gestellt werden muss.
-*
-* @method string getRfc5646() getRfc5646()
-* @method int getLcid() getLcid()
-* @method int getId() getId()
-* @method string getIso3166Part1alpha2() getIso3166Part1alpha2()
-* @method string getIso6393() getIso6393()
-*/
+ * 
+ * @method int getId() getId()
+ * @method void setId() setId(integer $id)
+ * @method int getLangName() getLangName()
+ * @method void setLangName() setLangName(string $langName)
+ * @method int getLcid() getLcid()
+ * @method void setLcid() setLcid(string $lcid)
+ * @method string getRfc5646() getRfc5646()
+ * @method void setRfc5646() setRfc5646(string $lang)
+ * @method string getIso3166Part1alpha2() getIso3166Part1alpha2()
+ * @method void setIso3166Part1alpha2() setIso3166Part1alpha2(string $lang)
+ * @method int getSublanguage() getSublanguage()
+ * @method void setSublanguage() setSublanguage(string $sublang)
+ * @method int getRtl() getRtl()
+ * @method void setRtl() setRtl(boolean $rtl)
+ * @method string getIso6393() getIso6393()
+ * @method void setIso6393() setIso6393(string $lang)
+ */
 abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract {
 
     const LANG_TYPE_ID = 'id';
@@ -328,16 +330,21 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract {
      *  
      * @param string $key
      * @param string $value
+     * @param bool $lowercase: lowercase key and value
      * @return array
      */
-    public function loadAllKeyValueCustom($key,$value){
+    public function loadAllKeyValueCustom(string $key,string $value,bool $lowercase=false){
         $rfcToIsoLanguage=array();
         if(!isset($key) || !isset($value)){
             return $rfcToIsoLanguage;
         }
         $lngs=$this->loadAll();
         foreach($lngs as $l){
-            $rfcToIsoLanguage[$l[$key]]=$l[$value];
+            if($lowercase){
+                $rfcToIsoLanguage[strtolower($l[$key])]=strtolower($l[$value]);
+            }else{
+                $rfcToIsoLanguage[$l[$key]]=$l[$value];
+            }
         }
         return $rfcToIsoLanguage;
     }

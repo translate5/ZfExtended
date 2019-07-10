@@ -402,6 +402,19 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implement
         return $aclInstance->isInAllowedRoles($userRoles,$resource,$right);
     }
     
+    
+    /**
+     * Check if currently logged in user has the given role
+     *
+     * @param string $role
+     * @return boolean
+     */
+    public function hasRole(string $role) {
+        $userSession = new Zend_Session_Namespace('user');
+        return in_array($role, $userSession->data->roles);
+    }
+    
+    
     /***
      * Get assigned customers to the currently logged user
      * @return array
