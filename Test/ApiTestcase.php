@@ -88,13 +88,22 @@ abstract class ZfExtended_Test_ApiTestcase extends \ZfExtended_Test_Testcase {
         self::assertContains('pm', $json->user->roles, 'Checking users roles:');
         self::assertContains('basic', $json->user->roles, 'Checking users roles:');
         self::assertContains('noRights', $json->user->roles, 'Checking users roles:');
+        
+        self::$api->login('testtermproposer', 'asdfasdf');
+        $json = self::assertLogin('testtermproposer');
+        self::assertContains('termProposer', $json->user->roles, 'Checking users roles:');
+        self::assertContains('editor', $json->user->roles, 'Checking users roles:');
+        self::assertContains('pm', $json->user->roles, 'Checking users roles:');
+        self::assertContains('basic', $json->user->roles, 'Checking users roles:');
+        self::assertContains('noRights', $json->user->roles, 'Checking users roles:');
     }
     
     /***
      * Asserts that a default customer is loaded
+     * @param string $user
      */
-    public static function assertCustomer(){
-        self::$api->loadCustomer();
+    public static function assertCustomer(string $user='testmanager'){
+        self::$api->loadCustomer($user);
     }
     
     /**

@@ -325,10 +325,11 @@ class ZfExtended_Test_ApiHelper {
     
     /***
      * Load the default customer
+     * @param string $user
      */
-    public function loadCustomer(){
+    public function loadCustomer(string $user){
         $test = $this->testClass;
-        $user=$test::assertLogin('testmanager');
+        $user=$test::assertLogin($user);
         $filter='[{"operator":"eq","value":"123456789","property":"number"}]';
         $filter=urlencode($filter);
         $url='editor/customer?page=1&start=0&limit=20&filter='.$filter;
