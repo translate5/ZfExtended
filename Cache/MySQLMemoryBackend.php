@@ -76,7 +76,7 @@ class ZfExtended_Cache_MySQLMemoryBackend extends Zend_Cache_Backend implements 
         $params = [$id];
         if (!$doNotTestCacheValidity) {
             $sql = $sql . ' AND (`expire` = 0 OR `expire` > ? )';
-            $params[] = time();
+            $params[] = date(self::DATE_MYSQL, time());
         }
         $res = $this->db->query($sql, $params);
         $row = $res->fetchObject();

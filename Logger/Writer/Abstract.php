@@ -68,6 +68,14 @@ abstract class ZfExtended_Logger_Writer_Abstract {
     abstract public function write(ZfExtended_Logger_Event $event);
     
     /**
+     * Returns true if is writer instance is enabled. Needed since other system configs may influence the concrete worker instance
+     * @return boolean
+     */
+    public function isEnabled(): bool {
+        return true;
+    }
+    
+    /**
      * returns true if writer accepts (via configured filters) the given event
      * @param ZfExtended_Logger_Event $event
      * @return boolean

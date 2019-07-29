@@ -78,6 +78,10 @@ class ZfExtended_Logger {
             $this->enableTraceFor = (int) $options['enableTraceFor'];
         }
         foreach($options['writer'] as $name => $writerConfig) {
+            //disable writer if config set to null / empty
+            if(empty($writerConfig)) {
+                continue;
+            }
             if($writerConfig instanceof Zend_Config) {
                 $writerConfig = $writerConfig->toArray();
             }
@@ -409,7 +413,9 @@ class ZfExtended_Logger {
      * @param ZfExtended_Logger_Writer_Abstract $writer
      */
     public function addWriter($name, ZfExtended_Logger_Writer_Abstract $writer) {
-        $this->writer[$name] = $writer;
+        if($writer->isEnabled()) {
+            $this->writer[$name] = $writer;
+        }
     }
     
     /**

@@ -91,4 +91,11 @@ class ZfExtended_Logger_Writer_DirectMail extends ZfExtended_Logger_Writer_Abstr
         
     }
     
+    /**
+     * {@inheritDoc}
+     * @see ZfExtended_Logger_Writer_Abstract::isEnabled()
+     */
+    public function isEnabled(): bool {
+        return ! $this->config->runtimeOptions->sendMailDisabled;
+    }
 }
