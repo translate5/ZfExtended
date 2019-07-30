@@ -44,9 +44,12 @@ abstract class ZfExtended_Test_ApiTestcase extends \ZfExtended_Test_Testcase {
         $state = self::$api->requestJson('editor/index/applicationstate');
         self::assertFalse(empty($state->termtagger), 'Termtagger Plugin not active!');
         self::assertTrue($state->termtagger->runningAll, 'Some configured termtaggers are not running: '.print_r($state->termtagger->running,1));
+        
+        //other system checks
         self::assertEquals(0, $state->worker->scheduled, 'For API testing no scheduled workers are allowed in DB!');
         self::assertEquals(0, $state->worker->waiting, 'For API testing no waiting workers are allowed in DB!');
         self::assertEquals(0, $state->worker->running, 'For API testing no running workers are allowed in DB!');
+        self::assertTrue($state->database->isUptodate, 'Database is not up to date! '.$state->database->newCount.' new / '.$state->database->modCount.' modified.');
         return $state;
     }
     

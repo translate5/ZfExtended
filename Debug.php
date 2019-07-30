@@ -157,6 +157,14 @@ class ZfExtended_Debug {
             $result->branch = exec('cd '.APPLICATION_PATH.'; git status -bs | head -1');
         }
         
+        $dbUpdater = ZfExtended_Factory::get('ZfExtended_Models_Installer_DbUpdater');
+        /* @var $dbUpdater ZfExtended_Models_Installer_DbUpdater */
+        $dbUpdater->calculateChanges();
+        $result->database = new stdClass();
+        $result->database->newCount = count($dbUpdater->getNewFiles());
+        $result->database->modCount = count($dbUpdater->getModifiedFiles());
+        $result->database->isUptodate = $result->database->newCount === 0 && $result->database->modCount === 0;
+        
         $worker = ZfExtended_Factory::get('ZfExtended_Models_Worker');
         /* @var $worker ZfExtended_Models_Worker */
         $result->worker = $worker->getSummary();
