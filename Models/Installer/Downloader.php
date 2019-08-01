@@ -321,6 +321,9 @@ class ZfExtended_Models_Installer_Downloader {
         }
 
         $targetDir = $this->applicationRoot.'/'.$dependency->target;
+        if(!empty($dependency->preventTargetClean)) {
+            $cleanBefore = false;
+        }
 
         if(!$overwrite && file_exists($targetDir)) {
             if(!$cleanBefore) {
