@@ -321,12 +321,12 @@ class ZfExtended_Models_Installer_Downloader {
         }
 
         $targetDir = $this->applicationRoot.'/'.$dependency->target;
-        if(!empty($dependency->preventTargetClean)) {
-            $cleanBefore = false;
+        if(!empty($dependency->preventTargetCleaning)) {
+            $overwrite = true;
         }
 
         if(!$overwrite && file_exists($targetDir)) {
-            if(!$cleanBefore && empty($dependency->preventTargetClean)) {
+            if(!$cleanBefore) {
                 $this->log('Could not unzip target directory for dependency package '.$dependency->name.' already exists! ZipFile:'.$dependency->targetFile);
                 return false;
             }
