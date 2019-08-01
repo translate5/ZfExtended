@@ -257,8 +257,13 @@ class  ZfExtended_Mail {
         $this->mail->setType(Zend_Mime::MULTIPART_RELATED);
         
         foreach (new DirectoryIterator($directory) as $file) {
-            if($file->isDot()) continue;
+            if($file->isDot() || !$file->isReadable()) {
+                continue;
+            }
             $filename = $file->getPathname();
+            if(exif_imagetype($filename) === false) {
+                continue;
+            }
             try {
                 $imageinfo = getimagesize($filename);
                 $imagedata = file_get_contents($filename);
