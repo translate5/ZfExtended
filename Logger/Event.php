@@ -221,10 +221,7 @@ class ZfExtended_Logger_Event {
             $msg[] = '<td>Exception:</td><td>'.get_class($this->exception).'</td>';
         }
         $msg[] = '<td>Level:</td><td>'.$this->getColorizedLevel().'</td>';
-        $config = Zend_Registry::get('config');
-        $link = '<a href="%s">%s</a>';
-        $link = sprintf($link, str_replace('{0}', $this->eventCode, $config->runtimeOptions->errorCodesUrl), $this->eventCode);
-        $msg[] = '<td>Errorcode:</td><td>'.$link.'</td>';
+        $msg[] = '<td>Errorcode:</td><td>'.$this->getCodeAnchor().'</td>';
         $msg[] = '<td style="vertical-align:top;">Message:</td><td>'.$this->messageToHtml($this->message).'</td>';
         $msg[] = '<td>Domain:</td><td>'.$this->domain.'</td>';
         $msg[] = '<td>File (Line):</td><td>'.$this->file.' ('.$this->line.')</td>';
@@ -262,6 +259,16 @@ class ZfExtended_Logger_Event {
         
         //FIXME implement a nice, flexible, changeable formatter here
         return $start.join("</tr>\n<tr>", $msg).$end;
+    }
+    
+    /**
+     * Generates a HTML anchor link to the event code documentation
+     * @return string
+     */
+    public function getCodeAnchor(): string {
+        $config = Zend_Registry::get('config');
+        $link = '<a href="%s">%s</a>';
+        return sprintf($link, str_replace('{0}', $this->eventCode, $config->runtimeOptions->errorCodesUrl), $this->eventCode);
     }
     
     /**

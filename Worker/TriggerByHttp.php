@@ -156,6 +156,7 @@ class ZfExtended_Worker_TriggerByHttp {
         $this->log->__call($method, [$code, $msg, [
             'state' => $state,
             'method' => $method,
+            'serverId' => $serverId,
             'postParameters' => $postParameters,
             'host' => $host.$this->path,
             'port' => $this->port,
