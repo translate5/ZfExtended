@@ -240,10 +240,20 @@ class ZfExtended_OpenIDConnectClient{
         
         $user->setCustomers(','.$this->customer->getId().',');
         
+        //find and set the roles, depending of the openid server config, this can be defined as roles or role
+        //and it can exist either in the verified claims or in the user info
         $roles=$this->openIdClient->getVerifiedClaims('roles');
         if(empty($roles)){
             $roles=$this->openIdClient->getVerifiedClaims('role');
         }
+        if(empty($roles) && !empty($userInfo) && array_key_exists('role', $userInfo)){
+            $roles=$userInfo->role;
+        }
+        
+        if(empty($roles) && !empty($userInfo) && array_key_exists('roles', $userInfo)){
+            $roles=$userInfo->roles;
+        }
+        
         $user->setRoles($this->mergeUserRoles($roles));
         
         return $user->save()>0? $user : null;
@@ -258,15 +268,16 @@ class ZfExtended_OpenIDConnectClient{
         $customerRoles=$this->customer->getOpenIdServerRoles();
         //no customer roles, the user should be saved without roles
         if(empty($customerRoles)){
-            return '';
+            return [];
         }
+        
+        $customerRoles=explode(',',$customerRoles);
         
         //the roles are not defined in the openid client server for the user, use the customer defined roles
         if(empty($claimsRoles)){
             return $customerRoles;
         }
         
-        $customerRoles=explode(',',$customerRoles);
         
         if(is_string($claimsRoles)){
             $claimsRoles=explode(',', $claimsRoles);
