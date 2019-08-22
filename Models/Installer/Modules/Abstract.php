@@ -27,11 +27,22 @@ END LICENSE AND COPYRIGHT
  * @version 2.0
  */
 abstract class ZfExtended_Models_Installer_Modules_Abstract {
+    /**
+     * @var string
+     */
+    protected $currentWorkingDir;
+    
+    /**
+     * @var ZfExtended_Models_Installer_Logger
+     */
+    protected $logger;
+    
     public function __construct(){
         $this->logger = new ZfExtended_Models_Installer_Logger();
     }
     
-    public function setOptions($options){
+    public function setOptions(string $cwd, array $options){
+        $this->currentWorkingDir = $cwd;
         $this->options = $options;
     }
     
@@ -51,5 +62,45 @@ abstract class ZfExtended_Models_Installer_Modules_Abstract {
      */
     public function getLongOptions() {
         return [];
+    }
+    
+    /**
+     * Adds the downloaded Zend Lib to the include path
+     */
+    protected function addZendToIncludePath() {
+        $zendDir = $this->options['zend'];
+        if(!is_dir($zendDir)) {
+            $this->log("Could not find Zend library ".$zendDir);
+            exit;
+        }
+        $path = get_include_path();
+        set_include_path($path.PATH_SEPARATOR.$zendDir);
+    }
+    
+    /**
+     * generates a Zend Application like environment with all needed registry entries filled
+     */
+    protected function initApplication() {
+        $_SERVER['REQUEST_URI'] = '/database/forceimportall';
+        $_SERVER['SERVER_NAME'] = 'localhost';
+        $_SERVER['HTTP_HOST'] = 'localhost';
+        define('APPLICATION_PATH', $this->currentWorkingDir.DIRECTORY_SEPARATOR.'application');
+        define('APPLICATION_ENV', 'application');
+        
+        require_once 'Zend/Session.php';
+        Zend_Session::$_unitTestEnabled = true;
+        require_once 'library/ZfExtended/BaseIndex.php';
+        $index = ZfExtended_BaseIndex::getInstance();
+        $index->initApplication()->bootstrap();
+        $index->addModuleOptions('default');
+        
+        //set the hostname to the configured one:
+        $config = Zend_Registry::get('config');
+        
+//FIXME hostname should be set to null in over written initApplication in installer module, it must be null in installation module! (was isInstallation check)
+        $this->hostname = $config->runtimeOptions->server->name;
+        
+        $version = ZfExtended_Utils::getAppVersion();
+        $this->logger->log('Current translate5 version '.$version);
     }
 }

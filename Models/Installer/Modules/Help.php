@@ -27,9 +27,6 @@ END LICENSE AND COPYRIGHT
  * @version 2.0
  */
 class ZfExtended_Models_Installer_Modules_Help extends ZfExtended_Models_Installer_Modules_Abstract{
-    public function __construct($options){
-        
-    }
     public function run() {
         echo "\n";
         echo "  Usage: install-and-update2.sh MODULE\n";

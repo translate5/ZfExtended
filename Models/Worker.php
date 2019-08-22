@@ -59,12 +59,12 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
      * This constant values define the different worker-states
      * @var string
      */
-    const STATE_PREPARE = 'prepare';
-    const STATE_SCHEDULED = 'scheduled';
-    const STATE_WAITING = 'waiting';
-    const STATE_RUNNING = 'running';
-    const STATE_DEFUNCT = 'defunct';
-    const STATE_DONE    = 'done';
+    const STATE_PREPARE     = 'prepare';
+    const STATE_SCHEDULED   = 'scheduled';
+    const STATE_WAITING     = 'waiting';
+    const STATE_RUNNING     = 'running';
+    const STATE_DEFUNCT     = 'defunct';
+    const STATE_DONE        = 'done';
     
     const WORKER_SERVERID_HEADER = 'X-Translate5-Worker-Serverid';
     
