@@ -224,6 +224,7 @@ class ZfExtended_Logger_Event {
         $msg[] = '<td>Errorcode:</td><td>'.$this->getCodeAnchor().'</td>';
         $msg[] = '<td style="vertical-align:top;">Message:</td><td>'.$this->messageToHtml($this->message).'</td>';
         $msg[] = '<td>Domain:</td><td>'.$this->domain.'</td>';
+        $msg[] = '<td>Version:</td><td>'.$this->appVersion.'</td>';
         $msg[] = '<td>File (Line):</td><td>'.$this->file.' ('.$this->line.')</td>';
         if(!empty($this->userGuid)) {
             $msg[] = '<td>User:</td><td>'.$this->userLogin.' ('.$this->userGuid.')</td>';
