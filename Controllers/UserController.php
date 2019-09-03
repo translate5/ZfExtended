@@ -104,6 +104,7 @@ class ZfExtended_UserController extends ZfExtended_RestController {
             $this->credentialCleanup();
             if($this->wasValid) {
                 $this->csvToArray();
+                $this->resetInvalidCounter();
             }
             $this->checkAndUpdateSession();
         }
@@ -393,6 +394,19 @@ class ZfExtended_UserController extends ZfExtended_RestController {
             $mailer = new ZfExtended_Mail();
             $mailer->sendToUser($this->entity);
         }
+    }
+    
+    /**
+     * resets the invalid login counter if password is changed of the user via User API (so at least an PM user) and not via "my settings"
+     */
+    protected function resetInvalidCounter() {
+        //only if putAction was called directly, not via the authenticatedAction (my settings pw change)
+        if($this->_request->getActionName() !== 'put' || empty($this->data->passwd)) {
+            return;
+        }
+        $counter = ZfExtended_Factory::get('ZfExtended_Models_Invalidlogin', [$this->entity->getLogin()]);
+        /* @var $counter ZfExtended_Models_Invalidlogin */
+        $counter->resetCounter();
     }
     
     /**
