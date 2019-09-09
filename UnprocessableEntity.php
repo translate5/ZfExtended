@@ -23,8 +23,9 @@ END LICENSE AND COPYRIGHT
 */
 
 /**
- * Should be used if the request to the server contains data which is not valid
- * points to HTTP 422 Unprocessable Entity
+ * Should be used if PUT/POSTed content does prevent normal processing: Wrong parameters, missing parameters.
+ * In other words: the requested call and its data is reasonable that the request can not be processed.
+ * Encapsulates HTTP 422 Unprocessable Entity
  */
 class ZfExtended_UnprocessableEntity extends ZfExtended_ErrorCodeException {
     use ZfExtended_ResponseExceptionTrait;
