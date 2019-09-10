@@ -52,6 +52,20 @@ class ZfExtended_OpenIDConnectClient{
      */
     protected $config;
     
+    /***
+     * User verified openid claims
+     * 
+     * @var stdClass
+     */
+    protected $openIdUserClaims;
+    
+    
+    /***
+     * Additional user information from the openid enpoind
+     * @var stdClass
+     */
+    protected $openIdUserInfo;
+    
     public function __construct(Zend_Controller_Request_Abstract $request) {
         $this->openIdClient=new OpenIDConnectClient();
         $this->config=Zend_Registry::get('config');
@@ -134,61 +148,15 @@ class ZfExtended_OpenIDConnectClient{
         $user=ZfExtended_Factory::get('ZfExtended_Models_User');
         /* @var $user ZfExtended_Models_User */
         
-        $issuer=$this->openIdClient->getVerifiedClaims('iss');
-        $subject=$this->openIdClient->getVerifiedClaims('sub');
-        
-        //check if the user exist
-        if(!$user->loadByIssuerAndSubject($issuer,$subject)){
-            //it is new user, create guid
-            $guidHelper = ZfExtended_Zendoverwrites_Controller_Action_HelperBroker::getStaticHelper(
-                'Guid'
-                );
-            $userGuid=$guidHelper->create(true);
-            
-            $user->setUserGuid($userGuid);
-            $user->setOpenIdIssuer($issuer);
-            $user->setOpenIdSubject($subject);
-            $user->setLogin($userGuid);
-            
-            //save the user so we get userid
-            $userId=$user->save();
-            
-            //update the login with the openid as prefix
-            $user->setLogin('OID-'.$userId);
-        }
+        $issuer=$this->getOpenIdUserData('iss');
+        $subject=$this->getOpenIdUserData('sub');
         
         
-        //load the user info
-        $userInfo=$this->openIdClient->requestUserInfo();
-        
-        $firstNameClaims=!empty($this->openIdClient->getVerifiedClaims('given_name')) ? $this->openIdClient->getVerifiedClaims('given_name') : null;
-        if(empty($firstNameClaims)){
-            $firstNameClaims=!empty($userInfo->given_name) ? $userInfo->given_name : null;
-        }
-        $user->setFirstName($firstNameClaims);
-        
-        $familyNameClaims=!empty($this->openIdClient->getVerifiedClaims('family_name')) ? $this->openIdClient->getVerifiedClaims('family_name') : null;
-        if(empty($familyNameClaims)){
-            $familyNameClaims=!empty($userInfo->family_name) ? $userInfo->family_name : null;
-        }
-        $user->setSurName($familyNameClaims);
-        
-        $gender='f';
-        if(!empty($userInfo) && array_key_exists('gender', $userInfo)){
-            //the gender is required in translate5, and in the response can be empty or larger than 1 character
-            $gender=substr($userInfo->gender,0,1);
-        }
-        $user->setGender($gender);
-        
-        $emailClaims=!empty($this->openIdClient->getVerifiedClaims('email')) ? $this->openIdClient->getVerifiedClaims('email') : null;
-        if(empty($emailClaims)){
-            $emailClaims=!empty($userInfo->email) ? $userInfo->email : null;
-        }
+        $emailClaims=$this->getOpenIdUserData('email');
         
         //if the email is not found from the standard claims, try to get it from 'upn'
         if(empty($emailClaims)){
-            $emailClaims=!empty($this->openIdClient->getVerifiedClaims('upn')) ? $this->openIdClient->getVerifiedClaims('upn') : null;
-
+            $emailClaims=$this->getOpenIdUserData('upn');
             if(!empty($emailClaims)){
                 //the upn is defined, chech if it is valid email
                 $valid = filter_var($emailClaims, FILTER_VALIDATE_EMAIL) !== false;
@@ -201,7 +169,7 @@ class ZfExtended_OpenIDConnectClient{
         
         //if the email is empty again, try to find if it is defined as preferred_username claim
         if(empty($emailClaims)){
-            $emailClaims=!empty($this->openIdClient->getVerifiedClaims('preferred_username')) ? $this->openIdClient->getVerifiedClaims('preferred_username') : null;
+            $emailClaims=$this->getOpenIdUserData('preferred_username');
             if(!empty($emailClaims)){
                 //the preferred_username is defined, chech if it is valid email
                 $valid = filter_var($emailClaims, FILTER_VALIDATE_EMAIL) !== false;
@@ -214,6 +182,39 @@ class ZfExtended_OpenIDConnectClient{
         
         $user->setEmail($emailClaims);
         
+        //check if the user exist for the issuer and subject
+        if(!$user->loadByIssuerAndSubject($issuer,$subject)){
+
+            //IMPORTANT INFO:set the user login as email
+            //we can't auto-generate login, since the users can be created also from the t5connect
+            //for the one mail to multiple users situation, the login of the first logged user will be with the email
+            //and all other user will have an auto-generated openid login
+            $user->setLogin($emailClaims);
+            $guidHelper = ZfExtended_Zendoverwrites_Controller_Action_HelperBroker::getStaticHelper('Guid');
+            $userGuid=$guidHelper->create(true);
+            $user->setUserGuid($userGuid);
+            try {
+                $user->save();
+            } catch (ZfExtended_Models_Entity_Exceptions_IntegrityDuplicateKey $e) {
+                //autogenerate new openid login for the user 
+                //because user with the $emailClaims as login already exist
+                $user->setLogin($userGuid);
+                $userId=$user->save();
+                //update the login with the openid as prefix
+                $user->setLogin('OID-'.$userId);
+            }
+        }
+        
+        $user->setOpenIdIssuer($issuer);
+        $user->setOpenIdSubject($subject);
+        
+        $user->setFirstName($this->getOpenIdUserData('given_name'));
+        $user->setSurName($this->getOpenIdUserData('family_name'));
+        
+        //the gender is required in translate5, and in the response can be empty or larger than 1 character
+        $gender=!empty($this->getOpenIdUserData('gender')) ? substr($this->getOpenIdUserData('gender'),0,1) : 'f';
+        $user->setGender($gender);
+        
         $user->setEditable(1);
         
         //find the default locale from the config
@@ -224,10 +225,7 @@ class ZfExtended_OpenIDConnectClient{
         $defaultLocale=empty($appLocale) ? (empty($fallbackLocale) ? 'en' : $fallbackLocale) : $appLocale;
         
         
-        $claimLocale=!empty($this->openIdClient->getVerifiedClaims('locale')) ? $this->openIdClient->getVerifiedClaims('locale') : null;
-        if(empty($claimLocale)){
-            $claimLocale=!empty($userInfo->locale) ? $userInfo->locale : null;
-        }
+        $claimLocale=$this->getOpenIdUserData('locale');
         
         //if the claim locale is empty, use the default user locale
         if(empty($claimLocale)){
@@ -242,20 +240,11 @@ class ZfExtended_OpenIDConnectClient{
         
         //find and set the roles, depending of the openid server config, this can be defined as roles or role
         //and it can exist either in the verified claims or in the user info
-        $roles=$this->openIdClient->getVerifiedClaims('roles');
+        $roles=$this->getOpenIdUserData('roles');
         if(empty($roles)){
-            $roles=$this->openIdClient->getVerifiedClaims('role');
+            $roles=$this->getOpenIdUserData('role');
         }
-        if(empty($roles) && !empty($userInfo) && array_key_exists('role', $userInfo)){
-            $roles=$userInfo->role;
-        }
-        
-        if(empty($roles) && !empty($userInfo) && array_key_exists('roles', $userInfo)){
-            $roles=$userInfo->roles;
-        }
-        
         $user->setRoles($this->mergeUserRoles($roles));
-        
         return $user->save()>0? $user : null;
     }
     
@@ -347,5 +336,38 @@ class ZfExtended_OpenIDConnectClient{
     
     public function getCustomer() {
         return $this->customer;
+    }
+    
+    
+    /***
+     * Get the user info from the openid provider.
+     * 
+     * @param string $attribute
+     * @return NULL|mixed
+     */
+    public function getOpenIdUserData(string $attribute) {
+        
+        //load openid claims from the sso provider
+        if(!isset($this->openIdUserClaims)){
+            $this->openIdUserClaims=$this->openIdClient->getVerifiedClaims();
+        }
+        
+        //load the openid user info from the defined userinfo endpoint
+        if(!isset($this->openIdUserInfo)){
+            $this->openIdUserInfo=$this->openIdClient->requestUserInfo();
+        }
+        
+        //check if the attribute exist in the claims
+        if(array_key_exists($attribute, $this->openIdUserClaims)) {
+            return $this->openIdUserClaims->$attribute;
+        }
+        
+        //check if the attribute exist in the user info
+        if (array_key_exists($attribute, $this->openIdUserInfo)) {
+            return $this->openIdUserInfo->$attribute;
+        }
+        
+        //no attribute was found
+        return null;
     }
 }
