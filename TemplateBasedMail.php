@@ -31,7 +31,7 @@ END LICENSE AND COPYRIGHT
 /**
  * Klasse zur Kapselung des Mailversands
  */
-class  ZfExtended_Mail {
+class  ZfExtended_TemplateBasedMail {
     const MAIL_TEMPLATE_BASEPATH = '/views/scripts/mail/';
     
     /**
@@ -40,7 +40,7 @@ class  ZfExtended_Mail {
     protected $view;
 
     /**
-     * @var Zend_Mail
+     * @var ZfExtended_Mailer
      */
     protected $mail;
 
@@ -71,12 +71,6 @@ class  ZfExtended_Mail {
      */
     protected $_sendBcc = false;
     
-    /**
-     * disable sending E-Mails completly
-     * @var boolean
-     */
-    protected $sendingDisabled = false;
-    
     protected $initialLocale;
     protected static $translationInstances = [];
 
@@ -84,13 +78,12 @@ class  ZfExtended_Mail {
      * initiiert das interne Mail und View Object
      *
      * @param bool initView entscheidet, ob view initialisiert wird
-     *      (Achtung: Bei false ist die Verwendung von Mailtemplates mit ZfExtended_Mail nicht möglich)
+     *      (Achtung: Bei false ist die Verwendung von Mailtemplates mit ZfExtended_TemplateBasedMail nicht möglich)
      *      Default: true
      */
     public function __construct($initView = true) {
         try {
             $this->config = Zend_Registry::get('config');
-            $this->sendingDisabled = $this->config->runtimeOptions->sendMailDisabled;
             $this->_sendMailLocally = $this->config->runtimeOptions->sendMailLocally;
             if(isset($this->config->runtimeOptions->mail->generalBcc)){
                 $this->_sendBcc = true;
@@ -106,10 +99,10 @@ class  ZfExtended_Mail {
 
     /**
      * setzt das interne Mail Object - z. B. bei verschicken zweier Mails mit der selben Objektinstanz
-     * @param Zend_Mail $mail
+     * @param ZfExtended_Mailer $mail
      */
     public function setMail(){
-        $this->mail = new Zend_Mail('utf-8');
+        $this->mail = new ZfExtended_Mailer('utf-8');
     }
 
     /**
@@ -297,7 +290,7 @@ class  ZfExtended_Mail {
      */
     protected function decideIfToThrowInitViewException() {
         if(!isset($this->view)){
-            throw new Zend_Exception('ZfExtended_Mail: Template soll verwendet werden, aber Viewinitialisierung im Konstruktor deaktiviert.');
+            throw new Zend_Exception('ZfExtended_TemplateBasedMail: Template soll verwendet werden, aber Viewinitialisierung im Konstruktor deaktiviert.');
         }
     }
 
@@ -364,13 +357,6 @@ class  ZfExtended_Mail {
             $this->setContentByTemplate();
         }
         
-        if($this->sendingDisabled){
-            if(ZfExtended_Debug::hasLevel('core', 'mailing')){
-                error_log('translate5 disabled mail: '.$this->getSubject().' to '.$toName.' <'.$toMail.'>');
-            }
-            return;
-        }
-
         //hack, um im lokalen development mails an lokale linux-mailadressen zu senden
         if((int)$this->_sendMailLocally === 1){
             $toMail = preg_replace('"@.+$"', '', $toMail);
