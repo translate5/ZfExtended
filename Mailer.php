@@ -24,14 +24,13 @@ END LICENSE AND COPYRIGHT
 
 /**
  */
-class  ZfExtended_Mailer extends Zend_Mail {
-    
+class ZfExtended_Mailer extends Zend_Mail {
     
     /**
      * disable sending E-Mails completly
      * @var boolean
      */
-    protected $sendingDisabled = false;
+    protected static $sendingDisabled = false;
     
     /**
      * @var Zend_Config
@@ -46,7 +45,9 @@ class  ZfExtended_Mailer extends Zend_Mail {
      */
     public function __construct($charset = null) {
         $this->config = Zend_Registry::get('config');
-        $this->sendingDisabled = $this->config->runtimeOptions->sendMailDisabled;
+        if(!self::$sendingDisabled){
+            self::$sendingDisabled= $this->config->runtimeOptions->sendMailDisabled;
+        }
         parent::__construct($charset);
     }
     
@@ -59,7 +60,7 @@ class  ZfExtended_Mailer extends Zend_Mail {
      * @return Zend_Mail                    Provides fluent interface
      */
     public function send($transport = null){
-        if($this->sendingDisabled){
+        if(self::$sendingDisabled){
             if(ZfExtended_Debug::hasLevel('core', 'mailing')){
                 error_log('translate5 disabled mail: '.$this->getSubject().' <'.implode(',',$this->getRecipients()).'>');
             }
@@ -69,7 +70,14 @@ class  ZfExtended_Mailer extends Zend_Mail {
         try {
             return parent::send($transport);
         } catch (Zend_Mail_Transport_Exception $e) {
-            //TODO: logger, talk with Thomas
+            //disable mail sending, so it not end up in endles loop
+            self::$sendingDisabled=true;
+            if(Zend_Registry::isRegistered('logger')){
+                Zend_Registry::get('logger')->exception($e, ['level' => ZfExtended_Logger::LEVEL_WARN]);
+            }else{
+                error_log($e->getMessage());
+            }
+            
         }
         return null;
     }
