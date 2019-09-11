@@ -126,7 +126,7 @@ class ZfExtended_Controller_Helper_General extends Zend_Controller_Action_Helper
      *
      */
     public function mail(string $toMail, string $toName, string $subject, array $params = array(), $fromMail = false, $fromName = false, array $attachments = array(), $template = false) {
-        $mailer = new ZfExtended_Mail();
+        $mailer = new ZfExtended_TemplateBasedMail();
         $mailer->setParameters($params);
         $mailer->setAttachment($attachments);
 
