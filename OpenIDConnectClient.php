@@ -214,7 +214,7 @@ class ZfExtended_OpenIDConnectClient{
         $user->setSurName($this->getOpenIdUserData('family_name'));
         
         //the gender is required in translate5, and in the response can be empty or larger than 1 character
-        $gender=!empty($this->getOpenIdUserData('gender')) ? substr($this->getOpenIdUserData('gender'),0,1) : 'f';
+        $gender=!empty($this->getOpenIdUserData('gender')) ? substr($this->getOpenIdUserData('gender'),0,1) : 'n';
         $user->setGender($gender);
         
         $user->setEditable(1);
