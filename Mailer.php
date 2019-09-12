@@ -57,7 +57,7 @@ class ZfExtended_Mailer extends Zend_Mail {
      * default transport had been set.
      *
      * @param  Zend_Mail_Transport_Abstract $transport
-     * @return Zend_Mail                    Provides fluent interface
+     * @return ZfExtended_Mailer                    Provides fluent interface
      */
     public function send($transport = null){
         if(self::$sendingDisabled){
@@ -75,7 +75,7 @@ class ZfExtended_Mailer extends Zend_Mail {
             if(Zend_Registry::isRegistered('logger')){
                 Zend_Registry::get('logger')->exception($e, ['level' => ZfExtended_Logger::LEVEL_WARN]);
             }else{
-                error_log($e->getMessage());
+                error_log($e);
             }
             
         }
