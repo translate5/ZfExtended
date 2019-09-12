@@ -209,12 +209,21 @@ class ZfExtended_OpenIDConnectClient{
         $guidHelper = ZfExtended_Zendoverwrites_Controller_Action_HelperBroker::getStaticHelper('Guid');
         $userGuid = $guidHelper->create(true);
         
+        //check if the user with email as login exist
+        if(!$user->loadByLogin($emailClaims)){
+            
+            //the user with email as login does not exist, this is a new user, so set the login as email and set the sso info
+            $user->setOpenIdIssuer($issuer);
+            $user->setOpenIdSubject($subject);
+            $user->setUserGuid($userGuid);
+            $user->setLogin($emailClaims);
+            return $user;
+        }
+        
         //the user with same email exist, now try to check if it is another sso user
         //another sso user is when the user has values in issuer and subject fields
         //this can only happen if 2 different sso user has same email address
-        $sameUserExistsFromSSO = $user->loadByLogin($emailClaims) && !empty($user->getOpenIdIssuer()) && !empty($user->getOpenIdSubject());
-        if($sameUserExistsFromSSO){
-            
+        if(!empty($user->getOpenIdIssuer()) && !empty($user->getOpenIdSubject())){
             // the loaded $user is already an SSO user with same email.
             // we want to create a new one then (init to throw away the above loaded data)
             $user->init();
