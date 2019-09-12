@@ -119,7 +119,7 @@ class ZfExtended_Test_ApiHelper {
         
         //enable xdebug debugger in eclipse
         if($this->xdebug) {
-            $http->setCookie('XDEBUG_SESSION','netbeans-xdebug');
+            $http->setCookie('XDEBUG_SESSION','ECLIPSE');
             $http->setConfig(array('timeout'      => 3600));
         }
         else {
