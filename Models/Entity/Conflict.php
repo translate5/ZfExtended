@@ -22,6 +22,14 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
+
+
+
+/**
+ * Should be used if the status of the entity does prevent normal processing: The entity is locked, the entity is used/referenced in other places.
+ * In other words: the entity it self is reasonable that the request can not be processed.
+ * Encapsulates 409 Conflict
+ */
 class ZfExtended_Models_Entity_Conflict  extends ZfExtended_ErrorCodeException {
     use ZfExtended_ResponseExceptionTrait;
     
