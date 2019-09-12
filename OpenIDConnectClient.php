@@ -224,9 +224,6 @@ class ZfExtended_OpenIDConnectClient{
             $userId=$user->save();
             //update the login with the openid as prefix
             $user->setLogin('OID-'.$userId);
-        }else{
-            $user->setUserGuid($userGuid);
-            $user->setLogin($emailClaims);
         }
         
         $user->setOpenIdIssuer($issuer);
