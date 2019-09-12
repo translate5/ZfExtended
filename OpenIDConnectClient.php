@@ -141,74 +141,14 @@ class ZfExtended_OpenIDConnectClient{
     
     /***
      * Create user from the OAuth verified user claims
+     * FIXME should be renamed to createOrMergeUser
      * @return NULL|ZfExtended_Models_User
      */
-    public function createUser(){
+    public function createUser(){ 
+        $emailClaims = $this->getEmailClaim();
+        $user = $this->initOrLoadUser($emailClaims);
         
-        $user=ZfExtended_Factory::get('ZfExtended_Models_User');
-        /* @var $user ZfExtended_Models_User */
-        
-        $issuer=$this->getOpenIdUserData('iss');
-        $subject=$this->getOpenIdUserData('sub');
-        
-        
-        $emailClaims=$this->getOpenIdUserData('email');
-        
-        //if the email is not found from the standard claims, try to get it from 'upn'
-        if(empty($emailClaims)){
-            $emailClaims=$this->getOpenIdUserData('upn');
-            if(!empty($emailClaims)){
-                //the upn is defined, chech if it is valid email
-                $valid = filter_var($emailClaims, FILTER_VALIDATE_EMAIL) !== false;
-                if(!$valid){
-                    //it is not valid email, reset it
-                    $emailClaims=null;
-                }
-            }
-        }
-        
-        //if the email is empty again, try to find if it is defined as preferred_username claim
-        if(empty($emailClaims)){
-            $emailClaims=$this->getOpenIdUserData('preferred_username');
-            if(!empty($emailClaims)){
-                //the preferred_username is defined, chech if it is valid email
-                $valid = filter_var($emailClaims, FILTER_VALIDATE_EMAIL) !== false;
-                if(!$valid){
-                    //it is not valid email, reset it
-                    $emailClaims=null;
-                }
-            }
-        }
-        
-        //check if the sso user already exist for the issuer and subject
-        if(!$user->loadByIssuerAndSubject($issuer,$subject)){
-            
-            if(!$user->loadByLogin($emailClaims)){
-                $guidHelper = ZfExtended_Zendoverwrites_Controller_Action_HelperBroker::getStaticHelper('Guid');
-                $userGuid=$guidHelper->create(true);
-                $user->setUserGuid($userGuid);
-                $user->setLogin($emailClaims);
-                $user->save();
-            }else{
-                //the user with same email exist, now try to check if it is another sso user
-                //another sso user is when the user has values in issuer and subject fields
-                //this can only happen if 2 different sso user has same email address
-                if(!empty($user->getOpenIdIssuer()) && !empty($user->getOpenIdSubject())){
-                    $guidHelper = ZfExtended_Zendoverwrites_Controller_Action_HelperBroker::getStaticHelper('Guid');
-                    $userGuid=$guidHelper->create(true);
-                    $user->init();
-                    $user->setUserGuid($userGuid);
-                    $user->setLogin($userGuid);
-                    $userId=$user->save();
-                    //update the login with the openid as prefix
-                    $user->setLogin('OID-'.$userId);
-                }
-            }
-            
-            $user->setOpenIdIssuer($issuer);
-            $user->setOpenIdSubject($subject);
-        }
-        
+        //down here update user with data from SSO
         $user->setEmail($emailClaims);
         $user->setFirstName($this->getOpenIdUserData('given_name'));
         $user->setSurName($this->getOpenIdUserData('family_name'));
@@ -248,6 +188,77 @@ class ZfExtended_OpenIDConnectClient{
         }
         $user->setRoles($this->mergeUserRoles($roles));
         return $user->save()>0? $user : null;
+    }
+    
+    /**
+     * Inits either an empty user with SSO data, or loads an existing one to be updated with the SSO data
+     * @param string $emailClaims
+     */
+    protected function initOrLoadUser($emailClaims) {
+        $user = ZfExtended_Factory::get('ZfExtended_Models_User');
+        /* @var $user ZfExtended_Models_User */
+        
+        $issuer = $this->getOpenIdUserData('iss');
+        $subject = $this->getOpenIdUserData('sub');
+        
+        //check if the sso user already exist for the issuer and subject, if yes use it and update other data outside
+        if($user->loadByIssuerAndSubject($issuer,$subject)){
+            return $user;
+        }
+
+        $guidHelper = ZfExtended_Zendoverwrites_Controller_Action_HelperBroker::getStaticHelper('Guid');
+        $userGuid = $guidHelper->create(true);
+        
+        //the user with same email exist, now try to check if it is another sso user
+        //another sso user is when the user has values in issuer and subject fields
+        //this can only happen if 2 different sso user has same email address
+        $sameUserExistsFromSSO = $user->loadByLogin($emailClaims) && !empty($user->getOpenIdIssuer()) && !empty($user->getOpenIdSubject());
+        if($sameUserExistsFromSSO){
+            
+            // the loaded $user is already an SSO user with same email.
+            // we want to create a new one then (init to throw away the above loaded data)
+            $user->init();
+            
+            $user->setUserGuid($userGuid);
+            $user->setLogin($userGuid);
+            $userId=$user->save();
+            //update the login with the openid as prefix
+            $user->setLogin('OID-'.$userId);
+        }else{
+            $user->setUserGuid($userGuid);
+            $user->setLogin($emailClaims);
+        }
+        
+        $user->setOpenIdIssuer($issuer);
+        $user->setOpenIdSubject($subject);
+        return $user;
+    }
+    
+    /**
+     * return the emailClaim from email or upn or preferred_username, null if nothing was a valid email
+     * @return string|NULL
+     */
+    protected function getEmailClaim() {
+        $emailClaims = $this->getOpenIdUserData('email');
+        
+        if(!empty($emailClaims)){
+            return $emailClaims;
+        }
+        //if the email is not found from the standard claims, try to get it from 'upn'
+        $emailClaims=$this->getOpenIdUserData('upn');
+        //the upn is defined, chech if it is valid email
+        if(!empty($emailClaims) && filter_var($emailClaims, FILTER_VALIDATE_EMAIL) !== false){
+            return $emailClaims;
+        }
+        
+        //if the email is empty again, try to find if it is defined as preferred_username claim
+        $emailClaims=$this->getOpenIdUserData('preferred_username');
+        //the preferred_username is defined, chech if it is valid email
+        if(!empty($emailClaims) && filter_var($emailClaims, FILTER_VALIDATE_EMAIL) !== false){
+            return $emailClaims;
+        }
+        //FIXME throw an exception here???
+        return null;
     }
     
     /***
