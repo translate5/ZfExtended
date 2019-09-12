@@ -180,34 +180,36 @@ class ZfExtended_OpenIDConnectClient{
             }
         }
         
-        $user->setEmail($emailClaims);
-        
-        //check if the user exist for the issuer and subject
+        //check if the sso user already exist for the issuer and subject
         if(!$user->loadByIssuerAndSubject($issuer,$subject)){
-
-            //IMPORTANT INFO:set the user login as email
-            //we can't auto-generate login, since the users can be created also from the t5connect
-            //for the one mail to multiple users situation, the login of the first logged user will be with the email
-            //and all other user will have an auto-generated openid login
-            $user->setLogin($emailClaims);
-            $guidHelper = ZfExtended_Zendoverwrites_Controller_Action_HelperBroker::getStaticHelper('Guid');
-            $userGuid=$guidHelper->create(true);
-            $user->setUserGuid($userGuid);
-            try {
+            
+            if(!$user->loadByLogin($emailClaims)){
+                $guidHelper = ZfExtended_Zendoverwrites_Controller_Action_HelperBroker::getStaticHelper('Guid');
+                $userGuid=$guidHelper->create(true);
+                $user->setUserGuid($userGuid);
+                $user->setLogin($emailClaims);
                 $user->save();
-            } catch (ZfExtended_Models_Entity_Exceptions_IntegrityDuplicateKey $e) {
-                //autogenerate new openid login for the user 
-                //because user with the $emailClaims as login already exist
-                $user->setLogin($userGuid);
-                $userId=$user->save();
-                //update the login with the openid as prefix
-                $user->setLogin('OID-'.$userId);
+            }else{
+                //the user with same email exist, now try to check if it is another sso user
+                //another sso user is when the user has values in issuer and subject fields
+                //this can only happen if 2 different sso user has same email address
+                if(!empty($user->getOpenIdIssuer()) && !empty($user->getOpenIdSubject())){
+                    $guidHelper = ZfExtended_Zendoverwrites_Controller_Action_HelperBroker::getStaticHelper('Guid');
+                    $userGuid=$guidHelper->create(true);
+                    $user->init();
+                    $user->setUserGuid($userGuid);
+                    $user->setLogin($userGuid);
+                    $userId=$user->save();
+                    //update the login with the openid as prefix
+                    $user->setLogin('OID-'.$userId);
+                }
             }
+            
+            $user->setOpenIdIssuer($issuer);
+            $user->setOpenIdSubject($subject);
         }
         
-        $user->setOpenIdIssuer($issuer);
-        $user->setOpenIdSubject($subject);
-        
+        $user->setEmail($emailClaims);
         $user->setFirstName($this->getOpenIdUserData('given_name'));
         $user->setSurName($this->getOpenIdUserData('family_name'));
         
