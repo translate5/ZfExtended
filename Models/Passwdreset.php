@@ -98,7 +98,7 @@ class ZfExtended_Models_Passwdreset extends ZfExtended_Models_Entity_Abstract {
         $this->validate();
         $this->save();
         
-        $mailer = new ZfExtended_Mail();
+        $mailer = new ZfExtended_TemplateBasedMail();
         $mailer->setParameters([
             'resetHash' => $session->resetHash,
         ]);
