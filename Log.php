@@ -32,7 +32,7 @@ END LICENSE AND COPYRIGHT
  * Klasse zur Kapselung des Loggings und Mailversands von Logmeldungen
  * @deprecated Use ZfExtended_Logger where possible
  */
-class  ZfExtended_Log extends ZfExtended_Mail {
+class  ZfExtended_Log extends ZfExtended_TemplateBasedMail {
     /**
      * Defining the log levels (draft, not really used at the moment)
      * Using 2^n values for better filtering and combining possibilties, although a simple < comparsion should be enough 
@@ -62,7 +62,7 @@ class  ZfExtended_Log extends ZfExtended_Mail {
      * initiiert das interne Mail und View Object
      *
      *  @param bool initView entscheidet, ob view initialisiert wird
-     *      (Achtung: Bei false ist die Verwendung von Mailtemplates mit ZfExtended_Mail nicht möglich)
+     *      (Achtung: Bei false ist die Verwendung von Mailtemplates mit ZfExtended_TemplateBasedMail nicht möglich)
      *      Default: true
      */
     public function __construct($initView = true) {

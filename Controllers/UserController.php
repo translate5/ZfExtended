@@ -391,7 +391,7 @@ class ZfExtended_UserController extends ZfExtended_RestController {
     protected function handlePasswdMail() {
         //convention for passwd being reset: 
         if(property_exists($this->data, 'passwd') && is_null($this->data->passwd)) {
-            $mailer = new ZfExtended_Mail();
+            $mailer = new ZfExtended_TemplateBasedMail();
             $mailer->sendToUser($this->entity);
         }
     }

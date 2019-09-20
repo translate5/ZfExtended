@@ -25,15 +25,6 @@
 /**
  */
 class ZfExtended_Logger_Writer_Database extends ZfExtended_Logger_Writer_Abstract {
-    /**
-     * @var Zend_Mail
-     */
-    protected $mail; 
-    
-    public function __construct(array $options) {
-        parent::__construct($options);
-    }
-    
     public function write(ZfExtended_Logger_Event $event) {
         //FIXME how to implement the duplication recognition (especially in the email logger)
         // same technique, here for counting up the counter, in the email logger to prevent mails. But how?

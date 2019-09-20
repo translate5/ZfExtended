@@ -47,11 +47,15 @@ class ZfExtended_View_Helper_MailEmployeeSalutation extends Zend_View_Helper_Abs
             $user = new Zend_Session_Namespace('user');
             $gender = $user->data->gender;
         }
-        elseif($gender !='f' and $gender!='m'){
+        elseif($gender !='f' && $gender!='m' && $gender!='n'){
             throw new Zend_Exception('$gender hat den nicht erwarteten Wert '.$gender, 0);
         }
-        return ($gender == 'f')?
-        $this->view->translate->_('Sehr geehrte Frau'):
-        $this->view->translate->_('Sehr geehrter Herr');
+        if($gender == 'f'){
+            return $this->view->translate->_('Sehr geehrte Frau');
+        }
+        if($gender == 'm'){
+            return $this->view->translate->_('Sehr geehrter Herr');
+        }
+        return $this->view->translate->_('Sehr geehrte(r)');
     }
 }
