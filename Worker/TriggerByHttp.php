@@ -92,7 +92,9 @@ class ZfExtended_Worker_TriggerByHttp {
         $header = '';
         $state = 0;
         $serverId = '';
+        $linesOfFsock = '';
         while ($line = fgets($fsock)) {
+			$linesOfFsock .= $line."/r/n";
             if ($line == "\r\n") {
                 break;
             }
@@ -127,7 +129,7 @@ class ZfExtended_Worker_TriggerByHttp {
                 'port' => $this->port,
             ]);
             // if not (URL responds immediately with an empty result) this means the called URL is not properly configured!
-            // → make a dedicated log entry, since the log below would be bogus for this situation
+            //  make a dedicated log entry, since the log below would be bogus for this situation
             return false; 
         }
         
@@ -147,7 +149,9 @@ class ZfExtended_Worker_TriggerByHttp {
                 //a 404 means we are requesting the wrong server! 
                 $method = 'error';
                 $code = 'E1107';
-                $msg = 'Worker HTTP response state was 404, the worker system requests probably the wrong server!';
+                $msg = 'Worker HTTP response state was 404, the worker system requests probably the wrong server! The serverId had been: '.
+						trim($serverId).' and the PostParameter-serverId had been: '.$postParameters['serverId']."\r\nFSock-Output was:\r\n".
+						$linesOfFsock;
                 break;
             default:
                 $method = 'warn';
