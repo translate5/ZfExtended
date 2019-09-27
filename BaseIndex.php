@@ -80,19 +80,11 @@ class ZfExtended_BaseIndex{
             throw new Exception('mb_internal_encoding("UTF-8") could not be set!');
         }
         $this->application_path = realpath(dirname($indexpath) . '/../application');
-        defined('APPLICATION_PATH')
-            || define('APPLICATION_PATH',$this->application_path);
-
+        defined('APPLICATION_PATH') || define('APPLICATION_PATH',$this->application_path);
         // Define application environment
-        defined('APPLICATION_ENV')||
-                define('APPLICATION_ENV', ( getenv('APPLICATION_ENV') ? getenv('APPLICATION_ENV') : 'application'));
-        defined('APPLICATION_AGENCY')||
-                define('APPLICATION_AGENCY', ( getenv('APPLICATION_AGENCY') ? getenv('APPLICATION_AGENCY') : $this->getAgency()));
-        defined('APPLICATION_RUNDIR')||
-                define('APPLICATION_RUNDIR', ( getenv('APPLICATION_RUNDIR') ? getenv('APPLICATION_RUNDIR') : ''));
-
-                
-        define('NOW_ISO', date('Y-m-d H:i:s', $_SERVER['REQUEST_TIME']));
+        defined('APPLICATION_ENV') || define('APPLICATION_ENV', ( getenv('APPLICATION_ENV') ? getenv('APPLICATION_ENV') : 'application'));
+        defined('APPLICATION_AGENCY') || define('APPLICATION_AGENCY', ( getenv('APPLICATION_AGENCY') ? getenv('APPLICATION_AGENCY') : $this->getAgency()));
+        defined('APPLICATION_RUNDIR') || define('APPLICATION_RUNDIR', ( getenv('APPLICATION_RUNDIR') ? getenv('APPLICATION_RUNDIR') : ''));
         $this->applicationInis = $this->getApplicationInis();
     }
     /**
@@ -165,8 +157,9 @@ class ZfExtended_BaseIndex{
         Zend_Loader_Autoloader::getInstance()->setFallbackAutoloader(true);
         /** Zend_Application */
         require_once dirname(__FILE__).'/Application.php';
-        return new ZfExtended_Application( APPLICATION_ENV,
-                array( 'config' => $this->applicationInis));
+        $application=new ZfExtended_Application( APPLICATION_ENV,[ 'config' => $this->applicationInis]);
+        $this->initAdditionalConstants();
+        return $application;
     }
 
     /**
@@ -352,5 +345,13 @@ class ZfExtended_BaseIndex{
           $applicationInis[] = APPLICATION_PATH.'/iniOverwrites/'.APPLICATION_AGENCY.'/'.$this->currentModule.'Application.ini';
         }
         return $applicationInis;
+    }
+    
+    
+    /***
+     * Define additional transalte5 constants. This will be initialized after the application ini is loaded
+     */
+    protected function initAdditionalConstants(){
+        define('NOW_ISO', date('Y-m-d H:i:s', $_SERVER['REQUEST_TIME']));
     }
 }
