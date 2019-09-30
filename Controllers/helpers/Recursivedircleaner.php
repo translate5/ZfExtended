@@ -83,7 +83,7 @@ class ZfExtended_Controller_Helper_Recursivedircleaner extends Zend_Controller_A
             if ($fileInfo->isDir()) {
                 $this->deleteOldFiles($directory . DIRECTORY_SEPARATOR . $fileInfo->getFilename(),$olderThan);
             }
-            if ($fileInfo->isFile() && $fileInfo->getCTime() >= $olderThan) {
+            if ($fileInfo->isFile() && $fileInfo->getCTime() <= $olderThan) {
                 unlink($fileInfo->getRealPath());
             }
         }
