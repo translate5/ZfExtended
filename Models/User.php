@@ -499,9 +499,12 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implement
      * Check if the domain exist for one of the customers of the user
      * @param string $userGuid
      * @param string $domain
-     * @return NULL|string
+     * @return NULL|int
      */
-    public function getUserCustomerDomain(string $userGuid,string $domain){
+    public function isValidCustomerDomain(string $userGuid,string $domain){
+        if(empty($userGuid) || empty($domain)){
+            return null;
+        }
         $customer=ZfExtended_Factory::get('editor_Models_Customer');
         /* @var $customer editor_Models_Customer */
         $customer->loadByDomain($domain);
@@ -512,7 +515,7 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implement
         $customers=trim($this->getCustomers(),",");
         $customers=explode(',', $customers);
         if(in_array($customer->getId(),$customers)){
-            return $domain;
+            return $customer->getId();
         }
         return null;
     }
