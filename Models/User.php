@@ -494,4 +494,29 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implement
     public function readAnonymizedUsers() {
         return $this->isAllowed("frontend","readAnonymyzedUsers");
     }
+
+    /***
+     * Check if the domain exist for one of the customers of the user
+     * @param string $userGuid
+     * @param string $domain
+     * @return NULL|int
+     */
+    public function isValidCustomerDomain(string $userGuid,string $domain){
+        if(empty($userGuid) || empty($domain)){
+            return null;
+        }
+        $customer=ZfExtended_Factory::get('editor_Models_Customer');
+        /* @var $customer editor_Models_Customer */
+        $customer->loadByDomain($domain);
+        if($customer->getId()==null){
+            return null;
+        }
+        $this->loadByGuid($userGuid);
+        $customers=trim($this->getCustomers(),",");
+        $customers=explode(',', $customers);
+        if(in_array($customer->getId(),$customers)){
+            return $customer->getId();
+        }
+        return null;
+    }
 }

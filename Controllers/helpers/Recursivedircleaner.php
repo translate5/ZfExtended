@@ -67,4 +67,26 @@ class ZfExtended_Controller_Helper_Recursivedircleaner extends Zend_Controller_A
 
         }
     }
+    
+    /***
+     * Remove files older than the given timestamp
+     * 
+     * @param string $directory
+     * @param int $olderThan
+     */
+    public function deleteOldFiles(string $directory,int $olderThan=null) {
+        $iterator = new DirectoryIterator($directory);
+        foreach ($iterator as $fileInfo) {
+            if ($fileInfo->isDot()) {
+                continue;
+            }
+            if ($fileInfo->isDir()) {
+                $this->deleteOldFiles($directory . DIRECTORY_SEPARATOR . $fileInfo->getFilename(),$olderThan);
+            }
+            
+            if ($fileInfo->isFile() && filemtime($fileInfo->getRealPath()) < $olderThan) {
+                unlink($fileInfo->getRealPath());
+            }
+        }
+    }
 }
