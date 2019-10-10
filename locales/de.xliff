@@ -5,6 +5,7 @@
  <file original='php-sourcecode' source-language='de' target-language='de' datatype='php'>
   <body>
       <trans-unit id="R2VuZXJhbE1ldGF0YWdUaXRsZVN1ZmZpeA=="><source>GeneralMetatagTitleSuffix</source><target>translate5</target></trans-unit>
+      <trans-unit id='QW5tZWxkdW5nIG1pdCBPcGVuaWQgbmljaHQgbcO2Z2xpY2gsIGJpdHRlIHZlcnN1Y2hlbiBTaWUgZXMgZXJuZXV0Lg=='><source>Anmeldung mit Openid nicht möglich, bitte versuchen Sie es erneut.</source><target>Unable to login with Openid, please try again.</target></trans-unit>
   </body>
  </file>
 </xliff>

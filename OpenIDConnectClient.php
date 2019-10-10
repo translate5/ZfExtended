@@ -66,11 +66,17 @@ class ZfExtended_OpenIDConnectClient{
      */
     protected $openIdUserInfo;
     
+    /**
+     * @var ZfExtended_Logger
+     */
+    protected $log;
+    
     public function __construct(Zend_Controller_Request_Abstract $request) {
         $this->openIdClient=new OpenIDConnectClient();
         $this->config=Zend_Registry::get('config');
         $this->setRequest($request);
         $this->initOpenIdData();
+        $this->log = Zend_Registry::get('logger')->cloneMe('core.openidconnect');
     }
     
     
@@ -120,7 +126,24 @@ class ZfExtended_OpenIDConnectClient{
         try {
             return $this->openIdClient->authenticate();
         } catch (OpenIDConnectClientException $e) {
-            throw $e;
+            $openidInfo=[
+                'customer'=>$this->getCustomer()->getDataObject(),
+                'userInfo'=>$this->openIdUserInfo,
+                'userClaims'=>$this->openIdUserClaims
+            ];
+            $data=[
+                'message' => $e->getMessage().PHP_EOL. $e->getTraceAsString(),
+                'request' => print_r($this->request->getParams(),1),
+                'session' => print_r($_SESSION,1),
+                'openid' => $openidInfo
+            ];
+            $this->log->error('E1165', $e->getMessage(),$data);
+            throw new ZfExtended_OpenIDConnectClientException('E1165',[
+                'message' => $e->getMessage().' \n'. $e->getTraceAsString(),
+                'request' => print_r($this->request->getParams(),1),
+                'session' => print_r($_SESSION,1),
+                'openid' => $openidInfo
+            ]);
         }
     }
     
