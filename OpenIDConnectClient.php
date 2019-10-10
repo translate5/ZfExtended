@@ -137,7 +137,7 @@ class ZfExtended_OpenIDConnectClient{
                 'session' => print_r($_SESSION,1),
                 'openid' => $openidInfo
             ];
-            $this->log->error('E1165', $e->getMessage(),$data);
+            $this->log->info('E1165', $e->getMessage(),$data);
             throw new ZfExtended_OpenIDConnectClientException('E1165',[
                 'message' => $e->getMessage().' \n'. $e->getTraceAsString(),
                 'request' => print_r($this->request->getParams(),1),
