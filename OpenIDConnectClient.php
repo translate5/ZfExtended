@@ -192,7 +192,6 @@ class ZfExtended_OpenIDConnectClient{
         if(empty($roles)){
             $roles=$this->getOpenIdUserData('role');
         }
-        $roles=['editor'];
         $user->setRoles($this->mergeUserRoles($roles));
         return $user->save()>0? $user : null;
     }
