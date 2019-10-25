@@ -160,7 +160,7 @@ class ZfExtended_OpenIDConnectClient{
         $user->setSurName($this->getOpenIdUserData('family_name'));
         
         //the gender is required in translate5, and in the response can be empty or larger than 1 character
-        $gender=!empty($this->getOpenIdUserData('gender')) ? substr($this->getOpenIdUserData('gender'),0,1) : 'n';
+        $gender=!empty($this->getOpenIdUserData('gender',false)) ? substr($this->getOpenIdUserData('gender'),0,1) : 'n';
         $user->setGender($gender);
         
         $user->setEditable(1);
@@ -173,7 +173,7 @@ class ZfExtended_OpenIDConnectClient{
         $defaultLocale=empty($appLocale) ? (empty($fallbackLocale) ? 'en' : $fallbackLocale) : $appLocale;
         
         
-        $claimLocale=$this->getOpenIdUserData('locale');
+        $claimLocale=$this->getOpenIdUserData('locale',false);
         
         //if the claim locale is empty, use the default user locale
         if(empty($claimLocale)){
@@ -188,10 +188,13 @@ class ZfExtended_OpenIDConnectClient{
         
         //find and set the roles, depending of the openid server config, this can be defined as roles or role
         //and it can exist either in the verified claims or in the user info
-        $roles=$this->getOpenIdUserData('roles');
+        $roles=$this->getOpenIdUserData('roles',false);
         if(empty($roles)){
-            $roles=$this->getOpenIdUserData('role');
+            $roles=$this->getOpenIdUserData('role',false);
         }
+        if(empty($roles)){
+			$this->log->info('E1174', 'No roles are provided by the OpenID Server to translate5. The default roles that are set in the configuration for the customer are used.');
+		}
         $user->setRoles($this->mergeUserRoles($roles));
         return $user->save()>0? $user : null;
     }
@@ -301,6 +304,20 @@ class ZfExtended_OpenIDConnectClient{
         if(is_string($claimsRoles)){
             $claimsRoles=explode(',', $claimsRoles);
         }
+        //if users are in more than 1 group with rights for translate5, it can happen that the IDP server delivers
+        //an array structure like such
+        //array("instantTranslate,termCustomerSearch,termProposer","instantTranslate,termCustomerSearch");
+        //this is solved with the following for loop
+		for($i=0; $i<count($claimsRoles); $i++) {
+			if(strstr($claimsRoles[$i],',')!== false){
+				$newRoles=explode(',', $claimsRoles[$i]);
+				$countNewRoles = count($newRoles);
+				array_splice($claimsRoles, $i, 1, $newRoles);
+				$i--;
+				$i = $i + $countNewRoles;
+			}
+		}
+		$claimsRoles = array_unique($claimsRoles);
         
         $acl = ZfExtended_Acl::getInstance();
         /* @var $acl ZfExtended_Acl */
@@ -377,9 +394,10 @@ class ZfExtended_OpenIDConnectClient{
      * Get the user info from the openid provider.
      * 
      * @param string $attribute
+     * @param bool $warnEmpty
      * @return NULL|mixed
      */
-    public function getOpenIdUserData(string $attribute) {
+    public function getOpenIdUserData(string $attribute,bool $warnEmpty = true) {
         
         //load openid claims from the sso provider
         if(!isset($this->openIdUserClaims)){
@@ -392,14 +410,20 @@ class ZfExtended_OpenIDConnectClient{
         }
         
         //check if the attribute exist in the claims
-        if(array_key_exists($attribute, $this->openIdUserClaims)) {
+        if(!empty($this->openIdUserClaims) && array_key_exists($attribute, $this->openIdUserClaims)) {
             return $this->openIdUserClaims->$attribute;
         }
         
         //check if the attribute exist in the user info
-        if (array_key_exists($attribute, $this->openIdUserInfo)) {
+        if (!empty($this->openIdUserInfo) && array_key_exists($attribute, $this->openIdUserInfo)) {
             return $this->openIdUserInfo->$attribute;
         }
+        if($warnEmpty){
+			$this->log->warn('E1173', 'The OpenIdUserData attribute {attribute} was not set by the requested OpenID server.', [
+				'attributeToFetch' => $attribute,
+				'attribute' => $attribute,
+			]);
+		}
         
         //no attribute was found
         return null;
