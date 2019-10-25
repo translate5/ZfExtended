@@ -52,6 +52,10 @@ class ZfExtended_View_Helper_Php2JsVars extends Zend_View_Helper_Abstract{
             $name = explode('.',$name);
         }
 
+        if($data instanceof Zend_Config) {
+            $data = $data->toArray();
+        }
+        
         //Das letzte Element bezeichnet den Wert selbst,
         // wird daher nicht ins create mit einbezogen
         $nameOfValue = array_pop($name);

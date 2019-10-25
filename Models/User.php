@@ -470,18 +470,19 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implement
         return $row;
     }
     
-    /***
+    /**
      * Load user by user login
      * 
      * @param string $login
-     * @return Zend_Db_Table_Row_Abstract|NULL
+     * @throws ZfExtended_Models_Entity_NotFoundException
+     * @return Zend_Db_Table_Row_Abstract
      */
     public function loadByLogin($login) {
         $s = $this->db->select();
         $s->where('login=?',$login);
         $row=$this->db->fetchRow($s);
         if(empty($row)){
-            return null;
+            $this->notFound(__CLASS__ . '#login', $login);
         }
         $this->row =$row;
         return $row;

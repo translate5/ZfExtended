@@ -219,8 +219,10 @@ class ZfExtended_OpenIDConnectClient{
         $userGuid = $guidHelper->create(true);
         
         //check if the user with email as login exist
-        if(!$user->loadByLogin($emailClaims)){
-            
+        try {
+            $user->loadByLogin($emailClaims);
+        } 
+        catch(ZfExtended_Models_Entity_NotFoundException $e) {
             //the user with email as login does not exist, this is a new user, so set the login as email and set the sso info
             $user->setOpenIdIssuer($issuer);
             $user->setOpenIdSubject($subject);
