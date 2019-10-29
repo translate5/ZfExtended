@@ -401,6 +401,10 @@ class ZfExtended_Models_Entity_ExcelExport {
     	return $this->spreadsheet;
     }
     
+    public function getAllWorksheets() {
+        return $this->spreadsheet->getAllSheets();
+    }
+    
     /**
      * Column index from string.
      *
