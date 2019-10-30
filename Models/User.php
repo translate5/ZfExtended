@@ -163,7 +163,11 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implement
      */
     public function getRoles(): array {
         //piping the method to __call, declaration is needed for interface
-        return explode(',', trim($this->__call('getRoles', []), ', '));
+        $roles = trim($this->__call('getRoles', []), ', ');
+        if(empty($roles)) {
+            return [];
+        }
+        return explode(',', $roles);
     }
     
     /**

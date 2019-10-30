@@ -460,6 +460,8 @@ class ZfExtended_UserController extends ZfExtended_RestController {
             return;
         }
         
+        $this->data->roles = trim($this->data->roles, ',');
+        
         //get the user old roles (put only)
         $oldRoles=[];
         if(isset($this->data->id)){
@@ -485,7 +487,7 @@ class ZfExtended_UserController extends ZfExtended_RestController {
                 
         $requestAclsArray=[];
         if(!empty($this->data->roles)){
-            $requestAclsArray=explode(',',$this->data->roles);
+            $requestAclsArray = explode(',',$this->data->roles);
         }
         
         //check if the user is allowed for the requested roles
@@ -495,9 +497,14 @@ class ZfExtended_UserController extends ZfExtended_RestController {
                 throw new ZfExtended_NoAccessException("Authenticated User is not allowed to modify role ".$role);
             }
         }
+        
+        //after checking setaclrole the auto_set_role flag is evaluated, 
+        // that means the value defined in the `right` column is used as needed role for the `role` column
+        $setAdditionally = $this->acl->getRightsToRolesAndResource($requestAclsArray, 'auto_set_role');
+        
         //merge the old roles and the allowed roles from the request
-        $requestAclsArray=array_merge($requestAclsArray,$oldRoles);
-        $this->data->roles=implode(',', $requestAclsArray);
+        $requestAclsArray = array_unique(array_merge($requestAclsArray, $oldRoles, $setAdditionally));
+        $this->data->roles = implode(',', $requestAclsArray);
     }
 
     /***

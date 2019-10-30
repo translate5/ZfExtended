@@ -247,9 +247,20 @@ class ZfExtended_Acl extends Zend_Acl {
     /**
      * Returns a list of frontend privileges / rights to the given roles
      * @param array $roles
+     * @return array 
      */
-    public function getFrontendRights(array $roles) {
-        $result = array();
+    public function getFrontendRights(array $roles): array {
+        return $this->getRightsToRolesAndResource($roles, 'frontend');
+    }
+    
+    /**
+     * returns the configured rights to a resource roles combination
+     * @param array $roles
+     * @param string $resource
+     * @return array 
+     */
+    public function getRightsToRolesAndResource(array $roles, string $resource): array {
+        $result = [];
         foreach($roles as $role) {
             try {
                 $roleObject = $this->getRole($role);
@@ -257,7 +268,7 @@ class ZfExtended_Acl extends Zend_Acl {
                 //if role is not registered because it is the role of a differnt module
                 continue;
             }
-            $res = $this->_getRules($this->get('frontend'), $roleObject);
+            $res = $this->_getRules($this->get($resource), $roleObject);
             if(!empty($res)) {
                 $result = array_merge($result, array_keys($res['byPrivilegeId']));
             }
