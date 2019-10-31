@@ -32,6 +32,7 @@ class ZfExtended_SessionController extends ZfExtended_RestController {
      * @see Zend_Controller_Action::init()
      */
     public function init() {
+        $this->acl = ZfExtended_Acl::getInstance();
         $this->initRestControllerSpecific();
     }
     
