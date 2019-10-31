@@ -306,20 +306,16 @@ class ZfExtended_OpenIDConnectClient{
         if(is_string($claimsRoles)){
             $claimsRoles=explode(',', $claimsRoles);
         }
+        
         //if users are in more than 1 group with rights for translate5, it can happen that the IDP server delivers
         //an array structure like such
         //array("instantTranslate,termCustomerSearch,termProposer","instantTranslate,termCustomerSearch");
         //this is solved with the following for loop
-		for($i=0; $i<count($claimsRoles); $i++) {
-			if(strstr($claimsRoles[$i],',')!== false){
-				$newRoles=explode(',', $claimsRoles[$i]);
-				$countNewRoles = count($newRoles);
-				array_splice($claimsRoles, $i, 1, $newRoles);
-				$i--;
-				$i = $i + $countNewRoles;
-			}
-		}
-		$claimsRoles = array_unique($claimsRoles);
+        //merge $claimsRoles containing comma separated strings with roles
+        $claimsRoles = array_unique(call_user_func_array('array_merge', array_map(function($item){
+            //explode each item
+            return explode(',', $item);
+        },$claimsRoles)));
         
         $acl = ZfExtended_Acl::getInstance();
         /* @var $acl ZfExtended_Acl */
