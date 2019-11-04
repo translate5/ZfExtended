@@ -111,15 +111,20 @@ abstract class ZfExtended_Models_Entity_Abstract {
 
     /**
      * inits the Entity, resets the internal data
-     * if data object is given, use this values
+     * if data object is given, use this values.
+     * If $assumeDatabase we "assume" that the given data really already exists in database.
      * @param array $data
+     * @param bool $assumeDatabase
      */
-    public function init(array $data = null) {
+    public function init(array $data = null, $assumeDatabase = false) {
         if(empty($data)) {
             $this->row = $this->db->createRow();
         }
         else {
             $this->row = $this->db->createRow($data);
+            if ($assumeDatabase) {
+                $this->row->refresh();
+            }
         }
     }
 
