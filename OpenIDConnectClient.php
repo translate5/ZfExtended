@@ -310,8 +310,8 @@ class ZfExtended_OpenIDConnectClient{
         //if users are in more than 1 group with rights for translate5, it can happen that the IDP server delivers
         //an array structure like such
         //array("instantTranslate,termCustomerSearch,termProposer","instantTranslate,termCustomerSearch");
-        //this is solved with the following for loop
-        //merge $claimsRoles containing comma separated strings with roles
+        //this is merged below
+        //$claimsRoles containing comma separated strings with roles
         $claimsRoles = array_unique(call_user_func_array('array_merge', array_map(function($item){
             //explode each item
             return explode(',', $item);
