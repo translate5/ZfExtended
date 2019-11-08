@@ -108,6 +108,17 @@ class ZfExtended_Models_Entity_ExcelExport {
     }
     
     /**
+     * set global document format settings
+     */
+    public function initDefaultFormat() {
+        $this->spreadsheet->getDefaultStyle()->getAlignment()
+        ->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_TOP)
+        ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT)
+        ->setWrapText(TRUE);
+        // @TODO: add some padding to all fields... but how??
+    }
+    
+    /**
      * The callback is called before the file is sent for download and after all cells are initialized.
 	 * In the callback we can do cell resizing,change its value etc...
      * @param array $data
@@ -390,6 +401,10 @@ class ZfExtended_Models_Entity_ExcelExport {
     	return $this->spreadsheet;
     }
     
+    public function getAllWorksheets() {
+        return $this->spreadsheet->getAllSheets();
+    }
+    
     /**
      * Column index from string.
      *
@@ -399,5 +414,34 @@ class ZfExtended_Models_Entity_ExcelExport {
      */
     public function columnIndexFromString($pString) {
         return Coordinate::columnIndexFromString($pString);
+    }
+    
+    /**
+     * Add a new worksheet to the excel-spreadsheet
+     * @param string $sheetName
+     * @param int $index
+     */
+    public function addWorksheet(string $sheetName, int $index) : void {
+        $tempWorksheet = new \PhpOffice\PhpSpreadsheet\Worksheet\Worksheet($this->spreadsheet, $sheetName);
+        $tempWorksheet->getDefaultColumnDimension()->setAutoSize(TRUE); // does not work propper in Libre-Office. With Microsoft-Office everything is OK.
+        $this->spreadsheet->addSheet($tempWorksheet, $index);
+    }
+    
+    /**
+     * Returns the worksheet of the given name
+     * @param string $sheetName
+     * @return PhpOffice\PhpSpreadsheet\Worksheet\Worksheet
+     */
+    public function getWorksheetByName($sheetName) {
+        $this->spreadsheet->setActiveSheetIndexByName($sheetName);
+        return $this->spreadsheet->getActiveSheet();
+    }
+    
+    /**
+     * Remove the worksheet of the given index
+     * @param integer $index
+     */
+    public function removeWorksheetByIndex(int $index) {
+        $this->spreadsheet->removeSheetByIndex($index);
     }
 }
