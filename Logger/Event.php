@@ -293,6 +293,7 @@ class ZfExtended_Logger_Event {
      * @param string $message
      */
     protected function messageToHtml(string $message) : string {
+        $message = htmlentities($message);
         $message = str_replace("\n", "<br>\n", $message);
         $message = preg_replace('/([^a-zA-Z]|^)(OFFLINE)([^a-zA-Z]|$)/s', '$1<span style="font-weight:bold;color:#c83335;">$2</span>$3', $message);
         $message = preg_replace('/([^a-zA-Z]|^)(ONLINE)([^a-zA-Z]|$)/s', '$1<span style="font-weight:bold;color:#00aa00;">$2</span>$3', $message);

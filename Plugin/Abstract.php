@@ -135,6 +135,16 @@ abstract class ZfExtended_Plugin_Abstract {
     }
     
     /**
+     * Returns the web directory for public resources
+     * @param string $resource
+     * @return string
+     */
+    public function getResourcePath(string $resource): string {
+        //the parts /plugins/resources/ are defined by convention
+        return APPLICATION_RUNDIR.'/'.Zend_Registry::get('module').'/plugins/resources/'.$this->pluginName.'/'.ltrim($resource,'/');
+    }
+    
+    /**
      * SubClasses of $classname are recognized as fulfilled dependency!
      * @param string $classname
      * @throws ZfExtended_Plugin_MissingDependencyException

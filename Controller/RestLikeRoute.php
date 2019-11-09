@@ -56,7 +56,7 @@ class ZfExtended_Controller_RestLikeRoute extends Zend_Controller_Router_Route {
         $return=parent::match($path,$partial);
         
         //match operation path route
-        if(preg_match('@([a-zA-Z]+)/([a-zA-Z]+)/([0-9]+)/([a-zA-Z]+)/operation@m', $path)){
+        if(preg_match('@([a-zA-Z]+)/([a-zA-Z]+)/([a-zA-Z0-9]+)/([a-zA-Z]+)/operation@m', $path)){
             
             //inject the operation action
             if(!empty($this->_defaults) && isset($this->_defaults['action']) && $this->_defaults['action']==""){
