@@ -618,4 +618,14 @@ abstract class ZfExtended_Models_Entity_Abstract {
         $this->setSpecificData($specificData);
         return true;
     }
+    
+    /***
+     * Get the next autoincrement primary key value for the entity
+     * @return mixed
+     */
+    public function getNextAutoincrement(){
+        $query = "SHOW TABLE STATUS LIKE ?;";
+        $result = $this->db->getAdapter()->fetchRow($query,[$this->tableName]);
+        return $result['Auto_increment'];
+    }
 }
