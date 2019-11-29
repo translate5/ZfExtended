@@ -175,11 +175,13 @@ class ZfExtended_Test_ApiHelper {
      * @param string $url
      * @param string $method
      * @param array $parameters
+     * @param array $additionalParameters
      * @return mixed a array/object structure (parsed from json) on HTTP Status 2XX, false otherwise 
      */
-    public function requestJson($url, $method = 'GET', $parameters = array()) {
+    public function requestJson($url, $method = 'GET', $parameters = [], $additionalParameters = []) {
         if(empty($this->filesToAdd) && ($method == 'POST' || $method == 'PUT')){
             $parameters = array('data' => json_encode($parameters));
+            $parameters = array_merge($parameters, $additionalParameters);
         }
         return $this->decodeJsonResponse($this->request($url, $method, $parameters));
     }
