@@ -174,12 +174,14 @@ class ZfExtended_Test_ApiHelper {
      * The raw response object is stored in lastResponse 
      * @param string $url
      * @param string $method
-     * @param array $parameters
+     * @param array $parameters added as json in data parameter
+     * @param array $additionalParameters attached as plain form parameters
      * @return mixed a array/object structure (parsed from json) on HTTP Status 2XX, false otherwise 
      */
-    public function requestJson($url, $method = 'GET', $parameters = array()) {
+    public function requestJson($url, $method = 'GET', $parameters = [], $additionalParameters = []) {
         if(empty($this->filesToAdd) && ($method == 'POST' || $method == 'PUT')){
             $parameters = array('data' => json_encode($parameters));
+            $parameters = array_merge($parameters, $additionalParameters);
         }
         return $this->decodeJsonResponse($this->request($url, $method, $parameters));
     }
