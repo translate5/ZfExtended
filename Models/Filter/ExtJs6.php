@@ -26,4 +26,17 @@ END LICENSE AND COPYRIGHT
  * converts the given Filter and Sort String from ExtJS to an object structure appliable to a Zend Select Object
  */
 class ZfExtended_Models_Filter_ExtJs6 extends ZfExtended_Models_Filter_ExtJs5 {
+    
+    /***
+     * Extjs filter operators translated to a userfrendly string
+     * @return string[]
+     */
+    public function getTranslatedOperators() {
+        $ret=[];
+        $translate = ZfExtended_Zendoverwrites_Translate::getInstance();
+        foreach ($this->operatorToType as $key=>$value){
+            $ret[$key]=$translate->_($key);
+        }
+        return $ret;
+    }
 }
