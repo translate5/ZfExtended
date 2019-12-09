@@ -106,6 +106,10 @@ class ZfExtended_Models_Filter_ExtJs extends ZfExtended_Models_Filter {
         case 'isNull':
             $this->applyIsNull($field);
             break;
+        case 'percent':
+            $method = 'applyPercent_'.$filter->comparison;
+            $this->$method($field,$filter->totalField, $filter->value);
+            break;
         case 'numeric':
         case 'date':
             $method = 'applyNumeric_'.$filter->comparison;
@@ -239,6 +243,34 @@ class ZfExtended_Models_Filter_ExtJs extends ZfExtended_Models_Filter {
   protected function applyNumeric_eq($field, $value) {
     $this->where($field.' = ?', $value);
   }
+  
+  /**
+   * apply the the lt percent filter to the select
+   * @param string $field
+   * @param int $value
+   */
+  protected function applyPercent_lt($field,$totalField, $value) {
+      $this->where('IFNULL((('.$field.'/'.$totalField.')*100),0) < ?', $value);
+  }
+  
+  /**
+   * apply the the gt percent filter to the select
+   * @param string $field
+   * @param int $value
+   */
+  protected function applyPercent_gt($field,$totalField, $value) {
+      $this->where('IFNULL((('.$field.'/'.$totalField.')*100),0) > ?', $value);
+  }
+  /**
+   * apply the eq percent filter to the select
+   * @param string $field
+   * @param int $value
+   */
+  protected function applyPercent_eq($field,$totalField, $value) {
+      $this->where('IFNULL((('.$field.'/'.$totalField.')*100),0) = ?', $value);
+  }
+  
+  
   /**
    * @param string $field
    * @param string $value
