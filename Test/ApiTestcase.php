@@ -40,16 +40,28 @@ abstract class ZfExtended_Test_ApiTestcase extends \ZfExtended_Test_Testcase {
      * @return stdClass returns the application state object
      */
     public static function assertTermTagger() {
-        self::assertLogin('testmanager');
-        $state = self::$api->requestJson('editor/index/applicationstate');
+        $state = self::assertAppState();
         self::assertFalse(empty($state->termtagger), 'Termtagger Plugin not active!');
         self::assertTrue($state->termtagger->runningAll, 'Some configured termtaggers are not running: '.print_r($state->termtagger->running,1));
-        
+        return $state;
+    }
+    
+    /**
+     * Asserts that the application state could be loaded 
+     * @return mixed|boolean
+     */
+    public static function assertAppState() {
+        self::$api->login('testapiuser', 'asdfasdf');
+        self::assertLogin('testapiuser');
+        $state = self::$api->requestJson('editor/index/applicationstate');
+        self::assertIsObject($state, 'Application state data is no object!');
         //other system checks
         self::assertEquals(0, $state->worker->scheduled, 'For API testing no scheduled workers are allowed in DB!');
         self::assertEquals(0, $state->worker->waiting, 'For API testing no waiting workers are allowed in DB!');
         self::assertEquals(0, $state->worker->running, 'For API testing no running workers are allowed in DB!');
-        self::assertTrue($state->database->isUptodate, 'Database is not up to date! '.$state->database->newCount.' new / '.$state->database->modCount.' modified.');
+        if(!$state->database->isUptodate) {
+            die('Database is not up to date! '.$state->database->newCount.' new / '.$state->database->modCount.' modified.'."\n\n");
+        }
         return $state;
     }
     
