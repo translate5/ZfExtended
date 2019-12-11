@@ -54,7 +54,7 @@ abstract class ZfExtended_Test_ApiTestcase extends \ZfExtended_Test_Testcase {
         self::$api->login('testapiuser', 'asdfasdf');
         self::assertLogin('testapiuser');
         $state = self::$api->requestJson('editor/index/applicationstate');
-        self::assertIsObject($state, 'Application state data is no object!');
+        self::assertTrue(is_object($state), 'Application state data is no object!');
         //other system checks
         self::assertEquals(0, $state->worker->scheduled, 'For API testing no scheduled workers are allowed in DB!');
         self::assertEquals(0, $state->worker->waiting, 'For API testing no waiting workers are allowed in DB!');
