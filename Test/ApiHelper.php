@@ -565,10 +565,13 @@ class ZfExtended_Test_ApiHelper {
     /**
      * returns the untestable segment fields (like id, taskGuid etc)
      * @param stdClass $segmentContent
+     * @param boolean $keepId optional, true to keep segment ID
      * @return stdClass
      */
-    public function removeUntestableSegmentContent(stdClass $segmentContent) {
-        unset($segmentContent->id);
+    public function removeUntestableSegmentContent(stdClass $segmentContent, $keepId = false) {
+        if(!$keepId) {
+            unset($segmentContent->id);
+        }
         unset($segmentContent->fileId);
         unset($segmentContent->taskGuid);
         unset($segmentContent->timestamp);
@@ -590,6 +593,12 @@ class ZfExtended_Test_ApiHelper {
         }
         $segmentContent->targetEdit = preg_replace('/data-usertrackingid="[0-9]+"/', 'data-usertrackingid="NOT_TESTABLE"', $segmentContent->targetEdit);
         $segmentContent->targetEdit = preg_replace('/data-timestamp="[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\+[0-9]{2}:[0-9]{2}"/', 'data-timestamp="NOT_TESTABLE"', $segmentContent->targetEdit);
+        $segmentContent->source = preg_replace('/data-tbxid="term_[0-9]+"/', 'data-tbxid="term_NOT_TESTABLE"', $segmentContent->source);
+        if(property_exists($segmentContent, 'sourceEdit')) {
+            $segmentContent->sourceEdit = preg_replace('/data-tbxid="term_[0-9]+"/', 'data-tbxid="term_NOT_TESTABLE"', $segmentContent->sourceEdit);
+        }
+        $segmentContent->target = preg_replace('/data-tbxid="term_[0-9]+"/', 'data-tbxid="term_NOT_TESTABLE"', $segmentContent->target);
+        $segmentContent->targetEdit = preg_replace('/data-tbxid="term_[0-9]+"/', 'data-tbxid="term_NOT_TESTABLE"', $segmentContent->targetEdit);
         return $segmentContent;
     }
     
