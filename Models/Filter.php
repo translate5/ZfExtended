@@ -208,8 +208,14 @@ abstract class ZfExtended_Models_Filter {
         $select->assemble();
         $from = $select->getPart($select::FROM);
     }
+    
     if(empty($this->defaultTable)) {
-        $table = reset($from)['tableName'];
+        if(empty($from)) {
+            $table = $this->entity->db->info($this->entity->db::NAME);
+        }
+        else {
+            $table = reset($from)['tableName'];
+        }
     }
     else {
         $table = $this->defaultTable;
