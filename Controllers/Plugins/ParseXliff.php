@@ -74,7 +74,9 @@ class ZfExtended_Controllers_Plugins_ParseXliff extends Zend_Controller_Plugin_A
         $integratedArr = $this->parseXliff($integratedPath);
         $integratedArr = array_merge($integratedArr,$logArr);
         $this->saveXliff($integratedArr, $integratedPath);
-        unlink($logPath);
+        if(file_exists($logPath)) {
+            unlink($logPath);
+        }
     }
     
     protected function saveXliff(array $fileArr,string $path) {
