@@ -99,6 +99,10 @@ class ZfExtended_OpenIDConnectClient{
         $this->openIdClient->setProviderURL($this->customer->getOpenIdServer());
         $this->openIdClient->setIssuer($this->customer->getOpenIdIssuer());
         $this->openIdClient->setRedirectURL($this->getRedirectDomainUrl());
+        //set the ssl sertificate file path if it is configured
+        if(!empty($this->config->runtimeOptions->openid->sslCertificatePath)){
+            $this->openIdClient->setCertPath($this->config->runtimeOptions->openid->sslCertificatePath);
+        }
     }
     
     public function authenticate(){

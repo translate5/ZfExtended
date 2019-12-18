@@ -271,6 +271,10 @@ abstract class ZfExtended_Models_Filter {
           
           $filter->_origType = $filter->type;
           $filter->type = $typeMap[$filter->type];
+          //if the type is percent, set the filter total field
+          if($filter->type=='percent'){
+              $filter->totalField=$typeMap['totalField'];
+          }
       }
   }
 
