@@ -52,7 +52,7 @@ trait ZfExtended_Models_Db_DeadLockHandlerTrait {
             
             $logger = Zend_Registry::get('logger')->cloneMe(ZfExtended_Models_Db_Exceptions_DeadLockHandler::DOMAIN);
             /* @var $logger ZfExtended_Logger */
-            $logger->debug('E1203', 'A transaction was rejected after a DB deadlock', ['deadlock' => $e]);
+            $logger->debug('E1203', 'A transaction was rejected after a DB deadlock', ['deadlock' => (string) $e]);
         }
         return null;
     }
