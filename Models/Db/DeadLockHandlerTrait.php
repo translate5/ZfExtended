@@ -29,13 +29,13 @@ trait ZfExtended_Models_Db_DeadLockHandlerTrait {
      * how often should the function be retried on a deadlock
      * @var integer
      */
-    const DEADLOCK_REPETITIONS = 3;
+    protected $DEADLOCK_REPETITIONS = 3;
     
     /**
      * how long should we wait between the retries, in seconds
      * @var integer
      */
-    const DEADLOCK_SLEEP = 1;
+    protected $DEADLOCK_SLEEP = 1;
     
     /**
      * Executes the given function, and just do nothing if a DB DeadLock occurs (for example if retrying the transaction makes no sense)
@@ -64,7 +64,7 @@ trait ZfExtended_Models_Db_DeadLockHandlerTrait {
      */
     public function retryOnDeadlock(Callable $function) {
         $e = null;
-        for ($i = 0; $i < self::DEADLOCK_REPETITIONS; $i++) {
+        for ($i = 0; $i < $this->DEADLOCK_REPETITIONS; $i++) {
             try {
                 $result = $function();
                 if($i > 0 && !empty($e)) {
@@ -77,7 +77,7 @@ trait ZfExtended_Models_Db_DeadLockHandlerTrait {
             catch(Zend_Db_Statement_Exception $e) {
                 //hier schleife
                 $this->throwIfNotDeadLockException($e);
-                sleep(self::DEADLOCK_SLEEP);
+                sleep($this->DEADLOCK_SLEEP);
             }
         }
         
