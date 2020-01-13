@@ -55,16 +55,20 @@ END LICENSE AND COPYRIGHT
  * 
  */
 class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
+    use ZfExtended_Models_Db_DeadLockHandlerTrait;
+    
     /**
      * This constant values define the different worker-states
      * @var string
      */
-    const STATE_PREPARE     = 'prepare';
-    const STATE_SCHEDULED   = 'scheduled';
-    const STATE_WAITING     = 'waiting';
-    const STATE_RUNNING     = 'running';
-    const STATE_DEFUNCT     = 'defunct';
-    const STATE_DONE        = 'done';
+    const STATE_PREPARE     = 'prepare';    // the worker is added to the worker table, but is not ready to run 
+                                            // (for example some other workers are still missing in the worker table)
+                                            // call schedulePrepared to mark the prepared workers of a taskGuid or worker group to be scheduled
+    const STATE_SCHEDULED   = 'scheduled';  // scheduled workers may be set to waiting by wakeupScheduled but keep the order as defined in worker dependencies
+    const STATE_WAITING     = 'waiting';    // waiting workers are ready to run, and may be started (set to running) in parallel, restricted by maxRunProcesses and slot / resource blocking mechanisms
+    const STATE_RUNNING     = 'running';    // the worker is running
+    const STATE_DEFUNCT     = 'defunct';    // the worker (or a sub worker) crashed
+    const STATE_DONE        = 'done';       // the worker has successfully finished its work
     
     const WORKER_SERVERID_HEADER = 'X-Translate5-Worker-Serverid';
     
@@ -181,7 +185,12 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
                 WHERE u.id = s.id;'; 
         
         $bindings = array(self::STATE_SCHEDULED, self::STATE_WAITING,self::STATE_RUNNING,self::STATE_SCHEDULED,self::STATE_PREPARE,self::STATE_WAITING);
-        $res = $adapter->query($sql, $bindings);
+        $this->db->getAdapter()->query('SET TRANSACTION ISOLATION LEVEL READ COMMITTED');
+        
+        //it may happen that a worker is not set to waiting if the deadlock was ignored, at least at the next worker queue call it is triggered again 
+        $this->ignoreOnDeadlock(function() use ($adapter, $sql, $bindings){
+            $adapter->query($sql, $bindings);
+        });
     }
     
     /**
@@ -204,7 +213,9 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
             $sql .= 'AND taskGuid = ? ';
             $bindings[] = $taskGuid;
         }
-        $res = $adapter->query($sql, $bindings);
+        $this->retryOnDeadlock(function() use ($adapter, $sql, $bindings){
+            return $adapter->query($sql, $bindings);
+        });
     }
     
     /**
@@ -226,7 +237,9 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
         $whereStatements[] = 'hash = "'.$this->getHash().'"';
         $whereStatements[] = 'state = "'.self::STATE_WAITING.'"';
         
-        $countRows = $this->db->update($data, $whereStatements);
+        $countRows = $this->retryOnDeadlock(function() use ($data, $whereStatements){
+            return $this->db->update($data, $whereStatements);
+        });
         
         // workerModel can not be set to mutex because no entry with same id and hash can be found in database
         // nothing to log since this can happen often
@@ -281,7 +294,10 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
 
         $values = [$this->getId()];
         
-        $stmt = $this->db->getAdapter()->query($sql, $values);
+        $this->db->getAdapter()->query('SET TRANSACTION ISOLATION LEVEL READ COMMITTED');
+        $stmt = $this->retryOnDeadlock(function() use ($sql, $values){
+            return $this->db->getAdapter()->query($sql, $values);
+        });
         $result = $stmt->rowCount();
         return $result > 0;
     }
@@ -351,9 +367,7 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
             $sql->where('taskGuid = ?', $taskGuid);
         }
         
-        $rows = $this->db->fetchAll($sql)->toArray();
-        
-        return $rows;
+        return $this->db->fetchAll($sql)->toArray();
     }
     private function getListRunning($taskGuid) {
         $db = $this->db;
@@ -367,9 +381,7 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
             $sql->where('taskGuid = ?', $taskGuid);
         }
     
-        $rows = $db->fetchAll($sql)->toArray();
-        
-        return $rows;
+        return $db->fetchAll($sql)->toArray();
     }
     
     /**
@@ -468,10 +480,12 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
      * Sets all remaining scheduled and waiting workers of that worker group (same parent (or the parent itself) and same taskGuid) to defunct
      */
     public function defuncRemainingOfGroup() {
-        $res = $this->db->getAdapter()->query('UPDATE Zf_worker SET state = "'.self::STATE_DEFUNCT.'"
-            WHERE (parentId = 0 AND id IN (?,?)) OR (parentId != 0 AND parentId = ?) 
-            AND state in ("'.self::STATE_WAITING.'", "'.self::STATE_SCHEDULED.'")
-            AND taskGuid = ?', [$this->getId(), $this->getParentId(), $this->getParentId(), $this->getTaskGuid()]);
+        $this->retryOnDeadlock(function() {
+            $this->db->getAdapter()->query('UPDATE Zf_worker SET state = "'.self::STATE_DEFUNCT.'"
+                WHERE (parentId = 0 AND id IN (?,?)) OR (parentId != 0 AND parentId = ?) 
+                AND state in ("'.self::STATE_WAITING.'", "'.self::STATE_SCHEDULED.'")
+                AND taskGuid = ?', [$this->getId(), $this->getParentId(), $this->getParentId(), $this->getTaskGuid()]);
+        });
     }
     
     public function getMaxLifetime() {

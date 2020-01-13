@@ -88,6 +88,7 @@ abstract class ZfExtended_Controllers_Action extends Zend_Controller_Action {
     /**
      * returns the deployed version number, or "dev" if no version file exists.
      * "invalid" is returned if version file contains invalid content.
+     * @deprecated replace with ZfExtended_Utils::getAppVersion()
      * @return string
      */
     protected function getAppVersion() {

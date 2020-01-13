@@ -23,6 +23,8 @@ END LICENSE AND COPYRIGHT
 */
 
 abstract class ZfExtended_Worker_Abstract {
+    use ZfExtended_Models_Db_DeadLockHandlerTrait;
+    
     /**
      * With blocking type slot, the maximum of parallel workers is defined by the available slots for this resource.
      * @var string
@@ -511,12 +513,16 @@ abstract class ZfExtended_Worker_Abstract {
             $this->workerModel->setState(ZfExtended_Models_Worker::STATE_DONE);
             $this->workerModel->setEndtime(new Zend_Db_Expr('NOW()'));
             $this->finishedWorker = clone $this->workerModel;
-            $this->workerModel->save();
+            $this->retryOnDeadlock(function(){
+                $this->workerModel->save();
+            });
         } catch(Exception $workException) {
             $this->reconnectDb();
             $result = false;
             $this->workerModel->setState(ZfExtended_Models_Worker::STATE_DEFUNCT);
-            $this->workerModel->save();
+            $this->retryOnDeadlock(function(){
+                $this->workerModel->save();
+            });
             $this->finishedWorker = clone $this->workerModel;
             $this->workerException = $workException;
         }
