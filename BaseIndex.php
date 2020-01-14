@@ -142,7 +142,24 @@ class ZfExtended_BaseIndex{
      * @return void
      */
     public function startApplication() {
-        $this->initApplication()->bootstrap()->run();
+        try {
+            $this->initApplication()->bootstrap()->run();
+        }
+        catch(Zend_Db_Adapter_Exception $e) {
+            if(strpos($e->getMessage(), 'SQLSTATE[HY000] [2002] No such file or directory') !== false) {
+                error_log('Fatal: Could not connect to the database! Database down?');
+            }elseif(strpos($e->getMessage(), 'SQLSTATE[HY000] [1045] Access denied for user') !== false) {
+                error_log('Fatal: Could not connect to the database! Wrong credentials?');
+            }elseif(strpos($e->getMessage(), 'SQLSTATE[HY000] [1044] Access denied for user') !== false) {
+                error_log('Fatal: Could not connect to the database! Wrong DB given?');
+            }elseif(strpos($e->getMessage(), 'SQLSTATE[HY000] [2002] php_network_getaddresses: getaddrinfo failed') !== false) {
+                error_log('Fatal: Could not connect to the database! Wrong host given?');
+            }else {
+                error_log('Fatal: Could not connect to the database!');
+            }
+            error_log($e);
+            die('Fatal: Could not connect to the database! <b>If you get this message in the Browser: try to reload the application.</b> <br>See error log for details.');
+        }
     }
     
     /**
