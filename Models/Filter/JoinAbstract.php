@@ -28,6 +28,7 @@ abstract class ZfExtended_Models_Filter_JoinAbstract {
     protected $table;
     protected $foreignKey;
     protected $searchField;
+    protected $searchTable;
     protected $localKey;
     
     /**
@@ -37,11 +38,16 @@ abstract class ZfExtended_Models_Filter_JoinAbstract {
      * @param string $foreignKey foreign key in the table
      * @param string $localKey localkey, defaults to searchfield
      */
-    public function __construct($table, $searchField, $foreignKey = 'id', $localKey = null) {
+    public function __construct($table, $searchField, $foreignKey = 'id', $localKey = null,$searchTable=null) {
         $this->table = $table; 
         $this->searchField = $searchField; 
         $this->foreignKey = $foreignKey; 
-        $this->localKey = $localKey; 
+        $this->localKey = $localKey;
+        if(!isset($searchTable)){
+            //set the search table a
+            $searchTable=$table;
+        }
+        $this->searchTable=$searchTable;
     }
     
     /**
@@ -50,6 +56,14 @@ abstract class ZfExtended_Models_Filter_JoinAbstract {
      */
     public function getSearchfield() {
         return $this->searchField;
+    }
+    
+    /**
+     * returns the table name for the search field
+     * @return string
+     */
+    public function getSearchTable() {
+        return $this->searchTable;
     }
     
     /**

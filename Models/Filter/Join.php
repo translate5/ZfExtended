@@ -45,7 +45,11 @@ class ZfExtended_Models_Filter_Join extends ZfExtended_Models_Filter_JoinAbstrac
      */
     public function configureEntityFilter(ZfExtended_Models_Filter $filter) {
         //if searchfield is ambigious we have to set the originaltable as mapping, the foreign table name is set directly in the filter
-        $filter->addTableForField($this->searchField, $filter->getEntityTable());
+        if(!isset($this->searchTable)){
+            //if the search table is not set, use the filter entity table for the search field
+            $this->searchTable=$filter->getEntityTable();
+        }
+        $filter->addTableForField($this->searchField, $this->searchTable);
         $filter->addJoinedTable($this->table, $this->localKey, $this->foreignKey, []);
     }
 }
