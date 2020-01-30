@@ -285,7 +285,6 @@ class ZfExtended_Test_ApiHelper {
             'targetLang' => 'de', // mandatory, target language in rfc5646
             'relaisLang' => 'de', // optional, must be given on using relais column
             'taskName' => 'simple-en-de', //optional, defaults to __CLASS__::__TEST__
-            'orderdate' => date('Y-m-d H:i:s'), //optional, defaults to now
             'targetDeliveryDate' => date('Y-m-d H:i:s'), //optional, defaults to now
             'wordCount' => 666, //optional, defaults to heavy metal
         );
@@ -404,9 +403,6 @@ class ZfExtended_Test_ApiHelper {
         $test = $this->testClass;
         if(empty($task['taskName'])) {
             $task['taskName'] = 'API Testing::'.$test.' '.$now;
-        }
-        if(empty($task['orderdate'])) {
-            $task['orderdate'] = $now;
         }
         if(empty($task['targetDeliveryDate'])) {
             $task['targetDeliveryDate'] = $now;
