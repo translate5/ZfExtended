@@ -50,18 +50,24 @@ trait ZfExtended_Controllers_MaintenanceTrait{
             throw new ZfExtended_Models_MaintenanceException();
         }
         $maintenanceTimeToNotify= max(1, (int) $config->runtimeOptions->maintenance->timeToNotify);
+        $maintenanceMessage = $config->runtimeOptions->maintenance->message ?? '';
      
         $maintenanceStartDate = strtotime($maintenanceStartDate);
         $time = $maintenanceStartDate - ($maintenanceTimeToNotify * 60);
         
         $date = new DateTime(date("Y-m-d H:i:s", $time));
         
-        if(new DateTime() >= $date ){
-            if($this->enableMaintenanceHeader) {
-                $this->_response->setHeader('x-translate5-shownotice', date(DATE_ISO8601, $maintenanceStartDate));
-            }
-            $this->view->displayMaintenancePanel = true;
+        if(new DateTime() < $date ){
+            return;
         }
+        
+        if($this->enableMaintenanceHeader) {
+            $this->_response->setHeader('x-translate5-shownotice', date(DATE_ISO8601, $maintenanceStartDate));
+            if(!empty($maintenanceMessage)) {
+                $this->_response->setHeader('x-translate5-maintenance-message', $maintenanceMessage);
+            }
+        }
+        $this->view->displayMaintenancePanel = true;
     }
 
     /***
