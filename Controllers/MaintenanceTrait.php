@@ -91,9 +91,12 @@ trait ZfExtended_Controllers_MaintenanceTrait{
         
         $time = strtotime($maintenanceStartDate);
         $time = $time - ($timeToLoginLock * 60);
-        $date = new DateTime(date("Y-m-d H:i:s", $time));
+        $date = date("Y-m-d H:i:s", $time);
     
-        if(new DateTime() >= $date ){
+        if(new DateTime() >= new DateTime($date)){
+            if($this instanceof ZfExtended_RestController || empty($this->_form)) {
+                throw new ZfExtended_Models_MaintenanceException('Maintenance scheduled in a few minutes: '.$date);                
+            }
             $this->_form->addError($this->_translate->_("Eine Wartung steht unmittelbar bevor, Sie können sich daher nicht anmelden. Bitte versuchen Sie es in Kürze erneut."));
             $this->view->form = $this->_form;
             return true;
