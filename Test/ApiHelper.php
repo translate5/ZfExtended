@@ -376,10 +376,10 @@ class ZfExtended_Test_ApiHelper {
      * adds the given user to the actual task
      * @param string $username one of the predefined users (testmanager, testlector, testtranslator)
      * @param string $state open, waiting, finished, as available by the workflow
-     * @param string $role lector or translator, as available by the workflow
+     * @param string $role reviewer or translator, as available by the workflow
      * @return stdClass taskuserassoc result 
      */
-    public function addUser($username, $state = 'open', $role = 'lector') {
+    public function addUser($username, $state = 'open', $role = 'reviewer') {
         $test = $this->testClass;
         $test::assertFalse(empty($this->testusers[$username]), 'Given testuser "'.$username.'" does not exist!');
         $p = array(
