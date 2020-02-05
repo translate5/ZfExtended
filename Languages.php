@@ -197,13 +197,13 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract {
     
     /**
      * Gibt den Sprachteil von RFC5646-Sprachkürzel zurück (unabh. vom Land),
-     * z.B. für "de" für "de-AT" oder "de" für "de".
+     * z.B. für "de" für "de-AT" oder "de" für "de" oder "sr" für "Sr-Cyrl".
      * @param int $lang Sprachkürzel nach RFC5646, wie in Tabelle languages hinterlegt
      * @return string mainlanguage der gesuchten Sprache
      */
     public function getMainlanguageByRfc5646($lang){
         $parts = explode("-", $lang);
-        return $parts[0];
+        return strtolower($parts[0]);
     }
     
     /**
