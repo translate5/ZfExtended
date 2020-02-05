@@ -48,7 +48,6 @@ echo $this->doctype() ?>
         <?php echo $this->headStyle() ?>
         <link rel="shortcut icon" href="<?php echo APPLICATION_RUNDIR.$config->runtimeOptions->server->pathToIMAGES; ?>/favicon.ico" type="image/x-icon"/>
         <?php echo $this->headScript() ?>
-        
         <style>
 		  body { text-align: center; padding: 150px; }
 		  h1 { font-size: 50px; padding-top:10px;}
@@ -66,16 +65,28 @@ echo $this->doctype() ?>
         </div>
 	    <h1>We&rsquo;ll be back <br>soon!</h1>
 	    <div style="clear:both;">
-	        <p>Maintenance is in progress. <br>translate5 will be available again after the maintenance is accomplished.</p>
+	        <p>Maintenance is in progress. <br><?php echo $config->runtimeOptions->appName; ?> will be available again after the maintenance is accomplished.</p>
             <p>Translate5 will be back online in a few minutes!</p>
 	        <p><?php echo $config->runtimeOptions->companyName; ?></p>
+	        <p id="last-reload" style="color:#cdcdcd;font-size:8px;"></p>
 	    </div>
 	</article>
 	<script>
-	
 		setInterval(function(){
-			  window.location.href = '<?php echo APPLICATION_RUNDIR;?>/login';
-		}, 30000);
+		        var xhr = new XMLHttpRequest(),
+		        	url = '<?php echo APPLICATION_RUNDIR;?>/login';
+		        xhr.open('GET', url);
+				xhr.onload = function() { 
+					if(xhr.status >= 200 && xhr.status < 400) {
+    			        window.location.href = url;
+    			        return;
+					}
+					var d = new Date();
+					document.getElementById('last-reload').innerHTML = 'Last check at: '+d.toLocaleString();
+		        };		    
+		        xhr.send();	
+		//}, 30000);
+		}, 5000);
 	
 	</script>
   </body>
