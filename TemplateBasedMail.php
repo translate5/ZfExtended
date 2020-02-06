@@ -371,6 +371,7 @@ class  ZfExtended_TemplateBasedMail {
             }
         }
         $this->mail->send();
+        $this->mail->clearRecipients();
     }
     
     /**

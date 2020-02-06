@@ -50,23 +50,79 @@ class Models_Installer_Maintenance {
         $this->config = Zend_Registry::get('config');
         $this->db = Zend_Db::factory($this->config->resources->db);
         
-        if($this->config->runtimeOptions->maintenance->startDate != $this->getStartDateFromDb()) {
+        if($this->config->runtimeOptions->maintenance->startDate != $this->getConfFromDb()->startDate) {
             die("\nError: There is some maintenance configuration in the installation.ini, \n please remove it for proper usage of this tool!\n\n");
+        }
+    }
+    
+    public function announce($time, $msg = '') {        
+        $receiver = $this->config->runtimeOptions->maintenance->announcementMail ?? '';
+        $preventDuplicates = [];
+        if(empty($receiver)) {
+            die('No receiver groups/users set in runtimeOptions.maintenance.announcementMail, so no email sent!'."\n\n");
+        }
+        $receiver = explode(',', $receiver);
+        $plainUsers = [];
+        $receiverGroups = array_filter($receiver, function($item) use (&$plainUsers) {
+            $item = explode(':', $item);
+            if(count($item) == 1) {
+                return true;
+            }
+            $plainUsers[] = end($item);
+            return false;
+        });
+        
+        $startTimeStamp = strtotime($time);
+        
+        Zend_Registry::set('module', 'editor'); // fix to load correct mail paths
+        Zend_Registry::set('Zend_Locale', new Zend_Locale('en')); // fix to prevent error message
+        $mailer = ZfExtended_Factory::get('ZfExtended_TemplateBasedMail');
+        /* @var $mailer ZfExtended_TemplateBasedMail */
+        $mailer->setParameters([
+            'appName' => $this->config->runtimeOptions->appName,
+            'maintenanceDate' => date('Y-m-d H:i (O)', $startTimeStamp),
+            'message' => $msg,
+        ]);
+        $mailer->setTemplate('announceMaintenance.phtml');
+        
+        $user = ZfExtended_Factory::get('ZfExtended_Models_User');
+        /* @var $user ZfExtended_Models_User */
+        $receivers = $user->loadAllByRole($receiverGroups);
+        
+        
+        foreach($plainUsers as $login) {
+            try {
+                $receivers[] = $user->loadByLogin($login)->toArray();
+            }
+            catch(ZfExtended_Models_Entity_NotFoundException $e) {
+                echo "There is a non existent user '$login' in the runtimeOptions.maintenance.announcementMail configuration!\n";
+            }
+        }
+        
+        echo "Send maintenance announcement mails to:\n";
+        foreach($receivers as $userData) {
+            $user->init($userData);
+            if(in_array($user->getEmail(), $preventDuplicates)) {
+                continue;
+            }
+            $preventDuplicates[] = $user->getEmail();
+            echo "  ".$user->getUsernameLong().' '.$user->getEmail()."\n";
+            $mailer->sendToUser($user);
         }
     }
     
     public function disable() {
         $this->db->query("UPDATE `Zf_configuration` SET `value` = null WHERE `name` = 'runtimeOptions.maintenance.startDate'");
+        $this->db->query("UPDATE `Zf_configuration` SET `value` = null WHERE `name` = 'runtimeOptions.maintenance.message'");
         $this->status();
     }
     
     public function status() {
-        $startDate = $this->getStartDateFromDb();
-        if(empty($startDate)) {
+        $conf = $this->getConfFromDb();
+        if(empty($conf->startDate)) {
             die("\n Maintenance mode disabled!\n\n");
         }
-        $conf = $this->config->runtimeOptions->maintenance;
-        $startTimeStamp = strtotime($startDate);
+        $startTimeStamp = strtotime($conf->startDate);
         $now = time();
         echo "\n";
         if($startTimeStamp < $now) {
@@ -76,9 +132,11 @@ class Models_Installer_Maintenance {
         elseif ($startTimeStamp - ($conf->timeToNotify*60) < $now){
             echo " \033[1;33mMaintenance mode notified!\033[00m\n\n";
         }
-        echo "  Maintenance mode start:         ".date('Y-m-d H:i (O)', $startTimeStamp)."\n";
-        echo "  Maintenance mode start notify:  ".date('Y-m-d H:i (O)', $startTimeStamp - ($conf->timeToNotify*60))."\n";
-        echo "  Maintenance mode login lock:    ".date('Y-m-d H:i (O)', $startTimeStamp - ($conf->timeToLoginLock*60))."\n";
+        echo "         start: ".date('Y-m-d H:i (O)', $startTimeStamp)."\n";
+        echo "  start notify: ".date('Y-m-d H:i (O)', $startTimeStamp - ($conf->timeToNotify*60))."\n";
+        echo "    login lock: ".date('Y-m-d H:i (O)', $startTimeStamp - ($conf->timeToLoginLock*60))."\n";
+        echo "       message: ".$conf->message."\n";
+        echo "     receivers: ".$conf->announcementMail."\n";
         echo "\n";
     }
     
@@ -86,15 +144,25 @@ class Models_Installer_Maintenance {
      * returns the configured start date from DB, false if no entry found
      * @return string|boolean
      */
-    protected function getStartDateFromDb() {
-        $res = $this->db->query('SELECT value FROM `Zf_configuration` WHERE `name` = "runtimeOptions.maintenance.startDate"');
-        if($startDate = $res->fetchObject()) {
-            return $startDate->value;
+    protected function getConfFromDb() {
+        $result = new stdClass();
+        $result->message = null;
+        $result->startDate = null;
+        $result->timeToNotify = null;
+        $result->timeToLoginLock = null;
+        $result->announcementMail = null;
+        
+        $res = $this->db->query('SELECT name, value FROM `Zf_configuration` WHERE `name` like "runtimeOptions.maintenance.%"');
+        $conf = $res->fetchAll();
+        foreach($conf as $row) {
+            $name = explode('.', $row['name']);
+            $name = end($name);
+            $result->$name = $row['value'];
         }
-        return false;
+        return $result;
     }
-    
-    public function set($time) {
+     
+    public function set($time, $msg = '') {
         $timeStamp = strtotime($time);
         if(!$timeStamp) {
             echo 'Given time parameter "'.$time.'" can not be parsed to a valid timestamp!';
@@ -102,6 +170,7 @@ class Models_Installer_Maintenance {
         }
         $timeStamp = date('Y-m-d H:i', $timeStamp);
         $this->db->query("UPDATE `Zf_configuration` SET `value` = ? WHERE `name` = 'runtimeOptions.maintenance.startDate'", $timeStamp);
+        $this->db->query("UPDATE `Zf_configuration` SET `value` = ? WHERE `name` = 'runtimeOptions.maintenance.message'", $msg);
         $this->status();
     }
     
