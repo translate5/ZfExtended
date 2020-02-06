@@ -496,6 +496,10 @@ abstract class ZfExtended_Worker_Abstract {
         //FIXME diese set calls und save durch eine Update ersetzen, welches task bezogen auf andere runnings dieser resource prüft
         //Dazu: checke im Model ob von außerhalb ein Hash mitgegeben wurde, wenn nein, setze ihn auf 0, damit der checkMutex (der implizit den Hash checkt) kracht.
 
+        if($this->isMaintenanceScheduled()) {
+            return false;
+        }
+        
         if(!$this->workerModel->setRunning($this->onlyOncePerTask)){
             //the worker can not set to state run, so don't perform the work
             return false; //FIXME what is this result used for?
@@ -610,5 +614,14 @@ abstract class ZfExtended_Worker_Abstract {
             }
             error_log($msg);
         }
+    }
+    
+    /**
+     * By default workers do not check if maintenance is scheduled. 
+     * This can be overwritten by worker.
+     * @return bool
+     */
+    protected function isMaintenanceScheduled(): bool {
+        return false;
     }
 }

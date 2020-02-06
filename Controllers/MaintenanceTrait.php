@@ -74,12 +74,12 @@ trait ZfExtended_Controllers_MaintenanceTrait{
      * Locks the login (configurable minutes) before the mainteance mode
      * @return boolean
      */
-    protected function isMaintenanceLoginLock(){
+    protected function isMaintenanceLoginLock(): bool{
         /* @var $config Zend_Config */
         $config = Zend_Registry::get('config');
         $rop = $config->runtimeOptions;
         if(!isset($rop->maintenance)){
-            return;
+            return false;
         }
         
         $maintenanceStartDate=$rop->maintenance->startDate;
@@ -93,13 +93,6 @@ trait ZfExtended_Controllers_MaintenanceTrait{
         $time = $time - ($timeToLoginLock * 60);
         $date = date("Y-m-d H:i:s", $time);
     
-        if(new DateTime() >= new DateTime($date)){
-            if($this instanceof ZfExtended_RestController || empty($this->_form)) {
-                throw new ZfExtended_Models_MaintenanceException('Maintenance scheduled in a few minutes: '.$date);                
-            }
-            $this->_form->addError($this->_translate->_("Eine Wartung steht unmittelbar bevor, Sie können sich daher nicht anmelden. Bitte versuchen Sie es in Kürze erneut."));
-            $this->view->form = $this->_form;
-            return true;
-        }
+        return (new DateTime() >= new DateTime($date));
     }
 }

@@ -72,15 +72,16 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
      */
     public function indexAction() {
         $this->_form->setTranslator($this->_translate);
+        $this->view->form = $this->_form;
         //if the user click on the openid redirect link in the login form
         if($this->isOpenIdRedirect()){
             //set login status to 'login needed'
             $this->view->loginStatus=ZfExtended_Models_SessionUserInterface::LOGIN_STATUS_OPENID;
-            $this->view->form = $this->_form;
             return ;
         }
         if($this->isMaintenanceLoginLock()){
             //set login status to 'maintenance'
+            $this->_form->addError($this->_translate->_("Eine Wartung steht unmittelbar bevor, Sie können sich daher nicht anmelden. Bitte versuchen Sie es in Kürze erneut."));
             $this->view->loginStatus=ZfExtended_Models_SessionUserInterface::LOGIN_STATUS_MAINTENANCE;
             return;
         }
@@ -88,7 +89,6 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
         if($this->isLoginRequest()){
             //set the translate5 login status
             $this->view->loginStatus= $this->isValidLogin() ? ZfExtended_Models_SessionUserInterface::LOGIN_STATUS_SUCCESS : ZfExtended_Models_SessionUserInterface::LOGIN_STATUS_REQUIRED;
-            $this->view->form = $this->_form;
             return;
         }
         //redirect the user if the session contains already a user
@@ -101,7 +101,6 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
         
         //set login status to 'login with openid'
         $this->view->loginStatus=ZfExtended_Models_SessionUserInterface::LOGIN_STATUS_OPENID;
-        $this->view->form = $this->_form;
     }
     
     /**
