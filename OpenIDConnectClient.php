@@ -291,8 +291,8 @@ class ZfExtended_OpenIDConnectClient{
         $customerRoles=$this->customer->getOpenIdServerRoles();
         $openIdDefaultServerRoles=$this->customer->getOpenIdDefaultServerRoles();
         
-        if(empty($openIdDefaultServerRoles)){
-            $this->throwOpenIdConnectException('The default server roles are not defined.');
+        if(empty($openIdDefaultServerRoles) && empty($claimsRoles)){
+            $this->throwOpenIdConnectException('The default server and the claim roles are not defined.',true);
         }
         
         //no claim roles, use the default roles
@@ -302,7 +302,7 @@ class ZfExtended_OpenIDConnectClient{
         
         //if there is not customer roles, log the info message and trhrow an exception
         if(empty($customerRoles)){
-            $this->throwOpenIdConnectException('The customer server roles are empty but there are roles from the provider.');
+            $this->throwOpenIdConnectException('The customer server roles are empty but there are roles from the provider.',true);
         }
         
         $customerRoles=explode(',',$customerRoles);
@@ -337,7 +337,7 @@ class ZfExtended_OpenIDConnectClient{
         }
         //check if the claims roles are allowed by the server customer roles
         if(empty($roles)){
-            $this->throwOpenIdConnectException('Invalid claims roles for the allowed server customer roles');
+            $this->throwOpenIdConnectException('Invalid claims roles for the allowed server customer roles',true);
         }
         return $roles;
     }
@@ -434,9 +434,10 @@ class ZfExtended_OpenIDConnectClient{
     /***
      * Throw open id client exception with additional debug data and given message
      * @param string $message
+     * @param bool $isErrorLvl
      * @throws ZfExtended_OpenIDConnectClientException
      */
-    protected function throwOpenIdConnectException(string $message) {
+    protected function throwOpenIdConnectException(string $message,bool $isErrorLvl=false) {
         $openidInfo=[
             'customer'=>$this->getCustomer()->getDataObject(),
             'userInfo'=>$this->openIdUserInfo,
@@ -448,7 +449,11 @@ class ZfExtended_OpenIDConnectClient{
             'session' => print_r($_SESSION,1),
             'openid' => $openidInfo
         ];
-        $this->log->info('E1165', $message,$data);
+        if($isErrorLvl){
+            $this->log->error('E1165', $message,$data);
+        }else{
+            $this->log->info('E1165', $message,$data);
+        }
         throw new ZfExtended_OpenIDConnectClientException('E1165',[
             'message' => $message,
             'request' => print_r($this->request->getParams(),1),
