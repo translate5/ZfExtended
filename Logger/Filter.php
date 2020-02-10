@@ -216,7 +216,8 @@ class ZfExtended_Logger_Filter {
         else {
             $cls = null;
         }
-        return $this->test($event->level, $event->domain, $cls);
+        //we test agains domain.ecode so that we can easily filter for ecodes via domain
+        return $this->testLevelDomain($event->level, $event->domain.'.'.$event->eventCode, $cls);
     }
     
     /**
@@ -231,16 +232,6 @@ class ZfExtended_Logger_Filter {
         return isset($this->filterForBasicCheck) ? $this->filterForBasicCheck->testLevelDomain($level, $domain) : true;
     }
 
-    /**
-     * returns true if the given level and origin matches the configured filters
-     * @param integer $level
-     * @param string $domain
-     * @return boolean
-     */
-    public function test($level, $domain): bool {
-        return $this->testLevelDomain($level, $domain);
-    }
-    
     /**
      * test the level and origin filter
      * @param integer $level
