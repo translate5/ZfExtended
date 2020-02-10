@@ -61,11 +61,8 @@ class ZfExtended_Controllers_Plugins_ParseXliff extends Zend_Controller_Plugin_A
             return;
         }
         
-        $xliffPath = APPLICATION_PATH.DIRECTORY_SEPARATOR.'modules'.
-                DIRECTORY_SEPARATOR.APPLICATION_MODULE.DIRECTORY_SEPARATOR.
-                'locales'.DIRECTORY_SEPARATOR.$sLang.'.xliff';
-                $integratedPath = $config->runtimeOptions->dir->logs.'/integratedTranslations-'.
-                APPLICATION_MODULE.'-'.$sLang.'-'.$tLang.'.xliff';
+        $xliffPath = APPLICATION_PATH.'/modules/'.APPLICATION_MODULE.'/locales/'.$sLang.'.xliff';
+        $integratedPath = $config->runtimeOptions->dir->logs.'/integratedTranslations-'.APPLICATION_MODULE.'-'.$sLang.'-'.$tLang.'.xliff';
         
         $xliffArr = $this->parseXliff($xliffPath);
         $xliffArr = array_merge($xliffArr,$logArr);
