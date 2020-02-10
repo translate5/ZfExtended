@@ -180,8 +180,12 @@ class ZfExtended_Models_Installer_Downloader {
     protected function fetchHashTable() {
         $hashTableDep = new stdClass();
         $url = $this->dependencies->getNeeded()->md5hashtable;
-        $hashTable = file_get_contents($url);
+        $hashTable = @file_get_contents($url);
         if(empty($hashTable)) {
+            //add error info to url if file_get_contents was failing
+            if($hashTable === false) {
+                $url .= ' with error '.error_get_last()['message'];
+            }
             throw new Exception('Could not fetch md5hashtable from URL:'.$url);
         }
         $this->md5HashTable = array();

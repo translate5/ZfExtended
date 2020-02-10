@@ -252,17 +252,21 @@ class ZfExtended_Logger_Filter {
         }
         foreach($this->rules as $rule) {
             //mostly there will be level filters, so we check them first
-            foreach($rule['level'] as $levelTest) {
-                if(!$levelTest($level)) {
-                    continue 2; //since the tests are and connected we step over the whole role if one test fails
+            if(is_iterable($rule['level'])) {
+                foreach($rule['level'] as $levelTest) {
+                    if(!$levelTest($level)) {
+                        continue 2; //since the tests are and connected we step over the whole role if one test fails
+                    }
                 }
             }
-            foreach($rule['domain'] as $originTest) {
-                if(!$originTest($domain)) {
-                    continue 2; //since the tests are and connected we step over the whole role if one test fails
+            if(is_iterable($rule['domain'])) {
+                foreach($rule['domain'] as $originTest) {
+                    if(!$originTest($domain)) {
+                        continue 2; //since the tests are and connected we step over the whole role if one test fails
+                    }
                 }
             }
-            if(!empty($exception)) {
+            if(!empty($exception) && is_iterable($rule['exception'])) {
                 foreach($rule['exception'] as $excTest) {
                     if(!$excTest($exception)) {
                         continue 2; //since the tests are and connected we step over the whole role if one test fails
