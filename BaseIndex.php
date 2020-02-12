@@ -283,23 +283,24 @@ class ZfExtended_BaseIndex{
      * @return string module
      */
     private function getCurrentModule(){
+        $module = 'default';
         if(is_null($this->moduleDirs)){
             $this->moduleDirs = $this->getModuleDirs();
         }
-        $runDirParts = explode('/',APPLICATION_RUNDIR);
+        $runDirParts = explode('/', APPLICATION_RUNDIR);
         $uriParts = explode('/', $_SERVER['REQUEST_URI']);
-        $i=1;
-        while(isset($runDirParts[$i]) and $uriParts[$i] === $runDirParts[$i]){
-            $i++;
+        
+        do {
+            $uriPart = array_shift($uriParts);
+            $runDirPart = array_shift($runDirParts);
+        } while($uriPart === $runDirPart);
+        
+        if(in_array($uriPart, $this->moduleDirs)){
+            $module = $uriPart;
         }
-        //FIXME some one reached here to produce an 1 not defined. 
-        //URL was:     [REQUEST_URI] => proxytest.zmap.io:80, I think someone tried to proxy direct to /editor or so.
-        if(in_array($uriParts[$i], $this->moduleDirs)){
-            define('APPLICATION_MODULE',  $uriParts[$i]);
-            return $uriParts[$i];
-        }
-        define('APPLICATION_MODULE',  'default');
-        return 'default';
+        
+        define('APPLICATION_MODULE',  $module);
+        return $module;
     }
 
     /**
