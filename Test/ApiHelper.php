@@ -285,7 +285,6 @@ class ZfExtended_Test_ApiHelper {
             'targetLang' => 'de', // mandatory, target language in rfc5646
             'relaisLang' => 'de', // optional, must be given on using relais column
             'taskName' => 'simple-en-de', //optional, defaults to __CLASS__::__TEST__
-            'orderdate' => date('Y-m-d H:i:s'), //optional, defaults to now
             'targetDeliveryDate' => date('Y-m-d H:i:s'), //optional, defaults to now
             'wordCount' => 666, //optional, defaults to heavy metal
         );
@@ -377,9 +376,11 @@ class ZfExtended_Test_ApiHelper {
      * @param string $username one of the predefined users (testmanager, testlector, testtranslator)
      * @param string $state open, waiting, finished, as available by the workflow
      * @param string $role reviewer or translator, as available by the workflow
+     * @param array $params add additional taskuserassoc params to the add user call
+     * 
      * @return stdClass taskuserassoc result 
      */
-    public function addUser($username, $state = 'open', $role = 'reviewer') {
+    public function addUser($username, $state = 'open', $role = 'reviewer',array $params=[]) {
         $test = $this->testClass;
         $test::assertFalse(empty($this->testusers[$username]), 'Given testuser "'.$username.'" does not exist!');
         $p = array(
@@ -390,6 +391,7 @@ class ZfExtended_Test_ApiHelper {
                 "state" => $state,
                 "role" => $role,
         );
+        $p=array_merge($p,$params);
         $json = $this->requestJson('editor/taskuserassoc', 'POST', $p);
         $resp = $this->getLastResponse();
         $test::assertEquals(200, $resp->getStatus(), 'User "'.$username.'" could not be added to test task '.$this->task->taskGuid.'! Body was: '.$resp->getBody());
@@ -404,9 +406,6 @@ class ZfExtended_Test_ApiHelper {
         $test = $this->testClass;
         if(empty($task['taskName'])) {
             $task['taskName'] = 'API Testing::'.$test.' '.$now;
-        }
-        if(empty($task['orderdate'])) {
-            $task['orderdate'] = $now;
         }
         if(empty($task['targetDeliveryDate'])) {
             $task['targetDeliveryDate'] = $now;
