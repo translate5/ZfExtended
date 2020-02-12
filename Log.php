@@ -220,8 +220,18 @@ class  ZfExtended_Log extends ZfExtended_TemplateBasedMail {
         //for TRANSLATE-600 only:
         $this->setMail();
         $this->setContent(substr($subject, 0, 120).$this->getAffectedTaskGuid(), $subject."\r\n\r\n".(string)$message);
-        $this->send($this->_config->resources->mail->defaultFrom->email,
-                $this->_config->resources->mail->defaultFrom->name);
+        $receiver = $this->_config->resources->ZfExtended_Resource_Logger->writer->mail->receiver ?? $this->_config->resources->mail->defaultFrom->email;
+        if($receiver instanceof Zend_Config){
+            $receiver = $receiver->toArray();
+        }
+        if(is_array($receiver)){
+            foreach($receiver as $one) {
+                $this->send($one, $this->_config->resources->mail->defaultFrom->name);
+            }
+        }
+        else {
+            $this->send($receiver, $this->_config->resources->mail->defaultFrom->name);
+        }
     }
     
     /**
