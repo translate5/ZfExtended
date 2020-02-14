@@ -291,9 +291,10 @@ class ZfExtended_Test_ApiHelper {
      * 
      * @param array $task
      * @param bool $failOnError default true
+     * @param bool $waithForImport default true : if this is set to false, the function will not check the task import state
      * @return boolean;
      */
-    public function import(array $task, $failOnError = true) {
+    public function import(array $task, $failOnError = true,$waithForImport=true) {
         $this->initTaskPostData($task);
         
         $test = $this->testClass;
@@ -303,7 +304,7 @@ class ZfExtended_Test_ApiHelper {
         $resp = $this->getLastResponse();
         $test::assertEquals(200, $resp->getStatus(), 'Import Request does not respond HTTP 200! Body was: '.$resp->getBody());
 
-        while(true){
+        while($waithForImport){
             $taskResult = $this->requestJson('editor/task/'.$this->task->id);
             if($taskResult->state == 'open') {
                 $this->task = $taskResult;
