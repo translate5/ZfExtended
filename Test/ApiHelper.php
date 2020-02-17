@@ -343,6 +343,7 @@ class ZfExtended_Test_ApiHelper {
     
     /**
      * tests the config names and values in the given associated array against the REST accessible application config
+     * If the given value to the config is null, the config value is just checked for existence and if the configured value is not empty 
      * @param array $configsToTest
      */
     public function testConfig(array $configsToTest) {
@@ -352,7 +353,12 @@ class ZfExtended_Test_ApiHelper {
                 'filter' => '[{"type":"string","value":"'.$name.'","property":"name","operator":"like"}]',
             ));
             $test::assertCount(1, $config, 'No Config entry for config "'.$name.'" found in instance config!');
-            $test::assertEquals($value, $config[0]->value, 'Config '.$name.' in instance config is not as expected: ');
+            if(is_null($value)) {
+                $test::assertNotEmpty($config[0]->value, 'Config '.$name.' in instance is empty but should be set with a value!');
+            }
+            else {
+                $test::assertEquals($value, $config[0]->value, 'Config '.$name.' in instance config is not as expected: ');
+            }
         }
     }
     
