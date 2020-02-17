@@ -45,7 +45,6 @@ class ZfExtended_Plugin_Manager {
         
         //TRANSLATE-569: ensure that only the plugin config for the affected module is loaded.
         foreach ($pluginClasses as $pluginClass) {
-            // error_log("Plugin-Class ".$pluginClass." initialized.");
             try {
                 $this->pluginNames[$pluginClass] = $name = $this->classToName($pluginClass);
                 $this->pluginInstances[$pluginClass] = $plugin = ZfExtended_Factory::get($pluginClass, array($name));
@@ -56,8 +55,12 @@ class ZfExtended_Plugin_Manager {
                 }
             }
             catch (ReflectionException $exception) {
-                /* @var $log ZfExtended_Log */
-                error_log(__CLASS__.' -> '.__FUNCTION__.'; $exception: '. print_r($exception->getMessage(), true));
+                $logger = Zend_Registry::get('logger');
+                /* @var $logger ZfExtended_Logger */
+                $logger->warn('E1218', 'The PHP class for the activated plug-in "{plugin}" does not exist.', [
+                    'plugin' => $pluginClass,
+                    'originalExceptionMsg' => $exception->getMessage()
+                ]);
             }
         }
         
