@@ -283,10 +283,11 @@ abstract class ZfExtended_Worker_Abstract {
         $instance->workerModel = $model;
         
         if (!$instance->init($model->getTaskGuid(), $model->getParameters())) {
-            $msg = get_called_class().' -> '.__FUNCTION__;
-            $msg .= ' Model: '.get_class($instance);
-            $msg .= '; $model->getParameters(): '.print_r($model->getParameters(), true);
-            $instance->log->logError('Worker can not be instanced from stored workerModel', $msg);
+            $log = Zend_Registry::get('logger')->cloneMe('core.worker');
+            $log->debug('E1219', 'Worker "{worker}" failed on initialisation.', [
+                'worker' => get_class($instance),
+                'parameters' => $model->getParameters(),
+            ]);
             return false;
         }
         
