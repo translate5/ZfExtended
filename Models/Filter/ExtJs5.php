@@ -76,7 +76,8 @@ class ZfExtended_Models_Filter_ExtJs5 extends ZfExtended_Models_Filter_ExtJs {
         $filter->field = $filter->property;
         unset ($filter->property);
         if (empty ( $this->operatorToType [$filter->operator] )) {
-            throw new ZfExtended_Exception ( 'Unkown filter operator from ExtJS 5 Grid Filter!' );
+            //Unkown filter operator "{operator}" from ExtJS 5 Grid Filter!
+            throw new ZfExtended_Models_Filter_Exception ( 'E1224', ['operator' => $filter->operator] );
         }
         $filter->type = $this->operatorToType [$filter->operator];
         if($filter->type == 'numeric') {

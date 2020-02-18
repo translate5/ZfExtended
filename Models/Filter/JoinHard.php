@@ -45,7 +45,8 @@ class ZfExtended_Models_Filter_JoinHard extends ZfExtended_Models_Filter_JoinAbs
      */
     public function __construct($tableClass, $searchField, $foreignKey = 'id', $localKey = null, $localFilterType = 'list') {
         if(!is_subclass_of($tableClass, 'Zend_Db_Table_Abstract')) {
-            throw new ZfExtended_Exception('Given $tableClass "'.$tableClass.'" is not a subclass of Zend_Db_Table_Abstract');
+            //Given tableClass "{tableClass}" is not a subclass of Zend_Db_Table_Abstract!
+            throw new ZfExtended_Models_Filter_Exception('E1225', ['tableClass' => $tableClass]);
         }
         $this->localFilterType = $localFilterType;
         parent::__construct($tableClass, $searchField, $foreignKey, $localKey);

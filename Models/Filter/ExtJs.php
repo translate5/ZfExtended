@@ -48,7 +48,10 @@ class ZfExtended_Models_Filter_ExtJs extends ZfExtended_Models_Filter {
     }
     $filters = json_decode($todecode);
     if(empty($filters)) {
-        throw new ZfExtended_Exception('errors in parsing filters Filterstring: '.$todecode."\nURL:".$_SERVER['REQUEST_URI']);
+        // errors in parsing filters Filterstring: "{filter}"
+        throw new ZfExtended_Models_Filter_Exception('E1220',[
+            'filter' => $todecode,
+        ]);
     }
     foreach ($filters as $filter) {
         if(is_object($filter) && isset($filter->table)) {
@@ -122,7 +125,10 @@ class ZfExtended_Models_Filter_ExtJs extends ZfExtended_Models_Filter {
             $this->$method($field, $filter->value);
             return;
         default:
-            throw new Zend_Exception("illegal type in filter");
+            //illegal type in filter
+            throw new ZfExtended_Models_Filter_Exception('E1221', [
+                'type' => $filter->type
+            ]);
     }
   }
   
@@ -187,10 +193,12 @@ class ZfExtended_Models_Filter_ExtJs extends ZfExtended_Models_Filter {
           return;
       }
       if(! preg_match('/[a-z0-9-_]+/i', $field)){
-          throw new Zend_Exception('illegal chars in field name '.$field);
+          //Illegal chars in field name "{field}"
+          throw new ZfExtended_Models_Filter_Exception('E1222',['field' => $field]);
       }
       if(empty($filter->table) && !$this->entity->hasField($field)){
-          throw new Zend_Exception('illegal field requested: '.$field);
+          //Illegal field "{field}" requested
+          throw new ZfExtended_Models_Filter_Exception('E1223',['field' => $field]);
       }
   }
 
