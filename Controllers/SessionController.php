@@ -86,6 +86,7 @@ class ZfExtended_SessionController extends ZfExtended_RestController {
      */
     public function postAction() {
         $this->decodePutData();
+        settype($this->data, 'object');
         settype($this->data->login, 'string');
         settype($this->data->passwd, 'string');
         //enabling passing credentials by plain form requests or given data object
