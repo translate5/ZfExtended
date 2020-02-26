@@ -219,14 +219,22 @@ abstract class ZfExtended_Models_Entity_Abstract {
      * @return array
      */
     protected function loadFilterdCustom(Zend_Db_Select $s){
-      if(!empty($this->filter)) {
-        $this->filter->applyToSelect($s);
-      }
-
-      if($this->offset || $this->limit) {
-        $s->limit($this->limit, $this->offset);
-      }
-      return $this->db->fetchAll($s)->toArray();
+        $this->applyFilterAndSort($s);
+        return $this->db->fetchAll($s)->toArray();
+    }
+    
+    /***
+     * apply the filter and sort to the select query
+     * @param Zend_Db_Select $s
+     */
+    protected function applyFilterAndSort(Zend_Db_Select &$s){
+        if(!empty($this->filter)) {
+            $this->filter->applyToSelect($s);
+        }
+        
+        if($this->offset || $this->limit) {
+            $s->limit($this->limit, $this->offset);
+        }
     }
 
     /**
