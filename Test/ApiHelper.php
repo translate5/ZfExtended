@@ -498,9 +498,9 @@ class ZfExtended_Test_ApiHelper {
     }
     
     /**
-     * 
+     * returns the content of the given filename in a given ZIP, in filename * and ? may be used. If it mathces multiple files the first one is returned.
      * @param string $pathToZip absolute file system path to zip file
-     * @param string $pathToFileInZip relative path to file inside of zip
+     * @param string $pathToFileInZip relative path to file inside of zip (uses glob to evaluate * ? etc pp. returns the first file if matched multiple files!)
      */
     public function getFileContentFromZipPath($pathToZip,$pathToFileInZip) {
         $zip = new ZipArchive();
@@ -509,7 +509,8 @@ class ZfExtended_Test_ApiHelper {
         $this->rmDir($dir);
         mkdir($dir);
         $zip->extractTo($dir);
-        $file = $dir.$pathToFileInZip;
+        $files = glob($dir.$pathToFileInZip, GLOB_NOCHECK);
+        $file = reset($files);
         $t = $this->testClass;
         $t::assertFileExists($file);
         $content = file_get_contents($file);
