@@ -23,13 +23,15 @@ END LICENSE AND COPYRIGHT
 */
 
 class ZfExtended_Worker_TriggerByHttp {
+    const WORKER_HEADER = 'X-Translate5-Worker';
+    
     
     private $host = 'localhost';
     private $port = 80; //attention the port alone does not define if SSL is used or no by fsockopent! 
     private $path = '';
     private $postParameters = array();
     private $method = 'GET';
-    private $getParameters = '?cleanupSessionAfterRun=1';
+    private $getParameters = '';
     
    /**
     * @var ZfExtended_Logger
@@ -149,9 +151,7 @@ class ZfExtended_Worker_TriggerByHttp {
                 //a 404 means we are requesting the wrong server! 
                 $method = 'error';
                 $code = 'E1107';
-                $msg = 'Worker HTTP response state was 404, the worker system requests probably the wrong server! The serverId had been: '.
-						trim($serverId).' and the PostParameter-serverId had been: '.$postParameters['serverId']."\r\nFSock-Output was:\r\n".
-						$linesOfFsock;
+                $msg = 'Worker HTTP response state was 404, the worker system requests probably the wrong server!';
                 break;
             default:
                 $method = 'warn';
@@ -161,6 +161,8 @@ class ZfExtended_Worker_TriggerByHttp {
             'state' => $state,
             'method' => $method,
             'serverId' => $serverId,
+            'serverIP' => $_SERVER['SERVER_ADDR'],
+            'remoteIP' => $_SERVER['REMOTE_ADDR'],
             'postParameters' => $postParameters,
             'host' => $host.$this->path,
             'port' => $this->port,
@@ -234,6 +236,7 @@ class ZfExtended_Worker_TriggerByHttp {
         $out = $this->method.' '.$this->path.$this->getParameters.' HTTP/1.1'."\r\n";
         $out .= 'Host: '.$this->host."\r\n";
         $out .= 'Accept: application/json'."\r\n"; // this is translate5-specific !!!
+        $out .= self::WORKER_HEADER.': 1'."\r\n"; // this is translate5-specific !!!
         
         $debug = null;
         //activated debug by browser plugin via cookie

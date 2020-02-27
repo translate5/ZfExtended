@@ -40,7 +40,7 @@ class ZfExtended_WorkerController extends ZfExtended_RestController {
     
     
     public function __destruct() {
-        if(!is_null($this->cleanupSessionAfterRun)){
+        if($this->cleanupSessionAfterRun){
             $session = new Zend_Session_Namespace();
             $SessionMapInternalUniqIdTable = new ZfExtended_Models_Db_SessionMapInternalUniqId();
             $SessionMapInternalUniqIdTable->update(array('modified'=>0),'`internalSessionUniqId` = \''.$session->internalSessionUniqId.'\'');
@@ -51,7 +51,7 @@ class ZfExtended_WorkerController extends ZfExtended_RestController {
     
     public function init() {
         parent::init();
-        $this->cleanupSessionAfterRun = $this->_getParam('cleanupSessionAfterRun');
+        $this->cleanupSessionAfterRun = (bool) $this->_request->getHeader(ZfExtended_Worker_TriggerByHttp::WORKER_HEADER);
     }
     
     /**
@@ -124,8 +124,6 @@ class ZfExtended_WorkerController extends ZfExtended_RestController {
             // set return as workerModel after runQueued() 
             // normaly should have state='done' if everything went well,
             $this->view->rows = $worker->getModelBeforeDelete()->getDataObject();
-            
-            return;
         }
     }
 
