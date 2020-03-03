@@ -101,13 +101,6 @@ abstract class ZfExtended_Models_Entity_Abstract {
     protected $tableName;
     
     
-    /***
-     * Default group by field
-     * @var string
-     */
-    protected $defaultGroup;
-    
-    
     public function __construct() {
         $this->db = ZfExtended_Factory::get($this->dbInstanceClass);
         $this->events = ZfExtended_Factory::get('ZfExtended_EventManager', array(get_class($this)));
@@ -227,7 +220,6 @@ abstract class ZfExtended_Models_Entity_Abstract {
      */
     protected function loadFilterdCustom(Zend_Db_Select $s){
         $this->applyFilterAndSort($s);
-        $this->applyDefaultGroupBy($s);
         return $this->db->fetchAll($s)->toArray();
     }
     
@@ -242,16 +234,6 @@ abstract class ZfExtended_Models_Entity_Abstract {
         
         if($this->offset || $this->limit) {
             $s->limit($this->limit, $this->offset);
-        }
-    }
-    
-    /***
-     * Apply default group by to the fiven select
-     * @param Zend_Db_Select $s
-     */
-    protected function applyDefaultGroupBy(Zend_Db_Select &$s){
-        if(isset($this->defaultGroup) && !empty($this->defaultGroup)){
-            $s->group($this->tableName.'.'.$this->defaultGroup);
         }
     }
 
@@ -272,10 +254,6 @@ abstract class ZfExtended_Models_Entity_Abstract {
       if(!empty($this->filter)) {
         $this->filter->applyToSelect($s, false);
       }
-      
-      //add the default groupby field
-      $this->applyDefaultGroupBy($s);
-      
       $name = $this->db->info(Zend_Db_Table_Abstract::NAME);
       $schema = $this->db->info(Zend_Db_Table_Abstract::SCHEMA);
 
@@ -287,7 +265,6 @@ abstract class ZfExtended_Models_Entity_Abstract {
           $s->reset($s::COLUMNS);
           $s->columns(array('numrows' => 'count(*)'));
       }
-      error_log($s->assemble());
       $totalCount = $this->db->fetchRow($s)->numrows;
       $s->reset($s::COLUMNS);
       $s->reset($s::FROM);
@@ -658,13 +635,5 @@ abstract class ZfExtended_Models_Entity_Abstract {
         $query = "SHOW TABLE STATUS LIKE ?;";
         $result = $this->db->getAdapter()->fetchRow($query,[$this->tableName]);
         return $result['Auto_increment'];
-    }
-    
-    /***
-     * Add the group by field for the entity table
-     * @param string $groupByField
-     */
-    public function addDefaultGroupByField(string $groupByField){
-        $this->defaultGroup=$groupByField;
     }
 }
