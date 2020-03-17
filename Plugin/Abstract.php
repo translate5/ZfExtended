@@ -75,7 +75,8 @@ abstract class ZfExtended_Plugin_Abstract {
         $this->eventManager = Zend_EventManager_StaticEventManager::getInstance();
         $c = Zend_Registry::get('config');
         if(empty($c->runtimeOptions->plugins)) {
-            throw new ZfExtended_Exception('No Plugin Configuration found!');
+            // No Plugin Configuration found!
+            throw new ZfExtended_Plugin_Exception('E1235');
         }
         $this->config = $c->runtimeOptions->plugins->$pluginName;
         $this->activePlugins = $c->runtimeOptions->plugins->active->toArray();
@@ -158,7 +159,8 @@ abstract class ZfExtended_Plugin_Abstract {
                 return;
             }
         }
-        throw new ZfExtended_Plugin_MissingDependencyException('A Plugin is missing or not active - plugin: '.$classname);
+        //A Plugin is missing or not active
+        throw new ZfExtended_Plugin_MissingDependencyException('E1236',['plugin' => $classname]);
     }
     
     /**
@@ -167,7 +169,11 @@ abstract class ZfExtended_Plugin_Abstract {
      */
     protected function blocks($classname) {
         if(in_array($classname, $this->activePlugins)) {
-            throw new ZfExtended_Plugin_ExclusionException('The following Plugin Bootstraps are not allowed to be active simultaneously: '.get_class($this).' and '.$classname);
+            //Plugins are not allowed to be active simultaneously
+            throw new ZfExtended_Plugin_ExclusionException('E1237', [
+                'current' => get_class($this),
+                'blocked' => $classname
+            ]);
         }
     }
     
@@ -222,7 +228,10 @@ abstract class ZfExtended_Plugin_Abstract {
      */
     public function getConfig() {
         if(empty($this->config)) {
-            throw new ZfExtended_Exception('No Plugin Configuration found for plugin '.$this->pluginName);
+            //No Plugin Configuration found for plugin
+            throw new ZfExtended_Plugin_Exception('E1238',[
+                'plugin' => $this->pluginName
+            ]);
         }
         return $this->config;
     }

@@ -109,7 +109,8 @@ class ZfExtended_Plugin_Manager {
             return empty($this->pluginInstances[$key]) ? null : $this->pluginInstances[$key];
         }
         //if some one ever traps here: search key ordered by "_" in the plugin class list (or implement something like a search tree)
-        throw new Exception('More than Plugin Classes found to key '.$key.' found: '.print_r($classes,1));
+        // Multiple Plugin Classes found to key
+        throw new ZfExtended_Plugin_Exception('E1234', ['key' => $key, 'foundClasses' => $classes]);
     }
     
     /**
