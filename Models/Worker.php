@@ -184,7 +184,7 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
                 SET u.STATE = ?
                 WHERE u.id = s.id;'; 
         
-        $bindings = array(self::STATE_SCHEDULED, self::STATE_WAITING,self::STATE_RUNNING,self::STATE_SCHEDULED,self::STATE_PREPARE,self::STATE_WAITING);
+        $bindings = [self::STATE_SCHEDULED, self::STATE_WAITING,self::STATE_RUNNING,self::STATE_SCHEDULED,self::STATE_PREPARE,self::STATE_WAITING];
         $this->db->getAdapter()->query('SET TRANSACTION ISOLATION LEVEL READ COMMITTED');
         
         //it may happen that a worker is not set to waiting if the deadlock was ignored, at least at the next worker queue call it is triggered again 
@@ -478,13 +478,20 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
     
     /**
      * Sets all remaining scheduled and waiting workers of that worker group (same parent (or the parent itself) and same taskGuid) to defunct
+     * @param array $exludedWorkers optional, contains the worker classes which should be ignored in setting them to defunc
      */
-    public function defuncRemainingOfGroup() {
-        $this->retryOnDeadlock(function() {
+    public function defuncRemainingOfGroup(array $exludedWorkers = []) {
+        $this->retryOnDeadlock(function() use ($exludedWorkers) {
+            $exclude = '';
+            $params = [$this->getId(), $this->getParentId(), $this->getParentId(), $this->getTaskGuid()];
+            if(!empty($exludedWorkers)) {
+                $exclude = ' AND worker NOT IN (?)';
+                $params[] = $exludedWorkers;
+            }
             $this->db->getAdapter()->query('UPDATE Zf_worker SET state = "'.self::STATE_DEFUNCT.'"
                 WHERE (parentId = 0 AND id IN (?,?)) OR (parentId != 0 AND parentId = ?) 
                 AND state in ("'.self::STATE_WAITING.'", "'.self::STATE_SCHEDULED.'")
-                AND taskGuid = ?', [$this->getId(), $this->getParentId(), $this->getParentId(), $this->getTaskGuid()]);
+                AND taskGuid = ?'.$exclude, $params);
         });
     }
     

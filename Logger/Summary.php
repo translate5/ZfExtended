@@ -70,7 +70,7 @@ class ZfExtended_Logger_Summary {
             $html .= '<table>';
             $html .= '<tr><th style="text-align:left;">Level:</th><th style="text-align:left;">Count:</th></tr>';
             foreach($summary as $levelSum) {
-                $html .= '<tr><td>'.$this->getLevel($levelSum['level']).'</td><td>'.$levelSum['cnt'].'</td></tr>'."\n";
+                $html .= '<tr><td>'.self::getLevel($levelSum['level']).'</td><td>'.$levelSum['cnt'].'</td></tr>'."\n";
             }
             $html .= '</table>';
         }
@@ -88,7 +88,7 @@ class ZfExtended_Logger_Summary {
                 $msg = '<a href="'.$url.'">'.$levelOverview['eventCode'].'</a> '.htmlspecialchars($levelOverview['message']);
                 $html .= '<tr>';
                 $html .= '<td style="white-space:nowrap;padding-right:10px;">'.$levelOverview['created'].'</td>';
-                $html .= '<td>'.$this->getLevel($levelOverview['level']).'</td>';
+                $html .= '<td>'.self::getLevel($levelOverview['level']).'</td>';
                 $html .= '<td>'.$msg.'</td>';
                 $html .= '<td>'.$levelOverview['appVersion'].'</td></tr>'."\n";
             }
@@ -114,7 +114,7 @@ class ZfExtended_Logger_Summary {
      * @param integer $level
      * @return string
      */
-    protected function getLevel($level) {
+    public static function getLevel($level) {
         $logger = Zend_Registry::get('logger');
         /* @var $logger ZfExtended_Logger */
         $levelName = $logger->getLevelName($level);
