@@ -99,6 +99,12 @@ abstract class ZfExtended_Models_Entity_Abstract {
      * @var string
      */
     protected $tableName;
+
+    /***
+     * The default group by field
+     * @var mixed
+     */
+    protected $defaultGroupBy;
     
     
     public function __construct() {
@@ -220,6 +226,7 @@ abstract class ZfExtended_Models_Entity_Abstract {
      */
     protected function loadFilterdCustom(Zend_Db_Select $s){
         $this->applyFilterAndSort($s);
+        $this->applyDefaultGroup($s);
         return $this->db->fetchAll($s)->toArray();
     }
     
@@ -235,6 +242,17 @@ abstract class ZfExtended_Models_Entity_Abstract {
         if($this->offset || $this->limit) {
             $s->limit($this->limit, $this->offset);
         }
+    }
+    
+    /***
+     * Apply the default group by for the select
+     * @param Zend_Db_Select $s
+     */
+    protected function applyDefaultGroup(Zend_Db_Select &$s){
+        if(!isset($this->defaultGroupBy) || empty($this->defaultGroupBy)){
+            return;
+        }
+        $s->group($this->tableName.'.'.$this->defaultGroupBy);
     }
 
     /**
@@ -265,10 +283,10 @@ abstract class ZfExtended_Models_Entity_Abstract {
           $s->reset($s::COLUMNS);
           $s->columns(array('numrows' => 'count(*)'));
       }
-      $totalCount = $this->db->fetchRow($s)->numrows;
+      $totalCount = $this->db->fetchAll($s);
       $s->reset($s::COLUMNS);
       $s->reset($s::FROM);
-      return $totalCount;
+      return count($totalCount);
     }
 
     /**
@@ -635,5 +653,9 @@ abstract class ZfExtended_Models_Entity_Abstract {
         $query = "SHOW TABLE STATUS LIKE ?;";
         $result = $this->db->getAdapter()->fetchRow($query,[$this->tableName]);
         return $result['Auto_increment'];
+    }
+    
+    public function setDefaultGroupBy(string $defaultGroupBy){
+        $this->defaultGroupBy=$defaultGroupBy;
     }
 }
