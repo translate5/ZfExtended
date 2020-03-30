@@ -105,27 +105,4 @@ abstract class ZfExtended_Logger_Writer_Abstract {
         }
         settype($options['filter'], 'array'); //ensure that if it was empty, that it is an array afterwards
     }
-    
-    /**
-     * Converts data to JSON, uses the data object of entities, on JSON errors the error and the raw data is returned
-     * @param mixed $data mostly an array
-     * @return string
-     */
-    protected function toJson($data) {
-        if(empty($data)) {
-            return null;
-        }
-        $data = array_map(function($item) {
-            if(is_object($item) && $item instanceof ZfExtended_Models_Entity_Abstract) {
-                return $item->getDataObject();
-            }
-            return $item;
-        }, (array) $data);
-        $result = json_encode($data);
-        if(empty($result) && json_last_error() > JSON_ERROR_NONE) {
-            $result = 'JSON Error: '.json_last_error_msg().' ('.json_last_error().")\n";
-            $result .= 'Raw Data: '.print_r($data, 1);
-        }
-        return $result;
-    }
 }

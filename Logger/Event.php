@@ -145,6 +145,12 @@ class ZfExtended_Logger_Event {
     public $extra = [];
     
     /**
+     * extra data flattened and sanitized (lazy filled by getExtraFlattenendAndSanitized) 
+     * @var array
+     */
+    public $extraFlat = [];
+    
+    /**
      * overwrites the data defined in the associative array into the current event
      * The extra array is merged - same named keys in the extra array are overwritten
      * @param array $dataToMerge
@@ -175,9 +181,8 @@ class ZfExtended_Logger_Event {
         if(!empty($this->worker)) {
             $msg[] = '  Worker: '.$this->worker;
         }
-        $extra = $this->convertExtra();
-        if(!empty($extra)) {
-            $msg[] = '  Extra: '.print_r($extra,1);
+        if(!empty($this->extra)) {
+            $msg[] = '  Extra: '.print_r($this->getExtraFlattenendAndSanitized(),1);
         }
         if(!empty($this->trace)) {
             $msg[] = '  Trace: ';
@@ -192,22 +197,6 @@ class ZfExtended_Logger_Event {
         
         //FIXME implement a nice, flexible, changeable formatter here
         return join("\n", $msg)."\n";
-    }
-    
-    /**
-     * Flattens the data in the extra array
-     * @return NULL|array
-     */
-    protected function convertExtra() {
-        if(empty($this->extra)) {
-            return '';
-        }
-        return print_r(array_map(function($item){
-            if($item instanceof ZfExtended_Models_Entity_Abstract) {
-                return $item->getDataObject();
-            }
-            return $item;
-        }, $this->extra),1);
     }
     
     /**
@@ -236,22 +225,16 @@ class ZfExtended_Logger_Event {
             $msg[] = '<td>Worker:</td><td>'.$this->worker.'</td>';
         }
         if(!empty($this->extra)) {
-            $extra = [];
-            foreach($this->extra as $key => $item) {
-                if(is_object($item) && $item instanceof ZfExtended_Models_Entity_Abstract) {
-                    $item = $item->getDataObject();
-                }
-                $extra[$key] = $item;
-            }
-            $msg[] = '<td>Extra:</td><td><pre>'.htmlspecialchars(print_r($extra,1)).'</pre></td>';
+            $msg[] = '<td>Extra:</td><td><pre>'.htmlspecialchars(print_r($this->getExtraFlattenendAndSanitized(),1)).'</pre></td>';
         }
         if(!empty($this->trace)) {
             $msg[] = '<td colspan="2">Trace:</td>';
             $msg[] = '<td colspan="2"><pre>'.$this->trace.'</pre></td>';
         }
         if(!empty($_REQUEST)) {
+            $copy = $_REQUEST;
             $msg[] = '<td colspan="2">Request:</td>';
-            $msg[] = '<td colspan="2"><pre>'.htmlspecialchars(print_r($_REQUEST,1)).'</pre></td>';
+            $msg[] = '<td colspan="2"><pre>'.htmlspecialchars(print_r($this->sanitizeContent($copy),1)).'</pre></td>';
         }
         $end = '</tr></table>';
         if(!empty($this->previous)) {
@@ -298,5 +281,66 @@ class ZfExtended_Logger_Event {
         $message = preg_replace('/([^a-zA-Z]|^)(OFFLINE)([^a-zA-Z]|$)/s', '$1<span style="font-weight:bold;color:#c83335;">$2</span>$3', $message);
         $message = preg_replace('/([^a-zA-Z]|^)(ONLINE)([^a-zA-Z]|$)/s', '$1<span style="font-weight:bold;color:#00aa00;">$2</span>$3', $message);
         return $message;
+    }
+    
+    /**
+     * Converts the flattened extra data to JSON, uses the data object of entities, on JSON errors the error and the raw data is returned
+     * @return string
+     */
+    public function getExtraAsJson(): ?string {
+        $data = $this->getExtraFlattenendAndSanitized();
+        if(empty($data)) {
+            return null;
+        }
+        $result = json_encode($data);
+        if(empty($result) && json_last_error() > JSON_ERROR_NONE) {
+            $result = 'JSON Error: '.json_last_error_msg().' ('.json_last_error().")\n";
+            $result .= 'Raw Data: '.print_r($data, 1);
+        }
+        return $result;
+    }
+    
+    /**
+     * Loops over the internal data and obfuscates possible private data
+     * WARNING: flattens also the extra data container!
+     */
+    public function getExtraFlattenendAndSanitized() {
+        if(!empty($this->extraFlat)) {
+            return $this->extraFlat;
+        }
+
+        return $this->extraFlat = $this->sanitizeContent(array_map(function($item) {
+            if(is_object($item) && $item instanceof ZfExtended_Models_Entity_Abstract) {
+                return $this->sanitizeContent($item->getDataObject());
+            }
+            return $item;
+        }, (array) $this->extra));
+    }
+
+    /**
+     * Accepts strings (URL with GET parameters), arrays or objects which are sanitized (searched for the given key and content is replaced
+     * @param mixed $toSanitize
+     */
+    protected function sanitizeContent($toSanitize) {
+        $sensitiveKeys = ['passwd', 'password', 'authhash', 'sessiontoken', 'authtoken', 'session_id', 'staticauthhash'];
+        
+        //if it is a string we assume it is a URL with parameters
+        if(is_string($toSanitize)) {
+            return preg_replace('/(\?|&)('.join('|', $sensitiveKeys).')=([^&#]+)/', '$1$2=XXX', $toSanitize);
+        }
+        $isObject = is_object($toSanitize);
+        foreach($toSanitize as $key => $value) {
+            if(!in_array(strtolower($key), $sensitiveKeys)) {
+                continue;
+            }
+            $value = substr($value, 0, 2).'XXX...';
+            if($isObject) {
+                $toSanitize->$key = $value;
+            }
+            else {
+                $toSanitize[$key] = $value;
+            }
+        }
+        return $toSanitize;
     }
 }
