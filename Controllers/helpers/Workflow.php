@@ -54,8 +54,12 @@ class ZfExtended_Controller_Helper_Workflow extends Zend_Controller_Action_Helpe
             $workflow = $wfm->getByTask($task);
             /* @var $workflow editor_Workflow_Abstract */
         }
-        $role=$workflow->getRoleOfStep($task->getWorkflowStepName());
-        $tua = $workflow->getTaskUserAssoc($taskGuid, $userGuid,$role);
+        $tua = null;
+        try {
+            $tua = editor_Models_Loaders_Taskuserassoc::loadByTaskGuid($userGuid,$taskGuid);
+        }
+        catch(ZfExtended_Models_Entity_NotFoundException $e) {
+        }
         if(empty($tua) || ! $workflow->isWritingAllowedForState($tua->getUsedState())) {
             $e = new ZfExtended_NoAccessException();
             $e->setLogging(false); //TODO info level logging

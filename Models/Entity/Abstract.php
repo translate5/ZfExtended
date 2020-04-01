@@ -100,12 +100,6 @@ abstract class ZfExtended_Models_Entity_Abstract {
      */
     protected $tableName;
 
-    /***
-     * The default group by field
-     * @var mixed
-     */
-    protected $defaultGroupBy;
-    
     
     public function __construct() {
         $this->db = ZfExtended_Factory::get($this->dbInstanceClass);
@@ -226,7 +220,6 @@ abstract class ZfExtended_Models_Entity_Abstract {
      */
     protected function loadFilterdCustom(Zend_Db_Select $s){
         $this->applyFilterAndSort($s);
-        $this->applyDefaultGroup($s);
         return $this->db->fetchAll($s)->toArray();
     }
     
@@ -244,17 +237,6 @@ abstract class ZfExtended_Models_Entity_Abstract {
         }
     }
     
-    /***
-     * Apply the default group by for the select
-     * @param Zend_Db_Select $s
-     */
-    protected function applyDefaultGroup(Zend_Db_Select &$s){
-        if(!isset($this->defaultGroupBy) || empty($this->defaultGroupBy)){
-            return;
-        }
-        $s->group($this->tableName.'.'.$this->defaultGroupBy);
-    }
-
     /**
      * returns the total (without LIMIT) count of rows
      */
