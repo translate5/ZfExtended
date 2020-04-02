@@ -43,11 +43,7 @@ abstract class ZfExtended_Models_Filter_JoinAbstract {
         $this->searchField = $searchField; 
         $this->foreignKey = $foreignKey; 
         $this->localKey = $localKey;
-        if(!isset($searchTable)){
-            //set the search table a
-            $searchTable=$table;
-        }
-        $this->searchTable=$searchTable;
+        $this->searchTable = $searchTable ?? $table;
     }
     
     /**
