@@ -265,10 +265,10 @@ abstract class ZfExtended_Models_Entity_Abstract {
           $s->reset($s::COLUMNS);
           $s->columns(array('numrows' => 'count(*)'));
       }
-      $totalCount = $this->db->fetchAll($s);
+      $totalCount = $this->db->fetchRow($s)->numrows;
       $s->reset($s::COLUMNS);
       $s->reset($s::FROM);
-      return count($totalCount);
+      return $totalCount;
     }
 
     /**
