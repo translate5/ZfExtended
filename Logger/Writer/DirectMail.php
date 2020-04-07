@@ -35,7 +35,6 @@ class ZfExtended_Logger_Writer_DirectMail extends ZfExtended_Logger_Writer_Abstr
      * @see ZfExtended_Logger_Writer_Abstract::write()
      */
     public function write(ZfExtended_Logger_Event $event) {
-        $event = clone $event; //clone it, so that extra data is not manipulated in object
         if(!empty($_SERVER['HTTP_HOST'])) {
             $subject = $_SERVER['HTTP_HOST'].': ';
         }
@@ -60,18 +59,11 @@ class ZfExtended_Logger_Writer_DirectMail extends ZfExtended_Logger_Writer_Abstr
         }
         
         $mail->setSubject($subject);
-        $extra = $event->extra;
         $event->extra = null;
         $mail->setBodyText($event);
         $mail->setBodyHtml($event->toHtml());
-        if(!empty($extra)) {
-            foreach($extra as $key => $item) {
-                if(is_object($item) && $item instanceof ZfExtended_Models_Entity_Abstract) {
-                    $item = $item->getDataObject();
-                }
-                $extra[$key] = $item;
-            }
-            $mail->createAttachment(print_r($extra,1), 'text/plain', Zend_Mime::DISPOSITION_ATTACHMENT, Zend_Mime::ENCODING_BASE64, 'extra_log_data.txt');
+        if(!empty($event->extraFlat)) {
+            $mail->createAttachment(print_r($event->extraFlat,1), 'text/plain', Zend_Mime::DISPOSITION_ATTACHMENT, Zend_Mime::ENCODING_BASE64, 'extra_log_data.txt');
         }
         $mail->send();
     }

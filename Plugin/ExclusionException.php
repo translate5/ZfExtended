@@ -25,5 +25,8 @@ END LICENSE AND COPYRIGHT
 /**
  * Plugins are throwing this exception if they exclude each other
  */
-class ZfExtended_Plugin_ExclusionException extends ZfExtended_Exception {
+class ZfExtended_Plugin_ExclusionException extends ZfExtended_Plugin_Exception {
+    static protected $localErrorCodes = [
+        'E1237' => 'The following Plugins are not allowed to be active simultaneously: {current} and {blocked}',
+    ];
 }

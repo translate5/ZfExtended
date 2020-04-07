@@ -40,7 +40,7 @@ class ZfExtended_Logger_Writer_Database extends ZfExtended_Logger_Writer_Abstrac
         $data['message'] = mb_substr($data['message'], 0, 512);
         $data['last'] = NOW_ISO;
         //flatten entities to their dataobjects and handles JSON errors:
-        $data['extra'] = $this->toJson($event->extra);
+        $data['extra'] = $event->getExtraAsJson();
         //$data['count'] = 0; FIXME how to make the duplication recognition?
         $db->insert($data);
     }

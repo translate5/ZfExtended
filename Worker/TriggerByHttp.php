@@ -70,7 +70,7 @@ class ZfExtended_Worker_TriggerByHttp {
      * 
      * @return boolean true if everything is OK
      */
-    public function triggerUrl(string $url, $postParameters = array(), $method = 'GET') {
+    protected function triggerUrl(string $url, $postParameters = array(), $method = 'GET') {
         $postParameters['serverId'] = ZfExtended_Utils::installationHash('ZfExtended_Worker_Abstract');
         $host = $this->triggerInit($url, $postParameters, $method);
         $errno = 0;
@@ -110,9 +110,10 @@ class ZfExtended_Worker_TriggerByHttp {
                 $serverId = $infos[1];
             }
         }
+        $isServerIdEqual = $postParameters['serverId'] === trim($serverId);
         //if the other server does not send a server id, or an invalid server id, the target server is not the current system!
-        if($postParameters['serverId'] != trim($serverId)) {
-            $state = 404;
+        if(!$isServerIdEqual) {
+            $state = 999;
         }
         
         $info = stream_get_meta_data($fsock);
@@ -137,7 +138,8 @@ class ZfExtended_Worker_TriggerByHttp {
         
         fclose($fsock);
         
-        if ($state >= 200 && $state < 300) {
+        //since it may happen that the worker does not exist anymore, 404 are valid states
+        if ($state >= 200 && $state < 300 || $state === 404) {
             return true;
         }
         $code = 'E1074';
@@ -147,11 +149,11 @@ class ZfExtended_Worker_TriggerByHttp {
                 //since on a 500 the real exception was logged in the worker, we just log that here as debug info
                 $method = 'debug';
                 break;
-            case 404:
-                //a 404 means we are requesting the wrong server! 
+            case 999:
+                //a 999 means we are requesting the wrong server! 
                 $method = 'error';
                 $code = 'E1107';
-                $msg = 'Worker HTTP response state was 404, the worker system requests probably the wrong server!';
+                $msg = 'Worker HTTP response was not successful, the worker system requests probably the wrong server!';
                 break;
             default:
                 $method = 'warn';

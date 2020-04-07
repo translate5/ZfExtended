@@ -137,7 +137,9 @@ class ZfExtended_Controller_Helper_Access extends Zend_Controller_Action_Helper_
         settype($user->data, 'object');
         settype($user->data->roles, 'array');
         foreach ($roles2add as $role) {
-            if(!in_array($role, $user->data->roles))$user->data->roles[] = $role;
+            if(!in_array($role, $user->data->roles)) {
+                $user->data->roles[] = $role;
+            }
         }
         $this->_roles = $user->data->roles;
     }

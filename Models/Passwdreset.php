@@ -3,14 +3,14 @@
 START LICENSE AND COPYRIGHT
 
  This file is part of ZfExtended library
- 
+
  Copyright (c) 2013 - 2017 Marc Mittag; MittagQI - Quality Informatics;  All rights reserved.
 
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
 
  This file may be used under the terms of the GNU LESSER GENERAL PUBLIC LICENSE version 3
- as published by the Free Software Foundation and appearing in the file lgpl3-license.txt 
- included in the packaging of this file.  Please review the following information 
+ as published by the Free Software Foundation and appearing in the file lgpl3-license.txt
+ included in the packaging of this file.  Please review the following information
  to ensure the GNU LESSER GENERAL PUBLIC LICENSE version 3.0 requirements will be met:
 https://www.gnu.org/licenses/lgpl-3.0.txt
 
@@ -22,11 +22,11 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
-/**#@+ 
+/**#@+
  * @author Marc Mittag
  * @package ZfExtended
  * @version 2.0
- * 
+ *
  */
 /**
  * handles passwd reset
@@ -39,7 +39,7 @@ END LICENSE AND COPYRIGHT
  * @method integer getUserId() getUserId()
  * @method integer getExpiration() getExpiration()
  * @method string getResetHash() getResetHash()
- * 
+ *
  */
 class ZfExtended_Models_Passwdreset extends ZfExtended_Models_Entity_Abstract {
   protected $dbInstanceClass = 'ZfExtended_Models_Db_Passwdreset';
@@ -53,7 +53,7 @@ class ZfExtended_Models_Passwdreset extends ZfExtended_Models_Entity_Abstract {
           }
       }
   }
-  
+
   /**
    * @param string $hash
    * @return boolean
@@ -84,26 +84,23 @@ class ZfExtended_Models_Passwdreset extends ZfExtended_Models_Entity_Abstract {
         } catch (ZfExtended_Models_Entity_NotFoundException $exc) {//catch the 404 thrown, if no user found
             return false;
         }
-        $guid = ZfExtended_Zendoverwrites_Controller_Action_HelperBroker::getStaticHelper(
-            'Guid'
-        );
-        $session->resetHash = md5($guid->create());
-        
-        
+        $session->resetHash = md5(ZfExtended_Utils::uuid());
+
+
         $this->setUserId($user->getId());
         $this->setResetHash($session->resetHash);
         $this->setExpiration(time()+1800);
         $this->setInternalSessionUniqId($session->internalSessionUniqId);
-        
+
         $this->validate();
         $this->save();
-        
+
         $mailer = new ZfExtended_TemplateBasedMail();
         $mailer->setParameters([
             'resetHash' => $session->resetHash,
         ]);
         $mailer->sendToUser($user);
-        
+
         return true;
     }
 }

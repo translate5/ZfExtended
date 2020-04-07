@@ -23,10 +23,17 @@ END LICENSE AND COPYRIGHT
 */
 
 /**
- * Plugins are throwing this exception if a dependency is not met
+ * Exceptions in plug-in handling
  */
-class ZfExtended_Plugin_MissingDependencyException extends ZfExtended_Plugin_Exception {
-    static protected $localErrorCodes = [
-        'E1236' => 'A Plugin is missing or not active - plugin: {plugin}'
-    ];
+class ZfExtended_Plugin_Exception extends ZfExtended_ErrorCodeException {
+        /**
+         * @var string
+         */
+        protected $domain = 'core.plugin';
+        
+        static protected $localErrorCodes = [
+            'E1234' => 'Multiple Plugin Classes found to key {key}',
+            'E1235' => 'No Plugin Configuration found!',
+            'E1238' => 'No Plugin Configuration found for plugin {plugin}',
+        ];
 }
