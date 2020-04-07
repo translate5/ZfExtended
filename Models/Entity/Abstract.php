@@ -99,7 +99,7 @@ abstract class ZfExtended_Models_Entity_Abstract {
      * @var string
      */
     protected $tableName;
-    
+
     
     public function __construct() {
         $this->db = ZfExtended_Factory::get($this->dbInstanceClass);
@@ -236,7 +236,7 @@ abstract class ZfExtended_Models_Entity_Abstract {
             $s->limit($this->limit, $this->offset);
         }
     }
-
+    
     /**
      * returns the total (without LIMIT) count of rows
      */
@@ -635,5 +635,9 @@ abstract class ZfExtended_Models_Entity_Abstract {
         $query = "SHOW TABLE STATUS LIKE ?;";
         $result = $this->db->getAdapter()->fetchRow($query,[$this->tableName]);
         return $result['Auto_increment'];
+    }
+    
+    public function setDefaultGroupBy(string $defaultGroupBy){
+        $this->defaultGroupBy=$defaultGroupBy;
     }
 }
