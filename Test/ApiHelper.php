@@ -9,8 +9,8 @@ START LICENSE AND COPYRIGHT
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
 
  This file may be used under the terms of the GNU LESSER GENERAL PUBLIC LICENSE version 3
- as published by the Free Software Foundation and appearing in the file lgpl3-license.txt 
- included in the packaging of this file.  Please review the following information 
+ as published by the Free Software Foundation and appearing in the file lgpl3-license.txt
+ included in the packaging of this file.  Please review the following information
  to ensure the GNU LESSER GENERAL PUBLIC LICENSE version 3.0 requirements will be met:
 https://www.gnu.org/licenses/lgpl-3.0.txt
 
@@ -168,15 +168,15 @@ class ZfExtended_Test_ApiHelper {
     }
     
     /**
-     * Sends a JSON request to the application API, returns 
+     * Sends a JSON request to the application API, returns
      *   - false on HTTP response state other than 2XX
      *   - the decoded JSON result on HTTP == 2XX
-     * The raw response object is stored in lastResponse 
+     * The raw response object is stored in lastResponse
      * @param string $url
      * @param string $method
      * @param array $parameters added as json in data parameter
      * @param array $additionalParameters attached as plain form parameters
-     * @return mixed a array/object structure (parsed from json) on HTTP Status 2XX, false otherwise 
+     * @return mixed a array/object structure (parsed from json) on HTTP Status 2XX, false otherwise
      */
     public function requestJson($url, $method = 'GET', $parameters = [], $additionalParameters = []) {
         if(empty($this->filesToAdd) && ($method == 'POST' || $method == 'PUT')){
@@ -187,7 +187,7 @@ class ZfExtended_Test_ApiHelper {
     }
     
     /**
-     * Decodes a returned JSON answer from Translate5 REST API 
+     * Decodes a returned JSON answer from Translate5 REST API
      * @param Zend_Http_Response $resp
      * @return mixed|boolean
      */
@@ -251,7 +251,7 @@ class ZfExtended_Test_ApiHelper {
         }
         
         $response = $this->requestJson('editor/session', 'POST', [
-            'login' => $login, 
+            'login' => $login,
             'passwd' => $password,
         ]);
         
@@ -279,7 +279,7 @@ class ZfExtended_Test_ApiHelper {
     
     /**
      * Imports the task described in array $task, parameters are the API parameters, at least:
-     * 
+     *
         $task = array(
             'sourceLang' => 'en', // mandatory, source language in rfc5646
             'targetLang' => 'de', // mandatory, target language in rfc5646
@@ -288,7 +288,7 @@ class ZfExtended_Test_ApiHelper {
             'orderdate' => date('Y-m-d H:i:s'), //optional, defaults to now
             'wordCount' => 666, //optional, defaults to heavy metal
         );
-     * 
+     *
      * @param array $task
      * @param bool $failOnError default true
      * @param bool $waithForImport default true : if this is set to false, the function will not check the task import state
@@ -320,7 +320,7 @@ class ZfExtended_Test_ApiHelper {
                 }
                 return false;
             }
-            sleep(5);
+            sleep(3);
         }
         
     }
@@ -343,7 +343,7 @@ class ZfExtended_Test_ApiHelper {
     
     /**
      * tests the config names and values in the given associated array against the REST accessible application config
-     * If the given value to the config is null, the config value is just checked for existence and if the configured value is not empty 
+     * If the given value to the config is null, the config value is just checked for existence and if the configured value is not empty
      * @param array $configsToTest
      */
     public function testConfig(array $configsToTest) {
@@ -384,8 +384,8 @@ class ZfExtended_Test_ApiHelper {
      * @param string $state open, waiting, finished, as available by the workflow
      * @param string $role reviewer or translator, as available by the workflow
      * @param array $params add additional taskuserassoc params to the add user call
-     * 
-     * @return stdClass taskuserassoc result 
+     *
+     * @return stdClass taskuserassoc result
      */
     public function addUser($username, $state = 'open', $role = 'reviewer',array $params=[]) {
         $test = $this->testClass;
@@ -427,8 +427,8 @@ class ZfExtended_Test_ApiHelper {
     }
     
     /**
-     * returns a data structure ready for segment PUT, 
-     * if last parameter is an ID creates the data structure, or if a data structure is given, 
+     * returns a data structure ready for segment PUT,
+     * if last parameter is an ID creates the data structure, or if a data structure is given,
      *   add the segment field with its data
      * @param string $field
      * @param string $value
@@ -488,7 +488,7 @@ class ZfExtended_Test_ApiHelper {
     }
     
     /**
-     * 
+     *
      * @param string $zipfile absolute file system path to zip file
      * @param string $pathToFileInZip relative path to file inside of zip
      */
@@ -519,7 +519,7 @@ class ZfExtended_Test_ApiHelper {
         return $content;
     }
     /**
-     * 
+     *
      * @param string $directory
      * @return boolean false if directory did not exist
      * @throws Exception if directory is a file
@@ -648,7 +648,7 @@ class ZfExtended_Test_ApiHelper {
     /**
      * Adds directly data to be imported instead of providing a filepath
      * useful for creating CSV testdata direct in testcase
-     * 
+     *
      * @param string $data
      * @param string $mime
      */
@@ -659,9 +659,9 @@ class ZfExtended_Test_ApiHelper {
     /**
      * Receives a two dimensional array and add it as a CSV file to the task
      * MID col and CSV head line is added automatically
-     * 
+     *
      * multiple targets currently not supported!
-     * 
+     *
      * @param array $data
      */
     public function addImportArray(array $data) {
