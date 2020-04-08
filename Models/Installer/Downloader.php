@@ -9,8 +9,8 @@ START LICENSE AND COPYRIGHT
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
 
  This file may be used under the terms of the GNU LESSER GENERAL PUBLIC LICENSE version 3
- as published by the Free Software Foundation and appearing in the file lgpl3-license.txt 
- included in the packaging of this file.  Please review the following information 
+ as published by the Free Software Foundation and appearing in the file lgpl3-license.txt
+ included in the packaging of this file.  Please review the following information
  to ensure the GNU LESSER GENERAL PUBLIC LICENSE version 3.0 requirements will be met:
 https://www.gnu.org/licenses/lgpl-3.0.txt
 
@@ -53,14 +53,14 @@ class ZfExtended_Models_Installer_Downloader {
     }
     
     /**
-     * This method checks if the application is uptodate.
+     * This method checks if the application is uptodate by package zip hash.
      * It assumes that the application is already listed in deps-installed.json,
      * if not or if no dep file is given it is also marked as uptodate!
      * This is needed for legacy applications which are not using the install-and-update script
      * and have therefore not deps-installed.json file.
      * The result is, that this method cannot be used in installation process,
      * which would also be nonsense.
-     * 
+     *
      * @return boolean
      */
     public function applicationIsUptodate(){
@@ -72,6 +72,21 @@ class ZfExtended_Models_Installer_Downloader {
         $this->fetchHashTable();
         $installed = $this->dependencies->getInstalled($app->name);
         return is_null($installed) || $this->isUpToDate($app);
+    }
+    
+    /**
+     * Returns the application version which is available in the update channel
+     */
+    public function getAvailableVersion(): ?string {
+        $url = $this->dependencies->getNeeded()->versionfile;
+        if(empty($url)) {
+            return null;
+        }
+        $versionContent = @file_get_contents($url);
+        if(empty($versionContent)) {
+            return null;
+        }
+        return ZfExtended_Utils::getAppVersion($versionContent);
     }
 
     /**
@@ -321,7 +336,7 @@ class ZfExtended_Models_Installer_Downloader {
         if($cleanBefore && empty($dependency->target)) {
             //nothing to extract since no target is given
             // for example if the downloaded file is no zip file
-            return true; 
+            return true;
         }
 
         $targetDir = $this->applicationRoot.'/'.$dependency->target;

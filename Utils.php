@@ -39,6 +39,8 @@ END LICENSE AND COPYRIGHT
  */
 class ZfExtended_Utils {
 
+    const VERSION_DEVELOPMENT = 'development';
+    
     /**
      * returns an value / array of values found by the xpath similar path.
      * Currently supported only:
@@ -204,16 +206,21 @@ class ZfExtended_Utils {
     /**
      * FIXME let the value come from a on deploy auto generated php file instead of reading the text version file
      * returns the application version
+     * @param string $versionContent Optional, parses the version from thegiven text string
      * @return string
      */
-    public static function getAppVersion() {
+    public static function getAppVersion(string $versionContent = null): string {
         $versionFile = APPLICATION_PATH.'/../version';
         $regex = '/MAJOR_VER=([0-9]+)\s*MINOR_VER=([0-9]+).*\s*BUILD=([0-9]+).*/';
-        if(file_exists($versionFile) && $res = preg_match($regex, file_get_contents($versionFile), $matches)) {
+        $matches = null;
+        if(empty($versionContent) && file_exists($versionFile)) {
+            $versionContent = file_get_contents($versionFile);
+        }
+        if(!empty($versionContent) && preg_match($regex, $versionContent, $matches)) {
             array_shift($matches);
             return join('.', $matches);
         }
-        return 'development';
+        return self::VERSION_DEVELOPMENT;
     }
 
     /***

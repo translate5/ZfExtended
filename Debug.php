@@ -9,8 +9,8 @@ START LICENSE AND COPYRIGHT
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
 
  This file may be used under the terms of the GNU LESSER GENERAL PUBLIC LICENSE version 3
- as published by the Free Software Foundation and appearing in the file lgpl3-license.txt 
- included in the packaging of this file.  Please review the following information 
+ as published by the Free Software Foundation and appearing in the file lgpl3-license.txt
+ included in the packaging of this file.  Please review the following information
  to ensure the GNU LESSER GENERAL PUBLIC LICENSE version 3.0 requirements will be met:
 https://www.gnu.org/licenses/lgpl-3.0.txt
 
@@ -31,7 +31,7 @@ END LICENSE AND COPYRIGHT
  * provides easy access to the debug configuration
  * Example - If you plan to execute some code only for debug reasons then implement:
  * if(ZfExtended_Debug::hasLevel('core', 'YourSection', 1))
- * → the code in the if block is executed only if one of the following lines is given in config: 
+ * → the code in the if block is executed only if one of the following lines is given in config:
  * runtimeOptions.debug = 1
  * runtimeOptions.debug.core = 1
  * runtimeOptions.debug.core.YourSection = 1
@@ -61,7 +61,7 @@ class ZfExtended_Debug {
     
     /**
      * returns the configured debug level for given category and key
-     * 
+     *
      * In Configuration debug can be enabled by setting:
      * runtimeOptions.debug = 1 → this enables debug overall
      * or
@@ -70,7 +70,7 @@ class ZfExtended_Debug {
      * runtimeOptions.debug.category.key = 1 → this enables debug in given category and section
      * The height of the integer can represent the verbosity. This should be documented at the concrete section.
      * In general: as higher is the integer, as higher is the verbosity
-     * 
+     *
      * @param string $category
      * @param string $section
      * @return integer
@@ -153,7 +153,7 @@ class ZfExtended_Debug {
             $result->version = file_get_contents($versionFile);
         }
         else {
-            $result->version = 'development';
+            $result->version = ZfExtended_Utils::VERSION_DEVELOPMENT;
             $result->branch = exec('cd '.APPLICATION_PATH.'; git status -bs | head -1');
         }
         
