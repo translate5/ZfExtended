@@ -9,8 +9,8 @@ START LICENSE AND COPYRIGHT
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
 
  This file may be used under the terms of the GNU LESSER GENERAL PUBLIC LICENSE version 3
- as published by the Free Software Foundation and appearing in the file lgpl3-license.txt 
- included in the packaging of this file.  Please review the following information 
+ as published by the Free Software Foundation and appearing in the file lgpl3-license.txt
+ included in the packaging of this file.  Please review the following information
  to ensure the GNU LESSER GENERAL PUBLIC LICENSE version 3.0 requirements will be met:
 https://www.gnu.org/licenses/lgpl-3.0.txt
 
@@ -34,7 +34,9 @@ trait ZfExtended_Controllers_MaintenanceTrait{
         if(!isset($config->runtimeOptions->maintenance)){
             return;
         }
-        $directMaintenance = ZfExtended_Debug::hasLevel('core', 'maintenance');
+        
+        //maintenance can be enabled by setting a debug level or for just testing the layout by adding the testmaintenance=1 parameter to the URL
+        $directMaintenance = ZfExtended_Debug::hasLevel('core', 'maintenance') || !empty($_GET['testmaintenance']);
         $maintenanceStartDate=$config->runtimeOptions->maintenance->startDate;
         
         if(!$directMaintenance && (!$maintenanceStartDate || !(strtotime($maintenanceStartDate)<= (time()+ 86400)))){//if there is no date and the start date is not in the next 24H

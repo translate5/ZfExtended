@@ -9,8 +9,8 @@ START LICENSE AND COPYRIGHT
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
 
  This file may be used under the terms of the GNU LESSER GENERAL PUBLIC LICENSE version 3
- as published by the Free Software Foundation and appearing in the file lgpl3-license.txt 
- included in the packaging of this file.  Please review the following information 
+ as published by the Free Software Foundation and appearing in the file lgpl3-license.txt
+ included in the packaging of this file.  Please review the following information
  to ensure the GNU LESSER GENERAL PUBLIC LICENSE version 3.0 requirements will be met:
 https://www.gnu.org/licenses/lgpl-3.0.txt
 
@@ -71,23 +71,33 @@ echo $this->doctype() ?>
 	        <p id="last-reload" style="color:#cdcdcd;font-size:8px;"></p>
 	    </div>
 	</article>
+<?php
+if(!empty($_GET['testmaintenance'])) {
+    echo '<!--';
+}
+?>
 	<script>
 		setInterval(function(){
 		        var xhr = new XMLHttpRequest(),
 		        	url = '<?php echo APPLICATION_RUNDIR;?>/login';
 		        xhr.open('GET', url);
-				xhr.onload = function() { 
+				xhr.onload = function() {
 					if(xhr.status >= 200 && xhr.status < 400) {
     			        window.location.href = url;
     			        return;
 					}
 					var d = new Date();
 					document.getElementById('last-reload').innerHTML = 'Last check at: '+d.toLocaleString();
-		        };		    
-		        xhr.send();	
+		        };
+		        xhr.send();
 		//}, 30000);
 		}, 5000);
 	
 	</script>
+<?php
+if(!empty($_GET['testmaintenance'])) {
+    echo '-->';
+}
+?>
   </body>
 </html>
