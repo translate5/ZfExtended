@@ -89,7 +89,7 @@ class ZfExtended_Cache_MySQLMemoryBackend extends Zend_Cache_Backend implements 
     /**
      * Updates the cache identified by $id with $value only, if lastModfied is older as the given amount of $seconds
      * returns true if the cache was updated by this request or false if not
-     * 
+     *
      * @param string $id
      * @param string $value
      * @param int $seconds
@@ -226,7 +226,7 @@ class ZfExtended_Cache_MySQLMemoryBackend extends Zend_Cache_Backend implements 
     }
     
     /**
-     * Since MySQL engine memory is limited to varchar fields and is not able to use blobs 
+     * Since MySQL engine memory is limited to varchar fields and is not able to use blobs
      *  we have to ensure the string length is not exceeding that limit to avoid cut off serialized strings.
      * @param string $id
      * @param string $data
@@ -253,8 +253,7 @@ class ZfExtended_Cache_MySQLMemoryBackend extends Zend_Cache_Backend implements 
             case Zend_Cache::CLEANING_MODE_ALL:
                 return $this->db->query('DELETE FROM Zf_memcache');
             case Zend_Cache::CLEANING_MODE_OLD:
-                $mktime = date(self::DATE_MYSQL, time());
-                return $this->db->query('DELETE FROM Zf_memcache WHERE expire>0 AND expire <= ?', [$mktime]);
+                return $this->db->query('DELETE FROM Zf_memcache WHERE expire>0 AND expire <= now()');
             default:
                 break;
         }
@@ -269,7 +268,7 @@ class ZfExtended_Cache_MySQLMemoryBackend extends Zend_Cache_Backend implements 
     public function getAllForPartOfId (string $idPart)
     {
         $sql = 'SELECT * FROM `Zf_memcache` WHERE `id` LIKE ?';
-        $params = ['%'.$idPart.'%']; 
+        $params = ['%'.$idPart.'%'];
         $res = $this->db->query($sql, $params);
         if($res && $res->rowCount() > 0) {
             return $res->fetchAll();
