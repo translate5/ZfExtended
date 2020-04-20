@@ -9,8 +9,8 @@ START LICENSE AND COPYRIGHT
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
 
  This file may be used under the terms of the GNU LESSER GENERAL PUBLIC LICENSE version 3
- as published by the Free Software Foundation and appearing in the file lgpl3-license.txt 
- included in the packaging of this file.  Please review the following information 
+ as published by the Free Software Foundation and appearing in the file lgpl3-license.txt
+ included in the packaging of this file.  Please review the following information
  to ensure the GNU LESSER GENERAL PUBLIC LICENSE version 3.0 requirements will be met:
 https://www.gnu.org/licenses/lgpl-3.0.txt
 
@@ -44,7 +44,7 @@ class ErrorController extends ZfExtended_Controllers_Action
     
     /**
      *
-     * @var string  
+     * @var string
      */
     protected $route;
     
@@ -87,7 +87,7 @@ class ErrorController extends ZfExtended_Controllers_Action
                     $httpCode = $e->getHttpReturnCode();
                 }
                 else {
-                    $httpCode = $e->getCode();
+                    $httpCode = $e->getCode() ?? 500;
                 }
                 break;
         }
@@ -194,7 +194,7 @@ class ErrorController extends ZfExtended_Controllers_Action
         $error = error_get_last();
         if(!empty($error)) {
             //if there were warnings or notices before, we have to clear them to get valid browser output
-            ob_get_length() && ob_clean(); 
+            ob_get_length() && ob_clean();
         }
         
         if($this->exception && $this->exception->getCode() == '503'){
