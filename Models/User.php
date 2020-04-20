@@ -524,4 +524,13 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implement
         }
         return null;
     }
+    
+    /***
+     * Get user application config level
+     * @return array
+     */
+    public function getApplicationConfigLevel(){
+        $acl = ZfExtended_Acl::getInstance();
+        return $acl->getRightsToRolesAndResource($this->getRoles(), 'applicationconfigLevel');
+    }
 }
