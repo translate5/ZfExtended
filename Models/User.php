@@ -60,6 +60,13 @@ END LICENSE AND COPYRIGHT
  * @method void getOpenIdSubject() getOpenIdSubject()
  */
 class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implements ZfExtended_Models_SessionUserInterface {
+    
+    /***
+     * resource key for the acl level record
+     * @var string
+     */
+    const APPLICATION_CONFIG_LEVEL='applicationconfigLevel';
+    
     const SYSTEM_LOGIN = 'system';
     const SYSTEM_GUID = '{00000000-0000-0000-0000-000000000000}';
     
@@ -531,6 +538,6 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implement
      */
     public function getApplicationConfigLevel(){
         $acl = ZfExtended_Acl::getInstance();
-        return $acl->getRightsToRolesAndResource($this->getRoles(), 'applicationconfigLevel');
+        return $acl->getRightsToRolesAndResource($this->getRoles(), self::APPLICATION_CONFIG_LEVEL);
     }
 }
