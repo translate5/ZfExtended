@@ -9,8 +9,8 @@ START LICENSE AND COPYRIGHT
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
 
  This file may be used under the terms of the GNU LESSER GENERAL PUBLIC LICENSE version 3
- as published by the Free Software Foundation and appearing in the file lgpl3-license.txt 
- included in the packaging of this file.  Please review the following information 
+ as published by the Free Software Foundation and appearing in the file lgpl3-license.txt
+ included in the packaging of this file.  Please review the following information
  to ensure the GNU LESSER GENERAL PUBLIC LICENSE version 3.0 requirements will be met:
 https://www.gnu.org/licenses/lgpl-3.0.txt
 
@@ -23,6 +23,8 @@ END LICENSE AND COPYRIGHT
 */
 
 /**
+ * Searches for data in a separate table, gets the results and use them for filtering in the main table.
+ * So no direct join between the tables is made!
  */
 class ZfExtended_Models_Filter_JoinHard extends ZfExtended_Models_Filter_JoinAbstract {
     /**
@@ -41,7 +43,7 @@ class ZfExtended_Models_Filter_JoinHard extends ZfExtended_Models_Filter_JoinAbs
      * @param string $searchField field to be searched in
      * @param string $foreignKey foreign key in the table
      * @param string $localKey localkey, defaults to searchfield
-     * @param string $filterType filter type to which the found data should be mapped 
+     * @param string $filterType filter type to which the found data should be mapped
      */
     public function __construct($tableClass, $searchField, $foreignKey = 'id', $localKey = null, $localFilterType = 'list') {
         if(!is_subclass_of($tableClass, 'Zend_Db_Table_Abstract')) {
@@ -93,7 +95,7 @@ class ZfExtended_Models_Filter_JoinHard extends ZfExtended_Models_Filter_JoinAbs
         $filterInstanceForJoined->applyToSelect($select);
         $data = $db->fetchAll($select)->toArray();
         if(empty($data)) {
-            //an empty value will not be filtered, so we have to provide a non existent ID here to get finally an empty result 
+            //an empty value will not be filtered, so we have to provide a non existent ID here to get finally an empty result
             $this->filterForBasetable->value = [0];
         }
         else {

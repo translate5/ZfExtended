@@ -9,8 +9,8 @@ START LICENSE AND COPYRIGHT
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
 
  This file may be used under the terms of the GNU LESSER GENERAL PUBLIC LICENSE version 3
- as published by the Free Software Foundation and appearing in the file lgpl3-license.txt 
- included in the packaging of this file.  Please review the following information 
+ as published by the Free Software Foundation and appearing in the file lgpl3-license.txt
+ included in the packaging of this file.  Please review the following information
  to ensure the GNU LESSER GENERAL PUBLIC LICENSE version 3.0 requirements will be met:
 https://www.gnu.org/licenses/lgpl-3.0.txt
 
@@ -23,6 +23,8 @@ END LICENSE AND COPYRIGHT
 */
 
 /**
+ * Implements a double join for t1 n-n t2 relations with a t3 assoc table in between.
+ * Searches in t2 (given as $finalJoin), joins then with $table.
  */
 class ZfExtended_Models_Filter_JoinAssoc extends ZfExtended_Models_Filter_Join {
     

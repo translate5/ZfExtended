@@ -9,8 +9,8 @@ START LICENSE AND COPYRIGHT
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
 
  This file may be used under the terms of the GNU LESSER GENERAL PUBLIC LICENSE version 3
- as published by the Free Software Foundation and appearing in the file lgpl3-license.txt 
- included in the packaging of this file.  Please review the following information 
+ as published by the Free Software Foundation and appearing in the file lgpl3-license.txt
+ included in the packaging of this file.  Please review the following information
  to ensure the GNU LESSER GENERAL PUBLIC LICENSE version 3.0 requirements will be met:
 https://www.gnu.org/licenses/lgpl-3.0.txt
 
@@ -28,26 +28,27 @@ abstract class ZfExtended_Models_Filter_JoinAbstract {
     protected $table;
     protected $foreignKey;
     protected $searchField;
-    protected $searchTable;
+    protected $filterType;
     protected $localKey;
     
     /**
      * Inits a join config to join a filterable field from a separate table
      * @param string $table DB table name
-     * @param string $searchField field to be searched in 
+     * @param string $searchField field to be searched in
      * @param string $foreignKey foreign key in the table
      * @param string $localKey localkey, defaults to searchfield
+     * @param string $type per join overwritable type, defaults to _origType
      */
-    public function __construct($table, $searchField, $foreignKey = 'id', $localKey = null,$searchTable=null) {
-        $this->table = $table; 
-        $this->searchField = $searchField; 
-        $this->foreignKey = $foreignKey; 
+    public function __construct($table, $searchField, $foreignKey = 'id', $localKey = null, $type = null) {
+        $this->table = $table;
+        $this->searchField = $searchField;
+        $this->foreignKey = $foreignKey;
         $this->localKey = $localKey;
-        $this->searchTable = $searchTable ?? $table;
+        $this->filterType = $type;
     }
     
     /**
-     * returns the fieldname in which the search should be performed 
+     * returns the fieldname in which the search should be performed
      * @return string
      */
     public function getSearchfield() {
@@ -55,15 +56,7 @@ abstract class ZfExtended_Models_Filter_JoinAbstract {
     }
     
     /**
-     * returns the table name for the search field
-     * @return string
-     */
-    public function getSearchTable() {
-        return $this->searchTable;
-    }
-    
-    /**
-     * returns the configured table 
+     * returns the configured table
      * @return string
      */
     public function getTable() {

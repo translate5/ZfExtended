@@ -9,8 +9,8 @@ START LICENSE AND COPYRIGHT
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
 
  This file may be used under the terms of the GNU LESSER GENERAL PUBLIC LICENSE version 3
- as published by the Free Software Foundation and appearing in the file lgpl3-license.txt 
- included in the packaging of this file.  Please review the following information 
+ as published by the Free Software Foundation and appearing in the file lgpl3-license.txt
+ included in the packaging of this file.  Please review the following information
  to ensure the GNU LESSER GENERAL PUBLIC LICENSE version 3.0 requirements will be met:
 https://www.gnu.org/licenses/lgpl-3.0.txt
 
@@ -23,6 +23,7 @@ END LICENSE AND COPYRIGHT
 */
 
 /**
+ * Filter to doing just one Join to another table for filtering
  */
 class ZfExtended_Models_Filter_Join extends ZfExtended_Models_Filter_JoinAbstract {
     /**
@@ -30,7 +31,8 @@ class ZfExtended_Models_Filter_Join extends ZfExtended_Models_Filter_JoinAbstrac
      * @param stdClass $filter
      */
     public function mergeFilter(stdClass $filter) {
-        $filter->type = $filter->_origType; //FIXME only if not remapped here (feature/field missing in constructor!!!!)
+        //if the type was overwritten by the Join class, we use it. Defaults to the origType
+        $filter->type = $this->filterType ?? $filter->_origType;
         if(empty($this->localKey)) {
             $this->localKey = $filter->field;
         }
@@ -45,11 +47,7 @@ class ZfExtended_Models_Filter_Join extends ZfExtended_Models_Filter_JoinAbstrac
      */
     public function configureEntityFilter(ZfExtended_Models_Filter $filter) {
         //if searchfield is ambigious we have to set the originaltable as mapping, the foreign table name is set directly in the filter
-        if(!isset($this->searchTable)){
-            //if the search table is not set, use the filter entity table for the search field
-            $this->searchTable=$filter->getEntityTable();
-        }
-        $filter->addTableForField($this->searchField, $this->searchTable);
+        $filter->addTableForField($this->searchField, $filter->getEntityTable());
         $filter->addJoinedTable($this->table, $this->localKey, $this->foreignKey, []);
     }
 }

@@ -9,8 +9,8 @@ START LICENSE AND COPYRIGHT
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
 
  This file may be used under the terms of the GNU LESSER GENERAL PUBLIC LICENSE version 3
- as published by the Free Software Foundation and appearing in the file lgpl3-license.txt 
- included in the packaging of this file.  Please review the following information 
+ as published by the Free Software Foundation and appearing in the file lgpl3-license.txt
+ included in the packaging of this file.  Please review the following information
  to ensure the GNU LESSER GENERAL PUBLIC LICENSE version 3.0 requirements will be met:
 https://www.gnu.org/licenses/lgpl-3.0.txt
 
@@ -88,7 +88,7 @@ class ZfExtended_Models_Filter_ExtJs extends ZfExtended_Models_Filter {
         return;
     }
     $method = 'apply'.ucfirst($filter->type);
-    //were assuming that all $methods are using the given field directly as 
+    //were assuming that all $methods are using the given field directly as
     //DB field name so we can merge the table alias as simple text
     $field = $filter->field;
     if(!empty($filter->table)) {
@@ -111,15 +111,23 @@ class ZfExtended_Models_Filter_ExtJs extends ZfExtended_Models_Filter {
             break;
         case 'percent':
             $method = 'applyPercent_'.$filter->comparison;
-            $this->$method($field,$filter->totalField, $filter->value);
+            $this->$method($field, $filter->value, $filter->totalField);
             break;
         case 'numeric':
-        case 'date':
             $method = 'applyNumeric_'.$filter->comparison;
+            $this->$method($field, $filter->value);
+            break;
+        case 'date':
+            //to be used for date comparsion "day" based, so additional times are just ignored (in filter and data).
+            //for datetime (including the time part) comparsion just use numeric above!
+            $method = 'applyDate_'.$filter->comparison;
+            $this->$method($field, $filter->value);
+            break;
         case 'list':
         case 'notInList':
         case 'listAsString':
         case 'listCommaSeparated':
+            settype($filter->value, 'array');
         case 'string':
         case 'boolean':
             $this->$method($field, $filter->value);
@@ -139,7 +147,7 @@ class ZfExtended_Models_Filter_ExtJs extends ZfExtended_Models_Filter {
   protected function applyExpression(stdClass $field, $isOr = true) {
       settype($field->value, 'array');
       
-      //populate the internal vars 
+      //populate the internal vars
       $select = ZfExtended_Factory::get('Zend_Db_Select', array($this->select->getAdapter()));
       
       $subFilter = ZfExtended_Factory::get(get_class($this), array(
@@ -204,20 +212,6 @@ class ZfExtended_Models_Filter_ExtJs extends ZfExtended_Models_Filter {
 
   /**
    * @param string $field
-   * @param array $values
-   */
-  protected function applyList($field, array $values) {
-    $this->where($field.' in (?)', $values);
-  }
-  /**
-   * @param string $field
-   * @param array $values
-   */
-  protected function applyNotInList($field, array $values) {
-    $this->where($field.' not in (?)', $values);
-  }
-  /**
-   * @param string $field
    * @param int $value
    */
   protected function applyNumeric_lt($field, $value) {
@@ -251,13 +245,49 @@ class ZfExtended_Models_Filter_ExtJs extends ZfExtended_Models_Filter {
   protected function applyNumeric_eq($field, $value) {
     $this->where($field.' = ?', $value);
   }
-  
   /**
-   * apply the the lt percent filter to the select
    * @param string $field
    * @param int $value
    */
-  protected function applyPercent_lt($field,$totalField, $value) {
+  protected function applyDate_lt($field, $value) {
+    $this->where('date('.$field.') < date(?)', $value);
+  }
+  /**
+   * @param string $field
+   * @param int $value
+   */
+  protected function applyDate_gt($field, $value) {
+    $this->where('date('.$field.') > date(?)', $value);
+  }
+  /**
+   * @param string $field
+   * @param int $value
+   */
+  protected function applyDate_lteq($field, $value) {
+    $this->where('date('.$field.') <= date(?)', $value);
+  }
+  /**
+   * @param string $field
+   * @param int $value
+   */
+  protected function applyDate_gteq($field, $value) {
+    $this->where('date('.$field.') >= date(?)', $value);
+  }
+  /**
+   * @param string $field
+   * @param int $value
+   */
+  protected function applyDate_eq($field, $value) {
+    $this->where('date('.$field.') = date(?)', $value);
+  }
+  
+  /**
+   * apply the the lt percent filter to the select
+   * @param string $field  FIXME SQL INJECTION?
+   * @param int $value
+   * @param string $totalField   FIXME SQL INJECTION?
+   */
+  protected function applyPercent_lt($field, $value, $totalField) {
       $this->where('IFNULL((('.$field.'/'.$totalField.')*100),0) < ?', $value);
   }
   
@@ -265,16 +295,18 @@ class ZfExtended_Models_Filter_ExtJs extends ZfExtended_Models_Filter {
    * apply the the gt percent filter to the select
    * @param string $field
    * @param int $value
+   * @param string $totalField
    */
-  protected function applyPercent_gt($field,$totalField, $value) {
+  protected function applyPercent_gt($field, $value, $totalField) {
       $this->where('IFNULL((('.$field.'/'.$totalField.')*100),0) > ?', $value);
   }
   /**
    * apply the eq percent filter to the select
    * @param string $field
    * @param int $value
+   * @param string $totalField
    */
-  protected function applyPercent_eq($field,$totalField, $value) {
+  protected function applyPercent_eq($field, $value, $totalField) {
       $this->where('IFNULL((('.$field.'/'.$totalField.')*100),0) = ?', $value);
   }
   
@@ -298,47 +330,52 @@ class ZfExtended_Models_Filter_ExtJs extends ZfExtended_Models_Filter {
   protected function applyNotIsNull($field) {
     $this->where('not '.$field.' is null');
   }
+
   /**
-   * Setzt einen Listfilter auf Basis einer Stringsuche um,
-   * wobei mehrere List-Werte als mit OR kombinierte String-Suchen umgesetzt werden
-   *
-   * - Filtertyp kommt nicht nativ aus ExtJs
-   * - Filtertyp wird durch Mapping gesetzt
    * @param string $field
    * @param array $values
    */
-  protected function applyListAsString(string $field, array $values) {
-      $this->applayListAsString($field,$values);
+  protected function applyList($field, array $values) {
+      $this->where($field.' in (?)', $values);
   }
   /**
-  * Converts a list filter based on a string search, 
+   * @param string $field
+   * @param array $values
+   */
+  protected function applyNotInList($field, array $values) {
+      $this->where($field.' not in (?)', $values);
+  }
+  
+  /**
+  * Converts a list filter based on a string search
+  *
+  * - Filter type does not come from native ExtJs
+  * - Filter type is set by mapping
+  * @param string $field
+  * @param array  $values
+  */
+  protected function applyListAsString(string $field, array $values) {
+      $db = Zend_Registry::get('db');
+      $where = array();
+      foreach($values as $value){
+          $where[] = $db->quoteInto($field.' like ?', '%'.$value.'%');
+      }
+      $this->where(implode(' OR ', $where));
+  }
+
+ /**
+  * Converts a list filter based on a string search,
   * where the search values are surrounded with comma
-  * 
+  *
   * - Filter type does not come from native ExtJs
   * - Filter type is set by mapping
   * @param string $field
   * @param array  $values
   */
   protected function applyListCommaSeparated(string $field, array $values){
-      $this->applayListAsString($field,$values,true);
-  }
-
-  /**
-  * Converts a list filter based on a string search, 
-  * where the search values are surrounded with comma if $addcoma parametar is true
-  * 
-  * - Filter type does not come from native ExtJs
-  * - Filter type is set by mapping
-  * @param string $field
-  * @param array  $values
-  * @param bool   $addcoma
-  */
-  private function applayListAsString(string $field, array $values,$addcoma = false){
-      $db = Zend_Registry::get('db');
-      $where = array();
-      foreach($values as $value){
-          $where[] = $db->quoteInto($field.' like ?', '%'.($addcoma ? ',':'').$value.($addcoma ? ',':'').'%');
-      }
-      $this->where(implode(' OR ', $where));
+      //add commas before and after each value
+      $this->applyListAsString($field, array_map(function($item){
+          return ','.$item.',';
+      }));
   }
 }
