@@ -9,8 +9,8 @@ START LICENSE AND COPYRIGHT
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
 
  This file may be used under the terms of the GNU LESSER GENERAL PUBLIC LICENSE version 3
- as published by the Free Software Foundation and appearing in the file lgpl3-license.txt 
- included in the packaging of this file.  Please review the following information 
+ as published by the Free Software Foundation and appearing in the file lgpl3-license.txt
+ included in the packaging of this file.  Please review the following information
  to ensure the GNU LESSER GENERAL PUBLIC LICENSE version 3.0 requirements will be met:
 https://www.gnu.org/licenses/lgpl-3.0.txt
 
@@ -23,7 +23,7 @@ END LICENSE AND COPYRIGHT
 */
 
 /**
- * 
+ *
  * @method int getId() getId()
  * @method void setId() setId(integer $id)
  * @method int getLangName() getLangName()
@@ -47,6 +47,16 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract {
     const LANG_TYPE_RFC5646 = 'rfc5646';
     const LANG_TYPE_LCID = 'lcid';
 
+    /**
+     * @var Zend_Cache_Core
+     */
+    protected $memCache;
+    
+    public function __construct() {
+        parent::__construct();
+        $this->memCache = Zend_Cache::factory('Core', new ZfExtended_Cache_MySQLMemoryBackend(), ['automatic_serialization' => true]);
+    }
+    
     /**
      * Lädt die Sprache anhand dem übergebenen Sprachkürzel (nach RFC5646)
      * @param string $lang
@@ -129,8 +139,8 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract {
     
     /**
      * Returns all configured languages in an array for displaying in frontend
-     * in format :  
-     * 
+     * in format :
+     *
      * [Mazedonisch] => Array
      *               (
      *                  [id] => 301
@@ -145,7 +155,7 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract {
             $name =$lang['langName'];
             $result[$name] = array(
                     'id'=>$lang['id'],
-                    'value'=>$lang['rfc5646'], 
+                    'value'=>$lang['rfc5646'],
                     'text'=>$name.' ('.$lang['rfc5646'].')');
         }
         ksort($result); //sort by name of language
@@ -302,28 +312,37 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract {
     /***
      * Return fuzzy languages for the given language id.
      * Languages with '-' in the rfc field are not searched for fuzzy.
-     * 
-     * ex: 
+     *
+     * ex:
      *    de -> de-DE,de-AT,de-CH,de-LI,de-LU
-     *    
+     *
      * @param int $id
-     * @param string $field: the field name wich will be returned(see languages model for available fields) 
+     * @param string $field: the field name wich will be returned(see languages model for available fields)
      * @return array
      */
     public function getFuzzyLanguages($id,$field='id'){
-        $rfc=$this->loadLangRfc5646($id);
+        $cacheId = __FUNCTION__.'_'.$id.'_'.$field;
+        $result = $this->memCache->load($cacheId);
+        if($result !== false) {
+            return $result;
+        }
+        
+        $rfc = $this->loadLangRfc5646($id);
         //check if language fuzzy matching is needed
         if(strpos($rfc, '-') !== false){
-            return  array($id);
+            $result = [$id];
         }
-        $lngs=$this->findLanguageGroup($rfc);
-        return array_column($lngs,$field);
+        else {
+            $result = array_column($this->findLanguageGroup($rfc), $field);
+        }
+        $this->memCache->save($result, $cacheId);
+        return $result;
     }
     
     /***
      * Search languages by given search string.
      * The search will provide any match on langName field.
-     * 
+     *
      * @param string $searchString
      * @return array|array
      */
@@ -338,7 +357,7 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract {
     
     /***
      * Load all languages where the return array will be with $key(lek_languages field) as key and $value(lek_languages field) as value
-     *  
+     *
      * @param string $key
      * @param string $value
      * @param bool $lowercase: lowercase key and value
