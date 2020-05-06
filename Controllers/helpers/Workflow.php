@@ -56,7 +56,7 @@ class ZfExtended_Controller_Helper_Workflow extends Zend_Controller_Action_Helpe
         }
         $tua = null;
         try {
-            $tua = editor_Models_Loaders_Taskuserassoc::loadByTaskGuid($userGuid,$taskGuid);
+            $tua = editor_Models_Loaders_Taskuserassoc::loadByTaskGuidSmart($userGuid,$taskGuid);
         }
         catch(ZfExtended_Models_Entity_NotFoundException $e) {
         }
