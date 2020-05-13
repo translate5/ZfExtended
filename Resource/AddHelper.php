@@ -9,8 +9,8 @@ START LICENSE AND COPYRIGHT
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
 
  This file may be used under the terms of the GNU LESSER GENERAL PUBLIC LICENSE version 3
- as published by the Free Software Foundation and appearing in the file lgpl3-license.txt 
- included in the packaging of this file.  Please review the following information 
+ as published by the Free Software Foundation and appearing in the file lgpl3-license.txt
+ included in the packaging of this file.  Please review the following information
  to ensure the GNU LESSER GENERAL PUBLIC LICENSE version 3.0 requirements will be met:
 https://www.gnu.org/licenses/lgpl-3.0.txt
 
@@ -29,40 +29,30 @@ END LICENSE AND COPYRIGHT
  *
  */
 /**
- * Stellt Laden der ControllerActionHelper sicher
- *
- *
- *
+ * creates all helper paths
  */
 class ZfExtended_Resource_AddHelper extends Zend_Application_Resource_ResourceAbstract {
-    /**
-     * @var array
-     */
-    protected $_pathsToAdd;
-
-    /**
-     * @var Zend_Session_Namespace
-     */
-    protected $_session;
-
     public function init()
     {
-        $bootstrap = $this->getBootstrap();
-        $this->_session = new Zend_Session_Namespace();
-        if(!isset($this->_session->zfExtendedPaths2Add[APPLICATION_MODULE])){
-            $this->_pathsToAdd = array();
-            $this->_genPaths();
-            $this->_session->zfExtendedPaths2Add[APPLICATION_MODULE] = $this->_pathsToAdd;
+        $cache = Zend_Registry::get('cache');
+        /* @var $cache Zend_Cache_Core */
+        $cacheKey = 'helper_paths_'.APPLICATION_MODULE;
+        $paths = $cache->load($cacheKey);
+        if($paths === false) {
+            $paths = $this->generatePaths();
+            $cache->save($paths, $cacheKey);
         }
-        foreach($this->_session->zfExtendedPaths2Add[APPLICATION_MODULE] as $prefix => $path){
-            ZfExtended_Zendoverwrites_Controller_Action_HelperBroker::addPath($path,$prefix);
+        foreach($paths as $prefix => $path){
+            ZfExtended_Zendoverwrites_Controller_Action_HelperBroker::addPath($path, $prefix);
         }
     }
 
     /**
      * Generiert die Prefix und Pfad Kombinationen
      */
-    protected function _genPaths() {
+    protected function generatePaths() {
+        $paths = [];
+        
         if(APPLICATION_MODULE === "default"){
             $modulePrefix = '';
         }
@@ -80,13 +70,13 @@ class ZfExtended_Resource_AddHelper extends Zend_Application_Resource_ResourceAb
         $v_h_path = '/views/helpers';
 
         //Kunden Module Controller Helper
-        $this->_addPath($agency.'_'.$modulePrefix.$c_h, $fowMod.$c_h_path);
+        $paths[$agency.'_'.$modulePrefix.$c_h] = $fowMod.$c_h_path;
         //Module Controller Helper
-        $this->_addPath($modulePrefix.$c_h, $modulesBase.$c_h_path);
+        $paths[$modulePrefix.$c_h] = $modulesBase.$c_h_path;
         //Kunden Module View Helper
-        $this->_addPath($agency.'_'.$modulePrefix.$v_h, $fowMod.$v_h_path);
+        $paths[$agency.'_'.$modulePrefix.$v_h] = $fowMod.$v_h_path;
         //Module View Helper
-        $this->_addPath($modulePrefix.$v_h, $modulesBase.$v_h_path);
+        $paths[$modulePrefix.$v_h] = $modulesBase.$v_h_path;
 
         //Es folgen die Controller und View Helper Pfade der einzelnen Libs,
         // ebenfalls in Abhängigkeit des Kunden (Agency)
@@ -94,21 +84,12 @@ class ZfExtended_Resource_AddHelper extends Zend_Application_Resource_ResourceAb
         $libs = array_reverse($config->runtimeOptions->libraries->order->toArray());
         foreach ($libs as $lib) {
             $libPrefix = ucfirst($lib).'_';
-            $this->_addPath($agency.'_'.$libPrefix.$c_h, $fowBase.'/library/'.$lib.$c_h_path);
-            $this->_addPath($libPrefix.$c_h, APPLICATION_PATH .'/../library/'.$lib.$c_h_path);
-            $this->_addPath($agency.'_'.$libPrefix.$v_h, $fowBase.'/library/'.$lib.$v_h_path);
-            $this->_addPath($libPrefix.$v_h, APPLICATION_PATH .'/../library/'.$lib.$v_h_path);
+            $paths[$agency.'_'.$libPrefix.$c_h] = $fowBase.'/library/'.$lib.$c_h_path;
+            $paths[$libPrefix.$c_h] = APPLICATION_PATH .'/../library/'.$lib.$c_h_path;
+            $paths[$agency.'_'.$libPrefix.$v_h] = $fowBase.'/library/'.$lib.$v_h_path;
+            $paths[$libPrefix.$v_h] = APPLICATION_PATH .'/../library/'.$lib.$v_h_path;
         }
-    }
-
-    /**
-     * Fügt Prefix und Pfad hinzu wenn der Pfad existiert
-     * @param string $prefix
-     * @param string $path
-     */
-    protected function _addPath(string $prefix, string $path) {
-        if(is_dir($path)) {
-            $this->_pathsToAdd[$prefix] = $path;
-        }
+        
+        return array_filter($paths, 'is_dir');
     }
 }
