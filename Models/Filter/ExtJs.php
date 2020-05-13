@@ -376,6 +376,6 @@ class ZfExtended_Models_Filter_ExtJs extends ZfExtended_Models_Filter {
       //add commas before and after each value
       $this->applyListAsString($field, array_map(function($item){
           return ','.$item.',';
-      }));
+      }, $values));
   }
 }
