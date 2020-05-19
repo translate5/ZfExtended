@@ -79,8 +79,11 @@ class ZfExtended_BaseIndex{
         if(!mb_internal_encoding("UTF-8")){
             throw new Exception('mb_internal_encoding("UTF-8") could not be set!');
         }
-        $this->application_path = realpath(dirname($indexpath) . '/../application');
-        defined('APPLICATION_PATH') || define('APPLICATION_PATH',$this->application_path);
+        if(!defined('APPLICATION_ROOT')) {
+            define('APPLICATION_ROOT', realpath(dirname($indexpath) . '/..'));
+        }
+        $this->application_path = APPLICATION_ROOT . '/application';
+        defined('APPLICATION_PATH') || define('APPLICATION_PATH', $this->application_path);
         // Define application environment
         defined('APPLICATION_ENV') || define('APPLICATION_ENV', ( getenv('APPLICATION_ENV') ? getenv('APPLICATION_ENV') : 'application'));
         defined('APPLICATION_AGENCY') || define('APPLICATION_AGENCY', ( getenv('APPLICATION_AGENCY') ? getenv('APPLICATION_AGENCY') : $this->getAgency()));
@@ -146,6 +149,7 @@ class ZfExtended_BaseIndex{
             $this->initApplication()->bootstrap()->run();
         }
         catch(Zend_Db_Adapter_Exception $e) {
+            error_log($e);
             if(strpos($e->getMessage(), 'SQLSTATE[HY000] [2002] No such file or directory') !== false) {
                 error_log('Fatal: Could not connect to the database! Database down?');
             }elseif(strpos($e->getMessage(), 'SQLSTATE[HY000] [1045] Access denied for user') !== false) {
@@ -157,7 +161,6 @@ class ZfExtended_BaseIndex{
             }else {
                 error_log('Fatal: Could not connect to the database!');
             }
-            error_log($e);
             die('Fatal: Could not connect to the database! <b>If you get this message in the Browser: try to reload the application.</b> <br>See error log for details.');
         }
     }
@@ -170,6 +173,11 @@ class ZfExtended_BaseIndex{
         if(class_exists('Zend_Registry')){
             throw new Zend_Exception('application already started - Zend_Registry exists!');
         }
+        //include optional composer vendor autoloader
+        if(file_exists(APPLICATION_ROOT.'/vendor/autoload.php')) {
+            require_once APPLICATION_ROOT.'/vendor/autoload.php';
+        }
+        
         require_once 'Zend/Loader/Autoloader.php';
         Zend_Loader_Autoloader::getInstance()->setFallbackAutoloader(true);
         /** Zend_Application */
