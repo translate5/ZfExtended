@@ -9,8 +9,8 @@ START LICENSE AND COPYRIGHT
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
 
  This file may be used under the terms of the GNU LESSER GENERAL PUBLIC LICENSE version 3
- as published by the Free Software Foundation and appearing in the file lgpl3-license.txt 
- included in the packaging of this file.  Please review the following information 
+ as published by the Free Software Foundation and appearing in the file lgpl3-license.txt
+ included in the packaging of this file.  Please review the following information
  to ensure the GNU LESSER GENERAL PUBLIC LICENSE version 3.0 requirements will be met:
 https://www.gnu.org/licenses/lgpl-3.0.txt
 
@@ -21,8 +21,6 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 
 END LICENSE AND COPYRIGHT
 */
-
-require APPLICATION_PATH.'/../library/PhpSpreadsheet/vendor/autoload.php';
 
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
@@ -249,7 +247,7 @@ class ZfExtended_Models_Entity_ExcelExport {
     }
     
     /**
-     * Get manipulated value of field $name 
+     * Get manipulated value of field $name
      * @param string $name
      * @param mixed $value
      * @return mixed
@@ -290,7 +288,7 @@ class ZfExtended_Models_Entity_ExcelExport {
     /**
      * Set field to date field format in excel output
      * Also sets a callback function to format field value as required
-     * 
+     *
      * @param string $field
      */
     public function setFieldTypeDate($field) {
@@ -308,7 +306,7 @@ class ZfExtended_Models_Entity_ExcelExport {
     /**
      * Set field to percent field format in excel output
      * Also sets a callback function to format field value as required
-     * 
+     *
      * @param string $field
      */
     public function setFieldTypePercent($field) {
@@ -323,7 +321,7 @@ class ZfExtended_Models_Entity_ExcelExport {
     
     /**
      * Set field to currency field format in excel output
-     * 
+     *
      * @param string $field
      */
     public function setFieldTypeCurrency($field) {
