@@ -22,8 +22,6 @@
  END LICENSE AND COPYRIGHT
  */
 
-require APPLICATION_PATH.'/../library/OpenID-Connect-PHP/vendor/autoload.php';
-
 use Jumbojett\OpenIDConnectClient;
 use Jumbojett\OpenIDConnectClientException;
 
