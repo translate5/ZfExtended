@@ -9,8 +9,8 @@ START LICENSE AND COPYRIGHT
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
 
  This file may be used under the terms of the GNU LESSER GENERAL PUBLIC LICENSE version 3
- as published by the Free Software Foundation and appearing in the file lgpl3-license.txt 
- included in the packaging of this file.  Please review the following information 
+ as published by the Free Software Foundation and appearing in the file lgpl3-license.txt
+ included in the packaging of this file.  Please review the following information
  to ensure the GNU LESSER GENERAL PUBLIC LICENSE version 3.0 requirements will be met:
 https://www.gnu.org/licenses/lgpl-3.0.txt
 
@@ -50,7 +50,7 @@ class ZfExtended_BaseIndex{
     protected static $_instance = null;
     /**
      *
-     * @var array 
+     * @var array
      */
     public $applicationInis = array();
 
@@ -67,8 +67,8 @@ class ZfExtended_BaseIndex{
      *
      */
     protected function  __construct($indexpath) {
-        if (version_compare(PHP_VERSION, '7.3', '<') || version_compare(PHP_VERSION, '7.4', '>=')) {
-            $msg = array('Please use PHP version >= 7.3 and < 7.4!');
+        if (version_compare(PHP_VERSION, '7.3', '<')) {
+            $msg = array('Please use PHP version >= 7.3!');
             if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
                 $msg[] = 'Please update your xampp package manually or reinstall Translate5 with the latest windows installer from http://www.translate5.net';
                 $msg[] = 'Warning: Reinstallation can lead to data loss! Please contact support@translate5.net when you need assistance in data conversion!';
@@ -91,7 +91,7 @@ class ZfExtended_BaseIndex{
         $this->applicationInis = $this->getApplicationInis();
     }
     /**
-     *@param $indexpath filesystem-path to the index.php of the application; 
+     *@param $indexpath filesystem-path to the index.php of the application;
      *      gets set to $_SERVER['SCRIPT_FILENAME'], if not set (only relevant on first invocation)
      * @return ZfExtended_BaseIndex
      */
@@ -196,10 +196,10 @@ class ZfExtended_BaseIndex{
     public function getAgency(){
         $sName = explode('.', $_SERVER['SERVER_NAME']);
         $tld = array_pop($sName);
-        $domain = array_pop($sName); 
+        $domain = array_pop($sName);
         $sub = array_pop($sName);
         $isLive = ($domain === 'translate5' && $tld === 'net');
-        $isMainT5 = (empty($sub) || $sub === 'www'); 
+        $isMainT5 = (empty($sub) || $sub === 'www');
         if($isLive && !$isMainT5) {
             return $sub;
         }
@@ -235,17 +235,17 @@ class ZfExtended_BaseIndex{
     
     /**
      * Changes the module of the ZF-Application, and returns the old module which was set before
-     * 
+     *
      * - sets $this->currentModule
      * - refreshes the loaded application.inis in relation to the new module
      * - starts the application, if not done already, else refreshes the config
-     * - overwrites options, which already exist with the options of the newly 
+     * - overwrites options, which already exist with the options of the newly
      *   set module, but keeps those of the old module, which are not present in
      *   the new one
-     * 
+     *
      *
      * @param string module
-     * @param bool $withAcl default true, enables resetting the ACLs, false to prevent this 
+     * @param bool $withAcl default true, enables resetting the ACLs, false to prevent this
      * @return string the old module
      */
     public function setModule($module, $withAcl = true){
@@ -269,9 +269,9 @@ class ZfExtended_BaseIndex{
     }
     /**
      * adds the options of the passed module-name
-     * 
+     *
      * - options already set stay as they are and do not get overridden
-     * 
+     *
      *
      * @param string module
      */
@@ -356,7 +356,7 @@ class ZfExtended_BaseIndex{
         //the main configuration file:
         $applicationInis[] = APPLICATION_PATH.'/config/application.ini';
         //the main configuration file of a module, provided by the module:
-        $applicationInis[] = APPLICATION_PATH.'/modules/'.$this->currentModule.'/configs/module.ini'; 
+        $applicationInis[] = APPLICATION_PATH.'/modules/'.$this->currentModule.'/configs/module.ini';
         //the application configuration file of a module, provided by the application, can overwrite module settings:
         $applicationInis[] = APPLICATION_PATH.'/config/'.$this->currentModule.'.ini';
         //a customized configuration file for the local installation:
@@ -365,7 +365,7 @@ class ZfExtended_BaseIndex{
         // this feature is currently not documented!
         $applicationInis[] = APPLICATION_PATH.'/config/installation-'.$this->currentModule.'.ini';
         
-        //FIXME in theory the following lines are obsolete since, the contained informations are in installation.ini 
+        //FIXME in theory the following lines are obsolete since, the contained informations are in installation.ini
         if(APPLICATION_AGENCY) {
           $applicationInis[] = APPLICATION_PATH.'/iniOverwrites/'.APPLICATION_AGENCY.'/application.ini';
           $applicationInis[] = APPLICATION_PATH.'/iniOverwrites/'.APPLICATION_AGENCY.'/'.$this->currentModule.'Application.ini';

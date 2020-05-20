@@ -183,7 +183,12 @@ class ZfExtended_Test_ApiHelper {
             $parameters = array('data' => json_encode($parameters));
             $parameters = array_merge($parameters, $additionalParameters);
         }
-        return $this->decodeJsonResponse($this->request($url, $method, $parameters));
+        $resp = $this->request($url, $method, $parameters);
+        $result = $this->decodeJsonResponse($resp);
+        if($result === false) {
+            error_log('apiTest '.$method.' on '.$url.' returned '.$resp->__toString());
+        }
+        return $result;
     }
     
     /**
