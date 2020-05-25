@@ -9,8 +9,8 @@ START LICENSE AND COPYRIGHT
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
 
  This file may be used under the terms of the GNU LESSER GENERAL PUBLIC LICENSE version 3
- as published by the Free Software Foundation and appearing in the file lgpl3-license.txt 
- included in the packaging of this file.  Please review the following information 
+ as published by the Free Software Foundation and appearing in the file lgpl3-license.txt
+ included in the packaging of this file.  Please review the following information
  to ensure the GNU LESSER GENERAL PUBLIC LICENSE version 3.0 requirements will be met:
 https://www.gnu.org/licenses/lgpl-3.0.txt
 
@@ -44,12 +44,12 @@ class ZfExtended_Models_Installer_License {
     
     /**
      * creates the license instances for the given dependency
-     * 
-     * replaces {UPPERCASE} variables with same named variables in the license 
+     *
+     * replaces {UPPERCASE} variables with same named variables in the license
      * or dependency object (the variable must be there completly in lowercase)
-     * 
-     * if a variable "agreement" or "title" is given in license, this texts will be used. 
-     * 
+     *
+     * if a variable "agreement" or "title" is given in license, this texts will be used.
+     *
      * @param stdClass $dependency
      * @return multitype:|multitype:ZfExtended_Models_Installer_License
      */
@@ -75,6 +75,21 @@ class ZfExtended_Models_Installer_License {
         settype($license->license, 'string');
         $this->license = $license;
         $this->dependency = $dependency;
+        $this->setUsesByFile();
+    }
+    
+    /**
+     * Overwrites the license uses field from optional usesFile if usesFile is given and a file exists,
+     * otherwise the previous license->uses value remains
+     */
+    protected function setUsesByFile() {
+        if(empty($this->license->usesFile)) {
+            return;
+        }
+        $usesFile = getcwd().DIRECTORY_SEPARATOR.$this->license->usesFile;
+        if(file_exists($usesFile)) {
+            $this->license->uses = file_get_contents($usesFile);
+        }
     }
     
     /**
@@ -93,7 +108,7 @@ class ZfExtended_Models_Installer_License {
     public function getAgreementText() {
         $text = empty($this->license->agreement) ? self::DEFAULT_AGREEMENT : $this->license->agreement;
         return '  '.join(PHP_EOL, array_map(function($item) {
-            return wordwrap($item, 70, PHP_EOL."  ");
+            return wordwrap($item, 80, PHP_EOL."  ");
         }, explode("\n", $this->replaceVariables($text))));
     }
     
