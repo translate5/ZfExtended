@@ -9,8 +9,8 @@ START LICENSE AND COPYRIGHT
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
 
  This file may be used under the terms of the GNU LESSER GENERAL PUBLIC LICENSE version 3
- as published by the Free Software Foundation and appearing in the file lgpl3-license.txt 
- included in the packaging of this file.  Please review the following information 
+ as published by the Free Software Foundation and appearing in the file lgpl3-license.txt
+ included in the packaging of this file.  Please review the following information
  to ensure the GNU LESSER GENERAL PUBLIC LICENSE version 3.0 requirements will be met:
 https://www.gnu.org/licenses/lgpl-3.0.txt
 
@@ -244,12 +244,14 @@ class ZfExtended_Models_Installer_DbUpdater {
             $dbversion->insert($this->getInsertData($file, $version));
             unset($this->sqlFilesNew[$key]);
         }
+        //we clean up all cache files after database update since DB definitions are cached
+        Zend_Registry::get('cache')->clean();
         $this->logErrors();
     }
     
     /**
      * Calls the desired File Handler selected by the file suffix
-     * returns true on handler success, false otherwise, exception if no handler found 
+     * returns true on handler success, false otherwise, exception if no handler found
      * @param array $file
      * @throws ZfExtended_Exception
      * @return boolean
@@ -305,7 +307,7 @@ class ZfExtended_Models_Installer_DbUpdater {
             $result = ob_get_flush();
             error_log('Result of imported DbUpdater PHP File '.$file['relativeToOrigin'].': '.print_r($result,1));
             //per default true, see attribute docu for more info
-            return $this->doNotSavePhpForDebugging; 
+            return $this->doNotSavePhpForDebugging;
         }
         catch (Exception $e) {
             $this->errors[] = 'Error on Importing a PHP DB Updater file. Called file: '.$file['relativeToOrigin'].' Result of PHP Exception: '."\n\n".$e;
@@ -314,7 +316,7 @@ class ZfExtended_Models_Installer_DbUpdater {
     }
     
     /**
-     * Logs collected errors on importing / updating if any 
+     * Logs collected errors on importing / updating if any
      */
     protected function logErrors() {
         if(empty($this->errors)){
@@ -326,7 +328,7 @@ class ZfExtended_Models_Installer_DbUpdater {
     }
     
     /**
-     * returns the mysql import command for exec() 
+     * returns the mysql import command for exec()
      * @throws ZfExtended_Exception
      * @return string
      */
@@ -343,7 +345,7 @@ class ZfExtended_Models_Installer_DbUpdater {
     }
     
     /**
-     * creates a shell exec command 
+     * creates a shell exec command
      * @param string $mysqlExecutable
      * @param mixed $credentials
      * @param bool $addFileParam optional, default true. If false the file to import is omitted
@@ -428,8 +430,8 @@ class ZfExtended_Models_Installer_DbUpdater {
     
     /**
      * Not all environments can deal with all characters in the DB credentials.
-     * This is checked here. 
-     * 
+     * This is checked here.
+     *
      * @param stdClass $credentials
      * @param string $exec
      * @param string $path
