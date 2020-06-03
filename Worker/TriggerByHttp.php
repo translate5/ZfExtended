@@ -9,8 +9,8 @@ START LICENSE AND COPYRIGHT
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
 
  This file may be used under the terms of the GNU LESSER GENERAL PUBLIC LICENSE version 3
- as published by the Free Software Foundation and appearing in the file lgpl3-license.txt 
- included in the packaging of this file.  Please review the following information 
+ as published by the Free Software Foundation and appearing in the file lgpl3-license.txt
+ included in the packaging of this file.  Please review the following information
  to ensure the GNU LESSER GENERAL PUBLIC LICENSE version 3.0 requirements will be met:
 https://www.gnu.org/licenses/lgpl-3.0.txt
 
@@ -27,7 +27,7 @@ class ZfExtended_Worker_TriggerByHttp {
     
     
     private $host = 'localhost';
-    private $port = 80; //attention the port alone does not define if SSL is used or no by fsockopent! 
+    private $port = 80; //attention the port alone does not define if SSL is used or no by fsockopent!
     private $path = '';
     private $postParameters = array();
     private $method = 'GET';
@@ -46,7 +46,7 @@ class ZfExtended_Worker_TriggerByHttp {
     /**
      * Trigger worker with id = $id.
      * To run mutex-save, the current hash is needed
-     * 
+     *
      * @param int $id
      * @param string $hash
      */
@@ -63,11 +63,11 @@ class ZfExtended_Worker_TriggerByHttp {
      * $url must be a valid URL.
      * If GET-Paramters should be send, than append it to the url direct.
      * If POST-Parameters should be send, use the second parameter $postParameters
-     * 
+     *
      * @param string $url: a valid URL
      * @param array $postParameters: named array with values to be send to the url with method POST
      * @param string $method: defautl: 'GET', can be 'PUT' if postParamteters should by send by PUT instead of POST
-     * 
+     *
      * @return boolean true if everything is OK
      */
     protected function triggerUrl(string $url, $postParameters = array(), $method = 'GET') {
@@ -89,7 +89,7 @@ class ZfExtended_Worker_TriggerByHttp {
         $out = $this->createHeader($postParameters);
         fwrite($fsock, $out);
         
-        stream_set_timeout($fsock, 5); // max readtime = 5 sec.
+        stream_set_timeout($fsock, 1); // max readtime = 1 sec., thats ok to get start up errors
         
         $header = '';
         $state = 0;
@@ -118,13 +118,13 @@ class ZfExtended_Worker_TriggerByHttp {
         
         $info = stream_get_meta_data($fsock);
 
-        // $header will be empty if fsock-connection runs into stream_set_timeout() 
-        //  or if the configured Worker URL is not accessible (due HTTPS / gateway / proxy reasons) 
+        // $header will be empty if fsock-connection runs into stream_set_timeout()
+        //  or if the configured Worker URL is not accessible (due HTTPS / gateway / proxy reasons)
         // a timeout normally indicates that everything is OK, since worker are intended to have a long execution time
         if (empty($header) || $info['timed_out']) {
             fclose($fsock);
             if($info['timed_out']) {
-                return true; //a real timeout is mostly OK. 
+                return true; //a real timeout is mostly OK.
                 //TODO can we identify timeouts because of target does not exist?
             }
             $this->log->error('E1073', 'Worker URL result is no HTTP answer!: {host}:{port}', [
@@ -133,7 +133,7 @@ class ZfExtended_Worker_TriggerByHttp {
             ]);
             // if not (URL responds immediately with an empty result) this means the called URL is not properly configured!
             //  make a dedicated log entry, since the log below would be bogus for this situation
-            return false; 
+            return false;
         }
         
         fclose($fsock);
@@ -150,7 +150,7 @@ class ZfExtended_Worker_TriggerByHttp {
                 $method = 'debug';
                 break;
             case 999:
-                //a 999 means we are requesting the wrong server! 
+                //a 999 means we are requesting the wrong server!
                 $method = 'error';
                 $code = 'E1107';
                 $msg = 'Worker HTTP response was not successful, the worker system requests probably the wrong server!';
