@@ -26,7 +26,14 @@ trait ZfExtended_Controllers_MaintenanceTrait{
     
     protected $enableMaintenanceHeader = true;
     
+    /**
+     * Flag which can be used in the controller using this trait to check if maintenance is scheduled
+     * @var boolean
+     */
+    protected $maintenanceIsScheduled = false;
+    
     public function displayMaintenance() {
+        $this->maintenanceIsScheduled = false;
         if($this->_response->isException()){
             return;
         }
@@ -62,6 +69,7 @@ trait ZfExtended_Controllers_MaintenanceTrait{
         if(new DateTime() < $date ){
             return;
         }
+        $this->maintenanceIsScheduled = true;
         
         if($this->enableMaintenanceHeader) {
             $this->_response->setHeader('x-translate5-shownotice', date(DATE_ISO8601, $maintenanceStartDate));

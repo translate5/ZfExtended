@@ -9,13 +9,13 @@ START LICENSE AND COPYRIGHT
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
 
  This file may be used under the terms of the GNU AFFERO GENERAL PUBLIC LICENSE version 3
- as published by the Free Software Foundation and appearing in the file agpl3-license.txt 
- included in the packaging of this file.  Please review the following information 
+ as published by the Free Software Foundation and appearing in the file agpl3-license.txt
+ included in the packaging of this file.  Please review the following information
  to ensure the GNU AFFERO GENERAL PUBLIC LICENSE version 3 requirements will be met:
  http://www.gnu.org/licenses/agpl.html
   
  There is a plugin exception available for use with this release of translate5 for
- translate5: Please see http://www.translate5.net/plugin-exception.txt or 
+ translate5: Please see http://www.translate5.net/plugin-exception.txt or
  plugin-exception.txt in the root folder of translate5.
   
  @copyright  Marc Mittag, MittagQI - Quality Informatics
@@ -55,7 +55,7 @@ class Models_Installer_Maintenance {
         }
     }
     
-    public function announce($time, $msg = '') {        
+    public function announce($time, $msg = '') {
         $receiver = $this->config->runtimeOptions->maintenance->announcementMail ?? '';
         $preventDuplicates = [];
         if(empty($receiver)) {
@@ -114,6 +114,9 @@ class Models_Installer_Maintenance {
     public function disable() {
         $this->db->query("UPDATE `Zf_configuration` SET `value` = null WHERE `name` = 'runtimeOptions.maintenance.startDate'");
         $this->db->query("UPDATE `Zf_configuration` SET `value` = null WHERE `name` = 'runtimeOptions.maintenance.message'");
+        //when  we disable the maintenance mode, we trigger the worker queue
+        $wq = new ZfExtended_Worker_Queue();
+        $wq->trigger();
         $this->status();
     }
     

@@ -94,9 +94,7 @@ class ZfExtended_Worker_TriggerByHttp {
         $header = '';
         $state = 0;
         $serverId = '';
-        $linesOfFsock = '';
         while ($line = fgets($fsock)) {
-			$linesOfFsock .= $line."/r/n";
             if ($line == "\r\n") {
                 break;
             }
@@ -110,9 +108,12 @@ class ZfExtended_Worker_TriggerByHttp {
                 $serverId = $infos[1];
             }
         }
-        $isServerIdEqual = $postParameters['serverId'] === trim($serverId);
+        
+        //if we are on CLI we can not check the serverId, so we assume that all is OK here!
+        $isServerIdEqual = PHP_SAPI === 'cli' || $postParameters['serverId'] === trim($serverId);
+        
         //if the other server does not send a server id, or an invalid server id, the target server is not the current system!
-        if(!$isServerIdEqual) {
+        if($state != 503 && !$isServerIdEqual) {
             $state = 999;
         }
         
@@ -145,6 +146,11 @@ class ZfExtended_Worker_TriggerByHttp {
         $code = 'E1074';
         $msg = 'Worker HTTP response state was not 2XX but {state}.';
         switch ($state) {
+            case 503:
+                //if the service is not available, we just do nothing since this is mostly wanted behaviour due maintenance
+                $method = 'info';
+                $msg = 'Worker not started, maintenance is scheduled or in progress!';
+                break;
             case 500:
                 //since on a 500 the real exception was logged in the worker, we just log that here as debug info
                 $method = 'debug';
@@ -195,14 +201,10 @@ class ZfExtended_Worker_TriggerByHttp {
         }
         $host = $this->host;
     
-        if (!empty($urlParts['scheme'])) {
-            switch ($urlParts['scheme']) {
-                case 'https':
-                    //fsockopen needs ssl:// scheme when using https
-                    $host = 'ssl://'.$host;
-                    $this->port = 443;
-                    break;
-            }
+        if (!empty($urlParts['scheme']) && $urlParts['scheme'] === 'https') {
+            //fsockopen needs ssl:// scheme when using https
+            $host = 'ssl://'.$host;
+            $this->port = 443;
         }
         if (!empty($urlParts['port'])) {
             $this->port = $urlParts['port'];
@@ -260,12 +262,10 @@ class ZfExtended_Worker_TriggerByHttp {
         
         // !!! if there are POST/PUT-data then add data here
         if ($this->method == 'POST' || $this->method == 'PUT') {
-            $postData = http_build_query($this->postParameters);
             $postData = 'data='.json_encode($this->postParameters);
             $length = strlen($postData);
             
             $out .= 'Content-Type: application/x-www-form-urlencoded'."\r\n";
-            //$out .= 'Content-Type: multipart/form-data'."\r\n";
             $out .= 'Content-Length: '.$length."\r\n";
             $out .= 'Connection: Close'."\r\n";
             $out .= "\r\n";

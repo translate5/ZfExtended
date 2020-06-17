@@ -9,8 +9,8 @@ START LICENSE AND COPYRIGHT
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
 
  This file may be used under the terms of the GNU LESSER GENERAL PUBLIC LICENSE version 3
- as published by the Free Software Foundation and appearing in the file lgpl3-license.txt 
- included in the packaging of this file.  Please review the following information 
+ as published by the Free Software Foundation and appearing in the file lgpl3-license.txt
+ included in the packaging of this file.  Please review the following information
  to ensure the GNU LESSER GENERAL PUBLIC LICENSE version 3.0 requirements will be met:
 https://www.gnu.org/licenses/lgpl-3.0.txt
 
@@ -24,7 +24,7 @@ END LICENSE AND COPYRIGHT
 
 /**
  * Important: putAction and queueAction are deleting their session so that no new session entry is created
- * On futural usage of the postAction (to be used from frontend for direct calls) this indeed should not be the case! 
+ * On futural usage of the postAction (to be used from frontend for direct calls) this indeed should not be the case!
  */
 class ZfExtended_WorkerController extends ZfExtended_RestController {
     
@@ -82,14 +82,18 @@ class ZfExtended_WorkerController extends ZfExtended_RestController {
      * @see ZfExtended_RestController::putAction()
      */
     public function putAction() {
+        //if maintenance is scheduled we disallow starting workers
+        if($this->maintenanceIsScheduled) {
+            throw new ZfExtended_Models_MaintenanceException();
+        }
         try {
             $this->entity->load($this->getParam('id'));
         }
         catch (ZfExtended_Models_Entity_NotFoundException $workerLoad) {
             //we catch the not found here, since it can just happen in normal handling that a worker is triggered which is already deleted
-            // to prevent unwanted 404s here we just catch that not found messages and do nothing instead 
-            // to prevent false positives when having multiple translate5 installations (and one has wrong server.name) it can happen, 
-            // that the worker requests go to the wrong translate5 installation. Since no 404 is logged, we don't find out that easily. 
+            // to prevent unwanted 404s here we just catch that not found messages and do nothing instead
+            // to prevent false positives when having multiple translate5 installations (and one has wrong server.name) it can happen,
+            // that the worker requests go to the wrong translate5 installation. Since no 404 is logged, we don't find out that easily.
             // as soplution we send additionally a server id which must match in order to run workers.
             $this->decodePutData();
             $this->testServerId($this->data->serverId);
@@ -121,7 +125,7 @@ class ZfExtended_WorkerController extends ZfExtended_RestController {
                 return false;
             }
             
-            // set return as workerModel after runQueued() 
+            // set return as workerModel after runQueued()
             // normaly should have state='done' if everything went well,
             $this->view->rows = $worker->getModelBeforeDelete()->getDataObject();
         }

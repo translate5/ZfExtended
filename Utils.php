@@ -245,7 +245,8 @@ class ZfExtended_Utils {
         $c = $db->getConfig();
         //FIXME on cluster installations this would fail, since the SERVER_ADDR is different for the different web servers.
         // no solution here, since putting a random value into the config would not prevent same ids on cloning installations.
-        return md5($salt.$_SERVER['SERVER_ADDR'].$c['host'].$c['username'].$c['dbname']);
+        $ip = $_SERVER['SERVER_ADDR'] ?? '';
+        return md5($salt.$ip.$c['host'].$c['username'].$c['dbname']);
     }
 
     /**
