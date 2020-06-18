@@ -351,14 +351,18 @@ class ZfExtended_Models_Installer_Downloader {
             }
             self::removeRecursive($targetDir);
         }
+//this part is very slow on the server, so we try to find out why!
+$this->log('Open dependency '.$dependency->name.' for unzip! ZipFile:'.$dependency->targetFile);
         if (!$zip->open($dependency->targetFile)) {
             $this->log('Could not find downloaded zip file for dependency package '.$dependency->name.'! ZipFile:'.$dependency->targetFile);
             return false;
         }
+$this->log('Begin extraction of dependency '.$dependency->name.'!');
         if(!$zip->extractTo($targetDir)){
             $this->log('Could not unzip downloaded package for dependency package '.$dependency->name.'! ZipFile:'.$dependency->targetFile);
             return false;
         }
+$this->log('End extraction of dependency '.$dependency->name.'!');
         $zip->close();
         if(!empty($dependency->symlink)) {
             return $this->symlink($dependency);
