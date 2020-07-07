@@ -283,4 +283,14 @@ class ZfExtended_Utils {
                 return self::uuid();
         };
     }
+    
+    /***
+     * Remove byte order mark from string
+     * @param string $text
+     * @return string
+     */
+    public static function remove_utf8_bom(string $text):string{
+        $bom = pack('H*','EFBBBF');
+        return preg_replace("/^$bom/", '', $text);
+    }
 }
