@@ -80,9 +80,9 @@ class ZfExtended_BaseIndex{
             throw new Exception('mb_internal_encoding("UTF-8") could not be set!');
         }
         if(!defined('APPLICATION_ROOT')) {
-            define('APPLICATION_ROOT', realpath(dirname($indexpath) . '/..'));
+            define('APPLICATION_ROOT', realpath(dirname($indexpath) . DIRECTORY_SEPARATOR.'..'));
         }
-        $this->application_path = APPLICATION_ROOT . '/application';
+        $this->application_path = APPLICATION_ROOT . DIRECTORY_SEPARATOR.'application';
         defined('APPLICATION_PATH') || define('APPLICATION_PATH', $this->application_path);
         // Define application environment
         defined('APPLICATION_ENV') || define('APPLICATION_ENV', ( getenv('APPLICATION_ENV') ? getenv('APPLICATION_ENV') : 'application'));
