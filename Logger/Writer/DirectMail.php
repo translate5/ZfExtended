@@ -59,11 +59,13 @@ class ZfExtended_Logger_Writer_DirectMail extends ZfExtended_Logger_Writer_Abstr
         }
         
         $mail->setSubject($subject);
-        $event->extra = null;
-        $mail->setBodyText($event);
-        $mail->setBodyHtml($event->toHtml());
-        if(!empty($event->extraFlat)) {
-            $mail->createAttachment(print_r($event->extraFlat,1), 'text/plain', Zend_Mime::DISPOSITION_ATTACHMENT, Zend_Mime::ENCODING_BASE64, 'extra_log_data.txt');
+        $mailEvent= clone $event;
+        //remove the extra only from the mail. Other writers are using the same event extra.
+        $mailEvent->extra = null;
+        $mail->setBodyText($mailEvent);
+        $mail->setBodyHtml($mailEvent->toHtml());
+        if(!empty($mailEvent->extraFlat)) {
+            $mail->createAttachment(print_r($mailEvent->extraFlat,1), 'text/plain', Zend_Mime::DISPOSITION_ATTACHMENT, Zend_Mime::ENCODING_BASE64, 'extra_log_data.txt');
         }
         $mail->send();
     }
