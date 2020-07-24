@@ -256,4 +256,12 @@ abstract class ZfExtended_Plugin_Abstract {
     public function isPublicFileType($requestedType) {
         return in_array($requestedType, $this->getPublicFileTypes());
     }
+    
+    /***
+     * Return the plugin module name. The module name is parsed from the plugin class (each plugin class starts with the module name)
+     * @return mixed
+     */
+    public function getModuleName() {
+        return current(explode('_', get_class($this)));
+    }
 }
