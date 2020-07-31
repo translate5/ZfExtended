@@ -240,7 +240,7 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
      * @return boolean
      */
     protected function isOpenIdRedirect(){
-        return $this->getRequest()->getParam('redirect')!=null && $this->getRequest()->getParam('redirect')=='openid';
+        return $this->getRequest()->getParam('openidredirect')!=null && $this->getRequest()->getParam('openidredirect')=='openid';
     }
     
     abstract protected function initDataAndRedirect();
@@ -249,7 +249,7 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
      * deletes all sessiondata
      *
      * - redirects to root
-     * - if($this->getRequest()->getParam('redirect', true) == false, no redirection is done
+     * - if($this->getRequest()->getParam('openidredirect', true) == false, no redirection is done
      * @return void
      *
      */
@@ -261,7 +261,7 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
         $this->doOnLogout();
         $this->_helper->general->logoutUser();
         $this->postDispatch(); //trigger after action events before redirecting
-        if($this->getRequest()->getParam('redirect', true)){
+        if($this->getRequest()->getParam('openidredirect', true)){
             header('Location: '.APPLICATION_RUNDIR.'/');
             exit();
         }

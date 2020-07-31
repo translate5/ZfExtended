@@ -112,9 +112,8 @@ class ZfExtended_OpenIDConnectClient{
 
         $isAuthRequest=!empty($this->request->getParam('code')) || !empty($this->request->getParam('id_token'));
         $isLoginRequest=!empty($this->request->getParam('login')) && !empty($this->request->getParam('passwd'));
-        $isRedirectRequest=$this->request->getParam('redirect')!=null;
-        $isShowLoginScreen=$this->customer->getOpenIdRedirectCheckbox();
-        if(!$isAuthRequest && !$isRedirectRequest && !$isLoginRequest && !$isShowLoginScreen){
+        $isRedirectRequest=$this->request->getParam('openidredirect')=='openid';
+        if(!$isAuthRequest && !$isRedirectRequest && !$isLoginRequest){
             return false;
         }
 
