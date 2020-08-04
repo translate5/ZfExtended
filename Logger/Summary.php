@@ -9,8 +9,8 @@ START LICENSE AND COPYRIGHT
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
 
  This file may be used under the terms of the GNU LESSER GENERAL PUBLIC LICENSE version 3
- as published by the Free Software Foundation and appearing in the file lgpl3-license.txt 
- included in the packaging of this file.  Please review the following information 
+ as published by the Free Software Foundation and appearing in the file lgpl3-license.txt
+ included in the packaging of this file.  Please review the following information
  to ensure the GNU LESSER GENERAL PUBLIC LICENSE version 3.0 requirements will be met:
 https://www.gnu.org/licenses/lgpl-3.0.txt
 
@@ -23,14 +23,14 @@ END LICENSE AND COPYRIGHT
 */
 
 /**
- * Logger Summary creator 
+ * Logger Summary creator
  */
 class ZfExtended_Logger_Summary {
     
     /**
      * @var ZfExtended_Models_Db_ErrorLog
      */
-    protected $db; 
+    protected $db;
     
     public function __construct() {
         $this->db = ZfExtended_Factory::get('ZfExtended_Models_Db_ErrorLog');
@@ -44,8 +44,9 @@ class ZfExtended_Logger_Summary {
             $date = time();
         }
         $date = date('Y-m-d', $date);
-        $summary = $this->getSummaryLastDay($date);
-        $overview = $this->getOverviewLastDay($date, [ZfExtended_Logger::LEVEL_FATAL, ZfExtended_Logger::LEVEL_ERROR, ZfExtended_Logger::LEVEL_WARN]);
+        $levelsToBeUsed = [ZfExtended_Logger::LEVEL_FATAL, ZfExtended_Logger::LEVEL_ERROR, ZfExtended_Logger::LEVEL_WARN];
+        $summary = $this->getSummaryLastDay($date, $levelsToBeUsed);
+        $overview = $this->getOverviewLastDay($date, $levelsToBeUsed);
         if(empty($summary) && empty($overview)) {
             return;
         }
@@ -119,11 +120,11 @@ class ZfExtended_Logger_Summary {
         /* @var $logger ZfExtended_Logger */
         $levelName = $logger->getLevelName($level);
         switch ($level) {
-            case $logger::LEVEL_FATAL: 
+            case $logger::LEVEL_FATAL:
                 return '<b style="color:#b60000;">'.$levelName.'</b>';
-            case $logger::LEVEL_ERROR: 
+            case $logger::LEVEL_ERROR:
                 return '<span style="color:#b60000;">'.$levelName.'</span>';
-            case $logger::LEVEL_WARN: 
+            case $logger::LEVEL_WARN:
                 return '<span style="color:#e89b00;">'.$levelName.'</span>';
         }
         return $levelName;
@@ -132,12 +133,14 @@ class ZfExtended_Logger_Summary {
     /**
      * returns a summary of how many events per level has happened
      * @param string $date
+     * @param integer $levelBitMap level integer for bitwise filter which level should be summarized
      * @return array
      */
-    protected function getSummaryLastDay($date) {
+    protected function getSummaryLastDay($date, array $level) {
         $s = $this->db->select()
             ->from($this->db, ['level', 'cnt' => 'count(*)'])
             ->where('(? - INTERVAL 1 DAY) <= created AND created <= ?', $date)
+            ->where('level in (?)', $level)
             ->group('level');
         return $this->db->fetchAll($s)->toArray();
     }
