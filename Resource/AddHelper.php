@@ -34,7 +34,7 @@ END LICENSE AND COPYRIGHT
 class ZfExtended_Resource_AddHelper extends Zend_Application_Resource_ResourceAbstract {
     public function init()
     {
-        $cache = Zend_Registry::get('cache');
+        $cache = Zend_Cache::factory('Core', new ZfExtended_Cache_MySQLMemoryBackend(), ['automatic_serialization' => true]);
         /* @var $cache Zend_Cache_Core */
         $cacheKey = 'helper_paths_'.APPLICATION_MODULE;
         $paths = $cache->load($cacheKey);
