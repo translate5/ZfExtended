@@ -42,12 +42,18 @@ class ZfExtended_Plugin_Manager {
             return;
         }
         $pluginClasses = array_unique($config->runtimeOptions->plugins->active->toArray());
-        
+
         //TRANSLATE-569: ensure that only the plugin config for the affected module is loaded.
         foreach ($pluginClasses as $pluginClass) {
             try {
-                $this->pluginNames[$pluginClass] = $name = $this->classToName($pluginClass);
-                $this->pluginInstances[$pluginClass] = $plugin = ZfExtended_Factory::get($pluginClass, array($name));
+                $name = $this->classToName($pluginClass);
+                $plugin = ZfExtended_Factory::get($pluginClass, array($name));
+                /* @var $plugin ZfExtended_Plugin_Abstract */
+                if($plugin->getModuleName()!==Zend_Registry::get('module')){
+                    continue;
+                }
+                $this->pluginNames[$pluginClass] = $name ;
+                $this->pluginInstances[$pluginClass] = $plugin;
                 /* @var $plugin ZfExtended_Plugin_Abstract */
                 $localePath = $plugin->getLocalePath();
                 if($localePath) {
