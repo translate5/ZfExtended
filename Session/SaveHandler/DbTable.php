@@ -23,12 +23,26 @@
  */
 
 /**
- * 
+ *
  */
 class ZfExtended_Session_SaveHandler_DbTable
     extends Zend_Session_SaveHandler_DbTable
 {
 
+    /**
+     * We store the session data here for comparsion before save
+     * @var string
+     */
+    protected $data = '';
+    
+    /**
+     * {@inheritDoc}
+     * @see Zend_Session_SaveHandler_DbTable::read()
+     */
+    public function read($id) {
+        return $this->data = parent::read($id);
+    }
+    
     /**
      * Write session data.
      * Overwrite initial method for using INSERT ON DUPLICATE KEY UPDATE instead.
@@ -39,12 +53,22 @@ class ZfExtended_Session_SaveHandler_DbTable
      */
     public function write($id, $data)
     {
-        $data = array($this->_modifiedColumn => time(),
-                      $this->_dataColumn     => (string) $data);
+        $isModified = $data !== $this->data;
+        $data = [
+            $this->_modifiedColumn => time(),
+            $this->_dataColumn     => (string) $data
+        ];
         
-        $sql = 'INSERT INTO `session` (`session_id`, `name`, `modified`, `lifetime`, `session_data`) VALUES (?,?,?,?,?)
-                ON DUPLICATE KEY UPDATE `modified` = ?, `session_data` = ?';
-        $bindings = array($id,$this->_sessionName,intval($data[$this->_modifiedColumn]),intval($this->_lifetime),$data[$this->_dataColumn],intval($data[$this->_modifiedColumn]),$data[$this->_dataColumn]);
+        if($isModified) {
+            $sql = 'INSERT INTO `session` (`session_id`, `name`, `modified`, `lifetime`, `session_data`) VALUES (?,?,?,?,?)
+                    ON DUPLICATE KEY UPDATE `modified` = ?, `session_data` = ?';
+            $bindings = array($id,$this->_sessionName,intval($data[$this->_modifiedColumn]),intval($this->_lifetime),$data[$this->_dataColumn],intval($data[$this->_modifiedColumn]),$data[$this->_dataColumn]);
+        }
+        else {
+            $sql = 'INSERT INTO `session` (`session_id`, `name`, `modified`, `lifetime`) VALUES (?,?,?,?)
+                    ON DUPLICATE KEY UPDATE `modified` = ?';
+            $bindings = array($id,$this->_sessionName,intval($data[$this->_modifiedColumn]),intval($this->_lifetime),intval($data[$this->_modifiedColumn]));
+        }
         
         $db = Zend_Db_Table_Abstract::getDefaultAdapter();
         $db->query($sql, $bindings);
