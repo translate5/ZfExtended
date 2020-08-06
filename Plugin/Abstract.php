@@ -9,8 +9,8 @@ START LICENSE AND COPYRIGHT
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
 
  This file may be used under the terms of the GNU LESSER GENERAL PUBLIC LICENSE version 3
- as published by the Free Software Foundation and appearing in the file lgpl3-license.txt 
- included in the packaging of this file.  Please review the following information 
+ as published by the Free Software Foundation and appearing in the file lgpl3-license.txt
+ included in the packaging of this file.  Please review the following information
  to ensure the GNU LESSER GENERAL PUBLIC LICENSE version 3.0 requirements will be met:
 https://www.gnu.org/licenses/lgpl-3.0.txt
 
@@ -27,10 +27,10 @@ END LICENSE AND COPYRIGHT
  */
 abstract class ZfExtended_Plugin_Abstract {
     /**
-     * Contains the Plugin Path relativ to APPLICATION_PATH or absolut if not under APPLICATION_PATH
+     * Contains absolute plugin path
      * @var string
      */
-    protected $relativePluginPath = '';
+    protected $absolutePluginPath = '';
     
     /**
      * @var Zend_EventManager_StaticEventManager
@@ -81,8 +81,7 @@ abstract class ZfExtended_Plugin_Abstract {
         $this->config = $c->runtimeOptions->plugins->$pluginName;
         $this->activePlugins = $c->runtimeOptions->plugins->active->toArray();
         $rc = new ReflectionClass($this);
-        $path = '^'.dirname($rc->getFileName());
-        $this->relativePluginPath = ltrim(str_replace(rtrim('^'.APPLICATION_PATH,"/\\"), '', $path),"/\\");
+        $this->absolutePluginPath = rtrim(dirname($rc->getFileName()),"/\\");
         $this->init();
     }
     
@@ -125,7 +124,7 @@ abstract class ZfExtended_Plugin_Abstract {
     }
     
     /**
-     * return the plugins locale path
+     * return the plugins absolute locale path
      * @return array
      */
     public function getLocalePath() {
@@ -193,11 +192,11 @@ abstract class ZfExtended_Plugin_Abstract {
     }
     
     /**
-     * returns the relative plugin path to APPLICATION_ROOT
+     * returns the absolute plugin path
      * @return string
      */
     public function getPluginPath() {
-        return $this->relativePluginPath;
+        return $this->absolutePluginPath;
     }
     
     /**
@@ -207,7 +206,7 @@ abstract class ZfExtended_Plugin_Abstract {
      * @return multitype:string
      */
     public function getPublicFiles($subdirectory = '', & $absolutePath = null) {
-        $publicDirectory = APPLICATION_PATH.'/'.$this->relativePluginPath.'/public/'.$subdirectory;
+        $publicDirectory = $this->absolutePluginPath.'/public/'.$subdirectory;
         $absolutePath = $publicDirectory;
         $objects = new RecursiveIteratorIterator(
             new RecursiveDirectoryIterator($publicDirectory, FilesystemIterator::SKIP_DOTS), RecursiveIteratorIterator::SELF_FIRST
@@ -242,11 +241,11 @@ abstract class ZfExtended_Plugin_Abstract {
     
     /**
      * Adds the given controller to the application
-     * Give just the Controller Name, Controller directory in Plugins is by convention "Controllers" and file must end with .php 
+     * Give just the Controller Name, Controller directory in Plugins is by convention "Controllers" and file must end with .php
      * @param string $controller
      */
     public function addController($controller) {
-        require_once APPLICATION_PATH.'/'.$this->getPluginPath().'/Controllers/'.$controller.'.php';
+        require_once $this->getPluginPath().'/Controllers/'.$controller.'.php';
     }
     
     public function getPublicFileTypes(){

@@ -9,8 +9,8 @@ START LICENSE AND COPYRIGHT
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
 
  This file may be used under the terms of the GNU LESSER GENERAL PUBLIC LICENSE version 3
- as published by the Free Software Foundation and appearing in the file lgpl3-license.txt 
- included in the packaging of this file.  Please review the following information 
+ as published by the Free Software Foundation and appearing in the file lgpl3-license.txt
+ included in the packaging of this file.  Please review the following information
  to ensure the GNU LESSER GENERAL PUBLIC LICENSE version 3.0 requirements will be met:
 https://www.gnu.org/licenses/lgpl-3.0.txt
 
@@ -37,13 +37,12 @@ class ZfExtended_View_Helper_PluginLocale extends Zend_View_Helper_Abstract{
     /**
      * The here added phtmls are rendered at the end of localizedjsstrings.phtml
      * The path must be relative to the plugin root!
-     * 
+     *
      * @param ZfExtended_Plugin_Abstract $plugin
      * @param string $localePhtmlPath
      */
     public function add(ZfExtended_Plugin_Abstract $plugin, $localePhtmlPath) {
-        $basePath = $plugin->getPluginPath();
-        $this->paths[] = APPLICATION_PATH.DIRECTORY_SEPARATOR.$basePath.DIRECTORY_SEPARATOR.$localePhtmlPath;
+        $this->paths[] = $plugin->getPluginPath().DIRECTORY_SEPARATOR.$localePhtmlPath;
     }
     
     /**
