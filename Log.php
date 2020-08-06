@@ -9,8 +9,8 @@ START LICENSE AND COPYRIGHT
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
 
  This file may be used under the terms of the GNU LESSER GENERAL PUBLIC LICENSE version 3
- as published by the Free Software Foundation and appearing in the file lgpl3-license.txt 
- included in the packaging of this file.  Please review the following information 
+ as published by the Free Software Foundation and appearing in the file lgpl3-license.txt
+ included in the packaging of this file.  Please review the following information
  to ensure the GNU LESSER GENERAL PUBLIC LICENSE version 3.0 requirements will be met:
 https://www.gnu.org/licenses/lgpl-3.0.txt
 
@@ -35,7 +35,7 @@ END LICENSE AND COPYRIGHT
 class  ZfExtended_Log extends ZfExtended_TemplateBasedMail {
     /**
      * Defining the log levels (draft, not really used at the moment)
-     * Using 2^n values for better filtering and combining possibilties, although a simple < comparsion should be enough 
+     * Using 2^n values for better filtering and combining possibilties, although a simple < comparsion should be enough
      * @var integer
      */
     const LEVEL_FATAL = 1;
@@ -72,15 +72,6 @@ class  ZfExtended_Log extends ZfExtended_TemplateBasedMail {
         if(!empty($_SERVER['HTTP_HOST'])) {
             $this->_className .= ' on '.$_SERVER['HTTP_HOST'];
         }
-        try {
-            $session = new Zend_Session_Namespace();
-            $this->_isFork = $session->isFork;
-        }
-        catch (Exception $e) {
-        }
-        if($this->_isFork){
-            $this->_className .= ' (FORK!)';
-        }
     }
     /**
      * Loggt eine Exception
@@ -99,7 +90,7 @@ class  ZfExtended_Log extends ZfExtended_TemplateBasedMail {
     }
     /**
      * Loggt eine Exception
-     * 
+     *
      * @param Exception
      */
     public function logException(Exception $exception){
@@ -166,13 +157,13 @@ class  ZfExtended_Log extends ZfExtended_TemplateBasedMail {
     /**
      * Holt auf Basis des views mit dem viewhelper getUrl die URL, wenn
      * der view schon vorhanden ist. Dann inkl. ggf. vorhandener POST-Parameter. Ansonsten $_SERVER['REQUEST_URI']
-     * 
+     *
      * - Ergänzt URL um davor stehenden Infotext für das Log
-     * 
+     *
      * - Achtung: Die Namen von Passwort-Post-Felder müssen hier aufgenommen sein,
      *   sonst werden passwörter ggf. als Klartext per Mail versandt im Fehlerfall
-     * 
-     * @return string 
+     *
+     * @return string
      */
     public function getUrlLogMessage(){
         $viewRenderer = ZfExtended_Zendoverwrites_Controller_Action_HelperBroker::getStaticHelper('ViewRenderer');
