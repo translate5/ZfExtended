@@ -65,7 +65,8 @@ class ZfExtended_Plugin_Manager {
                 /* @var $logger ZfExtended_Logger */
                 $logger->warn('E1218', 'The PHP class for the activated plug-in "{plugin}" does not exist.', [
                     'plugin' => $pluginClass,
-                    'originalExceptionMsg' => $exception->getMessage()
+                    'originalExceptionMsg' => $exception->getMessage(),
+                    'path' => get_include_path(),
                 ]);
             }
         }
