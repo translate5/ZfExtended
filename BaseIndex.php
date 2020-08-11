@@ -55,6 +55,12 @@ class ZfExtended_BaseIndex{
     public $applicationInis = array();
 
     /**
+     * If set to true load additional maintenance.ini config file
+     * @var boolean
+     */
+    public static $addMaintenanceConfig = false;
+    
+    /**
      * Konstruktor enthält alles, was normaler Weise die index.php enthält
      *
      * - Definition des Pfades zur Portal-Applikation
@@ -91,17 +97,11 @@ class ZfExtended_BaseIndex{
         $this->applicationInis = $this->getApplicationInis();
     }
     /**
-     *@param $indexpath filesystem-path to the index.php of the application;
-     *      gets set to $_SERVER['SCRIPT_FILENAME'], if not set (only relevant on first invocation)
      * @return ZfExtended_BaseIndex
      */
-    public static function getInstance($indexpath=NULL)
-    {
+    public static function getInstance(): ZfExtended_BaseIndex {
         if (null === self::$_instance) {
-            if(is_null($indexpath)){
-                $indexpath = $_SERVER['SCRIPT_FILENAME'];
-            }
-            self::$_instance = new self($indexpath);
+            self::$_instance = new self($_SERVER['SCRIPT_FILENAME']);
         }
         return self::$_instance;
     }
@@ -359,17 +359,18 @@ class ZfExtended_BaseIndex{
         $applicationInis[] = APPLICATION_PATH.'/modules/'.$this->currentModule.'/configs/module.ini';
         //the application configuration file of a module, provided by the application, can overwrite module settings:
         $applicationInis[] = APPLICATION_PATH.'/config/'.$this->currentModule.'.ini';
+        
+        if(self::$addMaintenanceConfig) {
+            //this additional config file is loaded when running the CLI configuration / maintenance scripts.
+            $applicationInis[] = APPLICATION_PATH.'/config/maintenance.ini';
+        }
+        
         //a customized configuration file for the local installation:
         $applicationInis[] = APPLICATION_PATH.'/config/installation.ini';
         //a customized configuration file for the local installation, called only for a specific module:
         // this feature is currently not documented!
         $applicationInis[] = APPLICATION_PATH.'/config/installation-'.$this->currentModule.'.ini';
         
-        //FIXME in theory the following lines are obsolete since, the contained informations are in installation.ini
-        if(APPLICATION_AGENCY) {
-          $applicationInis[] = APPLICATION_PATH.'/iniOverwrites/'.APPLICATION_AGENCY.'/application.ini';
-          $applicationInis[] = APPLICATION_PATH.'/iniOverwrites/'.APPLICATION_AGENCY.'/'.$this->currentModule.'Application.ini';
-        }
         return $applicationInis;
     }
     
