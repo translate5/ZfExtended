@@ -9,8 +9,8 @@ START LICENSE AND COPYRIGHT
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
 
  This file may be used under the terms of the GNU LESSER GENERAL PUBLIC LICENSE version 3
- as published by the Free Software Foundation and appearing in the file lgpl3-license.txt 
- included in the packaging of this file.  Please review the following information 
+ as published by the Free Software Foundation and appearing in the file lgpl3-license.txt
+ included in the packaging of this file.  Please review the following information
  to ensure the GNU LESSER GENERAL PUBLIC LICENSE version 3.0 requirements will be met:
 https://www.gnu.org/licenses/lgpl-3.0.txt
 
@@ -25,7 +25,7 @@ END LICENSE AND COPYRIGHT
 /**
  * design facts:
  * - since we are not only logging errors but also warnings, infos etc, we are talking about events not errors to be logged.
- * 
+ *
  * @method void fatal() fatal(string $code, string $message, $extra = null, $writer = [])
  * @method void error() error(string $code, string $message, $extra = null, $writer = [])
  * @method void warn() warn  (string $code, string $message, $extra = null, $writer = [])
@@ -36,7 +36,7 @@ END LICENSE AND COPYRIGHT
 class ZfExtended_Logger {
     /**
      * Defining the log levels (draft, not really used at the moment)
-     * Using 2^n values for better filtering and combining possibilties, although a simple < comparsion should be enough 
+     * Using 2^n values for better filtering and combining possibilties, although a simple < comparsion should be enough
      * @var integer
      */
     const LEVEL_FATAL = 1;
@@ -44,7 +44,7 @@ class ZfExtended_Logger {
     const LEVEL_WARN = 4;
     const LEVEL_INFO = 8;
     //DEBUG and TRACE log calls are only processed if there is on writer configured with a filter consuming debug logs of the current domain
-    const LEVEL_DEBUG = 16; 
+    const LEVEL_DEBUG = 16;
     const LEVEL_TRACE = 32;
     
     const ECODE_LEGACY_ERRORS = 'E9999';
@@ -59,9 +59,9 @@ class ZfExtended_Logger {
     protected $writer = [];
     
     /**
-     * before a trace is created, the current events level is compared on bit level against this value, 
+     * before a trace is created, the current events level is compared on bit level against this value,
      *  if it does match, then the trace is created
-     *  This value can be overridden via config  
+     *  This value can be overridden via config
      * @var integer
      */
     protected $enableTraceFor = 51; // 1 + 2 + 16 + 32
@@ -199,7 +199,7 @@ class ZfExtended_Logger {
      * @param Exception $exception
      * @param array $eventOverride array to override the event generated from the exception
      */
-    public function exception(Exception $exception, array $eventOverride = [], $returnEvent = false) {
+    public function exception(\Throwable $exception, array $eventOverride = [], $returnEvent = false) {
         $event = new ZfExtended_Logger_Event();
         $event->created = NOW_ISO;
         
@@ -209,7 +209,7 @@ class ZfExtended_Logger {
             $event->domain = $exception->getDomain();
         }
         else {
-            //exceptions not defined and not catched by us are of type error 
+            //exceptions not defined and not catched by us are of type error
             $event->level = self::LEVEL_ERROR;
             $extraData = [];
             $event->domain = $this->domain;
@@ -252,7 +252,7 @@ class ZfExtended_Logger {
     
     /**
      * test if current logger has writers consuming the given combination of level and domain.
-     * Can be used for example in plug-in init Methods to enable the processing of debug statements in the plugin.  
+     * Can be used for example in plug-in init Methods to enable the processing of debug statements in the plugin.
      * @param integer $level
      * @param string $domain
      */
@@ -266,11 +266,11 @@ class ZfExtended_Logger {
     }
     
     /**
-     * The trace information is set if 
+     * The trace information is set if
      * @param ZfExtended_Logger_Event $event
      * @param Exception $e
      */
-    protected function fillTrace(ZfExtended_Logger_Event $event, Exception $e = null) {
+    protected function fillTrace(ZfExtended_Logger_Event $event, \Throwable $e = null) {
         if(($this->enableTraceFor & $event->level) == 0) {
             return;
         }

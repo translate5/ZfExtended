@@ -9,8 +9,8 @@ START LICENSE AND COPYRIGHT
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
 
  This file may be used under the terms of the GNU LESSER GENERAL PUBLIC LICENSE version 3
- as published by the Free Software Foundation and appearing in the file lgpl3-license.txt 
- included in the packaging of this file.  Please review the following information 
+ as published by the Free Software Foundation and appearing in the file lgpl3-license.txt
+ included in the packaging of this file.  Please review the following information
  to ensure the GNU LESSER GENERAL PUBLIC LICENSE version 3.0 requirements will be met:
 https://www.gnu.org/licenses/lgpl-3.0.txt
 
@@ -182,7 +182,7 @@ abstract class ZfExtended_Models_Entity_Abstract {
      *
      * Basiert auf fetchRow
      *
-     * @param Zend_Db_Table_Select 
+     * @param Zend_Db_Table_Select
      * @return Zend_Db_Table_Row_Abstract|null
      */
     public function loadRowBySelect(Zend_Db_Table_Select $s) {
@@ -475,7 +475,7 @@ abstract class ZfExtended_Models_Entity_Abstract {
     public function validate(){
         $this->validatorLazyInstatiation();
         if(!$this->validator->isValid($this->getModifiedData())) {
-            //TODO the here thrown exception is the legacy fallback. 
+            //TODO the here thrown exception is the legacy fallback.
             // Each Validator should implement an own isValid which throws a UnprocessableEntity Exception it self.
             // See Segment Validator for an example
             $errors = $this->validator->getMessages();
@@ -625,16 +625,6 @@ abstract class ZfExtended_Models_Entity_Abstract {
         $specificData->$propertyName=$value;
         $this->setSpecificData($specificData);
         return true;
-    }
-    
-    /***
-     * Get the next autoincrement primary key value for the entity
-     * @return mixed
-     */
-    public function getNextAutoincrement(){
-        $query = "SHOW TABLE STATUS LIKE ?;";
-        $result = $this->db->getAdapter()->fetchRow($query,[$this->tableName]);
-        return $result['Auto_increment'];
     }
     
     public function setDefaultGroupBy(string $defaultGroupBy){
