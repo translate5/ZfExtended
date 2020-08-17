@@ -9,8 +9,8 @@ START LICENSE AND COPYRIGHT
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
 
  This file may be used under the terms of the GNU LESSER GENERAL PUBLIC LICENSE version 3
- as published by the Free Software Foundation and appearing in the file lgpl3-license.txt 
- included in the packaging of this file.  Please review the following information 
+ as published by the Free Software Foundation and appearing in the file lgpl3-license.txt
+ included in the packaging of this file.  Please review the following information
  to ensure the GNU LESSER GENERAL PUBLIC LICENSE version 3.0 requirements will be met:
 https://www.gnu.org/licenses/lgpl-3.0.txt
 
@@ -44,17 +44,17 @@ class  ZfExtended_Zendoverwrites_Translate extends Zend_Translate
     protected static $_instance = null;
     
     /**
-     * @var string the language part of the locale 
+     * @var string the language part of the locale
      */
     protected $sourceLang;
     
     /**
-     * @var string the language part of the locale 
+     * @var string the language part of the locale
      */
     protected $targetLang;
     
     /**
-     * @var string  
+     * @var string
      */
     protected $logPath;
     
@@ -96,8 +96,8 @@ class  ZfExtended_Zendoverwrites_Translate extends Zend_Translate
         }
 
         // Lade Übersetzungen und speichere Translate Objekt in der Session
-         //$cache = Zend_Registry::get('cache'); //Caching deaktiviert, da der Aufruf der selben Seite mehrmals innerhalb von Millisekunden bei der Nutzung des Caches für Zend_Translate zu Fatal Error führt
-         //Zend_Translate::setCache($cache);
+        $cache = Zend_Registry::get('cache'); //Caching deaktiviert, da der Aufruf der selben Seite mehrmals innerhalb von Millisekunden bei der Nutzung des Caches für Zend_Translate zu Fatal Error führt
+        Zend_Translate::setCache($cache);
         parent::__construct(
             array(
                 'adapter' => 'ZfExtended_Zendoverwrites_Translate_Adapter_Xliff',
@@ -124,7 +124,7 @@ class  ZfExtended_Zendoverwrites_Translate extends Zend_Translate
     public static function getInstance($init = false)
     {
         if (null === self::$_instance || $init) {
-            //warning overwriting this method changes also the class 
+            //warning overwriting this method changes also the class
             //name since self point to the method defining class!
             try {
                 self::$_instance = ZfExtended_Factory::get(__CLASS__);
@@ -141,7 +141,7 @@ class  ZfExtended_Zendoverwrites_Translate extends Zend_Translate
     }
     
     /**
-     * returns an assoc array with the available translations. 
+     * returns an assoc array with the available translations.
      * Key is the localeKey (de/en), value is the name of the language.
      * The name is already translated into the current language!
      * @return array
@@ -189,8 +189,8 @@ class  ZfExtended_Zendoverwrites_Translate extends Zend_Translate
 
     /**
      * protected, because if public the instances has to be newly instantiated, which is unneccessary currently
-     * 
-     * @param string $lang  
+     *
+     * @param string $lang
      */
     protected function setSourceLang($lang = null) {
         $this->sourceLang = $lang;
@@ -208,8 +208,8 @@ class  ZfExtended_Zendoverwrites_Translate extends Zend_Translate
     }
     /**
      * protected, because if public the instances has to be newly instantiated, which is unneccessary currently
-     * 
-     * @param string $lang  
+     *
+     * @param string $lang
      */
     protected function setTargetLang($lang = null) {
         $this->targetLang = $lang;
@@ -220,7 +220,7 @@ class  ZfExtended_Zendoverwrites_Translate extends Zend_Translate
     }
     
     protected function addTranslations() {
-        $paths = $this->getTranslationPaths(); 
+        $paths = $this->getTranslationPaths();
         foreach ($paths as $path) {
             $this->addTranslation(array(
                 'content' => $path,
@@ -247,7 +247,7 @@ class  ZfExtended_Zendoverwrites_Translate extends Zend_Translate
             $this->translationPaths[] = $lib.$ds.'locales'.$ds.$xliff;
         }
         $this->translationPaths[] = APPLICATION_PATH.$ds.'modules'.$ds.APPLICATION_MODULE.$ds.'locales'.$ds.$xliff;
-        $this->translationPaths[] =  $this->config->runtimeOptions->dir->locales.$ds.$xliff; 
+        $this->translationPaths[] =  $this->config->runtimeOptions->dir->locales.$ds.$xliff;
         
         $this->addPluginPaths($xliff);
         
@@ -274,12 +274,12 @@ class  ZfExtended_Zendoverwrites_Translate extends Zend_Translate
             return;
         }
         foreach($paths as $path) {
-            $this->translationPaths[] = APPLICATION_PATH.'/'.$path.'/'.$xliff;
+            $this->translationPaths[] = $path.'/'.$xliff;
         }
     }
     
     /**
-     * 
+     *
      * @return string
      */
     public function getLogPath() {
@@ -314,7 +314,7 @@ class  ZfExtended_Zendoverwrites_Translate extends Zend_Translate
     }
     
     /***
-     * 
+     *
      * @param string $s: string to be translated
      * @param string $locale: language locale
      * @throws Zend_Exception
