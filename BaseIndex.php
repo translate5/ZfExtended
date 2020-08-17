@@ -170,9 +170,6 @@ class ZfExtended_BaseIndex{
      * @return Zend_Application
      */
     public function initApplication() {
-        if(class_exists('Zend_Registry')){
-            throw new Zend_Exception('application already started - Zend_Registry exists!');
-        }
         //include optional composer vendor autoloader
         if(file_exists(APPLICATION_ROOT.'/vendor/autoload.php')) {
             require_once APPLICATION_ROOT.'/vendor/autoload.php';
