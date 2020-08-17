@@ -9,8 +9,8 @@ START LICENSE AND COPYRIGHT
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
 
  This file may be used under the terms of the GNU LESSER GENERAL PUBLIC LICENSE version 3
- as published by the Free Software Foundation and appearing in the file lgpl3-license.txt 
- included in the packaging of this file.  Please review the following information 
+ as published by the Free Software Foundation and appearing in the file lgpl3-license.txt
+ included in the packaging of this file.  Please review the following information
  to ensure the GNU LESSER GENERAL PUBLIC LICENSE version 3.0 requirements will be met:
 https://www.gnu.org/licenses/lgpl-3.0.txt
 
@@ -39,7 +39,7 @@ END LICENSE AND COPYRIGHT
  * @method void setDefaults() setDefaults(string $defaults) comma seperated values!
  * @method void setType() setType(string $type)
  * @method void setDescription() setDescription(string $desc)
- * 
+ *
  * @method integer getId() getId()
  * @method string getName() getName()
  * @method boolean getConfirmed() getConfirmed()
@@ -50,7 +50,7 @@ END LICENSE AND COPYRIGHT
  * @method string getDefaults() getDefaults()
  * @method string getType() getType()
  * @method string getDescription() getDescription()
- * 
+ *
  * The conversion from DB Storage Format to Zend Config Format is done by ZfExtended_Resource_DbConfig
  */
 class ZfExtended_Models_Config extends ZfExtended_Models_Entity_Abstract {
@@ -59,7 +59,7 @@ class ZfExtended_Models_Config extends ZfExtended_Models_Entity_Abstract {
   
     /**
      * Sets the given configuration value for the configuration identified via the given name
-     * loads internally the configuration instance so that the instance is a fully loaded instance then   
+     * loads internally the configuration instance so that the instance is a fully loaded instance then
      * @param string $name the configuration name
      * @param string $value the value to be set
      */
@@ -85,5 +85,18 @@ class ZfExtended_Models_Config extends ZfExtended_Models_Entity_Abstract {
         }
         //load implies loading one Row, so use only the first row
         $this->row = $row;
+    }
+    
+    /**
+     * loads all tasks of the given tasktype that are associated to a specific user as PM
+     * @param string $pmGuid
+     * @param string $tasktype
+     * @return array
+     */
+    public function loadListByNamePart(string $name) {
+        $s = $this->db->select()
+          ->where('name like ?', '%'.$name.'%')
+          ->order('name ASC');
+        return parent::loadFilterdCustom($s);
     }
 }
