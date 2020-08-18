@@ -96,8 +96,8 @@ class  ZfExtended_Zendoverwrites_Translate extends Zend_Translate
         }
 
         // Lade Übersetzungen und speichere Translate Objekt in der Session
-        $cache = Zend_Registry::get('cache'); //Caching deaktiviert, da der Aufruf der selben Seite mehrmals innerhalb von Millisekunden bei der Nutzung des Caches für Zend_Translate zu Fatal Error führt
-        Zend_Translate::setCache($cache);
+        //$cache = Zend_Registry::get('cache'); //Caching deaktiviert, da der Aufruf der selben Seite mehrmals innerhalb von Millisekunden bei der Nutzung des Caches für Zend_Translate zu Fatal Error führt
+        //Zend_Translate::setCache($cache);
         parent::__construct(
             array(
                 'adapter' => 'ZfExtended_Zendoverwrites_Translate_Adapter_Xliff',
