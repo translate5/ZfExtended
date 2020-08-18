@@ -404,7 +404,18 @@ class ZfExtended_OpenIDConnectClient{
 
         //load the openid user info from the defined userinfo endpoint
         if(!isset($this->openIdUserInfo)){
-            $this->openIdUserInfo=$this->openIdClient->requestUserInfo();
+            try{
+				$this->openIdUserInfo=$this->openIdClient->requestUserInfo();
+			}catch(OpenIDConnectClientException $exc){
+                //When the user is not allowed to acces the userinfo endpoint, openid connect will throw an exception.
+                
+                //Basically all required user information can be provided with the openid claims, and if the user info is
+                //not accesable via userinfo_endpoint, try to get the information from the main openid claims.
+                //Whenever an required user info is not found from the claims, translate5 will write an warning in the log.
+
+                //Info: userinfo_endpoint is deprecated on the newer versions of openid protocol, 
+                //,because the access_token and id_token that you get from the authenticator is enough to get user attributes.
+			}
         }
 
         //check if the attribute exist in the claims
