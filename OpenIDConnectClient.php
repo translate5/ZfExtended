@@ -402,8 +402,8 @@ class ZfExtended_OpenIDConnectClient{
             $this->openIdUserClaims=$this->openIdClient->getVerifiedClaims();
         }
 
-        //load the openid user info from the defined userinfo endpoint
-        if(!isset($this->openIdUserInfo)){
+        //load the user info endpoint only if it is allowed via configuration
+        if(!isset($this->openIdUserInfo) && $this->config->runtimeOptions->openid->requestUserInfo){
             try{
 				$this->openIdUserInfo=$this->openIdClient->requestUserInfo();
 			}catch(OpenIDConnectClientException $exc){
