@@ -9,8 +9,8 @@ START LICENSE AND COPYRIGHT
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
 
  This file may be used under the terms of the GNU LESSER GENERAL PUBLIC LICENSE version 3
- as published by the Free Software Foundation and appearing in the file lgpl3-license.txt 
- included in the packaging of this file.  Please review the following information 
+ as published by the Free Software Foundation and appearing in the file lgpl3-license.txt
+ included in the packaging of this file.  Please review the following information
  to ensure the GNU LESSER GENERAL PUBLIC LICENSE version 3.0 requirements will be met:
 https://www.gnu.org/licenses/lgpl-3.0.txt
 
@@ -74,6 +74,9 @@ trait ZfExtended_Models_Db_DeadLockHandlerTrait {
                 }
                 return $result;
             }
+            catch(Zend_Db_Table_Row_Exception $e) {
+                $this->throwIfNotParentMissingException($e);
+            }
             catch(Zend_Db_Statement_Exception $e) {
                 //hier schleife
                 $this->throwIfNotDeadLockException($e);
@@ -87,10 +90,19 @@ trait ZfExtended_Models_Db_DeadLockHandlerTrait {
     }
     
     /**
-     * Handles DB Exceptions: encapsulates Integrity constraint violation into separate expcetions, all others are thrown directly
+     * Handles DB Exceptions: encapsulates Deadlock found exception
      */
     protected function throwIfNotDeadLockException(Zend_Db_Statement_Exception $e) {
         if(strpos($e->getMessage(), 'Serialization failure: 1213 Deadlock found when trying to get lock; try restarting transaction,') === false) {
+            throw $e;
+        }
+    }
+    
+    /**
+     * Handles DB Exceptions: handles refresh row as parent is missing
+     */
+    protected function throwIfNotParentMissingException(Zend_Db_Statement_Exception $e) {
+        if(strpos($e->getMessage(), 'Cannot refresh row as parent is missing') === false) {
             throw $e;
         }
     }
