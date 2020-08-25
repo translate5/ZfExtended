@@ -40,7 +40,9 @@ class ZfExtended_Session_SaveHandler_DbTable
      * @see Zend_Session_SaveHandler_DbTable::read()
      */
     public function read($id) {
-        return $this->data = parent::read($id);
+        //if the read gets null from DB (which may happen) we have to return an empty string here,
+        // otherwise start_session will fail with a strange error
+        return $this->data = parent::read($id) ?? '';
     }
     
     /**
