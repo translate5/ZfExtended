@@ -317,11 +317,10 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract {
      *    de -> de-DE,de-AT,de-CH,de-LI,de-LU
      *
      * @param int $id
-     * @param string $field
-     * @param boolean $includeMajor : include mayor language when fuzzy matching
+     * @param string $field: the field name wich will be returned(see languages model for available fields)
      * @return array
      */
-    public function getFuzzyLanguages($id,$field='id',$includeMajor = false){
+    public function getFuzzyLanguages($id,$field='id'){
         $cacheId = __FUNCTION__.'_'.$id.'_'.$field;
         $result = $this->memCache->load($cacheId);
         if($result !== false) {
@@ -332,12 +331,6 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract {
         //check if language fuzzy matching is needed
         if(strpos($rfc, '-') !== false){
             $result = [$id];
-            if($includeMajor){
-                $mayor = $this->findMajorLanguage($rfc);
-                if(!empty($mayor)){
-                    $result[] = $mayor['id'];
-                }
-            }
         }
         else {
             $result = array_column($this->findLanguageGroup($rfc), $field);
@@ -384,18 +377,5 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract {
             }
         }
         return $rfcToIsoLanguage;
-    }
-
-    /***
-     * Find mayor language by given sub langauge.
-     * Ex: "de-CH" will find "de"
-     * @param string $rfcSub
-     * @return array
-     */
-    public function findMajorLanguage(string $rfcSub) {
-        $rfcSub = explode('-', $rfcSub);
-        $rfcSub = $rfcSub[0];
-        $mayor = $this->loadByRfc([$rfcSub]);
-        return empty($mayor) ? [] : reset($mayor);
     }
 }
