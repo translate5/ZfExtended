@@ -9,8 +9,8 @@ START LICENSE AND COPYRIGHT
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
 
  This file may be used under the terms of the GNU LESSER GENERAL PUBLIC LICENSE version 3
- as published by the Free Software Foundation and appearing in the file lgpl3-license.txt 
- included in the packaging of this file.  Please review the following information 
+ as published by the Free Software Foundation and appearing in the file lgpl3-license.txt
+ included in the packaging of this file.  Please review the following information
  to ensure the GNU LESSER GENERAL PUBLIC LICENSE version 3.0 requirements will be met:
 https://www.gnu.org/licenses/lgpl-3.0.txt
 
@@ -24,7 +24,7 @@ END LICENSE AND COPYRIGHT
 
 /**
  * The "event" to be logged
- * Currently no need for different formatters (like in Zend_Log), so we just provide a toString and a toHtml function.  
+ * Currently no need for different formatters (like in Zend_Log), so we just provide a toString and a toHtml function.
  */
 class ZfExtended_Logger_Event {
     
@@ -47,7 +47,7 @@ class ZfExtended_Logger_Event {
     public $levelName;
     
     /**
-     * hierarchical area code, for further filtering, can be for example: 
+     * hierarchical area code, for further filtering, can be for example:
      * FIXME better examples import / export / Plugin XYZ, and so on 	from exception type
      * @var string
      */
@@ -64,7 +64,7 @@ class ZfExtended_Logger_Event {
     public $previous;
     
     //worker 	worker class (loop over debug_backtrace, and ue is_subclass_of) 	automatically
-    // → FIXME is the domain usable for that? 
+    // → FIXME is the domain usable for that?
     
     /**
      * the project unique event code
@@ -103,7 +103,7 @@ class ZfExtended_Logger_Event {
     public $worker;
     
     /**
-     * the trace to the event 
+     * the trace to the event
      * @var string
      */
     public $trace = '';
@@ -145,7 +145,7 @@ class ZfExtended_Logger_Event {
     public $extra = [];
     
     /**
-     * extra data flattened and sanitized (lazy filled by getExtraFlattenendAndSanitized) 
+     * extra data flattened and sanitized (lazy filled by getExtraFlattenendAndSanitized)
      * @var array
      */
     public $extraFlat = [];
@@ -165,6 +165,19 @@ class ZfExtended_Logger_Event {
                 $this->$key = $value;
             }
         }
+    }
+
+    /**
+     * Returns just the created, level, ecode, message, file and URL in one line.
+     * @string
+     */
+    public function oneLine(): string {
+        $e = empty($this->exception) ? '' : ' '.get_class($this->exception);
+        $msg = [];
+        $msg[] = $this->levelName.$e.': '.$this->eventCode.' - '.$this->message;
+        $msg[] = '  in '.$this->domain.' '.$this->file.' ('.$this->line.') ';
+        $msg[] = ' by '.$this->method.' '.$this->url;
+        return join('', $msg);
     }
     
     public function __toString() {
