@@ -57,7 +57,8 @@ class Models_Installer_Maintenance {
     
     public function announce($time, $msg = '') {
         $receiver = $this->config->runtimeOptions->maintenance->announcementMail ?? '';
-        $preventDuplicates = [];
+        //fastest way to prevent that we spam our support mailbox TODO better solution
+        $preventDuplicates = ['support@translate5.net'];
         if(empty($receiver)) {
             die('No receiver groups/users set in runtimeOptions.maintenance.announcementMail, so no email sent!'."\n\n");
         }
