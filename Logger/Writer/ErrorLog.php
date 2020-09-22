@@ -26,6 +26,6 @@
  */
 class ZfExtended_Logger_Writer_ErrorLog extends ZfExtended_Logger_Writer_Abstract {
     public function write(ZfExtended_Logger_Event $event) {
-        error_log($event);
+        error_log($event->oneLine());
     }
 }

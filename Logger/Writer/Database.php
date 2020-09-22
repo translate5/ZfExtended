@@ -25,9 +25,10 @@
 /**
  */
 class ZfExtended_Logger_Writer_Database extends ZfExtended_Logger_Writer_Abstract {
+    
+    protected $insertedId;
+    
     public function write(ZfExtended_Logger_Event $event) {
-        //FIXME how to implement the duplication recognition (especially in the email logger)
-        // same technique, here for counting up the counter, in the email logger to prevent mails. But how?
         $db = ZfExtended_Factory::get('ZfExtended_Models_Db_ErrorLog');
         /* @var $db ZfExtended_Models_Db_ErrorLog */
         
@@ -37,11 +38,27 @@ class ZfExtended_Logger_Writer_Database extends ZfExtended_Logger_Writer_Abstrac
         foreach($directlyFromEvent as $key) {
             $data[$key] = $event->$key;
         }
+        if(!empty($event->exception)) {
+            $data['message'] = get_class($event->exception).': '.$data['message'];
+        }
+        
         $data['message'] = mb_substr($data['message'], 0, 512);
         $data['last'] = NOW_ISO;
+        
+        //we track previous exceptions seperate in the DB if possible
+        if(!empty($event->previous)) {
+            if($event->previous instanceof ZfExtended_Logger_Event) {
+                $this->write($event->previous);
+                $event->extra['_previous_exception_id'] = '#'.$this->insertedId;
+            }
+            elseif($event->previous instanceof Exception){
+                $event = clone $event;
+                $event->extra['_previous_exception'] = (string) $event->previous;
+            }
+        }
+        
         //flatten entities to their dataobjects and handles JSON errors:
         $data['extra'] = $event->getExtraAsJson();
-        //$data['count'] = 0; FIXME how to make the duplication recognition?
-        $db->insert($data);
+        $this->insertedId = $db->insert($data);
     }
 }
