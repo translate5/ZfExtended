@@ -71,6 +71,9 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
      * @return bool
      */
     public function indexAction() {
+        
+        $this->logInIpBased();
+        
         $this->_form->setTranslator($this->_translate);
         $this->view->form = $this->_form;
         //if the user click on the openid redirect link in the login form
@@ -388,6 +391,47 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
         $this->_session->locale = $locale;
         // set locale as Zend App default locale
         Zend_Registry::set('Zend_Locale', $Zend_Locale);
+    }
+    
+    protected function isIpBasedAuth() {
+        $conf = Zend_Registry::get('config')->runtimeOptions;
+        $ipConfig = $conf->authentication->ipbased->IpAddresses->toArray();
+        if(empty($ipConfig)){
+            return false;
+        }
+        $remoteAdress = ZfExtended_Factory::get('ZfExtended_RemoteAddress');
+        /* @var $remoteAdress ZfExtended_RemoteAddress */
+        $ip = $remoteAdress->getIpAddress();
+        
+        return in_array($ip, $ipConfig);
+    }
+    
+    protected function logInIpBased() {
+        //TODO: move me in ipbaseduser ?
+        $conf = Zend_Registry::get('config')->runtimeOptions;
+        $ipConfig = $conf->authentication->ipbased->IpAddresses->toArray();
+        if(empty($ipConfig)){
+            return;
+        }
+        $remoteAdress = ZfExtended_Factory::get('ZfExtended_RemoteAddress');
+        /* @var $remoteAdress ZfExtended_RemoteAddress */
+        $ip = $remoteAdress->getIpAddress();
+        if(!in_array($ip, $ipConfig)){
+            return;
+        }
+        
+        $user=ZfExtended_Factory::get('ZfExtended_Models_IpBaseUser');
+        /* @var $user ZfExtended_Models_IpBaseUser */
+        $user->handleIpBasedUser($ip);
+        
+        $this->_userModel->setUserSessionNamespaceWithoutPwCheck($user->getLogin());
+        $newSessionId = $this->getFrontController()->getPlugin('ZfExtended_Controllers_Plugins_SessionRegenerate')->updateSession(true);
+        
+        $user->setLogin($user->getLogin().$newSessionId);
+        $user->save();
+        
+        $this->view->loginStatus=ZfExtended_Models_SessionUserInterface::LOGIN_STATUS_AUTHENTICATED;
+        $this->initDataAndRedirect();
     }
     
 }

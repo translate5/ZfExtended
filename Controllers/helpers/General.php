@@ -145,6 +145,14 @@ class ZfExtended_Controller_Helper_General extends Zend_Controller_Action_Helper
      */
     public function logoutUser() {
         $session = new Zend_Session_Namespace();
+        $userSession = new Zend_Session_Namespace('user');
+        if(isset($userSession->data->userGuid)){
+            $user = ZfExtended_Factory::get('ZfExtended_Models_IpBaseUser');
+            /* @var $user ZfExtended_Models_IpBaseUser */
+            if($user->isIpBasedUser($userSession->data->userGuid)){
+                $user->delete();
+            }
+        }
         $internalSessionUniqId = $session->internalSessionUniqId;
         $sessionId = Zend_Session::getId();
         $SessionMapInternalUniqIdTable = ZfExtended_Factory::get('ZfExtended_Models_Db_SessionMapInternalUniqId');
