@@ -312,16 +312,22 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract {
     /***
      * Return fuzzy languages for the given language id.
      * Languages with '-' in the rfc field are not searched for fuzzy.
-     *
-     * ex:
+     * if $includeMajor is set to true, the mayor language will be included in the return result
+     * when the input language is non mayor language
+     * 
+     * ex: $includeMajor=false
      *    de -> de-DE,de-AT,de-CH,de-LI,de-LU
+     *    
+     * ex: $includeMajor=true
+     *     de -> de,de-DE,de-AT,de-CH,de-LI,de-LU
      *
      * @param int $id
-     * @param string $field: the field name wich will be returned(see languages model for available fields)
+     * @param string $field
+     * @param boolean $includeMajor : include mayor language when fuzzy matching
      * @return array
      */
-    public function getFuzzyLanguages($id,$field='id'){
-        $cacheId = __FUNCTION__.'_'.$id.'_'.$field;
+    public function getFuzzyLanguages($id,$field='id',$includeMajor = false){
+        $cacheId = __FUNCTION__.'_'.$id.'_'.$field.'_'.var_export($includeMajor,true).'_includeMajor';
         $result = $this->memCache->load($cacheId);
         if($result !== false) {
             return $result;
@@ -331,6 +337,12 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract {
         //check if language fuzzy matching is needed
         if(strpos($rfc, '-') !== false){
             $result = [$id];
+            if($includeMajor){
+                $mayor = $this->findMajorLanguage($rfc);
+                if(!empty($mayor)){
+                    $result[] = $mayor['id'];
+                }
+            }
         }
         else {
             $result = array_column($this->findLanguageGroup($rfc), $field);
@@ -377,5 +389,32 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract {
             }
         }
         return $rfcToIsoLanguage;
+    }
+    
+    /***
+     * Load all languages where the return array will be with $fieldName(lek_languages field) value as key.
+     * All keys are lowercase
+     * @param string $key
+     */
+    public function loadAllKeyCustom(string $fieldName){
+        $languages = $this->loadAll();
+        $result=[];
+        foreach ($languages as $language){
+            $result[strtolower($language[$fieldName])] = $language;
+        }
+        return $result;
+    }
+    
+    /***
+     * Find mayor language by given sub langauge.
+     * Ex: "de-CH" will find "de"
+     * @param string $rfcSub
+     * @return array
+     */
+    public function findMajorLanguage(string $rfcSub) {
+        $rfcSub = explode('-', $rfcSub);
+        $rfcSub = $rfcSub[0];
+        $mayor = $this->loadByRfc([$rfcSub]);
+        return empty($mayor) ? [] : reset($mayor);
     }
 }

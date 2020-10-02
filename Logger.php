@@ -198,8 +198,10 @@ class ZfExtended_Logger {
      * Log the given exception
      * @param Exception $exception
      * @param array $eventOverride array to override the event generated from the exception
+     * @param boolean $returnEvent if true given: return the created event instead processing it
+     * @return ZfExtended_Logger_Event|null
      */
-    public function exception(\Throwable $exception, array $eventOverride = [], $returnEvent = false) {
+    public function exception(\Throwable $exception, array $eventOverride = [], $returnEvent = false): ?ZfExtended_Logger_Event {
         $event = new ZfExtended_Logger_Event();
         $event->created = NOW_ISO;
         
@@ -232,6 +234,7 @@ class ZfExtended_Logger {
             return $event;
         }
         $this->processEvent($event);
+        return null;
     }
     
     /**
