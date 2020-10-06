@@ -71,6 +71,7 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
      * @return bool
      */
     public function indexAction() {
+        
         $this->_form->setTranslator($this->_translate);
         $this->view->form = $this->_form;
         //if the user click on the openid redirect link in the login form

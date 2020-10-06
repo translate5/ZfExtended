@@ -61,6 +61,7 @@ class ZfExtended_Controllers_Plugins_SessionRegenerate extends Zend_Controller_P
     /**
      * Updates the sessionMapInternalUniqId table modified stamp and regenerates the session id if needed 
      * @param bool $regenerate if true, the session id is regenerated!
+     * @return string : return the generated sessionid
      */
     public function updateSession($regenerate = false) {
         $db = ZfExtended_Factory::get('ZfExtended_Models_Db_SessionMapInternalUniqId');
@@ -76,7 +77,6 @@ class ZfExtended_Controllers_Plugins_SessionRegenerate extends Zend_Controller_P
             'session_id' => $newSessionId,
             'modified' => time(),
         ], ['session_id = ?' => $oldSessionId]);
+        return $newSessionId;
     }
-    
-        
 }
