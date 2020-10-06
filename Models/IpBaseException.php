@@ -31,5 +31,6 @@ class ZfExtended_Models_IpBaseException extends ZfExtended_ErrorCodeException {
     
     protected static $localErrorCodes = [
         'E1289' => "Ip based authentication: Customer with number ({number}) does't exist.",
+        'E1290' => "Ip based authentication: User with roles:({configuredRoles}) is not allowed to authenticate ip based."
     ];
 }
