@@ -66,7 +66,7 @@ class ZfExtended_Models_IpBaseUser extends ZfExtended_Models_User {
      * @return array
      */
     public function findAllExpired(){
-        $sql = " SELECT u.* FROM translate5.Zf_users u ".
+        $sql = " SELECT u.* FROM Zf_users u ".
                 " LEFT JOIN sessionMapInternalUniqId s ON u.login = CONCAT('".self::IP_BASED_USER_LOGIN_PREFIX."',s.internalSessionUniqId) ".
                 " WHERE login like '".self::IP_BASED_USER_LOGIN_PREFIX."%' ".
                 " AND s.internalSessionUniqId is null";
