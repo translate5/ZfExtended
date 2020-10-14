@@ -361,7 +361,7 @@ class ZfExtended_Models_Installer_DbUpdater {
             //escaping % in the password since the string is used as printf string
             $cmd[] = '-p'.escapeshellarg(str_replace('%', '%%', $credentials->password));
         }
-        $cmd[] = '--default-character-set=utf8';
+        $cmd[] = '--default-character-set=utf8mb4';
         $cmd[] = escapeshellarg($credentials->dbname);
         if($addFileParam) {
             $cmd[] = '< %s';
