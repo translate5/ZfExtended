@@ -75,6 +75,7 @@ class ErrorController extends ZfExtended_Controllers_Action
         //$caughtError->exception → the exception
         //$caughtError->type as defined in Zend_Controller_Plugin_ErrorHandler
         $this->exception = $caughtError->exception;
+        $this->view->errorCode = null; // instead of E9999 we just send nothing to the GUI if there is no errorCode
         
         switch($caughtError->type) {
             case Zend_Controller_Plugin_ErrorHandler::EXCEPTION_NO_ACTION:
@@ -85,6 +86,7 @@ class ErrorController extends ZfExtended_Controllers_Action
                 $e = $this->exception;
                 if($e instanceof ZfExtended_ErrorCodeException){
                     $httpCode = $e->getHttpReturnCode();
+                    $this->view->errorCode = $e->getErrorCode();
                 }
                 else {
                     $httpCode = $e->getCode() ?? 500;
