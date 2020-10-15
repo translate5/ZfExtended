@@ -9,8 +9,8 @@ START LICENSE AND COPYRIGHT
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
 
  This file may be used under the terms of the GNU LESSER GENERAL PUBLIC LICENSE version 3
- as published by the Free Software Foundation and appearing in the file lgpl3-license.txt 
- included in the packaging of this file.  Please review the following information 
+ as published by the Free Software Foundation and appearing in the file lgpl3-license.txt
+ included in the packaging of this file.  Please review the following information
  to ensure the GNU LESSER GENERAL PUBLIC LICENSE version 3.0 requirements will be met:
 https://www.gnu.org/licenses/lgpl-3.0.txt
 
@@ -42,7 +42,7 @@ END LICENSE AND COPYRIGHT
  * @method void setCustomers() setCustomers(string $customers)
  * @method void setOpenIdIssuer() setOpenIdIssuer(string $openIdIssuer)
  * @method void setOpenIdSubject() setOpenIdSubject(string $openIdsubject)
- * 
+ *
  * @method void setLogin() setLogin(string $login)
  * @method integer getId() getId()
  * @method string getUserGuid() getUserGuid()
@@ -53,8 +53,8 @@ END LICENSE AND COPYRIGHT
  * @method string getGender() getGender()
  * @method string getLogin() getLogin()
  * @method void getSourceLanguage() getSourceLanguage()
- * @method void getTargetLanguage() getTargetLanguage() 
- * @method void getParentIds() getParentIds() 
+ * @method void getTargetLanguage() getTargetLanguage()
+ * @method void getParentIds() getParentIds()
  * @method void getCustomers() getCustomers()
  * @method void getOpenIdIssuer() getOpenIdIssuer()
  * @method void getOpenIdSubject() getOpenIdSubject()
@@ -303,21 +303,29 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implement
     }
     
     /**
-     * 
+     *
      * @return Zend_Db_Table_Select
      */
     private function _loadAll() {
         $db = $this->db;
-        $cols = array_flip($db->info($db::COLS));
-        unset($cols['passwd']);
-        unset($cols['openIdSubject']);
-        unset($cols['openIdIssuer']);
-        $s = $db->select()->from($db->info($db::NAME), array_flip($cols));
+        $s = $db->select()->from($db->info($db::NAME), $this->getPublicColumns());
         $s->where('login != ?', self::SYSTEM_LOGIN); //filter out the system user
         if($this->filter && !$this->filter->hasSort()){
             $this->filter->addSort('login');
         }
         return $s;
+    }
+    
+    /**
+     * returns a list of user columns containing non sensitive data
+     * @return array
+     */
+    public function getPublicColumns(): array {
+        $cols = array_flip($this->db->info($this->db::COLS));
+        unset($cols['passwd']);
+        unset($cols['openIdSubject']);
+        unset($cols['openIdIssuer']);
+        return array_flip($cols);
     }
     
     /**
@@ -360,7 +368,7 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implement
     /**
      * @todo This method is a working draft and is not tested yet!
      * Return true if the given user is a child of the currently loaded one
-     * 
+     *
      * @param ZfExtended_Models_User $user
      * @return boolean
      */
@@ -371,7 +379,7 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implement
     /**
      * @todo This method is a working draft and is not tested yet!
      * Return true if the given user is a parent of the currently loaded one
-     * 
+     *
      * @param ZfExtended_Models_User $user
      * @return boolean
      */
@@ -399,10 +407,10 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implement
     
     /**
      * Check if currently logged in user is allowed to access the given ressource and right
-     * 
+     *
      * @param string $resource
      * @param string $right
-     * 
+     *
      * @return boolean
      */
     public function isAllowed($resource,$right) {
@@ -483,7 +491,7 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implement
     
     /**
      * Load user by user login
-     * 
+     *
      * @param string $login
      * @throws ZfExtended_Models_Entity_NotFoundException
      * @return Zend_Db_Table_Row_Abstract
