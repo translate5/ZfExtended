@@ -28,7 +28,7 @@ class ZfExtended_Logger_Writer_DirectMail extends ZfExtended_Logger_Writer_Abstr
     /**
      * @var Zend_Config
      */
-    protected $config; 
+    protected $config;
     
     /**
      * {@inheritDoc}
@@ -60,6 +60,8 @@ class ZfExtended_Logger_Writer_DirectMail extends ZfExtended_Logger_Writer_Abstr
         
         $mail->setSubject($subject);
         $mailEvent= clone $event;
+        //fill extraflat
+        $mailEvent->getExtraFlattenendAndSanitized();
         //remove the extra only from the mail. Other writers are using the same event extra.
         $mailEvent->extra = null;
         $mail->setBodyText($mailEvent);
