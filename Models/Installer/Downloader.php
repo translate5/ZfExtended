@@ -127,6 +127,7 @@ class ZfExtended_Models_Installer_Downloader {
         }
         $this->dependencies->updateInstalled();
         $this->dependencies->removeUnused();
+        $this->postInstallCopyFiles();
     }
     
     /**
@@ -386,6 +387,51 @@ $this->log('End extraction of dependency '.$dependency->name.'!');
             return false;
         }
         return true;
+    }
+    
+    protected function postInstallCopyFiles() {
+        $depConfig = $this->dependencies->getNeeded();
+        if(empty($depConfig->post_install_copy) || !is_object($depConfig->post_install_copy)) {
+            return;
+        }
+        foreach($depConfig->post_install_copy as $source => $target) {
+            $this->log('Copy "'.$source.'" to "'.$target.'"');
+            $source = $this->applicationRoot.'/'.$source;
+            $target = $this->applicationRoot.'/'.$target;
+            
+            if(is_dir($target)) {
+                self::removeRecursive($target);
+            }
+            if(is_file($target)) {
+                unlink($target);
+            }
+            if(is_dir($source)) {
+                self::copyRecursive($source, $target);
+            }
+            if(is_file($source)) {
+                copy($source, $target);
+            }
+        }
+    }
+    
+    public static function copyRecursive(string $src, string $dst) {
+        $dir = opendir($src);
+        if(!file_exists($dst)) {
+            @mkdir($dst);
+        }
+        $SEP = DIRECTORY_SEPARATOR;
+        while(false !== ( $file = readdir($dir)) ) {
+            if ($file == '.' || $file == '..') {
+                continue;
+            }
+            if (is_dir($src.$SEP.$file)) {
+                self::copyRecursive($src.$SEP.$file, $dst.$SEP.$file);
+            }
+            else {
+                copy($src.$SEP.$file, $dst.$SEP.$file);
+            }
+        }
+        closedir($dir);
     }
     
     public static function removeRecursive($toRemove) {
