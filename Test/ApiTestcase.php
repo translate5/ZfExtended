@@ -130,4 +130,13 @@ abstract class ZfExtended_Test_ApiTestcase extends \ZfExtended_Test_Testcase {
         $segmentToTest = self::$api->removeUntestableSegmentContent($segment);
         self::assertEquals(self::$api->getFileContent($fileToCompare), $segmentToTest, $msg);
     }
+    
+    /***
+     * Check if the current test request is from master tests.
+     * It is used for skipping tests.
+     * @return boolean
+     */
+    public static function isMasterTest(){
+        return !!getenv('MASTER_TEST');
+    }
 }
