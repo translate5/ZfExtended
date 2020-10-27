@@ -238,9 +238,7 @@ class ZfExtended_Models_Installer_DbUpdater {
             if(!$this->handleFile($file)) {
                 continue;
             }
-            $data = array();
-            $version = 'UPDATED';
-            //FIXME set correct $version after TRANSLATE-131
+            $version = ZfExtended_Utils::getAppVersion();
             $dbversion->insert($this->getInsertData($file, $version));
             unset($this->sqlFilesNew[$key]);
         }
