@@ -59,6 +59,11 @@ class ZfExtended_Models_Installer_DbUpdater {
     protected $doNotSavePhpForDebugging = true;
     
     /**
+     * @var ZfExtended_Logger
+     */
+    protected $log;
+    
+    /**
      * DB credentials, exec and base path must be given as parameter in usage of a non Zend Environment
      * @param stdClass $db optional
      * @param string $exec optional
@@ -75,6 +80,8 @@ class ZfExtended_Models_Installer_DbUpdater {
         if(!empty($db)) {
             $this->checkCredentials($db, $exec, $path);
         }
+        
+        $this->log = Zend_Registry::get('logger')->cloneMe('core.database.update');
     }
     
     /**
@@ -93,12 +100,12 @@ class ZfExtended_Models_Installer_DbUpdater {
             }
             $path = $file['absolutePath'];
             if(!file_exists($path) || !is_readable($path)) {
-                $this->log('The following file does not exist or is not readable and is therefore ignored: '.$path);
+                $this->log->error('E1293', 'The following file does not exist or is not readable and is therefore ignored: {path}',[
+                    'path' => $path
+                ]);
                 continue;
             }
-            $version = 'INITIAL'; //FIXME with TRANSLATE-131
-            //$dbversion->delete(true);
-            $dbversion->insert($this->getInsertData($file, $version));
+            $dbversion->insert($this->getInsertData($file, ZfExtended_Utils::getAppVersion()));
         }
     }
     
@@ -196,7 +203,6 @@ class ZfExtended_Models_Installer_DbUpdater {
     public function updateModified(array $toProcess) {
         $dbversion = ZfExtended_Factory::get('ZfExtended_Models_Db_DbVersion');
         /* @var $dbversion ZfExtended_Models_Db_DbVersion */
-        //FIXME update appVersion also after TRANSLATE-131
         
         foreach($this->sqlFilesChanged as $key => $file) {
             $entryHash = $this->getEntryHash($file['origin'], $file['relativeToOrigin']);
@@ -238,8 +244,7 @@ class ZfExtended_Models_Installer_DbUpdater {
             if(!$this->handleFile($file)) {
                 continue;
             }
-            $version = ZfExtended_Utils::getAppVersion();
-            $dbversion->insert($this->getInsertData($file, $version));
+            $dbversion->insert($this->getInsertData($file, ZfExtended_Utils::getAppVersion()));
             unset($this->sqlFilesNew[$key]);
         }
         //we clean up all cache files after database update since DB definitions are cached
@@ -303,7 +308,10 @@ class ZfExtended_Models_Installer_DbUpdater {
             ob_start();
             require $file['absolutePath'];
             $result = ob_get_flush();
-            error_log('Result of imported DbUpdater PHP File '.$file['relativeToOrigin'].': '.print_r($result,1));
+            $this->log->info('E1295', 'Result of imported DbUpdater PHP File {path}: {result}', [
+                'path' => $file['relativeToOrigin'],
+                'result' => print_r($result,1)
+            ]);
             //per default true, see attribute docu for more info
             return $this->doNotSavePhpForDebugging;
         }
@@ -320,9 +328,7 @@ class ZfExtended_Models_Installer_DbUpdater {
         if(empty($this->errors)){
             return;
         }
-        foreach($this->errors as $error) {
-            $this->log($error);
-        }
+        $this->log->error('E1294','Errors on calling database update - see details for more information.', $this->errors);
     }
     
     /**
@@ -388,11 +394,6 @@ class ZfExtended_Models_Installer_DbUpdater {
      */
     public function getErrors() {
         return $this->errors;
-    }
-    
-    protected function log($msg) {
-        //@todo send this to a installer wide logging
-        error_log($msg);
     }
     
     /**
