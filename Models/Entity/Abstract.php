@@ -432,6 +432,14 @@ abstract class ZfExtended_Models_Entity_Abstract {
         }
         return $result;
     }
+    
+    /***
+     * Convert the current row to array object
+     * @return array
+     */
+    public function toArray() {
+        return $this->row->toArray();
+    }
 
     /**
      * limits the result set of the loadAll Request

@@ -78,12 +78,16 @@ class ZfExtended_Resource_DbConfig extends Zend_Application_Resource_ResourceAbs
         Zend_Registry::Set('config', new Zend_Config($options));
     }
     
+    public function initDbOptionsTree(array $dbConfigs) {
+        foreach ($dbConfigs as $cnf){
+            $this->addOneEntry($cnf);
+        }
+    }
     /**
      * adds a given db config entry to the internal config tree
      * @param array $entry
      */
     protected function addOneEntry(array $entry){
-        $recursiveSetter = null;
         $path = explode('.', $entry['name']);
         $this->currentPath = $entry['name'];
         $this->recursiveSetter($this->dbOptionTree, $path, $entry);
@@ -91,7 +95,10 @@ class ZfExtended_Resource_DbConfig extends Zend_Application_Resource_ResourceAbs
     
     protected function recursiveSetter(array &$dbOptionTree, array $path, $entry) {
         $value = $entry['value'];
-        $type = $entry['type'];
+        $type = $entry['type'] ?? false;
+        if(!$type){
+            $type = (substr($value,0,1)==='[' || substr($value,0,1)==='{' ) ? self::TYPE_LIST : "";
+        }
         $key = array_shift($path);
         if(empty($path)) {
             $dbOptionTree[$key] = $this->convertConfigValue($type, $value);
@@ -168,5 +175,9 @@ class ZfExtended_Resource_DbConfig extends Zend_Application_Resource_ResourceAbs
         }
         //all others are relative, so we have to append the APPLICATION_PATH
         return APPLICATION_PATH.DIRECTORY_SEPARATOR.$path;
+    }
+    
+    public function getDbOptionTree(){
+        return $this->dbOptionTree;
     }
 }
