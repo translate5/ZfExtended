@@ -70,7 +70,6 @@ class ZfExtended_Resource_DbConfig extends Zend_Application_Resource_ResourceAbs
         }
         
         //update existing stored options
-        $options = $this->dbOptionTree;
         $options = $app->mergeOptions($this->dbOptionTree, $app->getOptions());
         $bootstrap->setOptions($options);
         
@@ -83,6 +82,7 @@ class ZfExtended_Resource_DbConfig extends Zend_Application_Resource_ResourceAbs
             $this->addOneEntry($cnf);
         }
     }
+    
     /**
      * adds a given db config entry to the internal config tree
      * @param array $entry
@@ -96,9 +96,6 @@ class ZfExtended_Resource_DbConfig extends Zend_Application_Resource_ResourceAbs
     protected function recursiveSetter(array &$dbOptionTree, array $path, $entry) {
         $value = $entry['value'];
         $type = $entry['type'] ?? false;
-        if(!$type){
-            $type = (substr($value,0,1)==='[' || substr($value,0,1)==='{' ) ? self::TYPE_LIST : "";
-        }
         $key = array_shift($path);
         if(empty($path)) {
             $dbOptionTree[$key] = $this->convertConfigValue($type, $value);
