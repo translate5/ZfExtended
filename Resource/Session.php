@@ -71,7 +71,10 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
             $resconf['cookie_secure'] = 1;
         }
         
-        Zend_Session::setOptions($resconf);
+        //we may set the options only, if unitTests are disabled (used to mask CLI usage)
+        if(!Zend_Session::$_unitTestEnabled) {
+            Zend_Session::setOptions($resconf);
+        }
         //im if: wichtiger workaround für swfuploader, welcher in awesomeuploader
         //verwendet wird. flash überträgt keine session-cookies außerhalb IE korrekt,
         //daher wird hier die session im post übergeben

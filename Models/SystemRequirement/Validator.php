@@ -72,6 +72,7 @@ class ZfExtended_Models_SystemRequirement_Validator {
      * @throws Exception
      */
     public function validate(string $module = null) {
+        $isInstallation = $this->installationBootstrapOnly;
         if(empty($module)) {
             $toRun = array_keys($this->modules);
         }
@@ -80,10 +81,12 @@ class ZfExtended_Models_SystemRequirement_Validator {
                 throw new Exception('SystemRequirement Module '.$module.' not found. Available modules: '.print_r($this->modules,1));
             }
             $toRun = [$module];
+            //if a module is given, this is forced, also in installation
+            $isInstallation = false;
         }
         foreach($toRun as $module) {
             $moduleInstance = new $this->modules[$module];
-            if($this->installationBootstrapOnly && !$moduleInstance->isInstallationBootstrap()) {
+            if($isInstallation && !$moduleInstance->isInstallationBootstrap()) {
                 continue;
             }
             $this->results[$module] = $moduleInstance->validate();

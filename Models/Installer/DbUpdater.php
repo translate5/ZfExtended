@@ -70,18 +70,17 @@ class ZfExtended_Models_Installer_DbUpdater {
      * @param string $path optional
      */
     public function __construct(stdClass $db = null, $exec = null, $path = null) {
-        if(class_exists('Zend_Registry', false)) {
+        if(class_exists('Zend_Registry', false) && defined('APPLICATION_PATH')) {
             $config = Zend_Registry::get('config');
             /* @var $config Zend_Config */
             $db = (object) $config->resources->db->params->toArray();
             $exec = $this->getDbExec();
             $path = APPLICATION_PATH.'/..';
+            $this->log = Zend_Registry::get('logger')->cloneMe('core.database.update');
         }
         if(!empty($db)) {
             $this->checkCredentials($db, $exec, $path);
         }
-        
-        $this->log = Zend_Registry::get('logger')->cloneMe('core.database.update');
     }
     
     /**
@@ -384,6 +383,8 @@ class ZfExtended_Models_Installer_DbUpdater {
      * @return boolean
      */
     public function executeSqlFile($mysqlExecutable, $credentials, $file, &$output) {
+        //WARNING: runs in installer once before application context,
+        // so no advanced functionality (logging for example) can be used here!
         $call = sprintf($this->makeSqlCmd($mysqlExecutable, $credentials), escapeshellarg($file));
         exec($call, $output, $result);
         return $result === 0;
