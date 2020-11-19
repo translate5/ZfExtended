@@ -69,8 +69,12 @@ class ZfExtended_Models_Config extends ZfExtended_Models_Entity_Abstract {
      * @param string $name the configuration name
      * @param string $value the value to be set
      */
-    public function update($name, $value) {
-        $this->db->update(['value' => $value], ['name = ?' => $name]);
+    public function update(string $name,string $value,string $comment = null) {
+        $update = ['value' => $value];
+        if(is_null($comment)){
+            $update['comment']=$comment;
+        }
+        $this->db->update($update, ['name = ?' => $name]);
         $this->loadByName($name);
         return $this;
     }
