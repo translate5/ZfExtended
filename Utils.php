@@ -211,7 +211,7 @@ class ZfExtended_Utils {
      */
     public static function getAppVersion(string $versionContent = null): string {
         $versionFile = APPLICATION_PATH.'/../version';
-        $regex = '/MAJOR_VER=([0-9]+)\s*MINOR_VER=([0-9]+).*\s*BUILD=([0-9]+).*/';
+        $regex = '/MAJOR_VER=([0-9]+)\s*MINOR_VER=([0-9]+).*\s*BUILD=([0-9]+[a-z]?).*/';
         $matches = null;
         if(empty($versionContent) && file_exists($versionFile)) {
             $versionContent = file_get_contents($versionFile);

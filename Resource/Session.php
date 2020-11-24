@@ -9,8 +9,8 @@ START LICENSE AND COPYRIGHT
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
 
  This file may be used under the terms of the GNU LESSER GENERAL PUBLIC LICENSE version 3
- as published by the Free Software Foundation and appearing in the file lgpl3-license.txt 
- included in the packaging of this file.  Please review the following information 
+ as published by the Free Software Foundation and appearing in the file lgpl3-license.txt
+ included in the packaging of this file.  Please review the following information
  to ensure the GNU LESSER GENERAL PUBLIC LICENSE version 3.0 requirements will be met:
 https://www.gnu.org/licenses/lgpl-3.0.txt
 
@@ -29,7 +29,7 @@ END LICENSE AND COPYRIGHT
  *   Session-Namespace fest. Sie wird nur intern in der Programmierung und für
  *   Flag-Files verwendet und darf aus Sicherheitsgründen nicht nicht in Cookies
  *   gesetzt werden. Sie ist persistent über die gesamte Session
- *   It is also used as sessionToken for setting the session from external (API auth), 
+ *   It is also used as sessionToken for setting the session from external (API auth),
  *      to keep security internalSessionUniqId is new generated after setting a session by the token
  * - hinterlegt in der Tabelle sessionMapInternalUniqId ein Mapping zwischen der
  *   session_id (die durch ZfExtended_Controllers_Plugins_SessionRegenerate bei
@@ -55,7 +55,7 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
         'dataColumn'        => 'session_data', //serialized data
         'lifetimeColumn'    => 'lifetime',     //end of life for a specific record
     );
-
+    
     public function init()
     {
         $bootstrap = $this->getBootstrap();
@@ -65,10 +65,18 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
         $bootstrap->bootstrap('ZfExtended_Resource_GarbageCollector');
         $config = new Zend_config($bootstrap->getOptions());
         $resconf = $config->resources->ZfExtended_Resource_Session->toArray();
-        unset($resconf['garbageCollectorLifetime']); //Zend_Session does not know this value! 
-        Zend_Session::setOptions($resconf);
-        //im if: wichtiger workaround für swfuploader, welcher in awesomeuploader 
-        //verwendet wird. flash überträgt keine session-cookies außerhalb IE korrekt, 
+        unset($resconf['garbageCollectorLifetime']); //Zend_Session does not know this value!
+        
+        if($this->isHttpsRequest()) {
+            $resconf['cookie_secure'] = 1;
+        }
+        
+        //we may set the options only, if unitTests are disabled (used to mask CLI usage)
+        if(!Zend_Session::$_unitTestEnabled) {
+            Zend_Session::setOptions($resconf);
+        }
+        //im if: wichtiger workaround für swfuploader, welcher in awesomeuploader
+        //verwendet wird. flash überträgt keine session-cookies außerhalb IE korrekt,
         //daher wird hier die session im post übergeben
         if (isset($_POST[$resconf['name']])) {
             Zend_Session::setId($_POST[$resconf['name']]);
@@ -85,11 +93,11 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
     
     private function reload() {
         Zend_Session::writeClose();
-        if(empty($_SERVER['HTTPS']) || empty($_SERVER['HTTPS']) == 'off'){
-            $url = 'http://';
+        if($this->isHttpsRequest()){
+            $url = 'https://';
         }
         else {
-            $url = 'https://';
+            $url = 'http://';
         }
         $url .= $_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
         $url = explode('?', $url);
@@ -100,6 +108,24 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
         }
         header('Location: '.$url);
         exit;
+    }
+    
+    
+    /**
+     * returns true if the request was made with SSL.
+     *  Our internal config server.protocol can not be used here,
+     *  since the config resource is loaded after the session resource
+     * @return bool
+     */
+    protected function isHttpsRequest(): bool {
+        //from https://stackoverflow.com/a/41591066/1749200
+        return (( ! empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+            || ( ! empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https')
+            || ( ! empty($_SERVER['HTTP_X_FORWARDED_SSL']) && $_SERVER['HTTP_X_FORWARDED_SSL'] == 'on')
+            || (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443)
+            || (isset($_SERVER['HTTP_X_FORWARDED_PORT']) && $_SERVER['HTTP_X_FORWARDED_PORT'] == 443)
+            || (isset($_SERVER['REQUEST_SCHEME']) && $_SERVER['REQUEST_SCHEME'] == 'https')
+            );
     }
     
     /**
@@ -124,7 +150,7 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
         $user = new Zend_Session_Namespace('user');
         $this->authTokenLog('Spawning session for sessionToken '.$_REQUEST['sessionToken'].' user: '.print_r($user->data,1));
         //since we changed the sessionId, we have to reset the internalSessionUniqId too
-        unset($session->internalSessionUniqId); 
+        unset($session->internalSessionUniqId);
         $this->setInternalSessionUniqId();
         //reload redirect to remove authToken from parameter
         //or doing this in access plugin because there are several helpers?

@@ -9,8 +9,8 @@ START LICENSE AND COPYRIGHT
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
 
  This file may be used under the terms of the GNU LESSER GENERAL PUBLIC LICENSE version 3
- as published by the Free Software Foundation and appearing in the file lgpl3-license.txt 
- included in the packaging of this file.  Please review the following information 
+ as published by the Free Software Foundation and appearing in the file lgpl3-license.txt
+ included in the packaging of this file.  Please review the following information
  to ensure the GNU LESSER GENERAL PUBLIC LICENSE version 3.0 requirements will be met:
 https://www.gnu.org/licenses/lgpl-3.0.txt
 
@@ -23,7 +23,7 @@ END LICENSE AND COPYRIGHT
 */
 
 /**
- * Logger filter instance 
+ * Logger filter instance
  */
 class ZfExtended_Logger_Filter {
     /**
@@ -39,7 +39,7 @@ class ZfExtended_Logger_Filter {
     protected $filterCache = [];
     
     /**
-     * a dedicated filter instance which keeps a separate filter for the debug/trace filter checks on bootstraping 
+     * a dedicated filter instance which keeps a separate filter for the debug/trace filter checks on bootstraping
      * @var ZfExtended_Logger_Filter
      */
     protected $filterForBasicCheck;
@@ -51,7 +51,7 @@ class ZfExtended_Logger_Filter {
      */
     public function __construct(array $filterRules) {
         if(empty($filterRules)) {
-           return;  
+           return;
         }
         $this->filterForBasicCheck = new self([]);
         foreach($filterRules as $rule) {
@@ -118,19 +118,19 @@ class ZfExtended_Logger_Filter {
     protected function add_level($operator, $configValue) {
         $configValue = $this->levelStringToInt($configValue);
         switch ($operator) {
-            case '<=': 
+            case '<=':
                 return function($givenValue) use ($configValue) {
                     return (int) $givenValue <= (int) $configValue;
                 };
-            case '>=': 
+            case '>=':
                 return function($givenValue) use ($configValue) {
                     return (int) $givenValue >= (int) $configValue;
                 };
-            case '!=': 
+            case '!=':
                 return function($givenValue) use ($configValue) {
                     return (int) $givenValue != (int) $configValue;
                 };
-            case '=': 
+            case '=':
                 return function($givenValue) use ($configValue) {
                     return (int) $givenValue == (int) $configValue;
                 };
@@ -175,7 +175,7 @@ class ZfExtended_Logger_Filter {
             return mb_strpos($configValue, $givenValue) !== false;
         };
         switch ($operator) {
-            case '=': 
+            case '=':
                 $this->lastAddedOrigins[] = $lastAddedOrigin;
                 return function($givenValue) use ($configValue) {
                     return (string) $givenValue == (string) $configValue;
@@ -185,17 +185,17 @@ class ZfExtended_Logger_Filter {
                 return function($givenValue) use ($configValue) {
                     return (string) $givenValue != (string) $configValue;
                 };
-            case '^=': 
+            case '^=':
                 $this->lastAddedOrigins[] = $lastAddedOrigin;
                 return function($givenValue) use ($configValue) {
                     return mb_strpos($givenValue, $configValue) === 0;
                 };
-            case '$=': 
+            case '$=':
                 $this->lastAddedOrigins[] = $lastAddedOrigin;
                 return function($givenValue) use ($configValue) {
                     return mb_strpos(strrev($givenValue), strrev($configValue)) === 0;
                 };
-            case '*=': 
+            case '*=':
                 $this->lastAddedOrigins[] = $lastAddedOrigin;
                 return function($givenValue) use ($configValue) {
                     return mb_strpos($givenValue, $configValue) !== false;
@@ -252,21 +252,21 @@ class ZfExtended_Logger_Filter {
         }
         foreach($this->rules as $rule) {
             //mostly there will be level filters, so we check them first
-            if(is_iterable($rule['level'])) {
+            if(isset($rule['level']) && is_iterable($rule['level'])) {
                 foreach($rule['level'] as $levelTest) {
                     if(!$levelTest($level)) {
                         continue 2; //since the tests are and connected we step over the whole role if one test fails
                     }
                 }
             }
-            if(is_iterable($rule['domain'])) {
+            if(isset($rule['domain']) && is_iterable($rule['domain'])) {
                 foreach($rule['domain'] as $originTest) {
                     if(!$originTest($domain)) {
                         continue 2; //since the tests are and connected we step over the whole role if one test fails
                     }
                 }
             }
-            if(!empty($exception) && is_iterable($rule['exception'])) {
+            if(!empty($exception) && isset($rule['exception']) && is_iterable($rule['exception'])) {
                 foreach($rule['exception'] as $excTest) {
                     if(!$excTest($exception)) {
                         continue 2; //since the tests are and connected we step over the whole role if one test fails

@@ -63,7 +63,7 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract {
      * @return Zend_Db_Table_Row_Abstract | null
      */
     public function loadByRfc5646($lang){
-        return $this->loader($lang, 'rfc5646');
+        return $this->loader($lang, self::LANG_TYPE_RFC5646);
     }
 
     /**
@@ -72,7 +72,7 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract {
      * @return Zend_Db_Table_Row_Abstract | null
      */
     public function loadByLcid($lcid){
-        return $this->loader($lcid, 'lcid');
+        return $this->loader($lcid, self::LANG_TYPE_LCID);
     }
 
     /**
@@ -81,7 +81,7 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract {
      * @return Zend_Db_Table_Row_Abstract | null
      */
     public function loadById($id){
-        return $this->loader($id, 'id');
+        return $this->loader($id, self::LANG_TYPE_ID);
     }
 
     /**
@@ -90,7 +90,7 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract {
      * @return Zend_Db_Table_Row_Abstract | null
      */
     public function loadByIds($ids){
-        return $this->loaderByIds($ids, 'id');
+        return $this->loaderByIds($ids, self::LANG_TYPE_ID);
     }
     
     /***
@@ -114,7 +114,14 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract {
      */
     protected function loader($lang, $field) {
         $s = $this->db->select();
-        $s->where('lower('.$field.') = ?',strtolower($lang));
+        $field = strtolower($field);
+        if($field == self::LANG_TYPE_ID || $field == self::LANG_TYPE_LCID) {
+            $s->where($field.' = ?', $lang);
+        }
+        else {
+            $s->where('lower('.$field.') = ?',strtolower($lang));
+        }
+        
         $this->row = $this->db->fetchRow($s);
         if(empty($this->row)){
             $this->notFound('#by'.ucfirst($field), $lang);
@@ -129,7 +136,7 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract {
      */
     protected function loaderByIds($langs, $field) {
         $s = $this->db->select();
-        $s->where(''.$field.' IN('.$langs.')');
+        $s->where($field.' IN('.$langs.')');
         $retval = $this->db->fetchAll($s)->toArray();
         if(empty($retval)){
             $this->notFound('#by'.ucfirst($field), $langs);
@@ -314,10 +321,10 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract {
      * Languages with '-' in the rfc field are not searched for fuzzy.
      * if $includeMajor is set to true, the mayor language will be included in the return result
      * when the input language is non mayor language
-     * 
+     *
      * ex: $includeMajor=false
      *    de -> de-DE,de-AT,de-CH,de-LI,de-LU
-     *    
+     *
      * ex: $includeMajor=true
      *     de -> de,de-DE,de-AT,de-CH,de-LI,de-LU
      *

@@ -70,6 +70,18 @@ class ZfExtended_Models_Config extends ZfExtended_Models_Entity_Abstract {
     }
     
     /**
+     * returns true if there are "defaults" values and the given value is one of them
+     */
+    public function isValidInDefaults($value) {
+        $defaults = $this->getDefaults();
+        if(empty($defaults)) {
+            return true;
+        }
+        $defaults = explode(',', $defaults);
+        return in_array(trim($value), $defaults);
+    }
+    
+    /**
      * loads the config entry to the given name
      * @param string $name
      */
