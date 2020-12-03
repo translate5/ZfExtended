@@ -26,17 +26,12 @@ abstract class ZfExtended_Worker_Abstract {
     use ZfExtended_Models_Db_DeadLockHandlerTrait;
     
     /**
-     * With blocking type slot, the maximum of parallel workers is defined by the available slots for this resource.
+     * With blocking type slot, the maximum of parallel workers is defined by the available resources
+     * Historically the naming is "slot" but it should better be named "resource"
      * @var string
      */
     const BLOCK_SLOT = 'slot';
-    
-    /**
-     * If a worker with blocking type "resource" is running, no other queued worker with same resource may be started at the same time.
-     * @var string
-     */
-    const BLOCK_RESOURCE = 'resource';
-    
+
     /**
      * If a worker with blocking global is running, no other queued worker may be started
      * No other queued worker means, regardless of maxParallelProcesses and regardless of resource.
@@ -66,7 +61,8 @@ abstract class ZfExtended_Worker_Abstract {
     protected $maxParallelProcesses = 1;
     
     /**
-     * Blocking-typ for this certain worker
+     * Blocking-typ for this worker
+     * Default is the Resource-based Blocking
      * @var string blocking-type BLOCK_XYZ
      */
     protected $blockingType = self::BLOCK_SLOT;
@@ -114,7 +110,7 @@ abstract class ZfExtended_Worker_Abstract {
     protected $log;
     
      /**
-     * resourcePool for the different TermTagger-Operations;
+     * resourcePool for the different Operations
      * Example from TermTagger: Possible Values: $this->allowdResourcePools = array('default', 'gui', 'import');
      * @var string
      */
@@ -514,7 +510,11 @@ abstract class ZfExtended_Worker_Abstract {
                 'worker' => $this,
                 'taskGuid' => $this->taskGuid,
             ]);
-            $result = $this->work();
+            if($this->canWork()){
+                $result = $this->work();
+            } else {
+                $result = false;
+            }
             $this->workerModel->setState(ZfExtended_Models_Worker::STATE_DONE);
             $this->workerModel->setEndtime(new Zend_Db_Expr('NOW()'));
             $this->finishedWorker = clone $this->workerModel;
@@ -533,6 +533,14 @@ abstract class ZfExtended_Worker_Abstract {
         }
         
         return $result;
+    }
+    
+    /**
+     * This Api Can be used to hook further logic if the work actually vcan be performed
+     * @return boolean
+     */
+    protected function canWork() {
+        return true;
     }
     
     /**
@@ -588,7 +596,7 @@ abstract class ZfExtended_Worker_Abstract {
     
     
     /**
-     * Get the result-values of prrocessing $this->work();
+     * Get the result-values of processing $this->work();
      * @return mixed
      */
     public function getResult() {
