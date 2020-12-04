@@ -420,7 +420,7 @@ abstract class ZfExtended_Worker_Abstract {
     /**
      * Direct run of a worker, if a worker should be runnable directly, define this function public in the in the concrete worker
      * and call this by parent::run();
-     * direct calls per run are not mutex-save!
+     * direct calls per run are not mutex-save! The run operation queues/starts no other workers and is purely sequential
      *
      * @throws Exception
      * @return boolean true if $this->work() runs without errors
@@ -439,8 +439,6 @@ abstract class ZfExtended_Worker_Abstract {
         if(!empty($this->workerException)) {
             throw $this->workerException;
         }
-        
-        $this->wakeUpAndStartNextWorkers();
         return $result;
     }
     
