@@ -168,7 +168,7 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
         // This creates an intermediate Table consisting of the fields id, count, worker and state
         // the idea is to have a list of all running and all scheduled workers that are ordered (running first) and count them up to check if we can start some more up to maxParalellProcesses
         // To properly count the worker-types it must be ordered by worker obviously and assigning the worker to the wworker variable must be done AFTER evaluating the count
-        // ALSO, the running workers must be the first workers to be counted for a worker type
+        // also, the running workers must be the first workers to be counted for a worker typewhat is achieved by the second ordering
         // the table summarizes all scheduled workers that either have no dependant workers or just have dependant workers in the states defined by bindings 2-5
         // FIXME: Why has the collation to be set for the User defined Variable @wworker ? Otherwise Zend throws Error "ERROR Zend_Db_Statement_Exception: E9999 - SQLSTATE[HY000]: General error: 1267 Illegal mix of collations (utf8mb4_general_ci,IMPLICIT) and (utf8mb4_unicode_ci,IMPLICIT) for operation '=', query was: ..."
         $stateOrder = (self::STATE_RUNNING < self::STATE_SCHEDULED) ? 'ASC' : 'DESC'; // just for robustness: evaluate the needed ordering to make running workers appear first
