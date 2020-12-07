@@ -151,6 +151,7 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
         $db = $this->db;
         $adapter = $db->getAdapter();
         
+        
 
         // set the next workers of the given task to waiting
         // if no other worker are running or waiting or scheduled, which
@@ -164,40 +165,46 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
         // SQL Explanation
         
         
-        // This creates an intermediate Table consisting of the fields id, count and worker
+        // This creates an intermediate Table consisting of the fields id, count, worker and state
+        // the idea is to have a list of all running and all scheduled workers that are ordered (running first) and count them up to check if we can start some more up to maxParalellProcesses
         // To properly count the worker-types it must be ordered by worker obviously and assigning the worker to the wworker variable must be done AFTER evaluating the count
-        // the table summarizes all scheduled workers that either have no dependant workers or just have dependant workers in the states defined by bindings 1-4 
+        // ALSO, the running workers must be the first workers to be counted for a worker type
+        // the table summarizes all scheduled workers that either have no dependant workers or just have dependant workers in the states defined by bindings 2-5
         // FIXME: Why has the collation to be set for the User defined Variable @wworker ? Otherwise Zend throws Error "ERROR Zend_Db_Statement_Exception: E9999 - SQLSTATE[HY000]: General error: 1267 Illegal mix of collations (utf8mb4_general_ci,IMPLICIT) and (utf8mb4_unicode_ci,IMPLICIT) for operation '=', query was: ..."
+        $stateOrder = (self::STATE_RUNNING < self::STATE_SCHEDULED) ? 'ASC' : 'DESC'; // just for robustness: evaluate the needed ordering to make running workers appear first
         $intermediateTable = 
             "
-                    SELECT w.id AS id, @num := if(@wworker = w.worker, @num:= @num + 1, 1) AS count, @wworker := w.worker as worker, w.maxParallelProcesses AS max
+                    SELECT w.id AS id, @num := if(@wworker = w.worker, @num:= @num + 1, 1) AS count, @wworker := w.worker as worker, w.maxParallelProcesses AS max, w.state AS state
                     FROM Zf_worker w, (SELECT @wworker := _utf8mb4 '' COLLATE utf8mb4_unicode_ci, @num := 0) r
-                    WHERE w.taskGuid = ?
-                    AND w.state = ?
-                    AND (
-                        (NOT EXISTS (SELECT *
-                            FROM Zf_worker_dependencies d1
-                            WHERE w.worker = d1.worker)
-                            )
-                        OR
-                        NOT EXISTS (SELECT *
-                            FROM Zf_worker ws, Zf_worker ws2, Zf_worker_dependencies d2
-                            WHERE d2.dependency = ws.worker
-                            AND ws2.worker = d2.worker
-                            AND ws.taskGuid = ws2.taskGuid
-                            AND ws.state IN (?, ?, ?, ?)
-                            AND ws2.id = w.id)
+                    WHERE w.state = ? /* BINDING 0 */
+                    OR (
+                        w.state = ? /* BINDING 1 */
+                        AND (
+                            (NOT EXISTS (SELECT *
+                                FROM Zf_worker_dependencies d1
+                                WHERE w.worker = d1.worker)
+                                )
+                            OR
+                            NOT EXISTS (SELECT *
+                                FROM Zf_worker ws, Zf_worker ws2, Zf_worker_dependencies d2
+                                WHERE d2.dependency = ws.worker
+                                AND ws2.worker = d2.worker
+                                AND ws.taskGuid = ws2.taskGuid
+                                AND ws.state IN (?, ?, ?, ?) /* BINDING 2 - 5 */
+                                AND ws2.id = w.id)
+                        )
                     )
-                    ORDER BY w.worker ASC, w.id ASC
+                    ORDER BY w.worker ASC, w.state ".$stateOrder.", w.id ASC
                     ";
         
         // we now update the worker state for the evaluated workers hold in the intermediate table but only up to the number of maxParalellWorkers per worker
         $sql = 'UPDATE Zf_worker u, ( '.$intermediateTable.' ) s
-                SET u.STATE = ?
+                SET u.state = ? /* BINDING 6 */
                 WHERE u.id = s.id
+                AND s.state != ? /* BINDING 7 */
                 AND s.count <= s.max;';
         
-        $bindings = [$this->getTaskGuid(), self::STATE_SCHEDULED, self::STATE_WAITING, self::STATE_RUNNING, self::STATE_SCHEDULED, self::STATE_PREPARE, self::STATE_WAITING];
+        $bindings = [self::STATE_RUNNING, self::STATE_SCHEDULED, self::STATE_WAITING, self::STATE_RUNNING, self::STATE_SCHEDULED, self::STATE_PREPARE, self::STATE_WAITING, self::STATE_RUNNING];
         $this->db->getAdapter()->query('SET TRANSACTION ISOLATION LEVEL READ COMMITTED');
         
         //it may happen that a worker is not set to waiting if the deadlock was ignored, at least at the next worker queue call it is triggered again
