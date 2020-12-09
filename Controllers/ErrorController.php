@@ -136,7 +136,6 @@ class ErrorController extends ZfExtended_Controllers_Action
      */
     public function errorAction()
     {
-        $this->view->messages = [];
         $this->view->translate = $this->_translate;
         
         $missingController = $this->exception instanceof Zend_Controller_Dispatcher_Exception && strpos($this->exception->getMessage(), 'Invalid controller specified') !== false;

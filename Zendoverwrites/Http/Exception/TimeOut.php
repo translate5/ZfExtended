@@ -23,21 +23,6 @@ END LICENSE AND COPYRIGHT
 */
 
 /**
- * Bad Gateway means: Our System is OK, but the requested third party systems gives an error.
  */
-class ZfExtended_BadGateway extends ZfExtended_ErrorCodeException {
-    /**
-     * @var integer
-     */
-    protected $httpReturnCode = 502;
-    
-    /**
-     * By default we log that as INFO, if created as response then the level is set to DEBUG
-     * @var integer
-     */
-    protected $level = ZfExtended_Logger::LEVEL_ERROR;
-    
-    protected static $localErrorCodes = [
-        'E1310' => '502 Bad Gateway',
-    ];
+class ZfExtended_Zendoverwrites_Http_Exception_TimeOut extends ZfExtended_Zendoverwrites_Http_Exception {
 }
