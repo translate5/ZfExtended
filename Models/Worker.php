@@ -201,10 +201,10 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
         $sql = 'UPDATE Zf_worker u, ( '.$intermediateTable.' ) s
                 SET u.state = ? /* BINDING 6 */
                 WHERE u.id = s.id
-                AND s.state != ? /* BINDING 7 */
+                AND s.state = ? /* BINDING 7 */
                 AND s.count <= s.max;';
         
-        $bindings = [self::STATE_RUNNING, self::STATE_SCHEDULED, self::STATE_WAITING, self::STATE_RUNNING, self::STATE_SCHEDULED, self::STATE_PREPARE, self::STATE_WAITING, self::STATE_RUNNING];
+        $bindings = [self::STATE_RUNNING, self::STATE_SCHEDULED, self::STATE_WAITING, self::STATE_RUNNING, self::STATE_SCHEDULED, self::STATE_PREPARE, self::STATE_WAITING, self::STATE_SCHEDULED];
         $this->db->getAdapter()->query('SET TRANSACTION ISOLATION LEVEL READ COMMITTED');
         
         //it may happen that a worker is not set to waiting if the deadlock was ignored, at least at the next worker queue call it is triggered again
