@@ -335,7 +335,7 @@ class ZfExtended_Logger_Event {
      * @param mixed $toSanitize
      */
     protected function sanitizeContent($toSanitize) {
-        $sensitiveKeys = ['passwd', 'password', 'authhash', 'sessiontoken', 'authtoken', 'session_id', 'staticauthhash'];
+        $sensitiveKeys = ['passwd', 'password', 'authhash', 'sessiontoken', 'authtoken', 'session_id', 'staticauthhash', 'auth_key'];
         
         //if it is a string we assume it is a URL with parameters
         if(is_string($toSanitize)) {
