@@ -69,6 +69,22 @@ class ZfExtended_Logger {
     protected $enableTraceFor = 51; // 1 + 2 + 16 + 32
     
     /**
+     * Add ecodes where the duplication should be checked by formatted message ({variables} replaced with content)
+     * @param string ...$ecode
+     */
+    static public function addDuplicatesByMessage(string ... $ecode) {
+        ZfExtended_Logger_DuplicateHandling::addDuplicates($ecode, ZfExtended_Logger_DuplicateHandling::DUPLICATION_BY_MESSAGE);
+    }
+    
+    /**
+     * Add ecodes where the duplication should be checked by formatted message ({variables} replaced with content)
+     * @param string ...$ecode
+     */
+    static public function addDuplicatesByEcode(string ... $ecode) {
+        ZfExtended_Logger_DuplicateHandling::addDuplicates($ecode, ZfExtended_Logger_DuplicateHandling::DUPLICATION_BY_ECODE);
+    }
+    
+    /**
      * Config options - mostly given by configuration in ini
      * @param array $options
      */
@@ -252,6 +268,10 @@ class ZfExtended_Logger {
         if(!empty($writersToUse)) {
             $availableWriters = array_intersect($writersToUse, $availableWriters);
         }
+        
+        //duplication handling before passing the event to the writers
+        ZfExtended_Logger_DuplicateHandling::getInstance()->incrementCount($event);
+        
         foreach($availableWriters as $name) {
             $writer = $this->writer[$name];
             $writer->isAccepted($event) && $writer->write($event);

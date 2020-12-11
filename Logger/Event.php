@@ -151,6 +151,12 @@ class ZfExtended_Logger_Event {
     public $extraFlat = [];
     
     /**
+     * Hash to identify duplications
+     * @var string|null
+     */
+    public $duplicationHash = null;
+    
+    /**
      * overwrites the data defined in the associative array into the current event
      * The extra array is merged - same named keys in the extra array are overwritten
      * @param array $dataToMerge
