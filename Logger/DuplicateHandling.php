@@ -26,6 +26,11 @@ END LICENSE AND COPYRIGHT
  * Handler for event duplicates
  */
 class ZfExtended_Logger_DuplicateHandling {
+    /**
+     * default interval in which errors are considered as duplicate
+     * @var integer
+     */
+    const DEFAULT_INTERVAL = 300;
     
     /**
      * recognizes event duplications by formatted message ({variables} replaced with content)
@@ -89,7 +94,7 @@ class ZfExtended_Logger_DuplicateHandling {
         
         switch ($duplicationType) {
             case self::DUPLICATION_BY_MESSAGE:
-                $key = $event->message;
+                $key = $event->eventCode.$event->message;
                 break;
             
             case self::DUPLICATION_BY_ECODE:
@@ -116,8 +121,7 @@ class ZfExtended_Logger_DuplicateHandling {
             $count++;
         }
         
-        //FIXME flexibilize 300s timeframe
-        $this->memcache->save((string) $count, $key, [], 300);
+        $this->memcache->save((string) $count, $key, [], self::DEFAULT_INTERVAL);
         return $count;
     }
     
