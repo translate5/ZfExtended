@@ -30,6 +30,18 @@ END LICENSE AND COPYRIGHT
  */
 class ZfExtended_ErrorCodeException extends ZfExtended_Exception {
     /**
+     * recognizes event duplications by formatted message ({variables} replaced with content)
+     * @var string
+     */
+    const DUPLICATION_BY_MESSAGE = ZfExtended_Logger_DuplicateHandling::DUPLICATION_BY_MESSAGE;
+    
+    /**
+     * recognizes event duplications just by ecode, ignoring content of {variables}
+     * @var string
+     */
+    const DUPLICATION_BY_ECODE = ZfExtended_Logger_DuplicateHandling::DUPLICATION_BY_ECODE;
+    
+    /**
      * default HTTP return code
      * @var integer
      */
@@ -51,6 +63,7 @@ class ZfExtended_ErrorCodeException extends ZfExtended_Exception {
      */
     public function __construct($errorCode, array $extra = [], Exception $previous = null) {
         $this->allErrorCodes = $this->mergeErrorCodes();
+        $this->setDuplication();
         parent::__construct($this->getErrorMessage($errorCode), substr($errorCode, 1), $previous);
         $this->setErrors($extra);
     }
@@ -112,6 +125,14 @@ class ZfExtended_ErrorCodeException extends ZfExtended_Exception {
             return $errorCode.': Unknown Error!';
         }
         return $this->allErrorCodes[$errorCode];
+    }
+    
+    /**
+     * Empty Template function, to be overriden to add duplication rules, is called in construct
+     * Override always with parent::setDuplication!
+     */
+    protected function setDuplication() {
+        //empty template function
     }
     
     /**
