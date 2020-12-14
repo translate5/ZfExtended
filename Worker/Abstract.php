@@ -502,11 +502,9 @@ abstract class ZfExtended_Worker_Abstract {
                 'worker' => $this,
                 'taskGuid' => $this->taskGuid,
             ]);
-            if($this->canWork()){
-                $result = $this->work();
-            } else {
-                $result = false;
-            }
+             // do the actual work
+            $result = $this->work();
+            
             $this->workerModel->setState(ZfExtended_Models_Worker::STATE_DONE);
             $this->workerModel->setEndtime(new Zend_Db_Expr('NOW()'));
             $this->finishedWorker = clone $this->workerModel;
@@ -526,15 +524,6 @@ abstract class ZfExtended_Worker_Abstract {
         
         return $result;
     }
-    
-    /**
-     * This Api Can be used to hook further logic if the work actually vcan be performed
-     * @return boolean
-     */
-    protected function canWork() {
-        return true;
-    }
-    
     /**
      * if worker exception was destroying DB connection on DB side
      * (for example violating max_allowed_packet or so), each next DB connection would trigger a mysql gone away
