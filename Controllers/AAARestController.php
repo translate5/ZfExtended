@@ -293,6 +293,10 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
           }
           throw $e;
       }
+      catch(ZfExtended_BadGateway $e) {
+          $this->handleException($e);
+          return;
+      }
 
       if(empty($this->view->message) && empty($this->view->success)) {
           $this->view->message = "OK";
