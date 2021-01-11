@@ -9,8 +9,8 @@ START LICENSE AND COPYRIGHT
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
 
  This file may be used under the terms of the GNU LESSER GENERAL PUBLIC LICENSE version 3
- as published by the Free Software Foundation and appearing in the file lgpl3-license.txt 
- included in the packaging of this file.  Please review the following information 
+ as published by the Free Software Foundation and appearing in the file lgpl3-license.txt
+ included in the packaging of this file.  Please review the following information
  to ensure the GNU LESSER GENERAL PUBLIC LICENSE version 3.0 requirements will be met:
 https://www.gnu.org/licenses/lgpl-3.0.txt
 
@@ -60,8 +60,8 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
    * maps cols which should be sorted to other cols in the table,
    * which then are used for the sorting process
    * (key = given col, value = col to be used for sorting
-   * 
-   * Mainly for text columns, where a short version is used for sorting, 
+   *
+   * Mainly for text columns, where a short version is used for sorting,
    * was introduced for MSSQL which cant sort textblobs
    * @var array
    */
@@ -172,8 +172,6 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
       }
       if(empty($this->view->errors)) {
           $this->view->errors = $messages;
-          $this->view->message = $messages;
-          $this->view->messages = $messages;
       }
       else {
           $this->view->errors = array_merge($this->view->errors, $messages);
@@ -182,7 +180,7 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
   
   /***
    * Trigger before action event for given controller action name
-   * 
+   *
    * @param string $actionName
    */
   public function beforeActionEvent($actionName){
@@ -204,7 +202,7 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
   }
   
   /**
-   * 
+   *
    */
   public function processClientReferenceVersion() {
       $entity = $this->entity;
@@ -271,7 +269,7 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
   
   /**
    * wraps REST Exception Handling around the called Actions
-   * 
+   *
    * Warning: Only Exceptions thrown in the dispatch process are handled correctly in REST calls.
    * Exceptions thrown before are not handled correctly, they are exposed as plain HTML exceptions!
    *
@@ -286,7 +284,7 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
       try {
           parent::dispatch($action);
       }
-      //this is the only useful place in processing REST request to translate 
+      //this is the only useful place in processing REST request to translate
       //the entityVersion DB exception to an 409 conflict exception
       catch(Zend_Db_Statement_Exception $e) {
           $m = $e->getMessage();
@@ -346,7 +344,7 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
       $this->log->exception($e);
       $this->restMessages->addException($e);
       $this->handleErrorResponse($e->getCode());
-      //this postDispatch and notifyPostDispatch calls are needed to finish 
+      //this postDispatch and notifyPostDispatch calls are needed to finish
       // the request properly and render the error messages properly
       $this->postDispatch();
       $this->_helper->notifyPostDispatch();
@@ -361,7 +359,7 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
       $this->view->message = "NOT OK";
       $this->view->success = false;
           
-      //ExtJS does not parse the HTTP Status well on file uploads. 
+      //ExtJS does not parse the HTTP Status well on file uploads.
       // In this case we deliver the status as additional information
       if(!empty($_FILES)) {
           $this->view->httpStatus = $httpStatus;
@@ -377,22 +375,22 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
   protected function additionalValidations() {}
   
   /**
-   * Transforms the Errors in Form of 
+   * Transforms the Errors in Form of
    * Array (
    *   [affectedFieldName] = Array (
    *     [errorName] => 'Already translated Error String'
-   *   ) 
+   *   )
    * )
-   * 
+   *
    * to a format used by ExtJS:
-   * 
+   *
    * Array (
    *   Object (
    *     [id] => 'affectedFieldName'
    *     [msg] => 'Already translated Error String'
-   *   ) 
+   *   )
    * )
-   * 
+   *
    * @param array $zendErrors
    * @return array
    */
@@ -508,7 +506,7 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
   /***
    * Join array elements with a comma.
    * The column string will start and end with comma to.
-   * 
+   *
    * @param string $language
    */
   protected function arrayToCommaSeparated($columnName){

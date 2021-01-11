@@ -80,6 +80,7 @@ class ZfExtended_Logger_Summary {
             $html .= '<br><b><u>Overview: </u></b><br>';
             $html .= '<table>';
             $html .= '<tr><th style="text-align:left;padding-right:10px;">Date:</th>';
+            $html .= '<th style="text-align:left;padding-right:10px;">Count:</th>';
             $html .= '<th style="text-align:left;padding-right:10px;">Level:</th>';
             $html .= '<th style="text-align:left;padding-right:10px;">Message:</th>';
             $html .= '<th style="text-align:left;">Version:</th></tr>';
@@ -89,6 +90,7 @@ class ZfExtended_Logger_Summary {
                 $msg = '<a href="'.$url.'">'.$levelOverview['eventCode'].'</a> '.htmlspecialchars($levelOverview['message']);
                 $html .= '<tr>';
                 $html .= '<td style="white-space:nowrap;padding-right:10px;">'.$levelOverview['created'].'</td>';
+                $html .= '<td>'.($levelOverview['duplicates'] > 0 ? ($levelOverview['duplicates'].' x ') : '').'</td>';
                 $html .= '<td>'.self::getLevel($levelOverview['level']).'</td>';
                 $html .= '<td>'.$msg.'</td>';
                 $html .= '<td>'.$levelOverview['appVersion'].'</td></tr>'."\n";
@@ -152,7 +154,7 @@ class ZfExtended_Logger_Summary {
      */
     protected function getOverviewLastDay($date, array $level) {
         $s = $this->db->select()
-            ->from($this->db, ['created', 'level', 'message', 'eventCode', 'appVersion'])
+            ->from($this->db, ['created', 'level', 'message', 'eventCode', 'appVersion', 'duplicates'])
             ->where('(? - INTERVAL 1 DAY) <= created AND created <= ?', $date)
             ->where('level in (?)', $level);
         return $this->db->fetchAll($s)->toArray();

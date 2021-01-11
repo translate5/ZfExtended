@@ -151,6 +151,12 @@ class ZfExtended_Logger_Event {
     public $extraFlat = [];
     
     /**
+     * Hash to identify duplications
+     * @var string|null
+     */
+    public $duplicationHash = null;
+    
+    /**
      * overwrites the data defined in the associative array into the current event
      * The extra array is merged - same named keys in the extra array are overwritten
      * @param array $dataToMerge
@@ -335,7 +341,7 @@ class ZfExtended_Logger_Event {
      * @param mixed $toSanitize
      */
     protected function sanitizeContent($toSanitize) {
-        $sensitiveKeys = ['passwd', 'password', 'authhash', 'sessiontoken', 'authtoken', 'session_id', 'staticauthhash'];
+        $sensitiveKeys = ['passwd', 'password', 'authhash', 'sessiontoken', 'authtoken', 'session_id', 'staticauthhash', 'auth_key'];
         
         //if it is a string we assume it is a URL with parameters
         if(is_string($toSanitize)) {

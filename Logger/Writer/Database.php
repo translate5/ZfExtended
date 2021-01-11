@@ -32,6 +32,13 @@ class ZfExtended_Logger_Writer_Database extends ZfExtended_Logger_Writer_Abstrac
         $db = ZfExtended_Factory::get('ZfExtended_Models_Db_ErrorLog');
         /* @var $db ZfExtended_Models_Db_ErrorLog */
         
+        //if this event is a duplication, we update the entry and do not insert a new one
+        $duplicateCount = $this->getDuplicateCount($event);
+        if($duplicateCount > 0) {
+            $db->incrementDuplicate($event->duplicationHash, $duplicateCount);
+            return;
+        }
+        
         //get this data directly from the event:
         $directlyFromEvent = ['level', 'domain', 'worker', 'eventCode', 'message', 'appVersion', 'file', 'line', 'trace', 'httpHost', 'url', 'method', 'userLogin', 'userGuid'];
         $data = [];
@@ -44,6 +51,8 @@ class ZfExtended_Logger_Writer_Database extends ZfExtended_Logger_Writer_Abstrac
         
         $data['message'] = mb_substr($data['message'], 0, 512);
         $data['last'] = NOW_ISO;
+        $data['duplicates'] = 0;
+        $data['duplicateHash'] = $event->duplicationHash;
         
         //we track previous exceptions seperate in the DB if possible
         if(!empty($event->previous)) {

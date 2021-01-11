@@ -9,8 +9,8 @@ START LICENSE AND COPYRIGHT
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
 
  This file may be used under the terms of the GNU LESSER GENERAL PUBLIC LICENSE version 3
- as published by the Free Software Foundation and appearing in the file lgpl3-license.txt 
- included in the packaging of this file.  Please review the following information 
+ as published by the Free Software Foundation and appearing in the file lgpl3-license.txt
+ included in the packaging of this file.  Please review the following information
  to ensure the GNU LESSER GENERAL PUBLIC LICENSE version 3.0 requirements will be met:
 https://www.gnu.org/licenses/lgpl-3.0.txt
 
@@ -29,6 +29,18 @@ END LICENSE AND COPYRIGHT
  * After that the two classes can be merged, and all occurences of ZfExtended_ErrorCodeException replaced with ZfExtended_Exception
  */
 class ZfExtended_ErrorCodeException extends ZfExtended_Exception {
+    /**
+     * recognizes event duplications by formatted message ({variables} replaced with content)
+     * @var string
+     */
+    const DUPLICATION_BY_MESSAGE = ZfExtended_Logger_DuplicateHandling::DUPLICATION_BY_MESSAGE;
+    
+    /**
+     * recognizes event duplications just by ecode, ignoring content of {variables}
+     * @var string
+     */
+    const DUPLICATION_BY_ECODE = ZfExtended_Logger_DuplicateHandling::DUPLICATION_BY_ECODE;
+    
     /**
      * default HTTP return code
      * @var integer
@@ -51,6 +63,7 @@ class ZfExtended_ErrorCodeException extends ZfExtended_Exception {
      */
     public function __construct($errorCode, array $extra = [], Exception $previous = null) {
         $this->allErrorCodes = $this->mergeErrorCodes();
+        $this->setDuplication();
         parent::__construct($this->getErrorMessage($errorCode), substr($errorCode, 1), $previous);
         $this->setErrors($extra);
     }
@@ -112,6 +125,14 @@ class ZfExtended_ErrorCodeException extends ZfExtended_Exception {
             return $errorCode.': Unknown Error!';
         }
         return $this->allErrorCodes[$errorCode];
+    }
+    
+    /**
+     * Empty Template function, to be overriden to add duplication rules, is called in construct
+     * Override always with parent::setDuplication!
+     */
+    protected function setDuplication() {
+        //empty template function
     }
     
     /**

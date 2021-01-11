@@ -24,18 +24,20 @@ END LICENSE AND COPYRIGHT
 
 /**
  * Bad Gateway means: Our System is OK, but the requested third party systems gives an error.
- * @deprecated
  */
-class ZfExtended_BadGateway extends ZfExtended_Exception {
-    protected $defaultCode = 502;
-    protected $defaultMessage = 'Das angefragte Zielsystem antwortete mit einem Fehler. Fehlermeldung des Zielsystems:';
-    protected $defaultMessageTranslate = true;
+class ZfExtended_BadGatewayErrorCode extends ZfExtended_ErrorCodeException {
+    /**
+     * @var integer
+     */
+    protected $httpReturnCode = 502;
     
-    public function __toString(){
-        $msg = $this->message;
-        $this->message .= "\n".print_r($this->errors,1);
-        $res = parent::__toString();
-        $this->message = $msg;
-        return $res;
-    }
+    /**
+     * By default we log that as INFO, if created as response then the level is set to DEBUG
+     * @var integer
+     */
+    protected $level = ZfExtended_Logger::LEVEL_ERROR;
+    
+    protected static $localErrorCodes = [
+        'E1310' => '502 Bad Gateway',
+    ];
 }

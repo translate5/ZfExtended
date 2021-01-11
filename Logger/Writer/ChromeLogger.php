@@ -25,7 +25,7 @@
 /**
  * Logs to the ChromeLogger extension in the Chrome Browser
  * https://craig.is/writing/chrome-logger
- * https://craig.is/writing/chrome-logger/techspecs 
+ * https://craig.is/writing/chrome-logger/techspecs
  */
 class ZfExtended_Logger_Writer_ChromeLogger extends ZfExtended_Logger_Writer_Abstract {
     
@@ -49,6 +49,7 @@ class ZfExtended_Logger_Writer_ChromeLogger extends ZfExtended_Logger_Writer_Abs
     }
     
     public function write(ZfExtended_Logger_Event $event) {
+        //no duplicate handling in this writer, just print all
         switch ($event->level) {
             case ZfExtended_Logger::LEVEL_FATAL:
             case ZfExtended_Logger::LEVEL_ERROR:
