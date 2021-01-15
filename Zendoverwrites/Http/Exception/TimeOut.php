@@ -23,19 +23,6 @@ END LICENSE AND COPYRIGHT
 */
 
 /**
- * Bad Gateway means: Our System is OK, but the requested third party systems gives an error.
- * @deprecated
  */
-class ZfExtended_BadGateway extends ZfExtended_Exception {
-    protected $defaultCode = 502;
-    protected $defaultMessage = 'Das angefragte Zielsystem antwortete mit einem Fehler. Fehlermeldung des Zielsystems:';
-    protected $defaultMessageTranslate = true;
-    
-    public function __toString(){
-        $msg = $this->message;
-        $this->message .= "\n".print_r($this->errors,1);
-        $res = parent::__toString();
-        $this->message = $msg;
-        return $res;
-    }
+class ZfExtended_Zendoverwrites_Http_Exception_TimeOut extends ZfExtended_Zendoverwrites_Http_Exception {
 }

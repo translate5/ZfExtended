@@ -9,8 +9,8 @@ START LICENSE AND COPYRIGHT
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
 
  This file may be used under the terms of the GNU LESSER GENERAL PUBLIC LICENSE version 3
- as published by the Free Software Foundation and appearing in the file lgpl3-license.txt 
- included in the packaging of this file.  Please review the following information 
+ as published by the Free Software Foundation and appearing in the file lgpl3-license.txt
+ included in the packaging of this file.  Please review the following information
  to ensure the GNU LESSER GENERAL PUBLIC LICENSE version 3.0 requirements will be met:
 https://www.gnu.org/licenses/lgpl-3.0.txt
 
@@ -45,11 +45,11 @@ class ZfExtended_Models_Messages {
     protected function add(array $data, $type) {
         $data['type'] = $type;
         if(empty($data['id'])) {
-            //we have to remove the null id here, since ExtJSs markInvalids findField will evaluate 
+            //we have to remove the null id here, since ExtJSs markInvalids findField will evaluate
             // this to the first segment with an empty dataIndex (which is nearly every formfield!)
-            // same when unsetting it, so the only solution is to init it with a JS non bool value 
+            // same when unsetting it, so the only solution is to init it with a JS non bool value
             // which does not evaluate to any field, this is -1
-            $data['id'] = -1; 
+            $data['id'] = -1;
         }
         if(!empty($data['msg'])) {
             $translate = ZfExtended_Zendoverwrites_Translate::getInstance();
@@ -60,7 +60,7 @@ class ZfExtended_Models_Messages {
     
     /**
      * adds a notice msg, origin is core or the pluginname, data will be added untranslated
-     * 
+     *
      * @param string $msg untranslated string
      * @param string $origin
      * @param string $id
@@ -83,10 +83,7 @@ class ZfExtended_Models_Messages {
     
     /**
      * adds a error msg, origin is core or the pluginname, data will be added untranslated
-     * @param string $msg untranslated string
-     * @param string $origin
-     * @param string $id
-     * @param string $data
+     * @param ZfExtended_Exception $e
      */
     public function addException(ZfExtended_Exception $e) {
         $msg = $e->getMessage();

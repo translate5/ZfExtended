@@ -9,8 +9,8 @@ START LICENSE AND COPYRIGHT
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
 
  This file may be used under the terms of the GNU LESSER GENERAL PUBLIC LICENSE version 3
- as published by the Free Software Foundation and appearing in the file lgpl3-license.txt 
- included in the packaging of this file.  Please review the following information 
+ as published by the Free Software Foundation and appearing in the file lgpl3-license.txt
+ included in the packaging of this file.  Please review the following information
  to ensure the GNU LESSER GENERAL PUBLIC LICENSE version 3.0 requirements will be met:
 https://www.gnu.org/licenses/lgpl-3.0.txt
 
@@ -22,36 +22,84 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
+/**
+ * Overwritten HTTP Client
+ * - Adds the config parameter "removeArrayIndexInUrlEncode", if true the [] in a post with multiple same named parameter are removed
+ * - Adds debugging capabilities
+ */
 class  ZfExtended_Zendoverwrites_Http_Client extends Zend_Http_Client {
-
-    /***
-     * When set to true, in post request with encoding method ENC_URLENCODED,
-     * the array indexes will be removed from multivalue fields
-     * @var boolean
-     */
-    protected $removeArrayIndexInUrlEncode = false;
-    
-    
     public function request($method = null){
-        
-        //ignore the debugginf if not enabled
-        if(!$this->isRequestDebugEnabled()){
-            return parent::request($method);
+        try {
+            //ignore the debugging if not enabled
+            $url = $this->getUri(true);
+            if(!$this->isRequestDebugEnabled($url)){
+                return parent::request($method);
+            }
+            $randKey = substr(md5(rand()), 0, 7);
+            $this->logRequest($randKey, $method, $url);
+            $response = parent::request($method);
+            $this->logResponse($randKey, $response);
+            return $response;
+        } catch(Zend_Http_Client_Exception | Zend_Http_Client_Adapter_Exception $httpException) {
+            $this->handleException($httpException, $method, $url);
         }
-        //TODO: add posibility this to be filtered per url
-        $randKey = substr(md5(rand()), 0, 7);
+    }
+    
+    protected function handleException(Exception $httpException, $method, $url) {
+        $msg = $httpException->getMessage();
         
-        error_log("Method ($randKey): ".(empty($method) ? $this->method : $method));
-        error_log("URL ($randKey):".$this->getUri(true));
-        error_log("\n\nDATA ($randKey): \n".$this->raw_post_data."\n\n");
-        error_log("Bytes ($randKey):".mb_strlen($this->raw_post_data));
+        //if the error is one of the following, we have a request timeout
+        //ERROR Zend_Http_Client_Adapter_Exception: E9999 - Read timed out after 10 seconds
+        if(strpos($msg, 'Read timed out after') === 0) {
+            //Request time out in {method}ing URL {url}
+            throw new ZfExtended_Zendoverwrites_Http_Exception_TimeOut('E1307', [
+                'method' => ($method ?? $this->method),
+                'url' => $url,
+            ], $httpException);
+            //if the error is one of the following, we have a connection problem
+            //ERROR Zend_Http_Client_Adapter_Exception: E9999 - Unable to Connect to tcp://localhost:8080. Error #111: Connection refused
+            //ERROR Zend_Http_Client_Adapter_Exception: E9999 - Unable to Connect to tcp://michgibtesdefinitivnichtalsdomain.com:8080. Error #0: php_network_getaddresses: getaddrinfo failed: Name or service not known
+            //the following IP is not routed, so it trigers a timeout on connection connect, which must result in "Unable to connect" too and not in a request timeout below
+            //ERROR Zend_Http_Client_Adapter_Exception: E9999 - Unable to Connect to tcp://10.255.255.1:8080. Error #111: Connection refused
+        }elseif(strpos($msg, 'Unable to Connect to') === 0) {
+            $url = array_intersect_key(parse_url($url), array_flip(['scheme', 'host', 'port']));
+            $url['host'] = '//'.($url['host'] ?? '');
+            // Requested URL is DOWN: {url}
+            throw new ZfExtended_Zendoverwrites_Http_Exception_Down('E1308', [
+                'url' => $url,
+                'server' => join(':', $url),
+            ], $httpException);
+        }elseif(strpos($msg, 'Unable to read response, or response is empty') === 0) {
+            //Empty response in {method}ing URL {url}
+            throw new ZfExtended_Zendoverwrites_Http_Exception_NoResponse('E1309', [
+                'method' => ($method ?? $this->method),
+                'url' => $url,
+            ], $httpException);
+        }
+        //FIXME what do we get here? Wrap with a general Request Exception???
+        throw $httpException;
+    }
+    
+    protected function logRequest($randKey, $method, $url) {
+        if(!empty($this->paramsGet)) {
+            $url .= ('?'.http_build_query($this->paramsGet));
+        }
+        error_log("Request ($randKey): ".($method ?? $this->method).' '.$url);
         error_log("Headers ".print_r($this->headers,1));
-        $response = parent::request($method);
+        if(!empty($this->raw_post_data)) {
+            $bytes = '('.mb_strlen($this->raw_post_data).' bytes)';
+            error_log("Raw Data ($randKey) '.$bytes.': \n".$this->raw_post_data."\n\n");
+        }
+        if(!empty($this->paramsPost)) {
+            error_log("Post Data ($randKey): \n".print_r($this->paramsPost,1));
+        }
+    }
+    
+    protected function logResponse($randKey, $response) {
         error_log("Status ($randKey): ".print_r($response->getStatus(),1));
+        error_log("Headers ($randKey):".($response->getHeadersAsString()));
         error_log("Raw Body ($randKey):".print_r($response->getRawBody(),1));
         error_log("Body ($randKey):".print_r($response->getBody(),1));
-        error_log("Headers ($randKey):".($response->getHeadersAsString()));
-        return $response;
     }
     
     /**
@@ -62,125 +110,36 @@ class  ZfExtended_Zendoverwrites_Http_Client extends Zend_Http_Client {
      */
     protected function _prepareBody()
     {
-        // According to RFC2616, a TRACE request should not have a body.
-        if ($this->method == self::TRACE) {
-            return '';
+        $removeArrayIndexInUrlEncode = !empty($this->config['removearrayindexinurlencode']);
+        //remove the encoded array indexes from the body
+        $body = parent::_prepareBody();
+        if($removeArrayIndexInUrlEncode && $this->enctype == self::ENC_URLENCODED){
+            $body = preg_replace('/\%5B\d+\%5D/', '', $body);
+            $this->setHeaders(self::CONTENT_LENGTH, strlen($body));
         }
-        
-        if (isset($this->raw_post_data) && is_resource($this->raw_post_data)) {
-            return $this->raw_post_data;
-        }
-        // If mbstring overloads substr and strlen functions, we have to
-        // override it's internal encoding
-        if (function_exists('mb_internal_encoding') &&
-            ((int) ini_get('mbstring.func_overload')) & 2) {
-                
-                $mbIntEnc = mb_internal_encoding();
-                mb_internal_encoding('ASCII');
-            }
-            
-            // If we have raw_post_data set, just use it as the body.
-            if (isset($this->raw_post_data)) {
-                $this->setHeaders(self::CONTENT_LENGTH, strlen($this->raw_post_data));
-                if (isset($mbIntEnc)) {
-                    mb_internal_encoding($mbIntEnc);
-                }
-                
-                return $this->raw_post_data;
-            }
-            
-            $body = '';
-            
-            // If we have files to upload, force enctype to multipart/form-data
-            if (count ($this->files) > 0) {
-                $this->setEncType(self::ENC_FORMDATA);
-            }
-            
-            // If we have POST parameters or files, encode and add them to the body
-            if (count($this->paramsPost) > 0 || count($this->files) > 0) {
-                switch($this->enctype) {
-                    case self::ENC_FORMDATA:
-                        // Encode body as multipart/form-data
-                        $boundary = '---ZENDHTTPCLIENT-' . md5(microtime());
-                        $this->setHeaders(self::CONTENT_TYPE, self::ENC_FORMDATA . "; boundary={$boundary}");
-                        
-                        // Encode all files and POST vars in the order they were given
-                        foreach ($this->body_field_order as $fieldName=>$fieldType) {
-                            switch ($fieldType) {
-                                case self::VTYPE_FILE:
-                                    foreach ($this->files as $file) {
-                                        if ($file['formname']===$fieldName) {
-                                            $fhead = array(self::CONTENT_TYPE => $file['ctype']);
-                                            $body .= self::encodeFormData($boundary, $file['formname'], $file['data'], $file['filename'], $fhead);
-                                        }
-                                    }
-                                    break;
-                                case self::VTYPE_SCALAR:
-                                    if (isset($this->paramsPost[$fieldName])) {
-                                        if (is_array($this->paramsPost[$fieldName])) {
-                                            $flattened = self::_flattenParametersArray($this->paramsPost[$fieldName], $fieldName);
-                                            foreach ($flattened as $pp) {
-                                                $body .= self::encodeFormData($boundary, $pp[0], $pp[1]);
-                                            }
-                                        } else {
-                                            $body .= self::encodeFormData($boundary, $fieldName, $this->paramsPost[$fieldName]);
-                                        }
-                                    }
-                                    break;
-                            }
-                        }
-                        
-                        $body .= "--{$boundary}--\r\n";
-                        break;
-                        
-                    case self::ENC_URLENCODED:
-                        // Encode body as application/x-www-form-urlencoded
-                        $this->setHeaders(self::CONTENT_TYPE, self::ENC_URLENCODED);
-                        $body = http_build_query($this->paramsPost, '', '&');
-                        //remove the encoded array indexes from the body
-                        if($this->removeArrayIndexInUrlEncode){
-                            $body = preg_replace('/\%5B\d+\%5D/', '', $body);
-                        }
-                        break;
-                        
-                    default:
-                        if (isset($mbIntEnc)) {
-                            mb_internal_encoding($mbIntEnc);
-                        }
-                        
-                        /** @see Zend_Http_Client_Exception */
-                        require_once 'Zend/Http/Client/Exception.php';
-                        throw new Zend_Http_Client_Exception("Cannot handle content type '{$this->enctype}' automatically." .
-                        " Please use Zend_Http_Client::setRawData to send this kind of content.");
-                        break;
-                }
-            }
-            
-            // Set the Content-Length if we have a body or if request is POST/PUT
-            if ($body || $this->method == self::POST || $this->method == self::PUT) {
-                $this->setHeaders(self::CONTENT_LENGTH, strlen($body));
-            }
-            
-            if (isset($mbIntEnc)) {
-                mb_internal_encoding($mbIntEnc);
-            }
-            
-            return $body;
+        return $body;
     }
     
     /***
-     * @param bool $flag
-     */
-    public function setRemoveArrayIndexInUrlEncode(bool $flag){
-        $this->removeArrayIndexInUrlEncode = $flag;
-    }
-
-    /***
      * Check if the debug mode is enabled for the current request.
+     * @param $url string the URL to be called for filtering
      * @return boolean
      */
-    public function isRequestDebugEnabled(){
+    protected function isRequestDebugEnabled(string $url): bool{
         $config = Zend_Registry::get('config');
-        return $config->runtimeOptions->debug->httpclient ?? false;
+        $debug = $config->debug->httpclient ?? false;
+        if(!$debug) {
+            return false;
+        }
+        $debug = strtolower($debug);
+        switch ($debug) {
+            case '1':
+            case 'on':
+            case 'true':
+                return true;
+                
+            default:
+                return (stripos($url, $debug) !== false);
+        }
     }
 }

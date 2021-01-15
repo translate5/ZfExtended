@@ -267,6 +267,9 @@ class  ZfExtended_Zendoverwrites_Translate extends Zend_Translate
      * @param string $xliff
      */
     protected function addPluginPaths($xliff) {
+        if(!Zend_Registry::isRegistered('PluginManager')) {
+            return;
+        }
         $pluginmanager = Zend_Registry::get('PluginManager');
         /* @var $pluginmanager ZfExtended_Plugin_Manager */
         $paths = $pluginmanager->getActiveLocalePaths();

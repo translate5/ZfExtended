@@ -9,8 +9,8 @@ START LICENSE AND COPYRIGHT
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
 
  This file may be used under the terms of the GNU LESSER GENERAL PUBLIC LICENSE version 3
- as published by the Free Software Foundation and appearing in the file lgpl3-license.txt 
- included in the packaging of this file.  Please review the following information 
+ as published by the Free Software Foundation and appearing in the file lgpl3-license.txt
+ included in the packaging of this file.  Please review the following information
  to ensure the GNU LESSER GENERAL PUBLIC LICENSE version 3.0 requirements will be met:
 https://www.gnu.org/licenses/lgpl-3.0.txt
 
@@ -40,8 +40,8 @@ abstract class ZfExtended_Logger_Writer_Abstract {
     protected $filter;
     
     /**
-     * creates a Logger writer as defined in the given options array, possible values 
-     * @param array $options 
+     * creates a Logger writer as defined in the given options array, possible values
+     * @param array $options
      * @return ZfExtended_Logger_Writer_Abstract
      */
     public static function create(array $options) {
@@ -62,7 +62,7 @@ abstract class ZfExtended_Logger_Writer_Abstract {
     }
     
     /**
-     * Writes the given event to the log if event matches the configured filters  
+     * Writes the given event to the log if event matches the configured filters
      * @param ZfExtended_Logger_Event $event
      */
     abstract public function write(ZfExtended_Logger_Event $event);
@@ -86,7 +86,7 @@ abstract class ZfExtended_Logger_Writer_Abstract {
     
     /**
      * returns true if the current writer accepts events for the given level and domain
-     * Attention: returns also true if writer is configured for domain foo.bar.xxx and here is checked for foo only. 
+     * Attention: returns also true if writer is configured for domain foo.bar.xxx and here is checked for foo only.
      * @param int $level
      * @param string $domain
      */
@@ -104,5 +104,14 @@ abstract class ZfExtended_Logger_Writer_Abstract {
             throw new ZfExtended_Logger_Exception(__CLASS__.': option filter is not an array!');
         }
         settype($options['filter'], 'array'); //ensure that if it was empty, that it is an array afterwards
+    }
+    
+    /**
+     * Shortct function to getDuplicateCount
+     * @param ZfExtended_Logger_Event $event
+     * @return int
+     */
+    protected function getDuplicateCount(ZfExtended_Logger_Event $event): int {
+        return ZfExtended_Logger_DuplicateHandling::getInstance()->getDuplicateCount($event);
     }
 }

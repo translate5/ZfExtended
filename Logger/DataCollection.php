@@ -24,7 +24,7 @@
 
 /**
  * convenient collection of multiple data sets to be logged to one single common error
- * 
+ *
  * @method void fatal() fatal(string $code, $extra = null)
  * @method void error() error(string $code, $extra = null)
  * @method void warn() warn  (string $code, $extra = null)
@@ -46,7 +46,7 @@ class ZfExtended_Logger_DataCollection {
     protected $domain;
     
     /**
-     * available mesages for that logged data collection
+     * available messages for that logged data collection
      * @var array
      */
     protected $messages;
