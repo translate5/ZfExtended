@@ -308,8 +308,24 @@ class ZfExtended_Test_ApiHelper {
         $this->task = $this->requestJson('editor/task', 'POST', $task);
         $resp = $this->getLastResponse();
         $test::assertEquals(200, $resp->getStatus(), 'Import Request does not respond HTTP 200! Body was: '.$resp->getBody());
-
-        while($waithForImport){
+        
+        if(!$waithForImport){
+            return;
+        }
+        $this->checkTaskStateLoop($failOnError);
+    }
+    
+    /***
+     * Check the task state. The test will fail when $failOnError = true and if the task is in state error or after 25 task state checks
+     * @param bool $failOnError
+     * @throws Exception
+     * @return boolean
+     */
+    public function checkTaskStateLoop(bool $failOnError = true){
+        $test = $this->testClass;
+        $counter=0;
+        $limitCheck = 25;
+        while(true){
             $taskResult = $this->requestJson('editor/task/'.$this->task->id);
             if($taskResult->state == 'open') {
                 $this->task = $taskResult;
@@ -325,9 +341,34 @@ class ZfExtended_Test_ApiHelper {
                 }
                 return false;
             }
+            
+            //break after 25 trys
+            if($counter==$limitCheck){
+                if($failOnError) {
+                    $test::fail('Task Import stopped. Task doees not have state open after '.$limitCheck.' task checks.');
+                }
+                return false;
+            }
+            
             sleep(3);
         }
-        
+    }
+    
+    /***
+     * Add task specific config. The config must be added after the task is created and before the import is triggered.
+     * @param string $configName
+     * @param string $configValue
+     * @return mixed|boolean
+     */
+    public function addTaskImportConfig(string $taskGuid, string $configName, string $configValue){
+        $this->requestJson('editor/config', 'PUT', [
+            'name' => $configName,
+            'value' => $configValue,
+            'taskGuid'=> $taskGuid
+        ]);
+        $resp = $this->getLastResponse();
+        $this->testClass::assertEquals(200, $resp->getStatus(), 'Import Request does not respond HTTP 200! Body was: '.$resp->getBody());
+        return $this->decodeJsonResponse($resp);
     }
     
     /***
@@ -642,15 +683,6 @@ class ZfExtended_Test_ApiHelper {
     }
     
     /**
-     * Adds the given XML file as task-template, using the importTbx way, since this works out of the box
-     * @param string $path
-     */
-    public function addImportTaskTemplate($path) {
-        $data = file_get_contents($this->testRoot.'/'.$path);
-        $this->addFilePlain('importTbx', $data, 'application/xml', 'task-template.xml');
-    }
-    
-    /**
      * Adds directly data to be imported instead of providing a filepath
      * useful for creating CSV testdata direct in testcase
      *
@@ -679,7 +711,7 @@ class ZfExtended_Test_ApiHelper {
             array_unshift($row, $i++); //add mid
             return '"'.join('","', $row).'"';
         }, $data);
-        array_unshift($data, '"mid", "quelle", "ziel"');
+        array_unshift($data, '"id", "source", "target"');
         $this->addImportPlain(join("\n", $data));
     }
     
