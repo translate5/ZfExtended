@@ -204,7 +204,7 @@ class ZfExtended_Exception extends Zend_Exception {
         
         /**
          * all possible config paths are defined in this array
-         * @var array
+         * @var unknown_type
          */
         $pathsToCheck = array(
             array($exception),
