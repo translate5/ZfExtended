@@ -46,6 +46,7 @@ class ZfExtended_Models_Db_ErrorLog extends Zend_Db_Table_Abstract {
         $rowCount = $this->update([
             'duplicates' => $count,
             'last' => NOW_ISO,
+            //FIXME remove nested subquery if we use everywhere a newer mysql
         ], $this->getAdapter()->quoteInto('id = (SELECT id FROM (SELECT id FROM Zf_errorlog WHERE duplicateHash = ? ORDER BY id DESC limit 1) as x)', $hash));
 
         

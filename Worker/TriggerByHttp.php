@@ -41,6 +41,7 @@ class ZfExtended_Worker_TriggerByHttp {
     
     public function __construct() {
         $this->log = Zend_Registry::get('logger')->cloneMe('core.worker');
+        $this->log->addDuplicatesByEcode('E1107');
     }
     
     /**
