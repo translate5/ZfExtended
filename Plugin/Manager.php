@@ -178,4 +178,22 @@ class ZfExtended_Plugin_Manager {
     protected function classExplode($class) {
         return explode('_', $class);
     }
+    
+    /***
+     * Return plugin config prefix for all inactive plugins
+     * @return array
+     */
+    public function getInactivePluginsConfigPrefix() {
+        $allNames = $this->getAllPluginNames();
+        $active = $this->getActive();
+        $filtered = array_map(function($item)use($active){
+            $initClass = 'editor_Plugins_'.ucfirst($item).'_Init';
+            $bootstrapClass = 'editor_Plugins_'.ucfirst($item).'_Bootstrap';
+            if(!in_array($initClass,$active) && !in_array($bootstrapClass, $active)){
+                return 'runtimeOptions.plugins.'.$item;
+            }
+            return '';
+        }, $allNames);
+        return array_filter($filtered);
+    }
 }
