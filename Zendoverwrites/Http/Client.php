@@ -28,15 +28,6 @@ END LICENSE AND COPYRIGHT
  * - Adds debugging capabilities
  */
 class  ZfExtended_Zendoverwrites_Http_Client extends Zend_Http_Client {
-
-    /***
-     * When set to true, in post request with encoding method ENC_URLENCODED,
-     * the array indexes will be removed from multivalue fields
-     * @var boolean
-     */
-    protected $removeArrayIndexInUrlEncode = false;
-    
-    
     public function request($method = null){
         try {
             //ignore the debugging if not enabled

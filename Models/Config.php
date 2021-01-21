@@ -31,6 +31,8 @@ END LICENSE AND COPYRIGHT
 /**
  * @method void setId() setId(int $id)
  * @method void setName() setName(string $name)
+ * @method void setGuiName() setGuiName(string $guiName)
+ * @method void setGuiGroup() setGroup(string $guiGroup)
  * @method void setConfirmed() setConfirmed(bool $confirmed)
  * @method void setModule() setModule(string $module)
  * @method void setCategory() setCategory(string $category)
@@ -39,9 +41,12 @@ END LICENSE AND COPYRIGHT
  * @method void setDefaults() setDefaults(string $defaults) comma seperated values!
  * @method void setType() setType(string $type)
  * @method void setDescription() setDescription(string $desc)
+ * @method void setComment() setComment(string $comment)
  *
  * @method integer getId() getId()
  * @method string getName() getName()
+ * @method string getGuiName() getGuiName()
+ * @method string getGuiGroup() getGuiGroup()
  * @method boolean getConfirmed() getConfirmed()
  * @method string getModule() getModule()
  * @method string getCategory() getCategory()
@@ -50,6 +55,7 @@ END LICENSE AND COPYRIGHT
  * @method string getDefaults() getDefaults()
  * @method string getType() getType()
  * @method string getDescription() getDescription()
+ * @method string getComment() getComment()
  *
  * The conversion from DB Storage Format to Zend Config Format is done by ZfExtended_Resource_DbConfig
  */
@@ -63,8 +69,12 @@ class ZfExtended_Models_Config extends ZfExtended_Models_Entity_Abstract {
      * @param string $name the configuration name
      * @param string $value the value to be set
      */
-    public function update($name, $value) {
-        $this->db->update(['value' => $value], ['name = ?' => $name]);
+    public function update(string $name,string $value,string $comment = null) {
+        $update = ['value' => $value];
+        if(is_null($comment)){
+            $update['comment']=$comment;
+        }
+        $this->db->update($update, ['name = ?' => $name]);
         $this->loadByName($name);
         return $this;
     }

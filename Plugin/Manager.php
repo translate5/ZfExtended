@@ -128,6 +128,32 @@ class ZfExtended_Plugin_Manager {
         return array_keys($this->pluginInstances);
     }
     
+    /***
+     * Get all plugin names for the current module.
+     * @return array|array
+     */
+    public function getAllPluginNames() {
+        $module = Zend_Registry::get('module');
+        $path = APPLICATION_PATH.'/modules/'.$module.'/Plugins';
+        if(!is_dir($path)){
+            return [];
+        }
+        $glob = glob($path . '/*');
+        
+        if($glob === false){
+            return [];
+        }
+        
+        $result = array_map(function($dir) { 
+            if(!is_dir($dir)){
+                return false;
+            }
+            $dir =explode('/', $dir);
+            return end($dir);
+        }, $glob);
+        return array_filter($result);
+    }
+    
     /**
      * returns the Plugin Name distilled from class name
      * @param string $class
@@ -151,5 +177,23 @@ class ZfExtended_Plugin_Manager {
      */
     protected function classExplode($class) {
         return explode('_', $class);
+    }
+    
+    /***
+     * Return plugin config prefix for all inactive plugins
+     * @return array
+     */
+    public function getInactivePluginsConfigPrefix() {
+        $allNames = $this->getAllPluginNames();
+        $active = $this->getActive();
+        $filtered = array_map(function($item)use($active){
+            $initClass = 'editor_Plugins_'.ucfirst($item).'_Init';
+            $bootstrapClass = 'editor_Plugins_'.ucfirst($item).'_Bootstrap';
+            if(!in_array($initClass,$active) && !in_array($bootstrapClass, $active)){
+                return 'runtimeOptions.plugins.'.$item;
+            }
+            return '';
+        }, $allNames);
+        return array_filter($filtered);
     }
 }
