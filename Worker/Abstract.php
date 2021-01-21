@@ -26,17 +26,12 @@ abstract class ZfExtended_Worker_Abstract {
     use ZfExtended_Models_Db_DeadLockHandlerTrait;
     
     /**
-     * With blocking type slot, the maximum of parallel workers is defined by the available slots for this resource.
+     * With blocking type slot, the maximum of parallel workers is defined by the available resources
+     * Historically the naming is "slot" but it should better be named "resource"
      * @var string
      */
     const BLOCK_SLOT = 'slot';
-    
-    /**
-     * If a worker with blocking type "resource" is running, no other queued worker with same resource may be started at the same time.
-     * @var string
-     */
-    const BLOCK_RESOURCE = 'resource';
-    
+
     /**
      * If a worker with blocking global is running, no other queued worker may be started
      * No other queued worker means, regardless of maxParallelProcesses and regardless of resource.
@@ -66,7 +61,8 @@ abstract class ZfExtended_Worker_Abstract {
     protected $maxParallelProcesses = 1;
     
     /**
-     * Blocking-typ for this certain worker
+     * Blocking-typ for this worker
+     * Default is the Resource-based Blocking
      * @var string blocking-type BLOCK_XYZ
      */
     protected $blockingType = self::BLOCK_SLOT;
@@ -114,7 +110,7 @@ abstract class ZfExtended_Worker_Abstract {
     protected $log;
     
      /**
-     * resourcePool for the different TermTagger-Operations;
+     * resourcePool for the different Operations
      * Example from TermTagger: Possible Values: $this->allowdResourcePools = array('default', 'gui', 'import');
      * @var string
      */
@@ -132,12 +128,6 @@ abstract class ZfExtended_Worker_Abstract {
     protected static $praefixResourceName = 'default_';
     
     protected static $resourceName = NULL;
-    /**
-     *
-     * @var array all scheduled workers for the worker classes listed here have to be done, before this worker will be woken up. Is serialized as JSON in DB. Should be soverridden by child
-     */
-    protected $workerChainDependency = array();
-
     /**
      * Contains the Exception thrown in the worker
      * Since one worker is designed to do one job, there should be only one exception.
@@ -424,7 +414,7 @@ abstract class ZfExtended_Worker_Abstract {
     /**
      * Direct run of a worker, if a worker should be runnable directly, define this function public in the in the concrete worker
      * and call this by parent::run();
-     * direct calls per run are not mutex-save!
+     * direct calls per run are not mutex-save! The run operation queues/starts no other workers and is purely sequential
      *
      * @throws Exception
      * @return boolean true if $this->work() runs without errors
@@ -443,8 +433,6 @@ abstract class ZfExtended_Worker_Abstract {
         if(!empty($this->workerException)) {
             throw $this->workerException;
         }
-        
-        $this->wakeUpAndStartNextWorkers();
         return $result;
     }
     
@@ -514,7 +502,9 @@ abstract class ZfExtended_Worker_Abstract {
                 'worker' => $this,
                 'taskGuid' => $this->taskGuid,
             ]);
+             // do the actual work
             $result = $this->work();
+            
             $this->workerModel->setState(ZfExtended_Models_Worker::STATE_DONE);
             $this->workerModel->setEndtime(new Zend_Db_Expr('NOW()'));
             $this->finishedWorker = clone $this->workerModel;
@@ -534,7 +524,6 @@ abstract class ZfExtended_Worker_Abstract {
         
         return $result;
     }
-    
     /**
      * if worker exception was destroying DB connection on DB side
      * (for example violating max_allowed_packet or so), each next DB connection would trigger a mysql gone away
@@ -588,7 +577,7 @@ abstract class ZfExtended_Worker_Abstract {
     
     
     /**
-     * Get the result-values of prrocessing $this->work();
+     * Get the result-values of processing $this->work();
      * @return mixed
      */
     public function getResult() {
