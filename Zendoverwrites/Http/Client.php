@@ -119,12 +119,15 @@ class  ZfExtended_Zendoverwrites_Http_Client extends Zend_Http_Client {
      */
     protected function _prepareBody()
     {
-        $removeArrayIndexInUrlEncode = !empty($this->config['removeArrayIndexInUrlEncode']);
+        $removeArrayIndexInUrlEncode = !empty($this->config['removearrayindexinurlencode']);
         //remove the encoded array indexes from the body
+        
+        $body = parent::_prepareBody();
         if($removeArrayIndexInUrlEncode && $this->enctype == self::ENC_URLENCODED){
-            return preg_replace('/\%5B\d+\%5D/', '', parent::_prepareBody());
+            $body = preg_replace('/\%5B\d+\%5D/', '', $body);
+            $this->setHeaders(self::CONTENT_LENGTH, strlen($body));
         }
-        return parent::_prepareBody();
+        return $body;
     }
     
     /***
