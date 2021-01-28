@@ -71,7 +71,7 @@ class ZfExtended_Models_Config extends ZfExtended_Models_Entity_Abstract {
      */
     public function update(string $name,string $value,string $comment = null) {
         $update = ['value' => $value];
-        if(is_null($comment)){
+        if(! is_null($comment)){
             $update['comment']=$comment;
         }
         $this->db->update($update, ['name = ?' => $name]);
