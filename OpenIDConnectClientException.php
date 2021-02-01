@@ -38,6 +38,11 @@ class ZfExtended_OpenIDConnectClientException extends ZfExtended_ErrorCodeExcept
     protected $domain = 'core.openidconnect';
     
     static protected $localErrorCodes = [
-        'E1165' => 'Error on openid authentication: {message} '.PHP_EOL.' Request params: {request} '.PHP_EOL.' Session: {session} '.PHP_EOL.' Openid params: {openid}'
+        'E1165' => 'Error on openid authentication.',
+        //the following messages are shown in the frontend, so they should not expose sensitive information:
+        'E1328' => 'OpenID connect authentication is only usable with SSL/HTTPS enabled!',
+        'E1329' => 'OpenID connect: The default server and the claim roles are not defined.',
+        'E1330' => 'The customer server roles are empty but there are roles from the provider.',
+        'E1331' => 'Invalid claims roles for the allowed server customer roles',
     ];
 }

@@ -68,7 +68,13 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
         unset($resconf['garbageCollectorLifetime']); //Zend_Session does not know this value!
         
         if($this->isHttpsRequest()) {
+            //None needed so far for Features like OpenID connect and session auth token,
+            // but non works only with HTTPS!
+            $resconf['cookie_samesite'] = 'None';
             $resconf['cookie_secure'] = 1;
+        }
+        else {
+            $resconf['cookie_samesite'] = 'Lax';
         }
         
         //we may set the options only, if unitTests are disabled (used to mask CLI usage)
@@ -117,7 +123,7 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
      *  since the config resource is loaded after the session resource
      * @return bool
      */
-    protected function isHttpsRequest(): bool {
+    public function isHttpsRequest(): bool {
         //from https://stackoverflow.com/a/41591066/1749200
         return (( ! empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
             || ( ! empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https')
@@ -136,6 +142,11 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
         if(empty($_REQUEST['sessionToken']) || !preg_match('/[a-zA-Z0-9]{32}/', $_REQUEST['sessionToken'])) {
             return;
         }
+        
+        if(!$this->isHttpsRequest()) {
+            throw new ZfExtended_NotAuthenticatedException('Due Cookie restrictions this feature can only be used with HTTPS enabled!');
+        }
+        
         $sessionDb = ZfExtended_Factory::get('ZfExtended_Models_Db_Session');
         /* @var $sessionDb ZfExtended_Models_Db_Session */
         $row = $sessionDb->fetchRow(['authToken = ?' => $_REQUEST['sessionToken']]);
