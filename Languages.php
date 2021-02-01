@@ -399,20 +399,6 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract {
     }
     
     /***
-     * Load all languages where the return array will be with $fieldName(lek_languages field) value as key.
-     * All keys are lowercase
-     * @param string $key
-     */
-    public function loadAllKeyCustom(string $fieldName){
-        $languages = $this->loadAll();
-        $result=[];
-        foreach ($languages as $language){
-            $result[strtolower($language[$fieldName])] = $language;
-        }
-        return $result;
-    }
-    
-    /***
      * Find mayor language by given sub langauge.
      * Ex: "de-CH" will find "de"
      * @param string $rfcSub
