@@ -9,8 +9,8 @@ START LICENSE AND COPYRIGHT
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
 
  This file may be used under the terms of the GNU LESSER GENERAL PUBLIC LICENSE version 3
- as published by the Free Software Foundation and appearing in the file lgpl3-license.txt 
- included in the packaging of this file.  Please review the following information 
+ as published by the Free Software Foundation and appearing in the file lgpl3-license.txt
+ included in the packaging of this file.  Please review the following information
  to ensure the GNU LESSER GENERAL PUBLIC LICENSE version 3.0 requirements will be met:
 https://www.gnu.org/licenses/lgpl-3.0.txt
 
@@ -154,13 +154,16 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
         if ($this->authIsValid($login, $passwd)) {
             $invalidLoginCounter->resetCounter(); // bei erfolgreichem login den counter zurücksetzen
             $this->_userModel->setUserSessionNamespaceWithPwCheck($login, $passwd);
+            ZfExtended_Models_LoginLog::addSuccess($this->_userModel, "plainlogin");
             $this->getFrontController()->getPlugin('ZfExtended_Controllers_Plugins_SessionRegenerate')->updateSession(true);
             $this->initDataAndRedirect();
             return true;
         }
+        ZfExtended_Models_LoginLog::addFailed($login, "plainlogin");
         $invalidLoginCounter->increment();
-        if($this->hasMaximumInvalidations($invalidLoginCounter))
+        if($this->hasMaximumInvalidations($invalidLoginCounter)) {
             return false;
+        }
         $this->view->errors = true;
         $this->_form->addError(sprintf($this->_translate->_('Ungültige Logindaten!<br/>Haben Sie Ihr Passwort vergessen oder bislang noch kein Passwort für Ihren Login gesetzt?  Sie können jederzeit einen neuen Link %shier%s anfordern.'),
                 '<a href="'. APPLICATION_RUNDIR .'/login/passwdreset">','</a>'));
@@ -201,13 +204,13 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
             $m = $e->getMessage();
             $isSqlState = strpos($m,'SQLSTATE') === 0;
             $isMissingLogin = stripos($m,'FOREIGN KEY (`login`)') !== false && stripos($m,'a foreign key constraint fails') !== false;
-            //if entered a missing login we get an contraint error here, 
-            //we return false here since this user does not have a session. 
+            //if entered a missing login we get an contraint error here,
+            //we return false here since this user does not have a session.
             //The not existence of the login is then checked correctly later.
             if($isSqlState && $isMissingLogin) {
-                return false; 
+                return false;
             }
-            //if error is no "duplicate entry" error we throw it regularly! 
+            //if error is no "duplicate entry" error we throw it regularly!
             if(!$isSqlState || stripos($m,'Duplicate entry') === false) {
                 throw $e;
             }
@@ -219,7 +222,7 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
     }
     
     /**
-     * 
+     *
      * @param ZfExtended_Models_Invalidlogin $invalidLogin
      * @return boolean
      */
@@ -374,7 +377,7 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
             $this->_setLocale($locale);
         }
         else{
-            //if there user has no valid locale in the DB we set the current locale 
+            //if there user has no valid locale in the DB we set the current locale
             $this->_userModel->setLocale($this->_session->locale);
         }
     }

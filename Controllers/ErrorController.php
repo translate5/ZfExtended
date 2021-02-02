@@ -88,6 +88,9 @@ class ErrorController extends ZfExtended_Controllers_Action
                     $httpCode = $e->getHttpReturnCode();
                     $this->view->errorCode = $e->getErrorCode();
                 }
+                elseif(empty($e)) {
+                    $httpCode = 500;
+                }
                 else {
                     $httpCode = $e->getCode() ?? 500;
                 }

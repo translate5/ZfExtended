@@ -29,28 +29,9 @@ END LICENSE AND COPYRIGHT
  *
  */
 /**
- * Class to access errorlog-table
+ * Login Log DB class
  */
-class ZfExtended_Models_Db_ErrorLog extends Zend_Db_Table_Abstract {
-    protected $_name    = 'Zf_errorlog';
+class ZfExtended_Models_Db_LoginLog extends Zend_Db_Table_Abstract {
+    protected $_name    = 'Zf_login_log';
     public $_primary = 'id';
-    
-    /**
-     * Updates the duplicate data in the error log table, returns false if no entry was updated, true otherwise
-     * @param string $hash
-     * @param int $count
-     * @return bool
-     */
-    public function incrementDuplicate(string $hash, int $count): bool {
-        //update the duplicates info for the newest entry with the same hash
-        $rowCount = $this->update([
-            'duplicates' => $count,
-            'last' => NOW_ISO,
-            //FIXME remove nested subquery if we use everywhere a newer mysql
-        ], $this->getAdapter()->quoteInto('id = (SELECT id FROM (SELECT id FROM Zf_errorlog WHERE duplicateHash = ? ORDER BY id DESC limit 1) as x)', $hash));
-
-        
-        //if no row update return false to trigger insert outside
-        return $rowCount > 0;
-    }
 }

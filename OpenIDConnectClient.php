@@ -110,6 +110,15 @@ class ZfExtended_OpenIDConnectClient{
             return false;
         }
 
+        
+        $bootstrap = Zend_Controller_Front::getInstance()->getParam('bootstrap');
+        /* @var $bootstrap Bootstrap */
+        $session = $bootstrap->getPluginResource('ZfExtended_Resource_Session');
+        /* @var $session ZfExtended_Resource_Session */
+        if(!$session->isHttpsRequest()) {
+            throw new ZfExtended_OpenIDConnectClientException("E1328", $this->getExceptionData());
+        }
+        
         $isAuthRequest=!empty($this->request->getParam('code')) || !empty($this->request->getParam('id_token'));
         $isLoginRequest=!empty($this->request->getParam('login')) && !empty($this->request->getParam('passwd'));
         $isRedirectRequest=$this->request->getParam('openidredirect')=='openid';
@@ -127,7 +136,7 @@ class ZfExtended_OpenIDConnectClient{
         try {
             return $this->openIdClient->authenticate();
         } catch (OpenIDConnectClientException $e) {
-            $this->throwOpenIdConnectException($e->getMessage().PHP_EOL. $e->getTraceAsString());
+            throw new ZfExtended_OpenIDConnectClientException("E1165", $this->getExceptionData(), $e);
         }
     }
 
@@ -194,8 +203,8 @@ class ZfExtended_OpenIDConnectClient{
             $roles=$this->getOpenIdUserData('role',false);
         }
         if(empty($roles)){
-			$this->log->info('E1174', 'No roles are provided by the OpenID Server to translate5. The default roles that are set in the configuration for the customer are used.');
-		}
+            $this->log->info('E1174', 'No roles are provided by the OpenID Server to translate5. The default roles that are set in the configuration for the customer are used.');
+        }
         $user->setRoles($this->mergeUserRoles($roles));
         return $user->save()>0? $user : null;
     }
@@ -288,7 +297,7 @@ class ZfExtended_OpenIDConnectClient{
         $openIdDefaultServerRoles=$this->customer->getOpenIdDefaultServerRoles();
 
         if(empty($openIdDefaultServerRoles) && empty($claimsRoles)){
-            $this->throwOpenIdConnectException('The default server and the claim roles are not defined.',true);
+            throw new ZfExtended_OpenIDConnectClientException("E1329", $this->getExceptionData());
         }
 
         //no claim roles, use the default roles
@@ -298,7 +307,7 @@ class ZfExtended_OpenIDConnectClient{
 
         //if there is not customer roles, log the info message and trhrow an exception
         if(empty($customerRoles)){
-            $this->throwOpenIdConnectException('The customer server roles are empty but there are roles from the provider.',true);
+            throw new ZfExtended_OpenIDConnectClientException("E1330", $this->getExceptionData());
         }
 
         $customerRoles=explode(',',$customerRoles);
@@ -333,7 +342,7 @@ class ZfExtended_OpenIDConnectClient{
         }
         //check if the claims roles are allowed by the server customer roles
         if(empty($roles)){
-            $this->throwOpenIdConnectException('Invalid claims roles for the allowed server customer roles',true);
+            throw new ZfExtended_OpenIDConnectClientException("E1331", $this->getExceptionData());
         }
         return $roles;
     }
@@ -405,17 +414,17 @@ class ZfExtended_OpenIDConnectClient{
         //load the user info endpoint only if it is allowed via configuration
         if(!isset($this->openIdUserInfo) && $this->config->runtimeOptions->openid->requestUserInfo){
             try{
-				$this->openIdUserInfo=$this->openIdClient->requestUserInfo();
-			}catch(OpenIDConnectClientException $exc){
+                $this->openIdUserInfo=$this->openIdClient->requestUserInfo();
+            } catch(OpenIDConnectClientException $exc){
                 //When the user is not allowed to acces the userinfo endpoint, openid connect will throw an exception.
                 
                 //Basically all required user information can be provided with the openid claims, and if the user info is
                 //not accesable via userinfo_endpoint, try to get the information from the main openid claims.
                 //Whenever an required user info is not found from the claims, translate5 will write an warning in the log.
 
-                //Info: userinfo_endpoint is deprecated on the newer versions of openid protocol, 
+                //Info: userinfo_endpoint is deprecated on the newer versions of openid protocol,
                 //,because the access_token and id_token that you get from the authenticator is enough to get user attributes.
-			}
+            }
         }
 
         //check if the attribute exist in the claims
@@ -428,44 +437,30 @@ class ZfExtended_OpenIDConnectClient{
             return $this->openIdUserInfo->$attribute;
         }
         if($warnEmpty){
-			$this->log->warn('E1173', 'The OpenIdUserData attribute {attribute} was not set by the requested OpenID server.', [
-				'attributeToFetch' => $attribute,
-				'attribute' => $attribute,
-			]);
-		}
+            $this->log->warn('E1173', 'The OpenIdUserData attribute {attribute} was not set by the requested OpenID server.', [
+                'attributeToFetch' => $attribute,
+                'attribute' => $attribute,
+            ]);
+        }
 
         //no attribute was found
         return null;
     }
 
-    /***
-     * Throw open id client exception with additional debug data and given message
-     * @param string $message
-     * @param bool $isErrorLvl
-     * @throws ZfExtended_OpenIDConnectClientException
+    /**
+     * returns a data array for error code exceptions
+     * @return array
      */
-    protected function throwOpenIdConnectException(string $message,bool $isErrorLvl=false) {
-        $openidInfo=[
-            'customer'=>$this->getCustomer()->getDataObject(),
-            'userInfo'=>$this->openIdUserInfo,
-            'userClaims'=>$this->openIdUserClaims
-        ];
-        $data=[
-            'message' => $message,
+    protected function getExceptionData(): array {
+        return [
             'request' => print_r($this->request->getParams(),1),
             'session' => print_r($_SESSION,1),
-            'openid' => $openidInfo
+            'openid' => [
+                'customerId'    =>  $this->getCustomer()->getId(),
+                'customerName'  =>  $this->getCustomer()->getName(),
+                'userInfo'      =>  $this->openIdUserInfo,
+                'userClaims'    =>  $this->openIdUserClaims
+            ]
         ];
-        if($isErrorLvl){
-            $this->log->error('E1165', $message,$data);
-        }else{
-            $this->log->info('E1165', $message,$data);
-        }
-        throw new ZfExtended_OpenIDConnectClientException('E1165',[
-            'message' => $message,
-            'request' => print_r($this->request->getParams(),1),
-            'session' => print_r($_SESSION,1),
-            'openid' => $openidInfo
-        ]);
     }
 }

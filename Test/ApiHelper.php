@@ -299,7 +299,7 @@ class ZfExtended_Test_ApiHelper {
      * @param bool $waithForImport default true : if this is set to false, the function will not check the task import state
      * @return boolean;
      */
-    public function import(array $task, $failOnError = true,$waithForImport=true) {
+    public function import(array $task, $failOnError = true, $waitForImport = true): bool {
         $this->initTaskPostData($task);
         
         $test = $this->testClass;
@@ -309,10 +309,10 @@ class ZfExtended_Test_ApiHelper {
         $resp = $this->getLastResponse();
         $test::assertEquals(200, $resp->getStatus(), 'Import Request does not respond HTTP 200! Body was: '.$resp->getBody());
         
-        if(!$waithForImport){
-            return;
+        if(!$waitForImport){
+            return true;
         }
-        $this->checkTaskStateLoop($failOnError);
+        return $this->checkTaskStateLoop($failOnError);
     }
     
     /***
@@ -321,7 +321,7 @@ class ZfExtended_Test_ApiHelper {
      * @throws Exception
      * @return boolean
      */
-    public function checkTaskStateLoop(bool $failOnError = true){
+    public function checkTaskStateLoop(bool $failOnError = true): bool {
         $test = $this->testClass;
         $counter=0;
         $limitCheck = 25;
@@ -391,13 +391,15 @@ class ZfExtended_Test_ApiHelper {
      * tests the config names and values in the given associated array against the REST accessible application config
      * If the given value to the config is null, the config value is just checked for existence and if the configured value is not empty
      * @param array $configsToTest
+     * @param array $filter provide an array with several filtering guids. Key taskGuid or userGuid or customerId, value the according value
      */
-    public function testConfig(array $configsToTest) {
+    public function testConfig(array $configsToTest, array $plainFilter = []) {
         $test = $this->testClass;
         foreach($configsToTest as $name => $value) {
-            $config = $this->requestJson('editor/config', 'GET', array(
+            $filter = array_merge([
                 'filter' => '[{"type":"string","value":"'.$name.'","property":"name","operator":"like"}]',
-            ));
+            ], $plainFilter);
+            $config = $this->requestJson('editor/config', 'GET', $filter);
             $test::assertCount(1, $config, 'No Config entry for config "'.$name.'" found in instance config!');
             if(is_null($value)) {
                 $test::assertNotEmpty($config[0]->value, 'Config '.$name.' in instance is empty but should be set with a value!');

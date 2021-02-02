@@ -112,6 +112,7 @@ class  ZfExtended_Zendoverwrites_Http_Client extends Zend_Http_Client {
     {
         $removeArrayIndexInUrlEncode = !empty($this->config['removearrayindexinurlencode']);
         //remove the encoded array indexes from the body
+        
         $body = parent::_prepareBody();
         if($removeArrayIndexInUrlEncode && $this->enctype == self::ENC_URLENCODED){
             $body = preg_replace('/\%5B\d+\%5D/', '', $body);
