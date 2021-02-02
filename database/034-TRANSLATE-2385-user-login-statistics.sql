@@ -26,7 +26,7 @@
 -- */
 
 CREATE TABLE `Zf_login_log` (
-    `id` INT auto_increment NULL,
+    `id` INT auto_increment NOT NULL,
     `created` DATETIME NOT NULL,
     `login` varchar(255) NOT NULL,
     `userGuid` varchar(38) NOT NULL,
