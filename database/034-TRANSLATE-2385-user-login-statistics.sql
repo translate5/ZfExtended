@@ -27,10 +27,10 @@
 
 CREATE TABLE `Zf_login_log` (
     `id` INT auto_increment NULL,
-    `created DATETIME NOT NULL,
-    `login varchar(255) NOT NULL,
-    `userGuid varchar(38) NOT NULL,
-    `status varchar(16) NULL,
-    `way varchar(64) NULL,
+    `created` DATETIME NOT NULL,
+    `login` varchar(255) NOT NULL,
+    `userGuid` varchar(38) NOT NULL,
+    `status` varchar(16) NULL,
+    `way` varchar(64) NULL,
     CONSTRAINT `Zf_login_log_PK` PRIMARY KEY (`id`)
 ) ENGINE=InnoDB;
