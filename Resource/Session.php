@@ -150,8 +150,14 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
         $sessionDb = ZfExtended_Factory::get('ZfExtended_Models_Db_Session');
         /* @var $sessionDb ZfExtended_Models_Db_Session */
         $row = $sessionDb->fetchRow(['authToken = ?' => $_REQUEST['sessionToken']]);
+        
+        $sysLog = Zend_Registry::get('logger');
+        /* @var $sysLog ZfExtended_Logger */
+        
         if(empty($row) || empty($row->session_id)) {
-            $this->authTokenLog('No matching sessionToken found in DB: '.$_REQUEST['sessionToken']);
+            $sysLog->warn('E1332', 'Authentication: No matching sessionToken found in DB: {token}', [
+                'token' => $_REQUEST['sessionToken']
+            ]);
             $this->reload(); //making exit
         }
         Zend_Session::setId($row->session_id);
@@ -159,19 +165,26 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
         $sessionDb->updateAuthToken($row->session_id);
         $session = new Zend_Session_Namespace();
         $user = new Zend_Session_Namespace('user');
-        $this->authTokenLog('Spawning session for sessionToken '.$_REQUEST['sessionToken'].' user: '.print_r($user->data,1));
+        
+        //since we have no user instance here, we create the success log by hand
+        $loginLog = ZfExtended_Models_LoginLog::createLog("sessionToken");
+        $loginLog->setLogin($user->data->login);
+        $loginLog->setUserGuid($user->data->userGuid);
+        $loginLog->setStatus($loginLog::LOGIN_SUCCESS);
+        $loginLog->save();
+        
+        $sysLog->debug('E1332', 'Authentication: Spawning session for sessionToken {token} and user {login}', [
+            'token' => $_REQUEST['sessionToken'],
+            'login' => $user->data->login,
+            'userGuid' => $user->data->userGuid,
+        ]);
+        
         //since we changed the sessionId, we have to reset the internalSessionUniqId too
         unset($session->internalSessionUniqId);
         $this->setInternalSessionUniqId();
         //reload redirect to remove authToken from parameter
         //or doing this in access plugin because there are several helpers?
         $this->reload(); //making exit
-    }
-    
-    private function authTokenLog($msg) {
-        if(ZfExtended_Debug::hasLevel('core', 'apiLogin')) {
-            error_log($msg);
-        }
     }
     
     /**

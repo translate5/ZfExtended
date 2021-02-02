@@ -9,8 +9,8 @@ START LICENSE AND COPYRIGHT
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
 
  This file may be used under the terms of the GNU LESSER GENERAL PUBLIC LICENSE version 3
- as published by the Free Software Foundation and appearing in the file lgpl3-license.txt 
- included in the packaging of this file.  Please review the following information 
+ as published by the Free Software Foundation and appearing in the file lgpl3-license.txt
+ included in the packaging of this file.  Please review the following information
  to ensure the GNU LESSER GENERAL PUBLIC LICENSE version 3.0 requirements will be met:
 https://www.gnu.org/licenses/lgpl-3.0.txt
 
@@ -126,14 +126,16 @@ class ZfExtended_SessionController extends ZfExtended_RestController {
             $this->view->sessionToken = $sessionDb->updateAuthToken($this->view->sessionId);
             
             $userSession = new Zend_Session_Namespace('user');
-            //set a flag to identify that this session was started by API 
+            //set a flag to identify that this session was started by API
             $userSession->loginByApiAuth = true;
             $this->log('User authentication by API successful for '.$login);
             $invalidLoginCounter->resetCounter();
+            ZfExtended_Models_LoginLog::addSuccess($userModel, "sessionapi");
             return true;
         }
+        ZfExtended_Models_LoginLog::addFailed($login, "sessionapi");
         $invalidLoginCounter->increment();
-        //throwing a 403 on the authentication request means: 
+        //throwing a 403 on the authentication request means:
         //  hey guy you could not be authenticated with the given credentials!
         $this->log('User authentication by API failed for '.$login);
         throw new ZfExtended_NoAccessException();
