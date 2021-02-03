@@ -34,8 +34,7 @@ class ZfExtended_Logger_Writer_Database extends ZfExtended_Logger_Writer_Abstrac
         
         //if this event is a duplication, we update the entry and do not insert a new one
         $duplicateCount = $this->getDuplicateCount($event);
-        if($duplicateCount > 0) {
-            $db->incrementDuplicate($event->duplicationHash, $duplicateCount);
+        if($duplicateCount > 0 && $db->incrementDuplicate($event->duplicationHash, $duplicateCount)) {
             return;
         }
         
