@@ -298,17 +298,18 @@ class ZfExtended_Models_Installer_DbUpdater {
         try {
             $config = Zend_Registry::get('config');
             $db = $config->resources->db->params;
-            $argv = array();
+            $argv = []; //is used and needed in the required PHP file
             $argv[] = $file['relativeToOrigin'];
             $argv[] = $db->host;
             $argv[] = $db->dbname;
             $argv[] = $db->username;
             $argv[] = $db->password;
             ob_start();
+            $_HIDDEN_file = $file; //$file may be overwritten by the required PHP file.
             require $file['absolutePath'];
             $result = ob_get_flush();
             $this->log->info('E1295', 'Result of imported DbUpdater PHP File {path}: {result}', [
-                'path' => $file['relativeToOrigin'],
+                'path' => $_HIDDEN_file['relativeToOrigin'],
                 'result' => print_r($result,1)
             ]);
             //per default true, see attribute docu for more info
