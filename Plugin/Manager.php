@@ -27,7 +27,7 @@ END LICENSE AND COPYRIGHT
  */
 class ZfExtended_Plugin_Manager {
     /**
-     * Container for the Plguin Instances
+     * Container for the Plugin Instances
      * @var array
      */
     protected $pluginInstances = array();
@@ -36,14 +36,64 @@ class ZfExtended_Plugin_Manager {
     protected $allLocalePaths = array();
     protected $allFrontendControllers = array();
     
-    public function bootstrap() {
+    /**
+     * returns a list of active plugins according to the config
+     * @return array
+     */
+    public function getActive(): array {
         $config = Zend_Registry::get('config');
         if (! isset($config->runtimeOptions->plugins)) {
+            return [];
+        }
+        return array_unique($config->runtimeOptions->plugins->active->toArray());
+    }
+    
+    /**
+     * Activates the plugin given by name
+     * @param string $plugin
+     * @param bool $activate true to activate, false to deactivate
+     * @return bool
+     */
+    public function setActive(string $plugin, bool $activate = true): bool {
+        $plugin = strtolower($plugin);
+        $available = $this->getAvailable();
+        $keys = array_map('strtolower', array_keys($available));
+        $available = array_combine($keys, array_values($available));
+        if(empty($available[$plugin])) {
+            return false;
+        }
+        $config = ZfExtended_Factory::get('editor_Models_Config');
+        /* @var $config editor_Models_Config */
+        $config->loadByName('runtimeOptions.plugins.active');
+        $active = json_decode($config->getValue());
+        if(!is_array($active)) {
+            $active = [];
+        }
+        if($activate) {
+            $active[] = $available[$plugin];
+        }
+        else {
+            $active = array_unique($active);
+            $found = array_search($available[$plugin], $active);
+            if($found === false) {
+                return true;
+            }
+            unset($active[$found]);
+        }
+        $config->setValue(json_encode(array_unique($active)));
+        $config->save();
+        return true;
+    }
+    
+    public function bootstrap() {
+        $pluginClasses = $this->getActive();
+        if (empty($pluginClasses)) {
             return;
         }
-        $pluginClasses = array_unique($config->runtimeOptions->plugins->active->toArray());
 
         //TRANSLATE-569: ensure that only the plugin config for the affected module is loaded.
+        $logger = Zend_Registry::get('logger');
+        /* @var $logger ZfExtended_Logger */
         foreach ($pluginClasses as $pluginClass) {
             try {
                 $name = $this->classToName($pluginClass);
@@ -61,8 +111,6 @@ class ZfExtended_Plugin_Manager {
                 }
             }
             catch (ReflectionException $exception) {
-                $logger = Zend_Registry::get('logger');
-                /* @var $logger ZfExtended_Logger */
                 $logger->warn('E1218', 'The PHP class for the activated plug-in "{plugin}" does not exist.', [
                     'plugin' => $pluginClass,
                     'originalExceptionMsg' => $exception->getMessage(),
@@ -121,10 +169,10 @@ class ZfExtended_Plugin_Manager {
     }
     
     /**
-     * returns a list of loaded plugins
-     * @return multitype:
+     * returns a list of loaded plugins for the current module
+     * @return array
      */
-    public function getActive() {
+    public function getLoaded() {
         return array_keys($this->pluginInstances);
     }
     
@@ -144,7 +192,7 @@ class ZfExtended_Plugin_Manager {
             return [];
         }
         
-        $result = array_map(function($dir) { 
+        $result = array_map(function($dir) {
             if(!is_dir($dir)){
                 return false;
             }
@@ -152,6 +200,41 @@ class ZfExtended_Plugin_Manager {
             return end($dir);
         }, $glob);
         return array_filter($result);
+    }
+    
+    /**
+     * returns a list of installed plug-ins
+     * @return ['PluginName'=>'Plugin_Init_Class',...]
+     */
+    
+    public function getAvailable() {
+        $result = [];
+        $moduleDirs = new FilesystemIterator(APPLICATION_PATH.'/modules/');
+        foreach ($moduleDirs as $moduleDirInfo) {
+            //get plugins of this module
+            $pluginDirPath = $moduleDirInfo->getPathname().'/Plugins';
+            if(!\is_dir($pluginDirPath)){
+                continue;
+            }
+            $pluginDirs = new FilesystemIterator($pluginDirPath);
+            foreach ($pluginDirs as $pluginDirInfo) {
+                /* @var $pluginDirInfo \SplFileInfo */
+                
+                if(!$pluginDirInfo->isDir()) {
+                    continue;
+                }
+                $name = $pluginDirInfo->getBasename();
+                if(file_exists($pluginDirInfo.'/Init.php')) {
+                    $result[$name] = $moduleDirInfo->getBasename().'_Plugins_'.$name.'_Init';
+                    continue;
+                }
+                if(file_exists($pluginDirInfo.'/Bootstrap.php')) {
+                    $result[$name] = $moduleDirInfo->getBasename().'_Plugins_'.$name.'_Init';
+                    continue;
+                }
+            }
+        }
+        return $result;
     }
     
     /**
