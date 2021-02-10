@@ -9,8 +9,8 @@ START LICENSE AND COPYRIGHT
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
 
  This file may be used under the terms of the GNU LESSER GENERAL PUBLIC LICENSE version 3
- as published by the Free Software Foundation and appearing in the file lgpl3-license.txt 
- included in the packaging of this file.  Please review the following information 
+ as published by the Free Software Foundation and appearing in the file lgpl3-license.txt
+ included in the packaging of this file.  Please review the following information
  to ensure the GNU LESSER GENERAL PUBLIC LICENSE version 3.0 requirements will be met:
 https://www.gnu.org/licenses/lgpl-3.0.txt
 
@@ -43,7 +43,7 @@ abstract class ZfExtended_Models_Validator_Abstract {
    * ATTENTION not the entity instance is validated, but the data given in isValid() !
    * @var ZfExtended_Models_Entity_Abstract
    */
-  protected $entity; 
+  protected $entity;
 
   /**
    * Example for defining Validators:
@@ -214,6 +214,6 @@ abstract class ZfExtended_Models_Validator_Abstract {
     else {
       $class = 'Zend_Validate_'.ucfirst($name);
     }
-    return ZfExtended_Factory::get($class, $parameters);
+    return ZfExtended_Factory::get($class, array_values($parameters));
   }
 }

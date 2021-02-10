@@ -81,7 +81,7 @@ class ZfExtended_Models_SystemRequirement_Modules_Environment extends ZfExtended
      * Ensure that the correct locale is set
      */
     protected function checkLocale() {
-        $locale = setlocale(LC_CTYPE, 0);
+        $locale = setlocale(LC_CTYPE, null);
         if(!$this->isWin && stripos($locale, 'utf-8') === false && stripos($locale, 'utf8') === false) {
             $this->result->error[] = 'Your system wide used locale is not UTF-8 capable, it is set to: LC_CTYPE='.$locale;
             $this->result->error[] = 'Please use a UTF-8 based locale like en_US.UTF-8 to avoid problems with special characters in filenames.';

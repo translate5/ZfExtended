@@ -9,8 +9,8 @@ START LICENSE AND COPYRIGHT
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
 
  This file may be used under the terms of the GNU LESSER GENERAL PUBLIC LICENSE version 3
- as published by the Free Software Foundation and appearing in the file lgpl3-license.txt 
- included in the packaging of this file.  Please review the following information 
+ as published by the Free Software Foundation and appearing in the file lgpl3-license.txt
+ included in the packaging of this file.  Please review the following information
  to ensure the GNU LESSER GENERAL PUBLIC LICENSE version 3.0 requirements will be met:
 https://www.gnu.org/licenses/lgpl-3.0.txt
 
@@ -143,7 +143,7 @@ class ZfExtended_Models_Installer_DbFileFinder {
     }
     
     /**
-     * merges the data of the replaced SQL files at the correct place into the final tree 
+     * merges the data of the replaced SQL files at the correct place into the final tree
      */
     protected function mergeReplacements() {
         foreach($this->replacements as $name => $files) {
@@ -158,7 +158,7 @@ class ZfExtended_Models_Installer_DbFileFinder {
     /**
      * returns the name of the sql package for the given meta informations
      * default is "application" if the meta data does not contain any name information
-     *  
+     *
      * @param string $meta
      * @return string
      */
@@ -172,7 +172,7 @@ class ZfExtended_Models_Installer_DbFileFinder {
     /**
      * loads and returns all meta information to this database source directory or null if nothing exists.
      * @param string $path
-     * @return stdClass|null 
+     * @return stdClass|null
      */
     protected function loadMetaInformation($path) {
         $file = $path.self::FILE_META;
@@ -232,11 +232,11 @@ class ZfExtended_Models_Installer_DbFileFinder {
     }
     /**
      * //checks, if every sql-file of a plugin has an uninstall sql-file
-     * 
-     * @return boolean 
+     *
+     * @return boolean
      */
     protected function checkUnistallSQLfiles(string $pluginDatabaseDir) {
-        $r = true; 
+        $r = true;
         $files = new DirectoryIterator($pluginDatabaseDir);
         foreach ($files as $file) {
             if ($file->isDot() || !$file->isFile()) {

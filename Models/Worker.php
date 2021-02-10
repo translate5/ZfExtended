@@ -488,8 +488,8 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
             $exclude = '';
             $params = [$this->getId(), $this->getParentId(), $this->getParentId(), $this->getTaskGuid()];
             if(!empty($exludedWorkers)) {
-                $exclude = ' AND worker NOT IN (?)';
-                $params[] = $exludedWorkers;
+                //adapter->query can not handle arrays directlym so use plain string concat
+                $exclude = $this->db->getAdapter()->quoteInto(' AND worker NOT IN (?)', $exludedWorkers);
             }
             $this->db->getAdapter()->query('UPDATE Zf_worker SET state = "'.self::STATE_DEFUNCT.'"
                 WHERE (parentId = 0 AND id IN (?,?)) OR (parentId != 0 AND parentId = ?)

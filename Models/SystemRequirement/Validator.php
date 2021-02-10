@@ -86,6 +86,7 @@ class ZfExtended_Models_SystemRequirement_Validator {
         }
         foreach($toRun as $module) {
             $moduleInstance = new $this->modules[$module];
+            /* @var $moduleInstance ZfExtended_Models_SystemRequirement_Modules_Abstract */
             if($isInstallation && !$moduleInstance->isInstallationBootstrap()) {
                 continue;
             }
