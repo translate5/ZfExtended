@@ -171,7 +171,7 @@ class ZfExtended_Debug {
         
         $pm = Zend_Registry::get('PluginManager');
         /* @var $pm ZfExtended_Plugin_Manager */
-        $result->pluginsLoaded = $pm->getActive();
+        $result->pluginsLoaded = $pm->getLoaded();
         
         $events = ZfExtended_Factory::get('ZfExtended_EventManager', array(__CLASS__));
         /* @var $events ZfExtended_EventManager */
