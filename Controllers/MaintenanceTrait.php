@@ -45,8 +45,13 @@ trait ZfExtended_Controllers_MaintenanceTrait{
         //maintenance can be enabled by setting a debug level or for just testing the layout by adding the testmaintenance=1 parameter to the URL
         $directMaintenance = ZfExtended_Debug::hasLevel('core', 'maintenance') || !empty($_GET['testmaintenance']);
         $maintenanceStartDate=$config->runtimeOptions->maintenance->startDate;
+        $maintenanceMessage = $config->runtimeOptions->maintenance->message ?? '';
         
         if(!$directMaintenance && (!$maintenanceStartDate || !(strtotime($maintenanceStartDate)<= (time()+ 86400)))){//if there is no date and the start date is not in the next 24H
+            if(!empty($maintenanceMessage)) {
+                $this->_response->setHeader('x-translate5-maintenance-message', $maintenanceMessage);
+                $this->view->displayMaintenancePanel = true;
+            }
             return;
         }
         
@@ -59,7 +64,6 @@ trait ZfExtended_Controllers_MaintenanceTrait{
             throw new ZfExtended_Models_MaintenanceException();
         }
         $maintenanceTimeToNotify= max(1, (int) $config->runtimeOptions->maintenance->timeToNotify);
-        $maintenanceMessage = $config->runtimeOptions->maintenance->message ?? '';
      
         $maintenanceStartDate = strtotime($maintenanceStartDate);
         $time = $maintenanceStartDate - ($maintenanceTimeToNotify * 60);

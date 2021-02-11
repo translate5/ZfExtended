@@ -34,7 +34,7 @@ END LICENSE AND COPYRIGHT
  */
 /**
  */
-class Models_Installer_Maintenance {
+class ZfExtended_Models_Installer_Maintenance {
     
     /**
      * @var Zend_Config
@@ -50,98 +50,6 @@ class Models_Installer_Maintenance {
         $this->config = Zend_Registry::get('config');
         $this->db = Zend_Db::factory($this->config->resources->db);
         
-        if($this->config->runtimeOptions->maintenance->startDate != $this->getConfFromDb()->startDate) {
-            die("\nError: There is some maintenance configuration in the installation.ini, \n please remove it for proper usage of this tool!\n\n");
-        }
-    }
-    
-    public function announce($time, $msg = '') {
-        $receiver = $this->config->runtimeOptions->maintenance->announcementMail ?? '';
-        //fastest way to prevent that we spam our support mailbox TODO better solution
-        $preventDuplicates = ['support@translate5.net'];
-        if(empty($receiver)) {
-            die('No receiver groups/users set in runtimeOptions.maintenance.announcementMail, so no email sent!'."\n\n");
-        }
-        $receiver = explode(',', $receiver);
-        $plainUsers = [];
-        $receiverGroups = array_filter($receiver, function($item) use (&$plainUsers) {
-            $item = explode(':', $item);
-            if(count($item) == 1) {
-                return true;
-            }
-            $plainUsers[] = end($item);
-            return false;
-        });
-        
-        $startTimeStamp = strtotime($time);
-        
-        Zend_Registry::set('module', 'editor'); // fix to load correct mail paths
-        Zend_Registry::set('Zend_Locale', new Zend_Locale('en')); // fix to prevent error message
-        $mailer = ZfExtended_Factory::get('ZfExtended_TemplateBasedMail');
-        /* @var $mailer ZfExtended_TemplateBasedMail */
-        $mailer->setParameters([
-            'appName' => $this->config->runtimeOptions->appName,
-            'maintenanceDate' => date('Y-m-d H:i (O)', $startTimeStamp),
-            'message' => $msg,
-        ]);
-        $mailer->setTemplate('announceMaintenance.phtml');
-        
-        $user = ZfExtended_Factory::get('ZfExtended_Models_User');
-        /* @var $user ZfExtended_Models_User */
-        $receivers = $user->loadAllByRole($receiverGroups);
-        
-        
-        foreach($plainUsers as $login) {
-            try {
-                $receivers[] = $user->loadByLogin($login)->toArray();
-            }
-            catch(ZfExtended_Models_Entity_NotFoundException $e) {
-                echo "There is a non existent user '$login' in the runtimeOptions.maintenance.announcementMail configuration!\n";
-            }
-        }
-        
-        echo "Send maintenance announcement mails to:\n";
-        foreach($receivers as $userData) {
-            $user->init($userData);
-            if(in_array($user->getEmail(), $preventDuplicates)) {
-                continue;
-            }
-            $preventDuplicates[] = $user->getEmail();
-            echo "  ".$user->getUsernameLong().' '.$user->getEmail()."\n";
-            $mailer->sendToUser($user);
-        }
-    }
-    
-    public function disable() {
-        $this->db->query("UPDATE `Zf_configuration` SET `value` = null WHERE `name` = 'runtimeOptions.maintenance.startDate'");
-        $this->db->query("UPDATE `Zf_configuration` SET `value` = null WHERE `name` = 'runtimeOptions.maintenance.message'");
-        //when  we disable the maintenance mode, we trigger the worker queue
-        $wq = new ZfExtended_Worker_Queue();
-        $wq->trigger();
-        $this->status();
-    }
-    
-    public function status() {
-        $conf = $this->getConfFromDb();
-        if(empty($conf->startDate)) {
-            die("\n Maintenance mode disabled!\n\n");
-        }
-        $startTimeStamp = strtotime($conf->startDate);
-        $now = time();
-        echo "\n";
-        if($startTimeStamp < $now) {
-            echo " \033[1;31mMaintenance mode active!\033[00m\n\n";
-        }
-        
-        elseif ($startTimeStamp - ($conf->timeToNotify*60) < $now){
-            echo " \033[1;33mMaintenance mode notified!\033[00m\n\n";
-        }
-        echo "         start: ".date('Y-m-d H:i (O)', $startTimeStamp)."\n";
-        echo "  start notify: ".date('Y-m-d H:i (O)', $startTimeStamp - ($conf->timeToNotify*60))."\n";
-        echo "    login lock: ".date('Y-m-d H:i (O)', $startTimeStamp - ($conf->timeToLoginLock*60))."\n";
-        echo "       message: ".$conf->message."\n";
-        echo "     receivers: ".$conf->announcementMail."\n";
-        echo "\n";
     }
     
     /**
@@ -165,62 +73,121 @@ class Models_Installer_Maintenance {
         }
         return $result;
     }
-     
-    public function set($time, $msg = '') {
+    
+    public function isInIni(): bool
+    {
+        return $this->config->runtimeOptions->maintenance->startDate != $this->getConfFromDb()->startDate;
+    }
+    
+    public function status(): stdClass
+    {
+        return $this->getConfFromDb();
+    }
+    
+    
+    public function disable() {
+        $this->db->query("UPDATE `Zf_configuration` SET `value` = null WHERE `name` = 'runtimeOptions.maintenance.startDate'");
+        $this->db->query("UPDATE `Zf_configuration` SET `value` = null WHERE `name` = 'runtimeOptions.maintenance.message'");
+        //when  we disable the maintenance mode, we trigger the worker queue
+        $wq = new ZfExtended_Worker_Queue();
+        $wq->trigger();
+    }
+    
+    /**
+     * sets the maintenance mode, returns false if timestamp can not be parsed
+     * @param string $time
+     * @param string $msg
+     * @return bool
+     */
+    public function set(string $time, string $msg = ''): bool
+    {
         $timeStamp = strtotime($time);
         if(!$timeStamp) {
-            echo 'Given time parameter "'.$time.'" can not be parsed to a valid timestamp!';
-            return;
+            return false;
         }
         $timeStamp = date('Y-m-d H:i', $timeStamp);
         $this->db->query("UPDATE `Zf_configuration` SET `value` = ? WHERE `name` = 'runtimeOptions.maintenance.startDate'", $timeStamp);
         $this->db->query("UPDATE `Zf_configuration` SET `value` = ? WHERE `name` = 'runtimeOptions.maintenance.message'", $msg);
-        $this->status();
+        return true;
     }
     
-    public function checkUsers() {
-        session_start();
-        $config = Zend_Registry::get('config');
-        $db = Zend_Db::factory($config->resources->db);
-        $result = $db->query('SELECT count(*) active FROM session where modified + lifetime > unix_timestamp()');
-        $activeSessions = $result->fetchObject()->active;
-        
-        $result = $db->query('SELECT count(*) active FROM session where modified + 3600 > unix_timestamp()');
-        $lastHourSessions = $result->fetchObject()->active;
-        
-        echo "Session Summary:\n";
-        echo "Active Sessions:               ".$activeSessions."\n";
-        echo "Active Sessions (last hour):   ".$lastHourSessions."\n";
-        
-        //$result = $db->query('SELECT session_data FROM session where modified + lifetime > unix_timestamp()');
-        $result = $db->query('SELECT * FROM session where modified + 3600 > unix_timestamp()');
-        
-        echo "Session Users (last hour):\n";
-        while($row = $result->fetchObject()) {
-            session_decode($row->session_data);
-            if(!empty($_SESSION['user']) && !empty($_SESSION['user']['data']) && !empty($_SESSION['user']['data']->login)){
-                $data = $_SESSION['user']['data'];
-                settype($data->firstName, 'string');
-                settype($data->surName, 'string');
-                settype($data->login, 'string');
-                settype($data->email, 'string');
-                $username = $data->firstName.' '.$data->surName.' ('.$data->login.': '.$data->email.')';
-                echo "                               ".$username."\n";
-            }
-            else {
-                echo "                               No User\n";
-            }
-        }
-        session_destroy();
+    /**
+     * sets a GUI message, provide empty string to clear
+     * @param string $msg
+     */
+    public function message(string $msg)
+    {
+        $this->db->query("UPDATE `Zf_configuration` SET `value` = ? WHERE `name` = 'runtimeOptions.maintenance.message'", $msg);
     }
     
-    public function checkWorkers() {
-        $config = Zend_Registry::get('config');
-        $db = Zend_Db::factory($config->resources->db);
-        $result = $db->query('SELECT count(*) cnt, state FROM Zf_worker group by state');
-        echo "Workers:\n";
-        while($row = $result->fetchObject()) {
-            echo "        ".str_pad($row->state, 23).$row->cnt."\n";
+    public function announce($time, $msg = ''): array {
+        
+        $result = [
+            'error' => [],
+            'warning' => [],
+            'sent' => [],
+        ];
+        
+        $startTimeStamp = strtotime($time);
+        if(!$startTimeStamp) {
+            $result['error'][] = 'The given time can not parsed to a valid timestamp!';
+            return $result;
         }
+        
+        $receiver = $this->config->runtimeOptions->maintenance->announcementMail ?? '';
+        //fastest way to prevent that we spam our support mailbox TODO better solution
+        $preventDuplicates = ['support@translate5.net'];
+        if(empty($receiver)) {
+            $result['error'][] = 'No receiver groups/users set in runtimeOptions.maintenance.announcementMail, so no email sent!';
+            return $result;
+        }
+        $receiver = explode(',', $receiver);
+        $plainUsers = [];
+        $receiverGroups = array_filter($receiver, function($item) use (&$plainUsers) {
+            $item = explode(':', $item);
+            if(count($item) == 1) {
+                return true;
+            }
+            $plainUsers[] = end($item);
+            return false;
+        });
+        
+        
+        Zend_Registry::set('module', 'editor'); // fix to load correct mail paths
+        Zend_Registry::set('Zend_Locale', new Zend_Locale('en')); // fix to prevent error message
+        $mailer = ZfExtended_Factory::get('ZfExtended_TemplateBasedMail');
+        /* @var $mailer ZfExtended_TemplateBasedMail */
+        $mailer->setParameters([
+            'appName' => $this->config->runtimeOptions->appName,
+            'maintenanceDate' => date('Y-m-d H:i (O)', $startTimeStamp),
+            'message' => $msg,
+        ]);
+        $mailer->setTemplate('announceMaintenance.phtml');
+        
+        $user = ZfExtended_Factory::get('ZfExtended_Models_User');
+        /* @var $user ZfExtended_Models_User */
+        $receivers = $user->loadAllByRole($receiverGroups);
+        
+        
+        foreach($plainUsers as $login) {
+            try {
+                $receivers[] = $user->loadByLogin($login)->toArray();
+            }
+            catch(ZfExtended_Models_Entity_NotFoundException $e) {
+                $result['warning'][] = "There is a non existent user '$login' in the runtimeOptions.maintenance.announcementMail configuration!";
+            }
+        }
+        
+        foreach($receivers as $userData) {
+            $user->init($userData);
+            if(in_array($user->getEmail(), $preventDuplicates)) {
+                continue;
+            }
+            $preventDuplicates[] = $user->getEmail();
+            $result['sent'][] = "  ".$user->getUsernameLong().' '.$user->getEmail();
+            $mailer->sendToUser($user);
+        }
+        
+        return $result;
     }
 }

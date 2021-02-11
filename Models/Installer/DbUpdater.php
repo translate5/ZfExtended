@@ -229,8 +229,11 @@ class ZfExtended_Models_Installer_DbUpdater {
     /**
      * Adds the new SQL files to the DB or runs the PHP script
      * @param array $toProcess
+     * @return int count of imported new files
      */
-    public function applyNew(array $toProcess) {
+    public function applyNew(array $toProcess): int
+    {
+        $count = 0;
         $dbversion = ZfExtended_Factory::get('ZfExtended_Models_Db_DbVersion');
         /* @var $dbversion ZfExtended_Models_Db_DbVersion */
         
@@ -241,14 +244,17 @@ class ZfExtended_Models_Installer_DbUpdater {
             }
             
             if(!$this->handleFile($file)) {
-                continue;
+                //we stop processing, print the error message and do not process the following SQL files
+                break;
             }
+            $count++;
             $dbversion->insert($this->getInsertData($file, ZfExtended_Utils::getAppVersion()));
             unset($this->sqlFilesNew[$key]);
         }
         //we clean up all cache files after database update since DB definitions are cached
         Zend_Registry::get('cache')->clean();
         $this->logErrors();
+        return $count;
     }
     
     /**

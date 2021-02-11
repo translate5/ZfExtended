@@ -26,6 +26,18 @@
  */
 class ZfExtended_Logger_Writer_ErrorLog extends ZfExtended_Logger_Writer_Abstract {
     public function write(ZfExtended_Logger_Event $event) {
-        error_log($event->oneLine());
+        //FIXME duplicate handling:print all? ignore all duplicates?
+          // print one line prefixed with repeated >10/>50/100/>200/>500/>1000 times
+//         $duplicateCount = $this->getDuplicateCount($event);
+//         if($duplicateCount > 0) {
+//             $db->incrementDuplicate($event->duplicationHash, $duplicateCount);
+//             return;
+//         }
+        if($event->eventCode == 'E9999') {
+            error_log($event);
+        }
+        else {
+            error_log($event->oneLine());
+        }
     }
 }
