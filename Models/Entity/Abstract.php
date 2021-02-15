@@ -638,4 +638,23 @@ abstract class ZfExtended_Models_Entity_Abstract {
     public function setDefaultGroupBy(string $defaultGroupBy){
         $this->defaultGroupBy=$defaultGroupBy;
     }
+    
+    /***
+     * Load all rows where the row key will be the value from the $fieldName result
+     * @param string $fieldName
+     * @param bool $keylower  : keys will be lowercase if set to true
+     * @return array[]
+     */
+    public function loadAllKeyCustom(string $fieldName, bool $keylower = false){
+        $rows = $this->loadAll();
+        $result=[];
+        foreach ($rows as $row){
+            $key = $row[$fieldName];
+            if($keylower){
+                $key = strtolower($key);
+            }
+            $result[$key] = $row;
+        }
+        return $result;
+    }
 }

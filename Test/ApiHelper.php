@@ -78,6 +78,13 @@ class ZfExtended_Test_ApiHelper {
      */
     protected $customer;
     
+    
+    /***
+     * Collection of language resources created from addResources method
+     * @var array
+     */
+    protected static $resources=[];//TODO: remove from memory ?
+    
     protected $testusers = array(
         'testmanager' => '{00000000-0000-0000-C100-CCDDEE000001}',
         'testlector' => '{00000000-0000-0000-C100-CCDDEE000002}',
@@ -324,8 +331,9 @@ class ZfExtended_Test_ApiHelper {
     public function checkTaskStateLoop(bool $failOnError = true): bool {
         $test = $this->testClass;
         $counter=0;
-        $limitCheck = 25;
+        $limitCheck = 100;
         while(true){
+            error_log('Task state check '.$counter.'/'.$limitCheck.' state: '.$this->task->state);
             $taskResult = $this->requestJson('editor/task/'.$this->task->id);
             if($taskResult->state == 'open') {
                 $this->task = $taskResult;
@@ -342,14 +350,14 @@ class ZfExtended_Test_ApiHelper {
                 return false;
             }
             
-            //break after 25 trys
+            //break after 100 reloads
             if($counter==$limitCheck){
                 if($failOnError) {
                     $test::fail('Task Import stopped. Task doees not have state open after '.$limitCheck.' task checks.');
                 }
                 return false;
             }
-            
+            $counter++;
             sleep(3);
         }
     }
@@ -411,22 +419,6 @@ class ZfExtended_Test_ApiHelper {
     }
     
     /**
-     * returns the current active task to test
-     * @return stdClass
-     */
-    public function getTask() {
-        return $this->task;
-    }
-    
-    /***
-     * return the test customer
-     * @return stdClass
-     */
-    public function getCustomer(){
-        return $this->customer;
-    }
-    
-    /**
      * adds the given user to the actual task
      * @param string $username one of the predefined users (testmanager, testlector, testtranslator)
      * @param string $state open, waiting, finished, as available by the workflow
@@ -453,6 +445,95 @@ class ZfExtended_Test_ApiHelper {
         return $json;
     }
     
+    /***
+     * Create new language resource
+     * 
+     * @param array $params: api params
+     * @param string $fileName: the resource upload file name
+     * @param bool $waitForImport: wait until the resource is imported
+     * @return mixed|boolean
+     */
+    public function addResource(array $params ,string $fileName = null,bool $waitForImport=false){
+        
+        $test = $this->testClass;
+        //if filename is provided, set the file upload field
+        if($fileName){
+            $this->addFile('tmUpload', $this->getFile($fileName), "application/xml");
+            $resource = $this->requestJson('editor/languageresourceinstance', 'POST',$params);
+        }else{
+            //request because the requestJson will encode the params with "data" as parent
+            $response =$this->request('editor/languageresourceinstance', 'POST',$params);
+            $resource = $this->decodeJsonResponse($response);
+        }
+        $test::assertTrue(is_object($resource), 'Unable to create the language resource:'.$params['name']);
+        $test::assertEquals($params['name'], $resource->name);
+        
+        //collect the created resource
+        self::$resources[]=$resource;
+        
+        error_log("Language resources created. ".$resource->name);
+        
+        $resp = $this->requestJson('editor/languageresourceinstance/'.$resource->id, 'GET',[]);
+        
+        if(!$waitForImport){
+            return $resp;
+        }
+        error_log('Languageresources status check:'.$resp->status);
+        $counter=0;
+        $limitCheck=20;
+        while ($resp->status!='available'){
+            if($resp->status=='error'){
+                break;
+            }
+            //break after 20 trys
+            if($counter==$limitCheck){
+                break;
+            }
+            sleep(5);
+            $resp = $this->requestJson('editor/languageresourceinstance/'.$resp->id, 'GET',[]);
+            error_log('Languageresources status check '.$counter.'/'.$limitCheck.' state: '.$resp->status);
+            $counter++;
+        }
+        
+        $test::assertEquals('available',$resp->status,'Resource import stoped. Resource state is:'.$resp->status);
+        return $resp;
+    }
+    
+    /***
+     * 
+     * @param array $params
+     * @param string $filename
+     */
+    public function addTermCollection(array $params,string $filename=null) {
+        //create the language resource
+        $collection = $this->addResource($params,$filename);
+
+        //validate the results
+        $response=$this->requestJson('editor/termcollection/export', 'POST',['collectionId' =>$collection->id]);
+        $this->assertTrue(is_object($response),"Unable to export the terms by term collection");
+        $this->assertNotEmpty($response->filedata,"The exported tbx file by collection is empty");
+        error_log("Termcollection created. ".$collection->name);
+    }
+    
+    
+    /***
+     * Associate all $resources to the current task
+     */
+    public function addTaskAssoc(){
+        $taskGuid = $this->getTask()->taskGuid;
+        $test = $this->testClass;
+        $test::assertNotEmpty($taskGuid,'Unable to associate resources to task. taskGuid empty');
+        
+        foreach ($this->getResources() as $resource){
+            // associate languageresource to task
+            $this->requestJson('editor/languageresourcetaskassoc', 'POST',[
+                'languageResourceId'=>$resource->id,
+                'taskGuid'=>$taskGuid,
+                'segmentsUpdateable' => 0
+            ]);
+            error_log('Languageresources assoc to task. '.$resource->name.' -> '.$taskGuid);
+        }
+    }
     /**
      * @param array $task
      */
@@ -752,5 +833,41 @@ class ZfExtended_Test_ApiHelper {
         $zip->close();
         
         return $zipFile;
+    }
+    
+    /***
+     * Remove all resources from the database
+     */
+    public function removeResources() {
+        foreach ($this->getResources() as $resource){
+            $route = 'editor/languageresourceinstance/'.$resource->id;
+            if($resource->serviceName == 'TermCollection'){
+                $route = 'editor/termcollection/'.$resource->id;
+            }
+            $this->requestJson($route,'DELETE');
+        }
+    }
+    
+    /**
+     * returns the current active task to test
+     * @return stdClass
+     */
+    public function getTask() {
+        return $this->task;
+    }
+    
+    /***
+     * return the test customer
+     * @return stdClass
+     */
+    public function getCustomer(){
+        return $this->customer;
+    }
+    
+    /***
+     * Get the created language resources
+     */
+    public function getResources() {
+        return self::$resources;
     }
 }
