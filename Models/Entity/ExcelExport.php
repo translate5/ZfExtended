@@ -133,12 +133,14 @@ class ZfExtended_Models_Entity_ExcelExport {
         
     }
     
-    /***
+    /**
      * Loads the array data in the excel spreadsheet
+     * 
      * @param array $data
+     * @param int $activeSheetIndex
      */
-    public function loadArrayData(array $data){
-        $this->spreadsheet->setActiveSheetIndex(0);
+    public function loadArrayData(array $data,int $activeSheetIndex = 0){
+        $this->spreadsheet->setActiveSheetIndex($activeSheetIndex);
         $tempSheet = $this->spreadsheet->getActiveSheet();
         $rowCount = 1;
         foreach ($data as $row)
