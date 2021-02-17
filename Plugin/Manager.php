@@ -80,7 +80,7 @@ class ZfExtended_Plugin_Manager {
             }
             unset($active[$found]);
         }
-        $config->setValue(json_encode(array_unique($active)));
+        $config->setValue(json_encode(array_unique(array_values($active))));
         $config->save();
         return true;
     }
@@ -229,7 +229,7 @@ class ZfExtended_Plugin_Manager {
                     continue;
                 }
                 if(file_exists($pluginDirInfo.'/Bootstrap.php')) {
-                    $result[$name] = $moduleDirInfo->getBasename().'_Plugins_'.$name.'_Init';
+                    $result[$name] = $moduleDirInfo->getBasename().'_Plugins_'.$name.'_Bootstrap';
                     continue;
                 }
             }
