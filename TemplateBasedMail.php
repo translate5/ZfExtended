@@ -9,8 +9,8 @@ START LICENSE AND COPYRIGHT
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
 
  This file may be used under the terms of the GNU LESSER GENERAL PUBLIC LICENSE version 3
- as published by the Free Software Foundation and appearing in the file lgpl3-license.txt 
- included in the packaging of this file.  Please review the following information 
+ as published by the Free Software Foundation and appearing in the file lgpl3-license.txt
+ included in the packaging of this file.  Please review the following information
  to ensure the GNU LESSER GENERAL PUBLIC LICENSE version 3.0 requirements will be met:
 https://www.gnu.org/licenses/lgpl-3.0.txt
 
@@ -114,7 +114,7 @@ class  ZfExtended_TemplateBasedMail {
         $this->view->translate = ZfExtended_Zendoverwrites_Translate::getInstance();
         $this->initialLocale = $this->view->translate->getTargetLang();
         
-        //cache translation instance per language to be able to send the mail in the users language 
+        //cache translation instance per language to be able to send the mail in the users language
         self::$translationInstances[$this->initialLocale] = $this->view->translate;
         
         $libs = array_reverse($this->config->runtimeOptions->libraries->order->toArray());
@@ -139,7 +139,7 @@ class  ZfExtended_TemplateBasedMail {
     }
 
     /**
-     * Stores the initialized translation instance per used language 
+     * Stores the initialized translation instance per used language
      * @param ZfExtended_Zendoverwrites_Translate $translate
      */
     protected function storeTranslationInstance(ZfExtended_Zendoverwrites_Translate $translate) {
@@ -220,7 +220,7 @@ class  ZfExtended_TemplateBasedMail {
         $this->mail->setBodyText($textbody);
         if(!empty($htmlbody)){
             $this->addImagesIfExist();
-            $this->mail->setBodyHtml($htmlbody, null, Zend_Mime::ENCODING_8BIT);
+            $this->mail->setBodyHtml($htmlbody, null, Zend_Mime::ENCODING_QUOTEDPRINTABLE);
         }
     }
 
@@ -464,7 +464,7 @@ class  ZfExtended_TemplateBasedMail {
     /**
      * Adds CC-recipient, $email can be an array, or a single string address
      * if it is an associative array the keys are used as receiver name, the value as email
-     * @param string|array $email 
+     * @param string|array $email
      */
     public function addCc($email, $name=''){
         $this->mail->addCc($email, $name='');
