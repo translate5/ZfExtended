@@ -72,7 +72,7 @@ class ZfExtended_Logger_Filter {
             $this->lastAddedOrigins = [];
             $matches = null;
             $expression = trim($expression);
-            if(!preg_match('/^([a-zA-Z0-9]+)[\s]*(<=|=|>=|\\*=|\\^=|\\$=)[\s]*([^\s]+)$/', $expression, $matches)) {
+            if(!preg_match('/^([a-zA-Z0-9]+)[\s]*(<=|=|!=|>=|\\*=|\\^=|\\$=)[\s]*([^\s]+)$/', $expression, $matches)) {
                 throw new ZfExtended_Logger_Exception('ZfExtended_Logger_Filter invalid expression: "'.$expression.'"');
             }
             $keyword = $matches[1];
