@@ -82,10 +82,6 @@ class ZfExtended_WorkerController extends ZfExtended_RestController {
      * @see ZfExtended_RestController::putAction()
      */
     public function putAction() {
-        //if maintenance is scheduled we disallow starting workers
-        if($this->maintenanceIsScheduled) {
-            throw new ZfExtended_Models_MaintenanceException();
-        }
         try {
             $this->entity->load($this->getParam('id'));
         }
@@ -98,6 +94,10 @@ class ZfExtended_WorkerController extends ZfExtended_RestController {
             $this->decodePutData();
             $this->testServerId($this->data->serverId);
             return false;
+        }
+        //if maintenance is scheduled we disallow starting workers
+        if($this->maintenanceIsScheduled) {
+            throw new ZfExtended_Models_MaintenanceException();
         }
         
         $oldWorker = clone $this->entity;
