@@ -471,6 +471,13 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implement
         return $this->getSurName().', '.$this->getFirstName().' ('.$this->getLogin().')';
     }
     
+    /***
+     * Return the user customers as array
+     * @return array
+     */
+    public function getCustomersArray() {
+        return explode(',', trim($this->getCustomers(),","));
+    }
     
     /***
      * Load user by given issuer and subject (the issuer and subject are openid specific fields)

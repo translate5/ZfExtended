@@ -444,4 +444,24 @@ class ZfExtended_Models_Entity_ExcelExport {
     public function removeWorksheetByIndex(int $index) {
         $this->spreadsheet->removeSheetByIndex($index);
     }
+    
+    /***
+     * Adjust the column size of each worksheet in given spredsheet 
+     * @param PhpOffice\PhpSpreadsheet\Spreadsheet $sp
+     */
+    public function autosizeColumns(PhpOffice\PhpSpreadsheet\Spreadsheet $sp) {
+        foreach ($sp->getWorksheetIterator() as $worksheet) {
+            
+            $sp->setActiveSheetIndex($sp->getIndex($worksheet));
+            
+            $sheet = $sp->getActiveSheet();
+            $cellIterator = $sheet->getRowIterator()->current()->getCellIterator();
+            $cellIterator->setIterateOnlyExistingCells(true);
+            
+            /** @var PHPExcel_Cell $cell */
+            foreach ($cellIterator as $cell) {
+                $sheet->getColumnDimension($cell->getColumn())->setAutoSize(true);
+            }
+        }
+    }
 }
