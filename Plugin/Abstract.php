@@ -237,7 +237,7 @@ abstract class ZfExtended_Plugin_Abstract {
     
     /**
      * FIXME: this should be named "addPublicSubFolder" as this API has nothing to do with file-types
-     * Adds a sub-folder to the plugins "public" folder to make in publically accessible. Per default these are 'js' and 
+     * Adds a sub-folder to the plugins "public" folder to make in publically accessible. Per default these are 'js' and 'css'
      * @param string $newType
      */
     public function addPublicFileTypes($newType){
