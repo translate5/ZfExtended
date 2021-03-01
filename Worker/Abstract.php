@@ -26,17 +26,12 @@ abstract class ZfExtended_Worker_Abstract {
     use ZfExtended_Models_Db_DeadLockHandlerTrait;
     
     /**
-     * With blocking type slot, the maximum of parallel workers is defined by the available slots for this resource.
+     * With blocking type slot, the maximum of parallel workers is defined by the available resources
+     * Historically the naming is "slot" but it should better be named "resource"
      * @var string
      */
     const BLOCK_SLOT = 'slot';
-    
-    /**
-     * If a worker with blocking type "resource" is running, no other queued worker with same resource may be started at the same time.
-     * @var string
-     */
-    const BLOCK_RESOURCE = 'resource';
-    
+
     /**
      * If a worker with blocking global is running, no other queued worker may be started
      * No other queued worker means, regardless of maxParallelProcesses and regardless of resource.
