@@ -205,7 +205,7 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
         if(empty($parentId)) {
             $parentId = $this->getId();
         }
-        $bindings = [self::STATE_SCHEDULED,self::STATE_PREPARE, $parentId, $parentId];
+        $bindings = [self::STATE_SCHEDULED, self::STATE_PREPARE, $parentId, $parentId];
         $sql = 'UPDATE `Zf_worker` SET `state` = ? ';
         $sql .= 'WHERE `state` = ? ';
         $sql .= 'AND (`id` = ? OR `parentId` = ?) ';
@@ -327,12 +327,6 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
         }
         
         foreach($listWaiting as $waiting) {
-            // check if blocking-type 'RESOURCE' blocks this waiting worker
-            if ($waiting['blockingType'] == ZfExtended_Worker_Abstract::BLOCK_RESOURCE
-                && in_array($waiting['resource'], $listRunningResources)) {
-                continue;
-            }
-            
             // check if blocking-type is 'SLOT' and number of parallel processes for this resource/slot is not reached
             $tempResourceSlot = array($waiting['resource'], $waiting['slot']);
             $tempResourceSlotSerialized = serialize($tempResourceSlot);

@@ -235,6 +235,11 @@ abstract class ZfExtended_Plugin_Abstract {
         return $this->config;
     }
     
+    /**
+     * FIXME: this should be named "addPublicSubFolder" as this API has nothing to do with file-types
+     * Adds a sub-folder to the plugins "public" folder to make in publically accessible. Per default these are 'js' and
+     * @param string $newType
+     */
     public function addPublicFileTypes($newType){
         array_push($this->publicFileTypes, $newType);
     }
@@ -248,10 +253,19 @@ abstract class ZfExtended_Plugin_Abstract {
         require_once $this->getPluginPath().'/Controllers/'.$controller.'.php';
     }
     
+    /**
+     * FIXME: this should be named "getPublicSubFolder"
+     * @return string[]
+     */
     public function getPublicFileTypes(){
         return $this->publicFileTypes;
     }
     
+    /**
+     * FIXME: this should be named "isPublicSubFolder"
+     * @param string $requestedType
+     * @return boolean
+     */
     public function isPublicFileType($requestedType) {
         return in_array($requestedType, $this->getPublicFileTypes());
     }

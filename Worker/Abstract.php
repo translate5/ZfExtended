@@ -133,12 +133,6 @@ abstract class ZfExtended_Worker_Abstract {
     
     protected static $resourceName = NULL;
     /**
-     *
-     * @var array all scheduled workers for the worker classes listed here have to be done, before this worker will be woken up. Is serialized as JSON in DB. Should be soverridden by child
-     */
-    protected $workerChainDependency = array();
-
-    /**
      * Contains the Exception thrown in the worker
      * Since one worker is designed to do one job, there should be only one exception.
      * @var array
