@@ -9,8 +9,8 @@ START LICENSE AND COPYRIGHT
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
 
  This file may be used under the terms of the GNU LESSER GENERAL PUBLIC LICENSE version 3
- as published by the Free Software Foundation and appearing in the file lgpl3-license.txt 
- included in the packaging of this file.  Please review the following information 
+ as published by the Free Software Foundation and appearing in the file lgpl3-license.txt
+ included in the packaging of this file.  Please review the following information
  to ensure the GNU LESSER GENERAL PUBLIC LICENSE version 3.0 requirements will be met:
 https://www.gnu.org/licenses/lgpl-3.0.txt
 
@@ -22,6 +22,10 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
+/**
+ * Abstract worker class, providing base worker functionality. The work to be done is implemented / triggered in the extending classes of this one.
+ * All other functionality reacting on the worker run is encapsulated in the behaviour classes
+ */
 abstract class ZfExtended_Worker_Abstract {
     use ZfExtended_Models_Db_DeadLockHandlerTrait;
     
@@ -90,12 +94,6 @@ abstract class ZfExtended_Worker_Abstract {
     protected $isBlocking = false;
     
     /**
-     * Setting this to false in derived classes disables the check
-     * @var string
-     */
-    protected $enableParentDefuncCheck = true;
-    
-    /**
      * Per default a "socket blocking like" worker is cancelled after 3600 seconds.
      * @var integer
      */
@@ -103,7 +101,7 @@ abstract class ZfExtended_Worker_Abstract {
     
     /**
      * holds the result-values of processing method $this->work()
-     *  
+     *
      * @var mixed
      */
     protected $result;
@@ -141,7 +139,7 @@ abstract class ZfExtended_Worker_Abstract {
     /**
      * Contains the Exception thrown in the worker
      * Since one worker is designed to do one job, there should be only one exception.
-     * @var array
+     * @var Throwable
      */
     protected $workerException = null;
 
@@ -150,10 +148,20 @@ abstract class ZfExtended_Worker_Abstract {
      */
     protected $events;
     
-
+    /**
+     * @var ZfExtended_Worker_Behaviour_Default
+     */
+    protected $behaviour;
+    
+    /**
+     * Defines the behaviour class to be used for this worker
+     * @var string
+     */
+    protected $behaviourClass = 'ZfExtended_Worker_Behaviour_Default';
+    
     /***
      * Is worker thread flag
-     * 
+     *
      * @var boolean
      */
     public $isWorkerThread=true;
@@ -162,6 +170,7 @@ abstract class ZfExtended_Worker_Abstract {
         $this->log = ZfExtended_Factory::get('ZfExtended_Log');
         $this->maxParallelProcesses = $this->getMaxParallelProcesses();
         $this->events = ZfExtended_Factory::get('ZfExtended_EventManager', array(get_class($this)));
+        $this->behaviour = ZfExtended_Factory::get($this->behaviourClass);
     }
     
     protected function getMaxParallelProcesses() {
@@ -175,11 +184,11 @@ abstract class ZfExtended_Worker_Abstract {
     }
     
     /**
-     * Initialize a worker and a internal worker-model 
-     * 
+     * Initialize a worker and a internal worker-model
+     *
      * @param string $taskGuid
      * @param array $parameters stored in the worker-model
-     * 
+     *
      * @return boolean true if worker can be initialized.
      */
     public function init($taskGuid = NULL, $parameters = array()) {
@@ -201,39 +210,9 @@ abstract class ZfExtended_Worker_Abstract {
     }
     
     /**
-     * Checks the parent workers if they are defunct, if yes set this worker also to defunct and return false
-     * @return boolean returns true when all is OK, false when a parent worker is defunct
-     */
-    protected function checkParentDefunc() {
-        if(! $this->enableParentDefuncCheck){
-            return true;
-        }
-        $wm = $this->workerModel;
-        $summary = $wm->getParentSummary();
-        $defunc = [];
-        foreach($summary as $result) {
-            //when a non defunc worker was found, the whole group of same workers is considered as non defunc
-            // for example multiple termtagger import calls can contain some defunc workers, 
-            // this should not set the whole worker group to defunc
-            if(isset($defunc[$result->worker]) && $defunc[$result->worker] !== false) {
-                continue;
-            }
-            $defunc[$result->worker] = $result->state == $wm::STATE_DEFUNCT;
-        }
-        $defunc = array_filter($defunc);
-        //no defunc workers found
-        if(empty($defunc)) {
-            return true;
-        }
-        $wm->setState($wm::STATE_DEFUNCT);
-        $wm->save();
-        return false;
-    }
-
-    /**
      * creates the internal worker model ready for DB storage if it not already exists.
      * The latter case happens when using instanceByModels
-     * 
+     *
      * @param string $taskGuid
      * @param array $parameters
      */
@@ -254,7 +233,7 @@ abstract class ZfExtended_Worker_Abstract {
     
     /**
      * Returns the internal worker-model of this worker
-     * 
+     *
      * @return ZfExtended_Models_Worker
      */
     public function getModel(){
@@ -263,7 +242,7 @@ abstract class ZfExtended_Worker_Abstract {
     
     /**
      * Returns the internal worker-model in the state before it was deleted
-     * 
+     *
      * @return ZfExtended_Models_Worker
      */
     public function getModelBeforeDelete() {
@@ -272,7 +251,7 @@ abstract class ZfExtended_Worker_Abstract {
     
     /**
      * Get a worker-instance from a worker-model
-     * 
+     *
      * @param ZfExtended_Models_Worker $model
      * @return ZfExtended_Worker_Abstract mixed a concrete worker corresponding to the submittied worker-model; false if instance could not be initialized;
      */
@@ -299,20 +278,20 @@ abstract class ZfExtended_Worker_Abstract {
     /**
      * Checks the parameters given to init().
      * Need to be defined in concrete worker.
-     * 
+     *
      * @param array $parameters
      * @return boolean true if everything is OK
      */
     abstract protected function validateParameters($parameters = array());
     
     /**
-     * 
+     *
      * @param number $parentId optional, defaults to 0. Should contain the workerId of the parent worker.
      * @param string $state optional, defaults to null. Designed to queue a worker with a desired state.
      * @param bool $startNext defaults to true, if true starts directly the queued worker. False to prevent this.
      * @return integer returns the id of the newly created worker DB entry
      */
-    public function queue($parentId = 0, $state = NULL, $startNext = true) {
+    public function queue($parentId = 0, $state = NULL, $startNext = true): int {
         $this->checkIsInitCalled();
         $tempSlot = $this->calculateQueuedSlot();
         $this->workerModel->setResource($tempSlot['resource']);
@@ -330,7 +309,7 @@ abstract class ZfExtended_Worker_Abstract {
             $this->emulateBlocking();
         }
         
-        return $this->workerModel->getId();
+        return (int) $this->workerModel->getId();
     }
     
     /**
@@ -342,7 +321,7 @@ abstract class ZfExtended_Worker_Abstract {
     }
     
     /**
-     * Sets the queue call of this worker to blocking, 
+     * Sets the queue call of this worker to blocking,
      *  that means the current process remains in an endless loop until the worker was called.
      *  Like stream set blocking
      * @param bool $blocking
@@ -355,7 +334,7 @@ abstract class ZfExtended_Worker_Abstract {
      * waits until the worker with the given ID is done
      *  defunct will trigger an exception
      * @param string $taskGuid
-     * @param Closure $filter optional filter with the loaded ZfExtended_Models_Worker as parameter, must return true to wait for the model or false to not. 
+     * @param Closure $filter optional filter with the loaded ZfExtended_Models_Worker as parameter, must return true to wait for the model or false to not.
      * @return boolean true if something found to wait on, false if not
      */
     public function waitFor(string $taskGuid, Closure $filter = null) {
@@ -367,7 +346,7 @@ abstract class ZfExtended_Worker_Abstract {
             return true;
         };
         
-        //TODO: getting the class name this way is not factory overwrite aware: 
+        //TODO: getting the class name this way is not factory overwrite aware:
         if($wm->loadLatestOpen(get_class($this), $taskGuid) && $filter($wm)) {
             $this->setBlocking();
             $this->emulateBlocking();
@@ -450,7 +429,7 @@ abstract class ZfExtended_Worker_Abstract {
     
     /**
      * Mutex save worker-run. Before this function can be called, the worker must be queued with $this->queue();
-     * 
+     *
      * @return boolean true if $this->work() runs without errors
      */
     public function runQueued() {
@@ -484,12 +463,13 @@ abstract class ZfExtended_Worker_Abstract {
         if(!defined('ZFEXTENDED_IS_WORKER_THREAD') && $this->isWorkerThread){
             define('ZFEXTENDED_IS_WORKER_THREAD', true);
         }
-        $this->registerShutdown();
+        $this->behaviour->setWorkerModel($this->workerModel);
+        $this->behaviour->registerShutdown();
         //prefilling the finishedWorker for the following return false step outs
         $this->finishedWorker = clone $this->workerModel;
         
-        // checks before parent workers before running 
-        if(! $this->checkParentDefunc()) {
+        // checks before parent workers before running
+        if(! $this->behaviour->checkParentDefunc()) {
             $this->logit(' set to defunct by parent!');
             return false;
         }
@@ -497,7 +477,7 @@ abstract class ZfExtended_Worker_Abstract {
         //FIXME diese set calls und save durch eine Update ersetzen, welches task bezogen auf andere runnings dieser resource prüft
         //Dazu: checke im Model ob von außerhalb ein Hash mitgegeben wurde, wenn nein, setze ihn auf 0, damit der checkMutex (der implizit den Hash checkt) kracht.
 
-        if($this->isMaintenanceScheduled()) {
+        if($this->behaviour->isMaintenanceScheduled()) {
             return false;
         }
         
@@ -506,7 +486,7 @@ abstract class ZfExtended_Worker_Abstract {
             return false; //FIXME what is this result used for?
         }
         //reload, to get running state and timestamps
-        $this->workerModel->load($this->workerModel->getId()); 
+        $this->workerModel->load($this->workerModel->getId());
         
         $this->logit('set to running!');
         try {
@@ -521,7 +501,7 @@ abstract class ZfExtended_Worker_Abstract {
             $this->retryOnDeadlock(function(){
                 $this->workerModel->save();
             });
-        } catch(Exception $workException) {
+        } catch(Throwable $workException) {
             $this->reconnectDb();
             $result = false;
             $this->workerModel->setState(ZfExtended_Models_Worker::STATE_DEFUNCT);
@@ -529,10 +509,18 @@ abstract class ZfExtended_Worker_Abstract {
                 $this->workerModel->save();
             });
             $this->finishedWorker = clone $this->workerModel;
-            $this->workerException = $workException;
+            $this->handleWorkerException($workException);
         }
         
         return $result;
+    }
+    
+    /**
+     * Handles the exception occured while working, by default just store it internally
+     * @param Throwable $workException
+     */
+    protected function handleWorkerException(Throwable $workException) {
+        $this->workerException = $workException;
     }
     
     /**
@@ -548,40 +536,14 @@ abstract class ZfExtended_Worker_Abstract {
         $db->getConnection();
     }
     
-    /**
-     * sets the worker model to defunct when a fatal error happens
-     */
-    private function registerShutdown() {
-        register_shutdown_function(function($wm) {
-            $error = error_get_last();
-            if(!is_null($error) && ($error['type'] & FATAL_ERRORS_TO_HANDLE)) {
-                $wm->setState(ZfExtended_Models_Worker::STATE_DEFUNCT);
-                $wm->save();
-            }
-        }, $this->workerModel);
-    }
-    
     protected function wakeUpAndStartNextWorkers() {
-        $this->workerModel->wakeupScheduled();
-        $this->logit(__CLASS__.'::'.__FUNCTION__);
-        $this->startWorkerQueue();
+        $this->behaviour->wakeUpAndStartNextWorkers($this->workerModel);
     }
-    
-    /**
-     * trigger application-wide worker-queue
-     */
-    private function startWorkerQueue() {
-        $trigger = ZfExtended_Factory::get('ZfExtended_Worker_TriggerByHttp');
-        /* @var $trigger ZfExtended_Worker_TriggerByHttp */
-        $this->logit(__CLASS__.'::'.__FUNCTION__);
-        $trigger->triggerQueue();
-    }
-    
     
     /**
      * need to be defined in concrete worker.
      * Results (if any) shold be written in $this->result so they can be read-out later by $this->getResults()
-     * 
+     *
      * @return boolean true if everything is OK
      */
     abstract protected function work();
@@ -615,14 +577,5 @@ abstract class ZfExtended_Worker_Abstract {
             }
             error_log($msg);
         }
-    }
-    
-    /**
-     * By default workers do not check if maintenance is scheduled. 
-     * This can be overwritten by worker.
-     * @return bool
-     */
-    protected function isMaintenanceScheduled(): bool {
-        return false;
     }
 }

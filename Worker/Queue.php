@@ -40,6 +40,10 @@ class ZfExtended_Worker_Queue {
      * trigger application-wide worker-queue
      */
     public function trigger() {
+        $worker = ZfExtended_Factory::get('ZfExtended_Models_Worker');
+        /* @var $worker ZfExtended_Models_Worker */
+        $worker = $worker->wakeupScheduled();
+        
         $trigger = ZfExtended_Factory::get('ZfExtended_Worker_TriggerByHttp');
         /* @var $trigger ZfExtended_Worker_TriggerByHttp */
         $trigger->triggerQueue();
