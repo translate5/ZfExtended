@@ -333,7 +333,7 @@ class ZfExtended_Test_ApiHelper {
         $counter=0;
         $limitCheck = 100;
         while(true){
-            error_log('Task state check '.$counter.'/'.$limitCheck.' state: '.$this->task->state);
+            error_log('Task state check '.$counter.'/'.$limitCheck.' state: '.$this->task->state.' ['.$test.']');
             $taskResult = $this->requestJson('editor/task/'.$this->task->id);
             if($taskResult->state == 'open') {
                 $this->task = $taskResult;
