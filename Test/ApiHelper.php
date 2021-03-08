@@ -546,7 +546,7 @@ class ZfExtended_Test_ApiHelper {
         if(empty($task['orderdate'])) {
             $task['orderdate'] = $now;
         }
-        if(empty($task['wordCount'])) {
+        if(!isset($task['wordCount'])) {
             $task['wordCount'] = 666;
         }
         //currently all test tasks are started automatically, no test of the /editor/task/ID/import URL is implemented!
