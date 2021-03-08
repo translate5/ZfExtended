@@ -41,7 +41,7 @@ class  ZfExtended_Zendoverwrites_TranslateError extends ZfExtended_Zendoverwrite
         error_log("Error on instancing ZfExtended_Zendoverwrites_Translate, error was: ".$e->getMessage().' in '.$e->getTraceAsString());
     }
 
-    public function _($s){
+    public function _($s, $locale = null){
         return $s;
     }
 }
