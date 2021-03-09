@@ -376,6 +376,9 @@ class ZfExtended_BaseIndex{
      * Define additional transalte5 constants. This will be initialized after the application ini is loaded
      */
     protected function initAdditionalConstants(){
+        if(!defined('ACL_ROLE_PM')) {
+            define('ACL_ROLE_PM', 'pm');
+        }
         define('NOW_ISO', date('Y-m-d H:i:s', $_SERVER['REQUEST_TIME']));
     }
 }

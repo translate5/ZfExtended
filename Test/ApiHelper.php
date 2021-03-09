@@ -333,7 +333,7 @@ class ZfExtended_Test_ApiHelper {
         $counter=0;
         $limitCheck = 100;
         while(true){
-            error_log('Task state check '.$counter.'/'.$limitCheck.' state: '.$this->task->state);
+            error_log('Task state check '.$counter.'/'.$limitCheck.' state: '.$this->task->state.' ['.$test.']');
             $taskResult = $this->requestJson('editor/task/'.$this->task->id);
             if($taskResult->state == 'open') {
                 $this->task = $taskResult;
@@ -546,7 +546,7 @@ class ZfExtended_Test_ApiHelper {
         if(empty($task['orderdate'])) {
             $task['orderdate'] = $now;
         }
-        if(empty($task['wordCount'])) {
+        if(!isset($task['wordCount'])) {
             $task['wordCount'] = 666;
         }
         //currently all test tasks are started automatically, no test of the /editor/task/ID/import URL is implemented!
