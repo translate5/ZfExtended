@@ -66,6 +66,13 @@ class ZfExtended_Test_ApiHelper {
      */
     protected $task;
     
+    /***
+     * 
+     * array of stdObject with the values of the last imported project tasks
+     * @var array
+     */
+    protected $projectTasks;
+    
     /**
      * Test root directory
      * @var string
@@ -319,11 +326,14 @@ class ZfExtended_Test_ApiHelper {
         if(!$waitForImport){
             return true;
         }
+        if($this->task->taskType == 'project'){
+            return $this->checkProjectTasksStateLoop($failOnError);
+        }
         return $this->checkTaskStateLoop($failOnError);
     }
     
     /***
-     * Check the task state. The test will fail when $failOnError = true and if the task is in state error or after 25 task state checks
+     * Check the task state. The test will fail when $failOnError = true and if the task is in state error or after 100 task state checks
      * @param bool $failOnError
      * @throws Exception
      * @return boolean
@@ -354,6 +364,60 @@ class ZfExtended_Test_ApiHelper {
             if($counter==$limitCheck){
                 if($failOnError) {
                     $test::fail('Task Import stopped. Task doees not have state open after '.$limitCheck.' task checks.');
+                }
+                return false;
+            }
+            $counter++;
+            sleep(3);
+        }
+    }
+    
+    /***
+     * Check the state of all project tasks. The test will fail when $failOnError = true and if one of the project task is in state error or after 100 task state checks
+     * @param bool $failOnError
+     * @throws Exception
+     * @return bool
+     */
+    public function checkProjectTasksStateLoop(bool $failOnError = true): bool {
+        $test = $this->testClass;
+        $counter=0;
+        $limitCheck = 100;
+        while(true){
+            
+            //reload the project
+            $this->reloadProjectTasks();
+            
+            $toCheck = count($this->projectTasks);
+            //foreach project task check the state
+            foreach ($this->projectTasks as $task) {
+                
+                error_log('Project tasks state check '.$counter.'/'.$limitCheck.', [ name:'.$task->taskName.'], [state: '.$task->state.'] ['.$test.']');
+                
+                if($task->state == 'open') {
+                    $toCheck--;
+                    continue;
+                }
+                if($task->state == 'unconfirmed') {
+                    //with task templates we could implement separate tests for that feature:
+                    throw new Exception("runtimeOptions.import.initialTaskState = unconfirmed is not supported at the moment!");
+                }
+                
+                if($task->state == 'error') {
+                    if($failOnError) {
+                        $test::fail('Task Import stopped. Task has state error.');
+                    }
+                    return false;
+                }
+            }
+            
+            if($toCheck == 0){
+                return true;
+            }
+            
+            //break after 100 reloads
+            if($counter==$limitCheck){
+                if($failOnError) {
+                    $test::fail('Project task import stopped. After '.$limitCheck.' task state checks, all of the project task are not in state open.');
                 }
                 return false;
             }
@@ -746,6 +810,16 @@ class ZfExtended_Test_ApiHelper {
         return $this->task = $this->requestJson('editor/task/'.$this->task->id);
     }
     
+    /***
+     * Reload the tasks of the current project
+     * @return mixed|boolean
+     */
+    public function reloadProjectTasks() {
+        return $this->projectTasks = $this->requestJson('editor/task/', 'GET',[
+            'filter' => '[{"operator":"eq","value":"'.$this->task->projectId.'","property":"projectId"}]',
+        ]);
+    }
+    
     /**
      * returns the absolute data path to the task
      * @return string
@@ -869,5 +943,13 @@ class ZfExtended_Test_ApiHelper {
      */
     public function getResources() {
         return self::$resources;
+    }
+    
+    /***
+     * 
+     * @return array|mixed|boolean
+     */
+    public function getProjectTasks() {
+        return $this->projectTasks;
     }
 }
