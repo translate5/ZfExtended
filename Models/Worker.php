@@ -173,8 +173,8 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
         // FIXME: Why has the collation to be set for the User defined Variable @wworker ? Otherwise Zend throws Error "ERROR Zend_Db_Statement_Exception: E9999 - SQLSTATE[HY000]: General error: 1267 Illegal mix of collations (utf8mb4_general_ci,IMPLICIT) and (utf8mb4_unicode_ci,IMPLICIT) for operation '=', query was: ..."
         $stateOrder = (self::STATE_RUNNING < self::STATE_SCHEDULED) ? 'ASC' : 'DESC'; // just for robustness: evaluate the needed ordering to make running workers appear first
         $intermediateTable = 
-            "
-                    SELECT w.id AS id, @num := if(@wworker = w.worker, @num:= @num + 1, 1) AS count, @wworker := w.worker as worker, w.maxParallelProcesses AS max, w.state AS state
+        
+                   "SELECT w.id AS id, @num := if(@wworker = w.worker, @num:= @num + 1, 1) AS count, @wworker := w.worker as worker, w.maxParallelProcesses AS max, w.state AS state
                     FROM Zf_worker w, (SELECT @wworker := _utf8mb4 '' COLLATE utf8mb4_unicode_ci, @num := 0) r
                     WHERE w.state = ? /* BINDING 0 */
                     OR (
@@ -194,8 +194,7 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
                                 AND ws2.id = w.id)
                         )
                     )
-                    ORDER BY w.worker ASC, w.state ".$stateOrder.", w.id ASC
-                    ";
+                    ORDER BY w.worker ASC, w.state ".$stateOrder.", w.id ASC";
         
         // we now update the worker state for the evaluated workers hold in the intermediate table but only up to the number of maxParalellWorkers per worker
         $sql = 'UPDATE Zf_worker u, ( '.$intermediateTable.' ) s
