@@ -1,26 +1,26 @@
 <?php
 /*
-START LICENSE AND COPYRIGHT
-
+ START LICENSE AND COPYRIGHT
+ 
  This file is part of ZfExtended library
  
  Copyright (c) 2013 - 2017 Marc Mittag; MittagQI - Quality Informatics;  All rights reserved.
-
+ 
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
-
+ 
  This file may be used under the terms of the GNU LESSER GENERAL PUBLIC LICENSE version 3
  as published by the Free Software Foundation and appearing in the file lgpl3-license.txt
  included in the packaging of this file.  Please review the following information
  to ensure the GNU LESSER GENERAL PUBLIC LICENSE version 3.0 requirements will be met:
-https://www.gnu.org/licenses/lgpl-3.0.txt
-
+ https://www.gnu.org/licenses/lgpl-3.0.txt
+ 
  @copyright  Marc Mittag, MittagQI - Quality Informatics
  @author     MittagQI - Quality Informatics
  @license    GNU LESSER GENERAL PUBLIC LICENSE version 3
-			 https://www.gnu.org/licenses/lgpl-3.0.txt
-
-END LICENSE AND COPYRIGHT
-*/
+ https://www.gnu.org/licenses/lgpl-3.0.txt
+ 
+ END LICENSE AND COPYRIGHT
+ */
 
 /**
  * Abstract Worker Class
@@ -38,7 +38,9 @@ END LICENSE AND COPYRIGHT
  * @method void setHash() setHash(string $hash)
  * @method void setMaxParallelProcesses() setMaxParallelProcesses(int $maxParallelProcesses)
  * @method void setBlockingType() setBlockingType(string $blockingType)
- *
+ * @method void setWeight() setWeight(float $weight)
+ * @method void setProgress() setProgress(float $progress)
+ * 
  * @method integer getId()
  * @method integer getParentId() getParentId()
  * @method string getState()
@@ -52,6 +54,8 @@ END LICENSE AND COPYRIGHT
  * @method string getHash()
  * @method integer getMaxParallelProcesses()
  * @method string getBlockingType()
+ * @method float getWeight()
+ * @method float getProgress()
  *
  */
 class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
@@ -62,8 +66,8 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
      * @var string
      */
     const STATE_PREPARE     = 'prepare';    // the worker is added to the worker table, but is not ready to run
-                                            // (for example some other workers are still missing in the worker table)
-                                            // call schedulePrepared to mark the prepared workers of a taskGuid or worker group to be scheduled
+    // (for example some other workers are still missing in the worker table)
+    // call schedulePrepared to mark the prepared workers of a taskGuid or worker group to be scheduled
     const STATE_SCHEDULED   = 'scheduled';  // scheduled workers may be set to waiting by wakeupScheduled but keep the order as defined in worker dependencies
     const STATE_WAITING     = 'waiting';    // waiting workers are ready to run, and may be started (set to running) in parallel, restricted by maxRunProcesses and slot / resource blocking mechanisms
     const STATE_RUNNING     = 'running';    // the worker is running
@@ -141,6 +145,17 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
             return $rows->toArray();
         }
         return array();
+    }
+    
+    /***
+     * Load all workers from Zf_worker table for the given taskGuid
+     * @param string $taskGuid
+     * @return array
+     */
+    public function loadByTask(string $taskGuid) : array{
+        $s = $this->db->select()
+        ->where('taskGuid = ?',$taskGuid);
+        return $this->db->fetchAll($s)->toArray();
     }
     /**
      * Wake up a scheduled worker (set state from scheduled to waiting)
@@ -240,10 +255,10 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
         $countRows = $this->retryOnDeadlock(function() use ($data, $whereStatements){
             return $this->db->update($data, $whereStatements);
         });
-        
-        // workerModel can not be set to mutex because no entry with same id and hash can be found in database
-        // nothing to log since this can happen often
-        return $countRows > 0;
+            
+            // workerModel can not be set to mutex because no entry with same id and hash can be found in database
+            // nothing to log since this can happen often
+            return $countRows > 0;
     }
     
     /**
@@ -291,15 +306,15 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
             $sql .= $sets('');
             $sql .= ' WHERE id = ?';
         }
-
+        
         $values = [$this->getId()];
         
         $this->db->getAdapter()->query('SET TRANSACTION ISOLATION LEVEL READ COMMITTED');
         $stmt = $this->retryOnDeadlock(function() use ($sql, $values){
             return $this->db->getAdapter()->query($sql, $values);
         });
-        $result = $stmt->rowCount();
-        return $result > 0;
+            $result = $stmt->rowCount();
+            return $result > 0;
     }
     
     /**
@@ -307,7 +322,7 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
      * @param string $taskGuid
      * @return array: list of queued entries in table Zf_worker which are "ready to run"
      */
-    public function getListQueued($taskGuid = NULL) {
+    public function getListQueued(string $taskGuid = null) : array{
         $listQueued = array();
         $db = $this->db;
         $db->getAdapter()->beginTransaction();
@@ -315,14 +330,12 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
         $listRunning = $this->getListRunning($taskGuid);
         $db->getAdapter()->commit();
         
-        $listRunningResources = array();
         $listRunningResourceSlotSerialized = array();
         foreach ($listRunning as $running) {
             // stop if one running worker is of blocking-type 'GLOBAL'
             if ($running['blockingType'] == ZfExtended_Worker_Abstract::BLOCK_GLOBAL) {
                 return array();
             }
-            $listRunningResources[] = $running['resource'];
             $listRunningResourceSlotSerialized[] = serialize(array($running['resource'], $running['slot']));
         }
         
@@ -342,13 +355,12 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
             
             if ($waiting['blockingType'] == ZfExtended_Worker_Abstract::BLOCK_SLOT
                 && $countRunningSlotProcesses >= $waiting['maxParallelProcesses']) {
-                continue;
-            }
-            
-            $listQueued[] = $waiting;
-            $listRunning[] = $tempResourceSlot;
-            $listRunningResources[] = $waiting['resource'];
-            $listRunningResourceSlotSerialized[] = $tempResourceSlotSerialized;
+                    continue;
+                }
+                
+                $listQueued[] = $waiting;
+                $listRunning[] = $tempResourceSlot;
+                $listRunningResourceSlotSerialized[] = $tempResourceSlotSerialized;
         }
         //error_log("QUEUED: ".print_r($listQueued,1));
         return $listQueued;
@@ -366,15 +378,15 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
     private function getListRunning($taskGuid) {
         $db = $this->db;
         $sql = $db->select()
-                    //->columns(array('resource', 'slot')) // this does not work :-((((
-                    ->from($db->info($db::NAME), array('resource', 'slot', 'blockingType'))
-                    ->where('state = ?', self::STATE_RUNNING)
-                    ->order('resource ASC')->order('slot ASC');
+        //->columns(array('resource', 'slot')) // this does not work :-((((
+        ->from($db->info($db::NAME), array('resource', 'slot', 'blockingType'))
+        ->where('state = ?', self::STATE_RUNNING)
+        ->order('resource ASC')->order('slot ASC');
         
         if ($taskGuid) {
             $sql->where('taskGuid = ?', $taskGuid);
         }
-    
+        
         return $db->fetchAll($sql)->toArray();
     }
     
@@ -390,12 +402,12 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
     public function getListSlotsCount($resourceName = '', $validSlots = array()) {
         $db = $this->db;
         $sql = $db->select()
-                    //->columns(array('resource', 'slot')) // this does not work :-((((
-                    ->from($db->info($db::NAME), array('slot', 'COUNT(*) AS count'))
-                    ->where('resource = ?', $resourceName)
-                    ->where('state IN (?)', array(self::STATE_WAITING, self::STATE_RUNNING))
-                    ->group(array('resource', 'slot'))
-                    ->order('count ASC');
+        //->columns(array('resource', 'slot')) // this does not work :-((((
+        ->from($db->info($db::NAME), array('slot', 'COUNT(*) AS count'))
+        ->where('resource = ?', $resourceName)
+        ->where('state IN (?)', array(self::STATE_WAITING, self::STATE_RUNNING))
+        ->group(array('resource', 'slot'))
+        ->order('count ASC');
         
         $rows = $db->fetchAll($sql)->toArray();
         
@@ -434,8 +446,8 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
      */
     public function getSummary(array $groupBy = ['state']) {
         $s = $this->db->select()
-            ->from($this->db, array_merge(['cnt' => 'count(*)'], $groupBy))
-            ->group($groupBy);
+        ->from($this->db, array_merge(['cnt' => 'count(*)'], $groupBy))
+        ->group($groupBy);
         $res = $this->db->fetchAll($s);
         
         if(count($groupBy) > 1) {
