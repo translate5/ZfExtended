@@ -23,6 +23,25 @@ END LICENSE AND COPYRIGHT
 */
 
 class ZfExtended_Test_ApiHelper {
+    
+    /***
+     * How many time the task status will be check while the task is importing.
+     * @var integer
+     */
+    const RELOAD_TASK_LIMIT = 100;
+    
+    /***
+     * How many times the language reosurces status will be checked while the resource is importing
+     * @var integer
+     */
+    const RELOAD_RESOURCE_LIMIT = 20;
+    
+    /***
+     * Project taskType
+     * @var string
+     */
+    const INITIAL_TASKTYPE_PROJECT = 'project';
+    
     const AUTH_COOKIE_KEY = 'zfExtended';
     const SEGMENT_DUPL_SAVE_CHECK = '<img src="data:image/gif;base64,R0lGODlhAQABAID/AMDAwAAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==" class="duplicatesavecheck" data-segmentid="%s" data-fieldname="%s">';
     
