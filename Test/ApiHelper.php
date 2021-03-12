@@ -42,6 +42,12 @@ class ZfExtended_Test_ApiHelper {
      */
     const INITIAL_TASKTYPE_PROJECT = 'project';
     
+    /***
+     * Project task type
+     * @var string
+     */
+    const INITIAL_TASKTYPE_PROJECT_TASK = 'projectTask';
+    
     const AUTH_COOKIE_KEY = 'zfExtended';
     const SEGMENT_DUPL_SAVE_CHECK = '<img src="data:image/gif;base64,R0lGODlhAQABAID/AMDAwAAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==" class="duplicatesavecheck" data-segmentid="%s" data-fieldname="%s">';
     
@@ -345,14 +351,14 @@ class ZfExtended_Test_ApiHelper {
         if(!$waitForImport){
             return true;
         }
-        if($this->task->taskType == 'project'){
+        if($this->task->taskType == self::INITIAL_TASKTYPE_PROJECT){
             return $this->checkProjectTasksStateLoop($failOnError);
         }
         return $this->checkTaskStateLoop($failOnError);
     }
     
     /***
-     * Check the task state. The test will fail when $failOnError = true and if the task is in state error or after 100 task state checks
+     * Check the task state. The test will fail when $failOnError = true and if the task is in state error or after RELOAD_TASK_LIMIT task state checks
      * @param bool $failOnError
      * @throws Exception
      * @return boolean
@@ -360,9 +366,8 @@ class ZfExtended_Test_ApiHelper {
     public function checkTaskStateLoop(bool $failOnError = true): bool {
         $test = $this->testClass;
         $counter=0;
-        $limitCheck = 100;
         while(true){
-            error_log('Task state check '.$counter.'/'.$limitCheck.' state: '.$this->task->state.' ['.$test.']');
+            error_log('Task state check '.$counter.'/'.self::RELOAD_TASK_LIMIT.' state: '.$this->task->state.' ['.$test.']');
             $taskResult = $this->requestJson('editor/task/'.$this->task->id);
             if($taskResult->state == 'open') {
                 $this->task = $taskResult;
@@ -379,10 +384,10 @@ class ZfExtended_Test_ApiHelper {
                 return false;
             }
             
-            //break after 100 reloads
-            if($counter==$limitCheck){
+            //break after RELOAD_TASK_LIMIT reloads
+            if($counter==self::RELOAD_TASK_LIMIT){
                 if($failOnError) {
-                    $test::fail('Task Import stopped. Task doees not have state open after '.$limitCheck.' task checks.');
+                    $test::fail('Task Import stopped. Task doees not have state open after '.self::RELOAD_TASK_LIMIT.' task checks.');
                 }
                 return false;
             }
@@ -392,7 +397,7 @@ class ZfExtended_Test_ApiHelper {
     }
     
     /***
-     * Check the state of all project tasks. The test will fail when $failOnError = true and if one of the project task is in state error or after 100 task state checks
+     * Check the state of all project tasks. The test will fail when $failOnError = true and if one of the project task is in state error or after RELOAD_TASK_LIMIT task state checks
      * @param bool $failOnError
      * @throws Exception
      * @return bool
@@ -400,7 +405,6 @@ class ZfExtended_Test_ApiHelper {
     public function checkProjectTasksStateLoop(bool $failOnError = true): bool {
         $test = $this->testClass;
         $counter=0;
-        $limitCheck = 100;
         while(true){
             
             //reload the project
@@ -410,7 +414,7 @@ class ZfExtended_Test_ApiHelper {
             //foreach project task check the state
             foreach ($this->projectTasks as $task) {
                 
-                error_log('Project tasks state check '.$counter.'/'.$limitCheck.', [ name:'.$task->taskName.'], [state: '.$task->state.'] ['.$test.']');
+                error_log('Project tasks state check '.$counter.'/'.self::RELOAD_TASK_LIMIT.', [ name:'.$task->taskName.'], [state: '.$task->state.'] ['.$test.']');
                 
                 if($task->state == 'open') {
                     $toCheck--;
@@ -433,10 +437,10 @@ class ZfExtended_Test_ApiHelper {
                 return true;
             }
             
-            //break after 100 reloads
-            if($counter==$limitCheck){
+            //break after RELOAD_TASK_LIMIT reloads
+            if($counter==self::RELOAD_TASK_LIMIT){
                 if($failOnError) {
-                    $test::fail('Project task import stopped. After '.$limitCheck.' task state checks, all of the project task are not in state open.');
+                    $test::fail('Project task import stopped. After '.self::RELOAD_TASK_LIMIT.' task state checks, all of the project task are not in state open.');
                 }
                 return false;
             }
@@ -476,6 +480,16 @@ class ZfExtended_Test_ApiHelper {
         $this->customer = $customerData[0];
         $resp = $this->getLastResponse();
         $test::assertEquals(200, $resp->getStatus(), 'Load test customer Request does not respond HTTP 200! Body was: '.$resp->getBody());
+    }
+    
+    /***
+     * Get all available langues from lek_languages table
+     */
+    public function getLanguages() {
+        $this->requestJson('editor/language');
+        $resp = $this->getLastResponse();
+        $this->testClass::assertEquals(200, $resp->getStatus(), 'Import Request does not respond HTTP 200! Body was: '.$resp->getBody());
+        return $this->decodeJsonResponse($resp);
     }
     
     /**
@@ -563,18 +577,17 @@ class ZfExtended_Test_ApiHelper {
         }
         error_log('Languageresources status check:'.$resp->status);
         $counter=0;
-        $limitCheck=20;
         while ($resp->status!='available'){
             if($resp->status=='error'){
                 break;
             }
-            //break after 20 trys
-            if($counter==$limitCheck){
+            //break after RELOAD_RESOURCE_LIMIT trys
+            if($counter==self::RELOAD_RESOURCE_LIMIT){
                 break;
             }
             sleep(5);
             $resp = $this->requestJson('editor/languageresourceinstance/'.$resp->id, 'GET',[]);
-            error_log('Languageresources status check '.$counter.'/'.$limitCheck.' state: '.$resp->status);
+            error_log('Languageresources status check '.$counter.'/'.self::RELOAD_RESOURCE_LIMIT.' state: '.$resp->status);
             $counter++;
         }
         
