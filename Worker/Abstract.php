@@ -486,6 +486,7 @@ abstract class ZfExtended_Worker_Abstract {
             $result = $this->work();
             $this->workerModel->setState(ZfExtended_Models_Worker::STATE_DONE);
             $this->workerModel->setEndtime(new Zend_Db_Expr('NOW()'));
+            $this->workerModel->setProgress(100);//update the worker progress to 100, when the worker status is set to done
             $this->finishedWorker = clone $this->workerModel;
             $this->retryOnDeadlock(function(){
                 $this->workerModel->save();
@@ -566,5 +567,23 @@ abstract class ZfExtended_Worker_Abstract {
             }
             error_log($msg);
         }
+    }
+    
+    /***
+     * Update the progres for the current worker model. The progress value needs to be calculated in the worker class.
+     * 
+     * @param float $progress
+     */
+    public function updateProgres(float $progress = 100){
+        $this->workerModel->setProgress(min($this->workerModel->getProgress()+$progress , 100));
+        $this->workerModel->save();
+    }
+    
+    /***
+     * Worker weight/percent of the total import proccess.
+     * @return number
+     */
+    public function getWeight() {
+        return 1;
     }
 }

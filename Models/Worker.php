@@ -38,7 +38,6 @@
  * @method void setHash() setHash(string $hash)
  * @method void setMaxParallelProcesses() setMaxParallelProcesses(int $maxParallelProcesses)
  * @method void setBlockingType() setBlockingType(string $blockingType)
- * @method void setWeight() setWeight(float $weight)
  * @method void setProgress() setProgress(float $progress)
  * 
  * @method integer getId()
@@ -54,7 +53,6 @@
  * @method string getHash()
  * @method integer getMaxParallelProcesses()
  * @method string getBlockingType()
- * @method float getWeight()
  * @method float getProgress()
  *
  */
@@ -154,8 +152,62 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
      */
     public function loadByTask(string $taskGuid) : array{
         $s = $this->db->select()
+        ->from($this->db->info($this->db::NAME))
         ->where('taskGuid = ?',$taskGuid);
         return $this->db->fetchAll($s)->toArray();
+    }
+    
+    /***
+     * Calculates progres for given taskGuid for all queued task workers.
+     * The total percentage will be distributed based on the worker weight.
+     * @param string $taskGuid
+     * @return array
+     */
+    public function calculateProgress(string $taskGuid) {
+        $result = $this->loadByTask($taskGuid);
+        if(empty($result)){
+            return [];
+        }
+        //set the worker weight as internal variable
+        $result = array_map(function(&$item){
+            $m = ZfExtended_Factory::get($item['worker']);
+            /* @var $m ZfExtended_Worker_Abstract */
+            $item['weight'] = $m->getWeight();
+            return $item;
+        }, $result);
+        
+        $resultArray = [];
+        $resultArray['progress'] = 1;
+        $resultArray['jobsDone'] = 0;
+        $resultArray['jobsTotal'] = count($result);
+        $resultArray['taskGuid'] = $taskGuid;
+        $resultArray['jobRunning'] = '';
+            
+        $totalWeight = array_sum(array_column($result, 'weight'));
+        
+        foreach ($result as &$single) {
+            //adjust the worker weight, base od the current queue list
+            $single['weight'] = ($single['weight'] / $totalWeight ) * 100;
+            if($single['state'] == self::STATE_DONE){
+                //collect the finished progress
+                $resultArray['progress']+=$single['weight'];
+                $resultArray['jobsDone']++;
+            }
+            if($single['state'] == self::STATE_RUNNING){
+                //calculate the running progress
+                //ex: worker weight is 60% of the total import time
+                //    the current worker job progress is 50%
+                //    add 30% to the total progress
+                $resultArray['progress']+=$single['weight'] / (100 / max(1,$single['progress']));
+                $resultArray['jobRunning']=$single['worker'];
+            }
+        }
+        //check if all jobs are done
+        if($resultArray['jobsDone'] == $resultArray['jobsTotal']){
+            $resultArray['progress']=100;
+        }
+        $resultArray['progress'] = min(100,round($resultArray['progress']));
+        return $resultArray;
     }
     /**
      * Wake up a scheduled worker (set state from scheduled to waiting)
