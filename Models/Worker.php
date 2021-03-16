@@ -198,7 +198,7 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
                 //ex: worker weight is 60% of the total import time
                 //    the current worker job progress is 50%
                 //    add 30% to the total progress
-                $resultArray['progress']+=$single['weight'] / (100 / max(1,$single['progress']));
+                $resultArray['progress']+=$single['weight'] / (100 / max(1,($single['progress']*100)));
                 $resultArray['jobRunning']=$single['worker'];
             }
         }
@@ -576,6 +576,26 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
             $this->parameters = unserialize($this->get('parameters'));
         }
         return $this->parameters;
+    }
+
+    /***
+     * Update the worker model progress field with given $progress value
+     * 
+     * @param float $progress
+     * @return boolean
+     */
+    public function updateProgress(float $progress = 1) {
+        $isUpdated = $this->db->update([
+            'progress'=>$progress // prevent from going over 1
+        ], [
+            'id = ?'=>$this->getId()
+        ])>0;
+        
+        //fire event if progress was updated
+        if($isUpdated){
+            $this->events->trigger("updateProgress", $this, ['taskGuid' =>$this->getTaskGuid(),'progress'=>$progress]);
+        }
+        return $isUpdated;
     }
     
     /**
