@@ -178,10 +178,10 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
         
         $resultArray = [];
         $resultArray['progress'] = 1;
-        $resultArray['jobsDone'] = 0;
-        $resultArray['jobsTotal'] = count($result);
+        $resultArray['workersDone'] = 0;
+        $resultArray['workersTotal'] = count($result);
         $resultArray['taskGuid'] = $taskGuid;
-        $resultArray['jobRunning'] = '';
+        $resultArray['workerRunning'] = '';
             
         $totalWeight = array_sum(array_column($result, 'weight'));
         
@@ -191,7 +191,7 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
             if($single['state'] == self::STATE_DONE){
                 //collect the finished progress
                 $resultArray['progress']+=$single['weight'];
-                $resultArray['jobsDone']++;
+                $resultArray['workersDone']++;
             }
             if($single['state'] == self::STATE_RUNNING){
                 //calculate the running progress
@@ -199,11 +199,11 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
                 //    the current worker job progress is 50%
                 //    add 30% to the total progress
                 $resultArray['progress']+=$single['weight'] / (100 / max(1,($single['progress']*100)));
-                $resultArray['jobRunning']=$single['worker'];
+                $resultArray['workerRunning']=$single['worker'];
             }
         }
         //check if all jobs are done
-        if($resultArray['jobsDone'] == $resultArray['jobsTotal']){
+        if($resultArray['workersDone'] == $resultArray['workersTotal']){
             $resultArray['progress']=100;
         }
         $resultArray['progress'] = min(100,round($resultArray['progress']));
