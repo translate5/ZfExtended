@@ -144,27 +144,50 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
         }
         return array();
     }
-    
+
     /***
-     * Load all workers from Zf_worker table for the given taskGuid
+     * Find first worker with state running for given taskGuid
      * @param string $taskGuid
      * @return array
      */
-    public function loadByTask(string $taskGuid) : array{
+    public function findFirstRunning(string $taskGuid) {
+            $s=$this->db->select()
+            ->where('state = ?',self::STATE_RUNNING) //TODO: STATE_SCHEDULED to ?
+            ->where('taskGuid = ?',$taskGuid)
+            ->order('id ASC')
+            ->limit(1);
+        $result = $this->db->fetchAll($s)->toArray();
+        return reset($result);
+    }
+    
+    /***
+     * Load all workers from Zf_worker table for the given taskGuid and given context.
+     * The context represents set of workers connected with same parentId.
+     * ex: on task import, all queued workers are with same parentId (the id of the import worker : editor_Models_Import_Worker)
+     * @param string $taskGuid
+     * @param int $parrentId
+     * @return array
+     */
+    public function loadByTaskAndContext(string $taskGuid,int $parrentId = 0) : array{
         $s = $this->db->select()
         ->from($this->db->info($this->db::NAME))
         ->where('taskGuid = ?',$taskGuid);
+        if(!empty($parrentId)){
+            $s->where('id = ? OR parentId = ?',[$parrentId]);
+        }
         return $this->db->fetchAll($s)->toArray();
     }
     
     /***
      * Calculates progres for given taskGuid for all queued task workers.
      * The total percentage will be distributed based on the worker weight.
+     * 
      * @param string $taskGuid
+     * @param int $context
      * @return array
      */
-    public function calculateProgress(string $taskGuid) {
-        $result = $this->loadByTask($taskGuid);
+    public function calculateProgress(string $taskGuid,int $context) {
+        $result = $this->loadByTaskAndContext($taskGuid,$context);
         if(empty($result)){
             return [];
         }
@@ -579,12 +602,14 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
     }
 
     /***
-     * Update the worker model progress field with given $progress value
-     * 
+     * Update the worker model progress field with given $progress value.
+     * If the progress was updated successfully, updateProgress event will be triggered.
+     *  
      * @param float $progress
+     * @param int $context: The context(worker parentId or workerId) represents set of workers connected with same parentId.
      * @return boolean
      */
-    public function updateProgress(float $progress = 1) {
+    public function updateProgress(float $progress = 1, int $context = 0) {
         $isUpdated = $this->db->update([
             'progress'=>$progress // prevent from going over 1
         ], [
@@ -593,7 +618,11 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
         
         //fire event if progress was updated
         if($isUpdated){
-            $this->events->trigger("updateProgress", $this, ['taskGuid' =>$this->getTaskGuid(),'progress'=>$progress]);
+            $this->events->trigger("updateProgress", $this, [
+                'taskGuid' =>$this->getTaskGuid(),
+                'progress'=>$progress,
+                'context' => $context
+            ]);
         }
         return $isUpdated;
     }
