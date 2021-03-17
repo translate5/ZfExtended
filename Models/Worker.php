@@ -146,15 +146,18 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
     }
 
     /***
-     * Find first worker with state running for given taskGuid
+     * Find the first worker required for context calculation. This is specific method and it is used only 
+     * for import progress calculation.
+     * This will return the oldest worker for given taskGuid with state running. 
+     * If no worker with state running is found return worker with state prepare
      * @param string $taskGuid
      * @return array
      */
-    public function findFirstRunning(string $taskGuid) {
+    public function findWorkerContext(string $taskGuid) {
             $s=$this->db->select()
-            ->where('state = ?',self::STATE_RUNNING) //TODO: STATE_SCHEDULED to ?
+            ->where('state IN (?)',[self::STATE_RUNNING,self::STATE_PREPARE])
             ->where('taskGuid = ?',$taskGuid)
-            ->order('id ASC')
+            ->order(['id ASC','state ASC'])
             ->limit(1);
         $result = $this->db->fetchAll($s)->toArray();
         return reset($result);
