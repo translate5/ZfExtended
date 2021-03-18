@@ -149,16 +149,20 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
      * Find the first worker required for context calculation. This is specific method and it is used only 
      * for import progress calculation.
      * This will return the oldest worker for given taskGuid with state running. 
-     * If no worker with state running is found return worker with state prepare
+     * If no worker with state running is found return worker with state prepare,scheduled or done
      * @param string $taskGuid
      * @return array
      */
     public function findWorkerContext(string $taskGuid) {
             $s=$this->db->select()
-            ->where('state IN (?)',[self::STATE_RUNNING,self::STATE_PREPARE])
+            ->where('state IN (?)',[self::STATE_RUNNING,self::STATE_PREPARE,self::STATE_SCHEDULED,self::STATE_DONE])
             ->where('taskGuid = ?',$taskGuid)
-            ->order(['id ASC','state ASC'])
-            ->limit(1);
+            ->order([
+                new Zend_Db_Expr('state="'.self::STATE_RUNNING.'" desc'),
+                new Zend_Db_Expr('state="'.self::STATE_PREPARE.'" desc'),
+                new Zend_Db_Expr('state="'.self::STATE_SCHEDULED.'" desc'),
+                new Zend_Db_Expr('state="'.self::STATE_DONE.'" desc')
+            ])->limit(1);
         $result = $this->db->fetchAll($s)->toArray();
         return reset($result);
     }
@@ -186,10 +190,23 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
      * The total percentage will be distributed based on the worker weight.
      * 
      * @param string $taskGuid
-     * @param int $context
+     * @param int $context: parentId or id of a worker with $taskGuid as taskGuid. 
+     * Use id only when there is no parentId for the current worker (the current worker is parent of all other queues. ex: editor_Models_Import_Worker)
      * @return array
      */
-    public function calculateProgress(string $taskGuid,int $context) {
+    public function calculateProgress(string $taskGuid,int $context = null) {
+
+        //if the context is not provided, try to calculate one base on the workers state
+        if($context == null){
+            //get the context from the current running worker for the task
+            //the context is the current running worker parentId or id(when the running worker is master worker like editor_Models_Import_Worker)
+            $context = $this->findWorkerContext($taskGuid);
+            if(empty($context)){
+                return [];
+            }
+            $context = $context['parentId'] ? $context['parentId'] : $context['id'];
+        }
+        
         $result = $this->loadByTaskAndContext($taskGuid,$context);
         if(empty($result)){
             return [];
