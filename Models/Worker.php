@@ -180,7 +180,7 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
         ->from($this->db->info($this->db::NAME))
         ->where('taskGuid = ?',$taskGuid);
         if(!empty($parrentId)){
-            $s->where('id = ? OR parentId = ?',[$parrentId]);
+            $s->where('id = ?',$parrentId)->orWhere('parentId = ?',$parrentId);
         }
         return $this->db->fetchAll($s)->toArray();
     }
@@ -643,7 +643,7 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
 
     /***
      * Update the worker model progress field with given $progress value.
-     * If the progress was updated successfully, updateProgress event will be triggered.
+     * This will trigger updateProgress event on each call.
      *  
      * @param float $progress
      * @param int $context: The context(worker parentId or workerId) represents set of workers connected with same parentId.
@@ -651,19 +651,17 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
      */
     public function updateProgress(float $progress = 1, int $context = 0) {
         $isUpdated = $this->db->update([
-            'progress'=>$progress // prevent from going over 1
+            'progress'=>$progress
         ], [
             'id = ?'=>$this->getId()
         ])>0;
         
-        //fire event if progress was updated
-        if($isUpdated){
-            $this->events->trigger("updateProgress", $this, [
-                'taskGuid' =>$this->getTaskGuid(),
-                'progress'=>$progress,
-                'context' => $context
-            ]);
-        }
+        //fire event if progress was called
+        $this->events->trigger("updateProgress", $this, [
+            'taskGuid' =>$this->getTaskGuid(),
+            'progress'=>$progress,
+            'context' => $context
+        ]);
         return $isUpdated;
     }
     

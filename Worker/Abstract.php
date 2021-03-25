@@ -486,7 +486,6 @@ abstract class ZfExtended_Worker_Abstract {
             $result = $this->work();
             $this->workerModel->setState(ZfExtended_Models_Worker::STATE_DONE);
             $this->workerModel->setEndtime(new Zend_Db_Expr('NOW()'));
-            $this->updateProgress(1);//update the worker progress to 100, when the worker status is set to done
             $this->finishedWorker = clone $this->workerModel;
             $this->retryOnDeadlock(function(){
                 $this->workerModel->save();
@@ -501,7 +500,7 @@ abstract class ZfExtended_Worker_Abstract {
             $this->finishedWorker = clone $this->workerModel;
             $this->handleWorkerException($workException);
         }
-        
+        $this->updateProgress(1);//update the worker progress to 1, when the worker status is set to done
         return $result;
     }
     
