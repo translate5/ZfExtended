@@ -179,6 +179,18 @@ class  ZfExtended_TemplateBasedMail {
     public function setFrom($frommail, $fromname) {
         $this->mail->setFrom($frommail, $fromname);
     }
+    
+    /**
+     * Set Reply-To Header
+     *
+     * @param string $email
+     * @param string $name
+     * @return Zend_Mail
+     * @throws Zend_Mail_Exception if called more than one time
+     */
+    public function setReplyTo(string $email, string $name = null) {
+        $this->mail->setReplyTo($email,$name);
+    }
 
     /**
      * Aus den Namen von Controller und Action wird der Templatename generiert.

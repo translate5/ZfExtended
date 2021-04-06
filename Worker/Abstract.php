@@ -501,7 +501,7 @@ abstract class ZfExtended_Worker_Abstract {
             $this->finishedWorker = clone $this->workerModel;
             $this->handleWorkerException($workException);
         }
-        
+        $this->updateProgress(1);//update the worker progress to 1, when the worker status is set to done
         return $result;
     }
     /**
@@ -566,5 +566,23 @@ abstract class ZfExtended_Worker_Abstract {
             }
             error_log($msg);
         }
+    }
+    
+    /***
+     * Update the progres for the current worker model. The progress value needs to be calculated in the worker class.
+     * 
+     * @param float $progress
+     */
+    public function updateProgress(float $progress = 1){
+        $parentId = $this->workerModel->getParentId() ? $this->workerModel->getParentId() : $this->workerModel->getId();
+        $this->workerModel->updateProgress($progress,$parentId);
+    }
+    
+    /***
+     * Worker weight/percent of the total import proccess.
+     * @return number
+     */
+    public function getWeight() {
+        return 1;
     }
 }
