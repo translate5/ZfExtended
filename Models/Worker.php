@@ -249,7 +249,7 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
         if($resultArray['workersDone'] == $resultArray['workersTotal']){
             $resultArray['progress']=100;
         }
-        $resultArray['progress'] = min(100,round($resultArray['progress']));
+        $resultArray['progress'] = min(100,round($resultArray['progress'],2));
         return $resultArray;
     }
     /**
