@@ -212,7 +212,7 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
             return [];
         }
         //set the worker weight as internal variable
-        $result = array_map(function(&$item){
+        $result = array_map(function($item){
             $m = ZfExtended_Factory::get($item['worker']);
             /* @var $m ZfExtended_Worker_Abstract */
             $item['weight'] = $m->getWeight();
@@ -249,7 +249,7 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
         if($resultArray['workersDone'] == $resultArray['workersTotal']){
             $resultArray['progress']=100;
         }
-        $resultArray['progress'] = min(100,round($resultArray['progress']));
+        $resultArray['progress'] = min(100,round($resultArray['progress'],2));
         return $resultArray;
     }
     /**
