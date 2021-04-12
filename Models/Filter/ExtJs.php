@@ -27,12 +27,6 @@ END LICENSE AND COPYRIGHT
  * @author Marc Mittag
  */
 class ZfExtended_Models_Filter_ExtJs extends ZfExtended_Models_Filter {
-    /**
-     * defines the Zend_Db_Select where operation to be used (where / orWhere)
-     * @var string
-     */
-    protected $whereOp = 'where';
-    
   /**
    * decodes the filter/sort string, return always an array
    * @param string $todecode
@@ -348,7 +342,7 @@ class ZfExtended_Models_Filter_ExtJs extends ZfExtended_Models_Filter {
   
   /**
   * Converts a list filter based on a string search
-  *
+  * TODO FIXME: this is very dirty and will not work e.g. with find 9 in ',7,12,29,'
   * - Filter type does not come from native ExtJs
   * - Filter type is set by mapping
   * @param string $field

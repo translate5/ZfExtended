@@ -81,6 +81,11 @@ abstract class ZfExtended_Models_Filter {
    * @var array
    */
   protected $joinedTables = [];
+  /**
+   * defines the Zend_Db_Select where operation to be used (where / orWhere)
+   * @var string
+   */
+  protected $whereOp = 'where';
   
   /**
    * @param ZfExtended_Models_Entity_Abstract $entity optional, needed for default invocation in controller
