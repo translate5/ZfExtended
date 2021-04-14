@@ -188,6 +188,14 @@ abstract class ZfExtended_Models_Entity_Abstract {
     public function loadRowBySelect(Zend_Db_Table_Select $s) {
         $this->row = $this->db->fetchRow($s);
         if(empty($this->row)){
+            //TODO: this will return the sql via api
+            //{
+//             "errorCode": null,
+//             "httpStatus": 404,
+//             "errorMessage": "User Entity Not Found: Key: #bySelect; Value: SELECT `Zf_users`.* FROM `Zf_users` WHERE (login = 'xxx@xxx.com') LIMIT 1",
+//             "message": "Not Found",
+//             "success": false
+//             }
             $this->notFound('#bySelect', $s);
         }
         return $this->row;
