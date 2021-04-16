@@ -9,8 +9,8 @@ START LICENSE AND COPYRIGHT
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
 
  This file may be used under the terms of the GNU LESSER GENERAL PUBLIC LICENSE version 3
- as published by the Free Software Foundation and appearing in the file lgpl3-license.txt 
- included in the packaging of this file.  Please review the following information 
+ as published by the Free Software Foundation and appearing in the file lgpl3-license.txt
+ included in the packaging of this file.  Please review the following information
  to ensure the GNU LESSER GENERAL PUBLIC LICENSE version 3.0 requirements will be met:
 https://www.gnu.org/licenses/lgpl-3.0.txt
 
@@ -69,7 +69,7 @@ class ZfExtended_Mailer extends Zend_Mail {
         
         try {
             return parent::send($transport);
-        } catch (Zend_Mail_Transport_Exception $e) {
+        } catch (Throwable $e) {
             //disable mail sending, so it not end up in endles loop
             self::$sendingDisabled=true;
             if(Zend_Registry::isRegistered('logger')){

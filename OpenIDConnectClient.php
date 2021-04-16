@@ -428,12 +428,12 @@ class ZfExtended_OpenIDConnectClient{
         }
 
         //check if the attribute exist in the claims
-        if(!empty($this->openIdUserClaims) && array_key_exists($attribute, $this->openIdUserClaims)) {
+        if(!empty($this->openIdUserClaims) && property_exists($this->openIdUserClaims, $attribute)) {
             return $this->openIdUserClaims->$attribute;
         }
 
         //check if the attribute exist in the user info
-        if (!empty($this->openIdUserInfo) && array_key_exists($attribute, $this->openIdUserInfo)) {
+        if (!empty($this->openIdUserInfo) && property_exists($this->openIdUserInfo, $attribute)) {
             return $this->openIdUserInfo->$attribute;
         }
         if($warnEmpty){
