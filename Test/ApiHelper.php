@@ -550,7 +550,7 @@ class ZfExtended_Test_ApiHelper {
      * @param bool $waitForImport: wait until the resource is imported
      * @return mixed|boolean
      */
-    public function addResource(array $params ,string $fileName = null,bool $waitForImport=false){
+    public function addResource(array $params ,string $fileName = null, bool $waitForImport=false){
         
         $test = $this->testClass;
         //if filename is provided, set the file upload field
