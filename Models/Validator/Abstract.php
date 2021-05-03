@@ -195,7 +195,6 @@ abstract class ZfExtended_Models_Validator_Abstract {
     $this->dontValidateList[] = $fieldname;
   }
   
-  
   /**
    * simple Validator Factory. Parameter "name" is looked up in internal List, or expanded to Zend_Validator_Name
    * @todo improve class searching/autoloading
@@ -204,10 +203,12 @@ abstract class ZfExtended_Models_Validator_Abstract {
    * @return Zend_Validate_Interface
    */
   public function validatorFactory($name, array $parameters = array()){
-    $internalValidators = array('guid' => 'ZfExtended_Validate_Guid',
+    $internalValidators = [
+        'uuid' => 'ZfExtended_Validate_Uuid',
+        'guid' => 'ZfExtended_Validate_Guid',
         'boolean' => 'ZfExtended_Validate_Boolean',
         'md5' => 'ZfExtended_Validate_Md5'
-        );
+    ];
     if(isset($internalValidators[$name])){
       $class = $internalValidators[$name];
     }
