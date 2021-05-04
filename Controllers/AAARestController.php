@@ -199,7 +199,12 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller {
    */
   public function afterActionEvent($actionName){
       $eventName = "after".ucfirst($actionName)."Action";
-      $this->events->trigger($eventName, $this, array('entity' => $this->entity, 'view' => $this->view,'request' =>$this->getRequest()));
+      $this->events->trigger($eventName, $this, [
+          'entity' => $this->entity,
+          'view' => $this->view,
+          'data' => $this->data,
+          'request' =>$this->getRequest(),
+      ]);
   }
   
   /**

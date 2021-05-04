@@ -651,11 +651,15 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
      * @return boolean
      */
     public function updateProgress(float $progress = 1, int $context = 0) {
-        $isUpdated = $this->db->update([
-            'progress'=>$progress
-        ], [
-            'id = ?'=>$this->getId()
-        ])>0;
+        $id = $this->getId();
+        $isUpdated = $this->retryOnDeadlock(function() use ($progress, $id){
+            return $this->db->update([
+                'progress'=>$progress
+            ], [
+                'id = ?'=>$id
+            ])>0;
+            
+        });
         
         //fire event if progress was called
         $this->events->trigger("updateProgress", $this, [
