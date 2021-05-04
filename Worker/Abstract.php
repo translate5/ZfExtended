@@ -412,6 +412,8 @@ abstract class ZfExtended_Worker_Abstract {
         if(!empty($this->workerException)) {
             throw $this->workerException;
         }
+        
+        $this->wakeUpAndStartNextWorkers();
         return $result;
     }
     
