@@ -244,13 +244,13 @@ class ZfExtended_Test_ApiHelper {
      * @param array $additionalParameters attached as plain form parameters
      * @return mixed a array/object structure (parsed from json) on HTTP Status 2XX, false otherwise
      */
-    public function requestJson($url, $method = 'GET', $parameters = [], $additionalParameters = []) {
+    public function requestJson($url, $method = 'GET', $parameters = [], $additionalParameters = [], $isTreeData=false) {
         if(empty($this->filesToAdd) && ($method == 'POST' || $method == 'PUT')){
             $parameters = array('data' => json_encode($parameters));
             $parameters = array_merge($parameters, $additionalParameters);
         }
         $resp = $this->request($url, $method, $parameters);
-        $result = $this->decodeJsonResponse($resp);
+        $result = $this->decodeJsonResponse($resp, $isTreeData);
         if($result === false) {
             error_log('apiTest '.$method.' on '.$url.' returned '.$resp->__toString());
         }
@@ -262,7 +262,7 @@ class ZfExtended_Test_ApiHelper {
      * @param Zend_Http_Response $resp
      * @return mixed|boolean
      */
-    public function decodeJsonResponse(Zend_Http_Response $resp) {
+    public function decodeJsonResponse(Zend_Http_Response $resp, bool $isTreeData=false) {
         $status = $resp->getStatus();
         if(200 <= $status && $status < 300) {
             $body = $resp->getBody();
@@ -276,8 +276,20 @@ class ZfExtended_Test_ApiHelper {
             $t::assertEquals('No error', json_last_error_msg(), 'Server did not response valid JSON: '.$resp->getBody());
             if(isset($json->success)) {
                 $t::assertEquals(true, $json->success);
+            }            
+            if($isTreeData){
+                if(property_exists($json, 'children') && count($json->children) > 0){
+                    return $json->children[0];
+                } else {
+                    $json = new stdClass();
+                    $json->error = 'The fetched data had no children in the root object';
+                    return $json;
+                }
+            } else if(property_exists($json, 'rows')){
+                return $json->rows;
+            } else {
+                return $json;
             }
-            return $json->rows ?? $json;
         }
         return false;
     }
