@@ -563,7 +563,7 @@ abstract class ZfExtended_Worker_Abstract {
             if(!empty($this->workerModel)){
                 $msg = 'Worker '.$this->workerModel->getWorker().' ('.$this->workerModel->getId().'): '.$msg;
             }
-            if(ZfExtended_Debug::hasLevel('core', 'worker',2)){
+            if(ZfExtended_Debug::hasLevel('core', 'worker', 2)){
                 $msg .= "\n".'    by '.$_SERVER['REQUEST_URI'];
             }
             error_log($msg);
@@ -577,7 +577,7 @@ abstract class ZfExtended_Worker_Abstract {
      */
     public function updateProgress(float $progress = 1){
         $parentId = $this->workerModel->getParentId() ? $this->workerModel->getParentId() : $this->workerModel->getId();
-        $this->workerModel->updateProgress($progress,$parentId);
+        $this->workerModel->updateProgress($progress, $parentId);
     }
     
     /***
