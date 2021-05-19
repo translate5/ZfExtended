@@ -840,7 +840,7 @@ class ZfExtended_Test_ApiHelper {
      * @return stdClass
      */
     public function reloadTask(int $id = null) {
-        return $this->task = $this->requestJson('editor/task/'.$id ?? $this->task->id);
+        return $this->task = $this->requestJson('editor/task/'.($id ?? $this->task->id));
     }
     
     /***
