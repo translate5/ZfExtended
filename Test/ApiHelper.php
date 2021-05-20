@@ -120,7 +120,7 @@ class ZfExtended_Test_ApiHelper {
     protected $task;
     
     /***
-     * 
+     *
      * array of stdObject with the values of the last imported project tasks
      * @var array
      */
@@ -582,7 +582,7 @@ class ZfExtended_Test_ApiHelper {
     
     /***
      * Create new language resource
-     * 
+     *
      * @param array $params: api params
      * @param string $fileName: the resource upload file name
      * @param bool $waitForImport: wait until the resource is imported
@@ -634,7 +634,7 @@ class ZfExtended_Test_ApiHelper {
     }
     
     /***
-     * 
+     *
      * @param array $params
      * @param string $filename
      */
@@ -836,8 +836,8 @@ class ZfExtended_Test_ApiHelper {
      * reloads the internal stored task
      * @return stdClass
      */
-    public function reloadTask() {
-        return $this->task = $this->requestJson('editor/task/'.$this->task->id);
+    public function reloadTask(int $id = null) {
+        return $this->task = $this->requestJson('editor/task/'.($id ?? $this->task->id));
     }
     
     /***
@@ -973,10 +973,23 @@ class ZfExtended_Test_ApiHelper {
     }
     
     /***
-     * 
+     *
      * @return array|mixed|boolean
      */
     public function getProjectTasks() {
         return $this->projectTasks;
+    }
+    
+    /**
+     * returns a XML string as formatted XML
+     * @param string $xml
+     * @return string
+     */
+    public function formatXml(string $xml): string {
+        $xmlDoc = new DOMDocument();
+        $xmlDoc->preserveWhiteSpace = false;
+        $xmlDoc->formatOutput = true;
+        $xmlDoc->loadXML($xml);
+        return $xmlDoc->saveXML();
     }
 }
