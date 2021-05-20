@@ -70,6 +70,10 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implement
     const SYSTEM_LOGIN = 'system';
     const SYSTEM_GUID = '{00000000-0000-0000-0000-000000000000}';
     
+    const GENDER_NONE = 'n';
+    const GENDER_FEMALE = 'f';
+    const GENDER_MALE = 'm';
+    
   protected $dbInstanceClass = 'ZfExtended_Models_Db_User';
   protected $validatorInstanceClass = 'ZfExtended_Models_Validator_User';
   
@@ -512,6 +516,18 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implement
         }
         $this->row =$row;
         return $row;
+    }
+    
+    /**
+     * returns a list of users matching the given parameter in login (mysql wildcards permitted) or a direct in the e-mail field
+     * @param string $search
+     * @return array
+     */
+    public function loadAllByLoginPartOrEMail(string $search): array {
+        $s = $this->_loadAll();
+        $s->where('login like ?', $search)
+        ->orWhere('email = ?', $search);
+        return $this->loadFilterdCustom($s);
     }
     
     /**
