@@ -262,7 +262,7 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
         $adapter = $db->getAdapter();
         
         
-        
+
         // set the next workers of the given task to waiting
         // if no other worker are running or waiting or scheduled, which
         //      - is from the same taskGuid as the worker which should be started
@@ -271,7 +271,7 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
         // This way it is achieved, that task-independent the next workers in the queue
         // are started and that task-dependent only workers are started which have
         // no dependency to any other workers in the queue which are not set to "done"
-        
+
         // SQL Explanation
         
         
@@ -283,9 +283,9 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
         // It seems MySQL ignores the collation default settings when creating variables what is really annoying as it is prone to cause problems, so the collation has to be set explicitly for the variable
         // TODO FIXME: Collation behaviour for variables may can be fixed by setting "character_set_connection"
         $stateOrder = (self::STATE_RUNNING < self::STATE_SCHEDULED) ? 'ASC' : 'DESC'; // just for robustness: evaluate the needed ordering to make running workers appear first
-        $intermediateTable =
+        $intermediateTable = 
         
-                    "SELECT w.id AS id, @num := if(@wworker = w.worker, @num:= @num + 1, 1) AS count, @wworker := w.worker as worker, w.maxParallelProcesses AS max, w.state AS state
+                   "SELECT w.id AS id, @num := if(@wworker = w.worker, @num:= @num + 1, 1) AS count, @wworker := w.worker as worker, w.maxParallelProcesses AS max, w.state AS state
                     FROM Zf_worker w, (SELECT @wworker := _utf8mb4 '' COLLATE utf8mb4_unicode_ci, @num := 0) r
                     WHERE w.state = ? /* BINDING 0 */
                     OR (
@@ -323,6 +323,7 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
             $adapter->query($sql, $bindings);
         });
     }
+    
     /**
      * sets the prepared workers of the same workergroup and taskGuid as the current one
      */
