@@ -65,7 +65,8 @@ abstract class ZfExtended_Worker_Abstract {
     protected $maxParallelProcesses = 1;
     
     /**
-     * Blocking-typ for this certain worker
+     * Blocking-typ for this worker
+     * Default is the Resource-based Blocking
      * @var string blocking-type BLOCK_XYZ
      */
     protected $blockingType = self::BLOCK_SLOT;
@@ -107,7 +108,7 @@ abstract class ZfExtended_Worker_Abstract {
     protected $log;
     
      /**
-     * resourcePool for the different TermTagger-Operations;
+     * resourcePool for the different Operations
      * Example from TermTagger: Possible Values: $this->allowdResourcePools = array('default', 'gui', 'import');
      * @var string
      */
@@ -392,7 +393,7 @@ abstract class ZfExtended_Worker_Abstract {
     /**
      * Direct run of a worker, if a worker should be runnable directly, define this function public in the in the concrete worker
      * and call this by parent::run();
-     * direct calls per run are not mutex-save!
+     * direct calls per run are not mutex-save! The run operation queues/starts no other workers and is purely sequential
      *
      * @throws Exception
      * @return boolean true if $this->work() runs without errors
@@ -483,7 +484,9 @@ abstract class ZfExtended_Worker_Abstract {
                 'worker' => $this,
                 'taskGuid' => $this->taskGuid,
             ]);
+             // do the actual work
             $result = $this->work();
+            
             $this->workerModel->setState(ZfExtended_Models_Worker::STATE_DONE);
             $this->workerModel->setEndtime(new Zend_Db_Expr('NOW()'));
             $this->finishedWorker = clone $this->workerModel;
@@ -503,7 +506,6 @@ abstract class ZfExtended_Worker_Abstract {
         $this->updateProgress(1);//update the worker progress to 1, when the worker status is set to done
         return $result;
     }
-    
     /**
      * Handles the exception occured while working, by default just store it internally
      * @param Throwable $workException
@@ -539,7 +541,7 @@ abstract class ZfExtended_Worker_Abstract {
     
     
     /**
-     * Get the result-values of prrocessing $this->work();
+     * Get the result-values of processing $this->work();
      * @return mixed
      */
     public function getResult() {
@@ -561,7 +563,7 @@ abstract class ZfExtended_Worker_Abstract {
             if(!empty($this->workerModel)){
                 $msg = 'Worker '.$this->workerModel->getWorker().' ('.$this->workerModel->getId().'): '.$msg;
             }
-            if(ZfExtended_Debug::hasLevel('core', 'worker',2)){
+            if(ZfExtended_Debug::hasLevel('core', 'worker', 2)){
                 $msg .= "\n".'    by '.$_SERVER['REQUEST_URI'];
             }
             error_log($msg);
@@ -575,7 +577,7 @@ abstract class ZfExtended_Worker_Abstract {
      */
     public function updateProgress(float $progress = 1){
         $parentId = $this->workerModel->getParentId() ? $this->workerModel->getParentId() : $this->workerModel->getId();
-        $this->workerModel->updateProgress($progress,$parentId);
+        $this->workerModel->updateProgress($progress, $parentId);
     }
     
     /***
