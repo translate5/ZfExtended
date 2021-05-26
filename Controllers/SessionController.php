@@ -118,9 +118,13 @@ class ZfExtended_SessionController extends ZfExtended_RestController {
             $userModel = ZfExtended_Factory::get($userClass);
             /* @var $userModel ZfExtended_Models_SessionUserInterface */
             $userModel->setUserSessionNamespaceWithPwCheck($login, $passwd);
+
+            // check for existing valid session for the current user
+            $sessionId = ZfExtended_Session::updateSession(true,true);
+
             $session = new Zend_Session_Namespace();
             $this->setLocale($session, $userModel);
-            $this->view->sessionId = session_id();
+            $this->view->sessionId = $sessionId;
             
             $sessionDb = ZfExtended_Factory::get('ZfExtended_Models_Db_Session');
             $this->view->sessionToken = $sessionDb->updateAuthToken($this->view->sessionId);

@@ -33,7 +33,7 @@ class ZfExtended_Resource_GarbageCollector extends Zend_Application_Resource_Res
      * @var Zend_Config
      */
     protected $config;
-    
+
     public function init() {
         $bootstrap = $this->getBootstrap();
         $bootstrap->bootstrap('db');
@@ -99,7 +99,7 @@ class ZfExtended_Resource_GarbageCollector extends Zend_Application_Resource_Res
      * @return boolean true if origin matches the configured one
      */
     protected function checkOrigin($callOrigin) {
-        if($this->config->runtimeOptions->garbageCollector) {
+        if(isset($this->config) && isset($this->config->runtimeOptions->garbageCollector)) {
             $configuredInvocation = $this->config->runtimeOptions->garbageCollector->invocation;
         }
         else {
