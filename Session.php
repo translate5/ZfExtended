@@ -24,6 +24,15 @@ END LICENSE AND COPYRIGHT
 
 class ZfExtended_Session {
 
+    /**
+     * @var ZfExtended_EventManager
+     */
+    protected $events = false;
+
+    public function __construct()
+    {
+        $this->events = ZfExtended_Factory::get('ZfExtended_EventManager', array(get_class($this)));
+    }
     /***
      * Updates the sessionMapInternalUniqId table modified stamp and regenerates the session id if needed
      * @param bool $regenerate if true, the session id is regenerated!
@@ -91,14 +100,10 @@ class ZfExtended_Session {
      * <b>NOTE: this will NOT check if the session is expired, it will just remove all session entries for given userId</b>
      * @param int $userId
      */
-    public static function cleanForUser(int $userId){
+    public function cleanForUser(int $userId){
         $model = ZfExtended_Factory::get('ZfExtended_Models_Db_Session');
         /* @var $model ZfExtended_Models_Db_Session */
         $model->delete(['userId = ?'=>$userId]);
-
-        // TODO: is this the right way to call the garbage collector ?
-        $gargabe = ZfExtended_Factory::get('ZfExtended_Resource_GarbageCollector');
-        /* @var $gargabe ZfExtended_Resource_GarbageCollector */
-        $gargabe->cleanUp($gargabe::ORIGIN_CRON);
+        $this->events->trigger('afterSessionCleanForUser', $this, []);
     }
 }
