@@ -29,8 +29,7 @@ class ZfExtended_Session {
      */
     protected $events = false;
 
-    public function __construct()
-    {
+    public function __construct(){
         $this->events = ZfExtended_Factory::get('ZfExtended_EventManager', array(get_class($this)));
     }
     /***
@@ -103,7 +102,10 @@ class ZfExtended_Session {
     public function cleanForUser(int $userId){
         $model = ZfExtended_Factory::get('ZfExtended_Models_Db_Session');
         /* @var $model ZfExtended_Models_Db_Session */
-        $model->delete(['userId = ?'=>$userId]);
+        $model->delete([
+            'userId = ?'=>$userId,
+            'session_id != ?'=>session_id()
+        ]);
         $this->events->trigger('afterSessionCleanForUser', $this, []);
     }
 }
