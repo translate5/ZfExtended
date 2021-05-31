@@ -28,18 +28,8 @@ END LICENSE AND COPYRIGHT
  * @version 2.0
  *
  */
-/**
- * Plugin zur Regnerierung der Session-ID (Vermeidung von XSS-Attacken)
- *
- * - nutzt rememberMe, denn nur so funktioniert es bei Nutzung von Zend_Auth
- * - rememberMe ruft regenerateId auf
- * -  Regeneriert die Session nur, wenn das Layout aktiviert ist, denn bei vielen
- *    Aufrufen in wenigen Millisekunden Abstand kommen sich die Aufrufe gegenseitig 
- *    in die Quere mit dem Effekt, dass der User ausgeloggt wird.
- * - legt die Variable $session->internalSessionUniqId im allgemeinen
- *   Session-Namespace fest. Sie wird nur intern in der Programmierung und für
- *   Flag-Files verwendet und darf aus Sicherheitsgründen nicht nicht in Cookies
- *   gesetzt werden. 
+/***
+ * Regenerate the session only for non rest requests
  */
 class ZfExtended_Controllers_Plugins_SessionRegenerate extends Zend_Controller_Plugin_Abstract {
 
@@ -55,28 +45,7 @@ class ZfExtended_Controllers_Plugins_SessionRegenerate extends Zend_Controller_P
         );
         $user = new Zend_Session_Namespace('user');
         $isAuthenticated = !empty($user->data->userGuid);
-        $this->updateSession($layouthelper->isEnabled() && !$isAuthenticated && !Zend_Session::isDestroyed());
-    }
-
-    /**
-     * Updates the sessionMapInternalUniqId table modified stamp and regenerates the session id if needed 
-     * @param bool $regenerate if true, the session id is regenerated!
-     * @return string : return the generated sessionid
-     */
-    public function updateSession($regenerate = false) {
-        $db = ZfExtended_Factory::get('ZfExtended_Models_Db_SessionMapInternalUniqId');
-        /* @var $db ZfExtended_Models_Db_SessionMapInternalUniqId */
-        $newSessionId = $oldSessionId = Zend_Session::getId();
-        
-        if($regenerate){
-            $config = Zend_Registry::get('config');
-            Zend_Session::rememberMe($config->resources->ZfExtended_Resource_Session->remember_me_seconds);
-            $newSessionId = Zend_Session::getId();
-        }
-        $db->update([
-            'session_id' => $newSessionId,
-            'modified' => time(),
-        ], ['session_id = ?' => $oldSessionId]);
-        return $newSessionId;
+        // if you are not in the rest context, we want this to happen.
+        ZfExtended_Session::updateSession($layouthelper->isEnabled() && !$isAuthenticated && !Zend_Session::isDestroyed());
     }
 }

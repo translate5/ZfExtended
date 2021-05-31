@@ -121,16 +121,6 @@ abstract class ZfExtended_Test_ApiTestcase extends \ZfExtended_Test_Testcase {
         self::$api->loadCustomer();
     }
     
-    /**
-     * compares the given segment content to the content in the given assert file
-     * @param string $fileToCompare
-     * @param stdClass $segment
-     */
-    public static function assertSegmentContentToFile($fileToCompare, stdClass $segment, $msg = '') {
-        $segmentToTest = self::$api->removeUntestableSegmentContent($segment);
-        self::assertEquals(self::$api->getFileContent($fileToCompare), $segmentToTest, $msg);
-    }
-    
     /***
      * Check if the current test request is from master tests.
      * It is used for skipping tests.

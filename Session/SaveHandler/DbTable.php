@@ -60,11 +60,14 @@ class ZfExtended_Session_SaveHandler_DbTable
             $this->_modifiedColumn => time(),
             $this->_dataColumn     => (string) $data
         ];
-        
+        $userSession = new Zend_Session_Namespace('user');
+        $userId = $userSession->data->id ?? null;
+
+        // check if the session user namespace exist
         if($isModified) {
-            $sql = 'INSERT INTO `session` (`session_id`, `name`, `modified`, `lifetime`, `session_data`) VALUES (?,?,?,?,?)
-                    ON DUPLICATE KEY UPDATE `modified` = ?, `session_data` = ?';
-            $bindings = array($id,$this->_sessionName,intval($data[$this->_modifiedColumn]),intval($this->_lifetime),$data[$this->_dataColumn],intval($data[$this->_modifiedColumn]),$data[$this->_dataColumn]);
+            $sql = 'INSERT INTO `session` (`session_id`, `name`, `modified`, `lifetime`, `session_data`,`userId`) VALUES (?,?,?,?,?,?)
+                    ON DUPLICATE KEY UPDATE `modified` = ?, `session_data` = ?, `userId` = ? ';
+            $bindings = array($id,$this->_sessionName,intval($data[$this->_modifiedColumn]),intval($this->_lifetime),$data[$this->_dataColumn],$userId,intval($data[$this->_modifiedColumn]),$data[$this->_dataColumn],$userId);
         }
         else {
             $sql = 'INSERT INTO `session` (`session_id`, `name`, `modified`, `lifetime`) VALUES (?,?,?,?)

@@ -154,8 +154,12 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
         if ($this->authIsValid($login, $passwd)) {
             $invalidLoginCounter->resetCounter(); // bei erfolgreichem login den counter zurücksetzen
             $this->_userModel->setUserSessionNamespaceWithPwCheck($login, $passwd);
+
             ZfExtended_Models_LoginLog::addSuccess($this->_userModel, "plainlogin");
-            $this->getFrontController()->getPlugin('ZfExtended_Controllers_Plugins_SessionRegenerate')->updateSession(true);
+
+            // check for already valid session for the current authenticated user
+            ZfExtended_Session::updateSession(true,true);
+
             $this->initDataAndRedirect();
             return true;
         }

@@ -49,5 +49,20 @@ class ZfExtended_Models_Db_Session extends Zend_Db_Table_Abstract {
         $this->getAdapter()->query($sql, [$token, $sessionId, Zend_Session::getOptions('name'), $lifetime]);
         return $token;
     }
+
+    /***
+     * Load the session_id for the given user. If $excludeSession is provided, this session value will be ignored from the select.
+     * @param int $userId
+     * @param string $excludeSession
+     * @return mixed
+     * @throws Zend_Db_Table_Exception
+     */
+    public function loadSessionIdForUser(int $userId,string $excludeSession = ''){
+        $s = $this->select()->from($this->info($this::NAME),'session_id')->where('userId = ?',$userId);
+        if(!empty($excludeSession)){
+            $s->where('session_id != ?',$excludeSession);
+        }
+        return $this->getAdapter()->fetchRow($s);
+    }
 }
 

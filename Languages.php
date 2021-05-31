@@ -397,6 +397,36 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract {
         }
         return $rfcToIsoLanguage;
     }
+
+    /***
+     * Load all languages for front-end display (language name + (rfc value) ).
+     * Language array result layout:
+     *  [
+     *      "0"=>" language id ",
+     *      "1"=>" language name + (rfc)",
+     *      "2"=>" rtl ",
+     *      "3"=>" rfc ",
+     * ]
+     * If field key is provided, this lek_languages field will be used as key for each language in the return array.
+     * @param string $field
+     * @return array
+     * @throws Zend_Exception
+     */
+    public function loadAllForDisplay(string $fieldKey = ''){
+        $translate= ZfExtended_Zendoverwrites_Translate::getInstance();
+        $langs = $this->loadAll();
+        $result = [];
+        foreach ($langs as $lang) {
+            $name = $translate->_($lang['langName']);
+            $key = empty($fieldKey) ? $name : $lang[$fieldKey];
+            $result[$key] = [$lang['id'], $name.' ('.$lang['rfc5646'].')', $lang['rtl'],$lang['rfc5646']];
+        }
+        ksort($result); //sort by name of language
+        if(empty($result)){
+            throw new Zend_Exception('No languages defined. Please use /docs/003fill-LEK-languages-after-editor-sql or define them otherwhise.');
+        }
+        return empty($fieldKey) ? array_values($result) : $result;
+    }
     
     /***
      * Find mayor language by given sub langauge.

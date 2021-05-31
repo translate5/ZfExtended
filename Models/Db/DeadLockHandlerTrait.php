@@ -92,7 +92,7 @@ trait ZfExtended_Models_Db_DeadLockHandlerTrait {
     /**
      * Handles DB Exceptions: encapsulates Deadlock found exception
      */
-    protected function throwIfNotDeadLockException(Zend_Db_Statement_Exception $e) {
+    protected function throwIfNotDeadLockException(Zend_Db_Exception $e) {
         if(strpos($e->getMessage(), 'Serialization failure: 1213 Deadlock found when trying to get lock; try restarting transaction,') === false) {
             throw $e;
         }
@@ -101,7 +101,7 @@ trait ZfExtended_Models_Db_DeadLockHandlerTrait {
     /**
      * Handles DB Exceptions: handles refresh row as parent is missing
      */
-    protected function throwIfNotParentMissingException(Zend_Db_Statement_Exception $e) {
+    protected function throwIfNotParentMissingException(Zend_Db_Exception $e) {
         if(strpos($e->getMessage(), 'Cannot refresh row as parent is missing') === false) {
             throw $e;
         }

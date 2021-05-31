@@ -52,6 +52,34 @@ class ZfExtended_Test_ApiHelper {
     const SEGMENT_DUPL_SAVE_CHECK = '<img src="data:image/gif;base64,R0lGODlhAQABAID/AMDAwAAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==" class="duplicatesavecheck" data-segmentid="%s" data-fieldname="%s">';
     
     /**
+     * Holds the api url as defined in zend config
+     * @var string
+     */
+    private static $API_URL;
+    /**
+     * Holds the task data dir as defined in zend config
+     * @var string
+     */
+    private static $DATA_DIR;
+    /**
+     * Holds the logout url
+     * @var string
+     */
+    private static $LOGOUT_PATH;
+    
+    /**
+     * Sets the Test API up. This needs to be set in the test bootstrapper
+     * @param string $apiUrl
+     * @param string $dataDir
+     * @param string $logoutPath
+     */
+    public static function setup(string $apiUrl, string $dataDir, string $logoutPath){
+        static::$API_URL = rtrim($apiUrl, '/').'/';
+        static::$DATA_DIR = rtrim($dataDir, '/').'/';
+        static::$LOGOUT_PATH = $logoutPath;
+    }
+    
+    /**
      * enable xdebug debugger in eclipse
      * @var boolean
      */
@@ -92,7 +120,7 @@ class ZfExtended_Test_ApiHelper {
     protected $task;
     
     /***
-     * 
+     *
      * array of stdObject with the values of the last imported project tasks
      * @var array
      */
@@ -115,7 +143,7 @@ class ZfExtended_Test_ApiHelper {
      * Collection of language resources created from addResources method
      * @var array
      */
-    protected static $resources=[];//TODO: remove from memory ?
+    protected static $resources = []; //TODO: remove from memory ?
     
     protected $testusers = array(
         'testmanager' => '{00000000-0000-0000-C100-CCDDEE000001}',
@@ -142,6 +170,14 @@ class ZfExtended_Test_ApiHelper {
         return $this->authCookie;
     }
     
+    /***
+     * 
+     * @param string $cookie
+     */
+    public function setAuthCookie(string $cookie) {
+        $this->authCookie = $cookie;
+    }
+    
     /**
      * requests the REST API, can handle file uploads, add file methods must be called first
      * @param string $url
@@ -150,10 +186,9 @@ class ZfExtended_Test_ApiHelper {
      * @return Zend_Http_Response
      */
     public function request($url, $method = 'GET', $parameters = array()) {
-        global $T5_API_URL;
+
         $http = new Zend_Http_Client();
-        $url = $T5_API_URL.$url;
-        $http->setUri($url);
+        $http->setUri(static::$API_URL.ltrim($url, '/'));
         $http->setHeaders('Accept', 'application/json');
         
         //enable xdebug debugger in eclipse
@@ -217,13 +252,13 @@ class ZfExtended_Test_ApiHelper {
      * @param array $additionalParameters attached as plain form parameters
      * @return mixed a array/object structure (parsed from json) on HTTP Status 2XX, false otherwise
      */
-    public function requestJson($url, $method = 'GET', $parameters = [], $additionalParameters = []) {
+    public function requestJson($url, $method = 'GET', $parameters = [], $additionalParameters = [], $isTreeData=false) {
         if(empty($this->filesToAdd) && ($method == 'POST' || $method == 'PUT')){
             $parameters = array('data' => json_encode($parameters));
             $parameters = array_merge($parameters, $additionalParameters);
         }
         $resp = $this->request($url, $method, $parameters);
-        $result = $this->decodeJsonResponse($resp);
+        $result = $this->decodeJsonResponse($resp, $isTreeData);
         if($result === false) {
             error_log('apiTest '.$method.' on '.$url.' returned '.$resp->__toString());
         }
@@ -235,7 +270,7 @@ class ZfExtended_Test_ApiHelper {
      * @param Zend_Http_Response $resp
      * @return mixed|boolean
      */
-    public function decodeJsonResponse(Zend_Http_Response $resp) {
+    public function decodeJsonResponse(Zend_Http_Response $resp, bool $isTreeData=false) {
         $status = $resp->getStatus();
         if(200 <= $status && $status < 300) {
             $body = $resp->getBody();
@@ -249,8 +284,20 @@ class ZfExtended_Test_ApiHelper {
             $t::assertEquals('No error', json_last_error_msg(), 'Server did not response valid JSON: '.$resp->getBody());
             if(isset($json->success)) {
                 $t::assertEquals(true, $json->success);
+            }            
+            if($isTreeData){
+                if(property_exists($json, 'children') && count($json->children) > 0){
+                    return $json->children[0];
+                } else {
+                    $json = new stdClass();
+                    $json->error = 'The fetched data had no children in the root object';
+                    return $json;
+                }
+            } else if(property_exists($json, 'rows')){
+                return $json->rows;
+            } else {
+                return $json;
             }
-            return $json->rows ?? $json;
         }
         return false;
     }
@@ -316,8 +363,7 @@ class ZfExtended_Test_ApiHelper {
      * Makes a request to the configured logout URL
      */
     public function logout() {
-        global $T5_LOGOUT_PATH;
-        $this->request($T5_LOGOUT_PATH);
+        $this->request(static::$LOGOUT_PATH);
         $this->authLogin = null;
     }
     
@@ -544,13 +590,13 @@ class ZfExtended_Test_ApiHelper {
     
     /***
      * Create new language resource
-     * 
+     *
      * @param array $params: api params
      * @param string $fileName: the resource upload file name
      * @param bool $waitForImport: wait until the resource is imported
      * @return mixed|boolean
      */
-    public function addResource(array $params ,string $fileName = null,bool $waitForImport=false){
+    public function addResource(array $params ,string $fileName = null, bool $waitForImport=false){
         
         $test = $this->testClass;
         //if filename is provided, set the file upload field
@@ -596,7 +642,7 @@ class ZfExtended_Test_ApiHelper {
     }
     
     /***
-     * 
+     *
      * @param array $params
      * @param string $filename
      */
@@ -795,51 +841,11 @@ class ZfExtended_Test_ApiHelper {
     }
     
     /**
-     * returns the untestable segment fields (like id, taskGuid etc)
-     * @param stdClass $segmentContent
-     * @param boolean $keepId optional, true to keep segment ID
-     * @return stdClass
-     */
-    public function removeUntestableSegmentContent(stdClass $segmentContent, $keepId = false) {
-        if(!$keepId) {
-            unset($segmentContent->id);
-        }
-        unset($segmentContent->fileId);
-        unset($segmentContent->taskGuid);
-        unset($segmentContent->timestamp);
-        if(isset($segmentContent->metaCache)) {
-            $meta = json_decode($segmentContent->metaCache, true);
-            if(!empty($meta['siblingData'])) {
-                $data = [];
-                foreach($meta['siblingData'] as $sibling) {
-                    $data['fakeSegId_'.$sibling['nr']] = $sibling;
-                }
-                ksort($data);
-                $meta['siblingData'] = $data;
-            }
-            $segmentContent->metaCache = json_encode($meta, JSON_FORCE_OBJECT);
-        }
-        
-        if(!empty($segmentContent->comments)) {
-            $segmentContent->comments = preg_replace('/<span class="modified">[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}</', '<span class="modified">NOT_TESTABLE<', $segmentContent->comments);
-        }
-        $segmentContent->targetEdit = preg_replace('/data-usertrackingid="[0-9]+"/', 'data-usertrackingid="NOT_TESTABLE"', $segmentContent->targetEdit);
-        $segmentContent->targetEdit = preg_replace('/data-timestamp="[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\+[0-9]{2}:[0-9]{2}"/', 'data-timestamp="NOT_TESTABLE"', $segmentContent->targetEdit);
-        $segmentContent->source = preg_replace('/data-tbxid="term_[0-9]+"/', 'data-tbxid="term_NOT_TESTABLE"', $segmentContent->source);
-        if(property_exists($segmentContent, 'sourceEdit')) {
-            $segmentContent->sourceEdit = preg_replace('/data-tbxid="term_[0-9]+"/', 'data-tbxid="term_NOT_TESTABLE"', $segmentContent->sourceEdit);
-        }
-        $segmentContent->target = preg_replace('/data-tbxid="term_[0-9]+"/', 'data-tbxid="term_NOT_TESTABLE"', $segmentContent->target);
-        $segmentContent->targetEdit = preg_replace('/data-tbxid="term_[0-9]+"/', 'data-tbxid="term_NOT_TESTABLE"', $segmentContent->targetEdit);
-        return $segmentContent;
-    }
-    
-    /**
      * reloads the internal stored task
      * @return stdClass
      */
-    public function reloadTask() {
-        return $this->task = $this->requestJson('editor/task/'.$this->task->id);
+    public function reloadTask(int $id = null) {
+        return $this->task = $this->requestJson('editor/task/'.($id ?? $this->task->id));
     }
     
     /***
@@ -857,10 +863,7 @@ class ZfExtended_Test_ApiHelper {
      * @return string
      */
     public function getTaskDataDirectory() {
-        global $T5_DATA_DIR;
-        $dataPath = trim($T5_DATA_DIR, '/');
-        $application = $this->testRoot.'/../../../../application/';
-        return $application.$dataPath.'/'.trim($this->task->taskGuid, '{}').'/';
+        return static::$DATA_DIR.trim($this->task->taskGuid, '{}').'/';
     }
     
     public function addImportFile($path, $mime = 'application/zip') {
@@ -978,10 +981,23 @@ class ZfExtended_Test_ApiHelper {
     }
     
     /***
-     * 
+     *
      * @return array|mixed|boolean
      */
     public function getProjectTasks() {
         return $this->projectTasks;
+    }
+    
+    /**
+     * returns a XML string as formatted XML
+     * @param string $xml
+     * @return string
+     */
+    public function formatXml(string $xml): string {
+        $xmlDoc = new DOMDocument();
+        $xmlDoc->preserveWhiteSpace = false;
+        $xmlDoc->formatOutput = true;
+        $xmlDoc->loadXML($xml);
+        return $xmlDoc->saveXML();
     }
 }
