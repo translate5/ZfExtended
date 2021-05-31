@@ -170,6 +170,14 @@ class ZfExtended_Test_ApiHelper {
         return $this->authCookie;
     }
     
+    /***
+     * 
+     * @param string $cookie
+     */
+    public function setAuthCookie(string $cookie) {
+        $this->authCookie = $cookie;
+    }
+    
     /**
      * requests the REST API, can handle file uploads, add file methods must be called first
      * @param string $url
