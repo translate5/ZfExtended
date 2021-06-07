@@ -71,6 +71,12 @@ class ErrorController extends ZfExtended_Controllers_Action
     {
         //the error caught by the Zend_Controller_Plugin_ErrorHandler
         $caughtError = $this->_getParam('error_handler');
+        
+        if(empty($caughtError)) {
+            //some one tried to access the error controller, so no error was caught at all
+            throw new ZfExtended_NotFoundException();
+        }
+        
         //$caughtError->request → the original request
         //$caughtError->exception → the exception
         //$caughtError->type as defined in Zend_Controller_Plugin_ErrorHandler
