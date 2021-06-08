@@ -135,7 +135,7 @@ class ZfExtended_Models_Entity_ExcelExport {
     
     /**
      * Loads the array data in the excel spreadsheet
-     * 
+     *
      * @param array $data
      * @param int $activeSheetIndex
      */
@@ -362,7 +362,7 @@ class ZfExtended_Models_Entity_ExcelExport {
      * Redirect output to a client's web browser (Excel)
      */
     public function sendDownload () {
-        $fileName = $this->getProperty('filename').date('-Y-d-m');
+        $fileName = $this->getProperty('filename').date('-Y-d-m').'.xlsx';
         
         // XLSX Excel 2010 output
         $objWriter = \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($this->spreadsheet, 'Xlsx');
@@ -370,7 +370,7 @@ class ZfExtended_Models_Entity_ExcelExport {
         $objWriter->setPreCalculateFormulas($this->getPreCalculateFormulas());
 
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        header('Content-Disposition: attachment;filename="'.$fileName.'.xlsx"');
+        header("Content-Disposition: attachment; filename*=UTF-8''".rawurlencode($fileName));
         
         header('Cache-Control: max-age=0');
         // If you're serving to IE 9, then the following may be needed
@@ -446,7 +446,7 @@ class ZfExtended_Models_Entity_ExcelExport {
     }
     
     /***
-     * Adjust the column size of each worksheet in given spredsheet 
+     * Adjust the column size of each worksheet in given spredsheet
      * @param PhpOffice\PhpSpreadsheet\Spreadsheet $sp
      */
     public function autosizeColumns(PhpOffice\PhpSpreadsheet\Spreadsheet $sp) {
