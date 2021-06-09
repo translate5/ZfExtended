@@ -80,7 +80,7 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
     public $db;
     
     /**
-     * @var ZfExtended_Models_Db_Worker
+     * @var string
      */
     protected $dbInstanceClass = 'ZfExtended_Models_Db_Worker';
     
