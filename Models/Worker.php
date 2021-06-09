@@ -77,7 +77,7 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
     /**
      * @var ZfExtended_Models_Db_Worker
      */
-    protected $db;
+    public $db;
     
     /**
      * @var ZfExtended_Models_Db_Worker
