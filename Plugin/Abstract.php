@@ -26,6 +26,25 @@ END LICENSE AND COPYRIGHT
  * provides basic functionality for plugins
  */
 abstract class ZfExtended_Plugin_Abstract {
+    
+    /**
+     * A public plug-in is available for everybody
+     * @var string
+     */
+    const TYPE_PUBLIC = 'public';
+    
+    /**
+     * A private plug-in is only available if purchased
+     * @var string
+     */
+    const TYPE_PRIVATE = 'private';
+    
+    /**
+     * A private plug-in is only available for specific installations
+     * @var string
+     */
+    const TYPE_CLIENT_SPECIFIC = 'clientspecific';
+    
     /**
      * Contains absolute plugin path
      * @var string
@@ -67,8 +86,19 @@ abstract class ZfExtended_Plugin_Abstract {
      */
     protected $localePath = false;
     
+    protected $publicFileTypes = ['js', 'resources'];
     
-    protected $publicFileTypes=array('js', 'resources');
+    /**
+     * The plug-in type
+     * @var string
+     */
+    protected static $type = self::TYPE_PUBLIC;
+    
+    /**
+     * A human readable description of the plug-in
+     * @var string
+     */
+    protected static $description = 'Please overwrite me in the plug-in init';
     
     public function __construct($pluginName) {
         $this->pluginName = $pluginName;
@@ -270,11 +300,19 @@ abstract class ZfExtended_Plugin_Abstract {
         return in_array($requestedType, $this->getPublicFileTypes());
     }
     
-    /***
+    /**
      * Return the plugin module name. The module name is parsed from the plugin class (each plugin class starts with the module name)
      * @return mixed
      */
     public function getModuleName() {
         return current(explode('_', get_class($this)));
+    }
+    
+    /**
+     * Return the plug-in description
+     * @return string
+     */
+    public static function getDescription(): string {
+        return static::$description;
     }
 }
