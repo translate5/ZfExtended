@@ -429,7 +429,7 @@ abstract class ZfExtended_Worker_Abstract {
         }
         
         $result = $this->_run();
-        $this->onRunQueuedFinished($result); // plugin method to e.g. chain workery dynamically after queued work is done
+        $this->onRunQueuedFinished($result); // plugin method to e.g. chain another worker dynamically after queued work is done
         
         $this->wakeUpAndStartNextWorkers();
         
@@ -509,7 +509,7 @@ abstract class ZfExtended_Worker_Abstract {
         return $result;
     }
     /**
-     * This method can be used in extending classes to add code that is executed after q queued worker has run and the new worker-state in the model is set
+     * This method can be used in extending classes to add code that is executed after a queued worker has run and the new worker-state in the model is set
      * @param bool $success
      */
     protected function onRunQueuedFinished($success){
