@@ -512,23 +512,22 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
      * for the given resource $resourceName
      *
      * @param string $resourceName
-     * @param string $validSlots optional array with valid Slots. All slots in the result which are not in this array of valid slots will be removed
-     *
+     * @param array $validSlots:  optional array with valid Slots. All slots in the result which are not in this array of valid slots will be removed
      * @return array: list of array(slot, count) for the given resource
      */
-    public function getListSlotsCount($resourceName = '', $validSlots = array()) {
+    public function getListSlotsCount(string $resourceName = '', array $validSlots=NULL) {
         $db = $this->db;
         $sql = $db->select()
-        //->columns(array('resource', 'slot')) // this does not work :-((((
-        ->from($db->info($db::NAME), array('slot', 'COUNT(*) AS count'))
-        ->where('resource = ?', $resourceName)
-        ->where('state IN (?)', array(self::STATE_WAITING, self::STATE_RUNNING))
-        ->group(array('resource', 'slot'))
-        ->order('count ASC');
+            //->columns(array('resource', 'slot')) // this does not work :-((((
+            ->from($db->info($db::NAME), array('slot', 'COUNT(*) AS count'))
+            ->where('resource = ?', $resourceName)
+            ->where('state IN (?)', array(self::STATE_WAITING, self::STATE_RUNNING))
+            ->group(array('resource', 'slot'))
+            ->order('count ASC');
         
         $rows = $db->fetchAll($sql)->toArray();
         
-        if (!empty($validSlots)) {
+        if(is_array($validSlots)) {
             foreach ($rows as $key => $row) {
                 if(!in_array($row['slot'], $validSlots)) {
                     unset($rows[$key]);
