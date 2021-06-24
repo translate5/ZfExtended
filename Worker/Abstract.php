@@ -429,6 +429,7 @@ abstract class ZfExtended_Worker_Abstract {
         }
         
         $result = $this->_run();
+        $this->onRunQueuedFinished($result); // plugin method to e.g. chain workery dynamically after queued work is done
         
         $this->wakeUpAndStartNextWorkers();
         
@@ -503,8 +504,16 @@ abstract class ZfExtended_Worker_Abstract {
             $this->finishedWorker = clone $this->workerModel;
             $this->handleWorkerException($workException);
         }
+        // TODO shouldn't this be moved to runQueued() as a progress update is not needed for the unthreaded run() method ?
         $this->updateProgress(1);//update the worker progress to 1, when the worker status is set to done
         return $result;
+    }
+    /**
+     * This method can be used in extending classes to add code that is executed after q queued worker has run and the new worker-state in the model is set
+     * @param bool $success
+     */
+    protected function onRunQueuedFinished($success){
+        
     }
     /**
      * Handles the exception occured while working, by default just store it internally
