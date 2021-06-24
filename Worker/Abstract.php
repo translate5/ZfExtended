@@ -433,7 +433,7 @@ abstract class ZfExtended_Worker_Abstract {
         $this->wakeUpAndStartNextWorkers();
         
         if(!empty($this->workerException)) {
-            if($this->workerException instanceof  Zend_Exception) {
+            if($this->workerException instanceof ZfExtended_Exception) {
                 //when a worker runs into an exception we want to have always a log
                 $this->workerException->setLogging(true);
             }
@@ -572,7 +572,7 @@ abstract class ZfExtended_Worker_Abstract {
     
     /***
      * Update the progres for the current worker model. The progress value needs to be calculated in the worker class.
-     * 
+     *
      * @param float $progress
      */
     public function updateProgress(float $progress = 1){
