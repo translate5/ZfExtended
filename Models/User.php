@@ -36,8 +36,6 @@ END LICENSE AND COPYRIGHT
  * @method void setEmail() setEmail(string $email)
  * @method void setPasswd() setPassword(string $passwd)
  * @method void setGender() setGender(string $gender)
- * @method void setSourceLanguage() setSourceLanguage(string $sourceLanguage)
- * @method void setTargetLanguage() setTargetLanguage(string $targetLanguage)
  * @method void setParentIds() setParentIds(string $parentIds)
  * @method void setCustomers() setCustomers(string $customers)
  * @method void setOpenIdIssuer() setOpenIdIssuer(string $openIdIssuer)
@@ -52,8 +50,6 @@ END LICENSE AND COPYRIGHT
  * @method string getPasswd() getPasswd()
  * @method string getGender() getGender()
  * @method string getLogin() getLogin()
- * @method void getSourceLanguage() getSourceLanguage()
- * @method void getTargetLanguage() getTargetLanguage()
  * @method void getParentIds() getParentIds()
  * @method void getCustomers() getCustomers()
  * @method void getOpenIdIssuer() getOpenIdIssuer()
@@ -288,22 +284,6 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implement
         if($parentIdFilter !== false){
             $s->where('parentIds like "%,'.$parentIdFilter.',%" OR id='.$adapter->quote($parentIdFilter));
         }
-    }
-    
-    /**
-     * Load all users which have a specific source and target language (rfc5646 value)
-     *  load all users matching for a specific task
-     * @param string $sourceLang given as rfc5646 value!
-     * @param string $targetLang given as rfc5646 value!
-     */
-    public function loadAllByLanguages($sourceLang, $targetLang, $parendIdFilter = false) {
-        $s = $this->db->select();
-        $s->where('sourceLanguage like ?', '%,'.$sourceLang.',%');
-        $s->where('targetLanguage like ?', '%,'.$targetLang.',%');
-        if($parendIdFilter !== false){
-            $s->where('parentIds like "%,'.$parendIdFilter.',%" OR id='.$adapter->quote($parendIdFilter));
-        }
-        return $this->db->fetchAll($s)->toArray();
     }
     
     /**
