@@ -40,8 +40,6 @@ class ZfExtended_UserController extends ZfExtended_RestController {
     public function init() {
         //add filter type for languages
         $this->_filterTypeMap = [
-            'sourceLanguage' => ['list' => 'listCommaSeparated'],
-            'targetLanguage' => ['list' => 'listCommaSeparated'],
             'customers' => [
                 'list' => 'listCommaSeparated',
                 'string' => new ZfExtended_Models_Filter_JoinHard('editor_Models_Db_Customer', 'name', 'id', 'customers', 'listCommaSeparated')
@@ -193,15 +191,11 @@ class ZfExtended_UserController extends ZfExtended_RestController {
         //if the row is an array, loop over its elements, and explode the source/target language
         if(is_array($this->view->rows)){
             foreach ($this->view->rows as &$singleRow){
-                $singleRow['sourceLanguage']=$callback($singleRow['sourceLanguage']);
-                $singleRow['targetLanguage']=$callback($singleRow['targetLanguage']);
                 $singleRow['parentIds']=$callback($singleRow['parentIds']);
             }
             return;
         }
 
-        $this->view->rows->sourceLanguage=$callback($this->view->rows->sourceLanguage);
-        $this->view->rows->targetLanguage=$callback($this->view->rows->targetLanguage);
         $this->view->rows->parentIds = $callback($this->view->rows->parentIds);
     }
 
@@ -209,10 +203,6 @@ class ZfExtended_UserController extends ZfExtended_RestController {
      * After the fields are decoded, modify their values if needed
      */
     protected function convertDecodedFields(){
-        //Convert array to comma separated values.
-        //Frontend/api use array, in the database we save comma separated values.
-        $this->arrayToCommaSeparated('sourceLanguage');
-        $this->arrayToCommaSeparated('targetLanguage');
         //add leading and trailing comma
         if(!empty($this->data->customers)){
             $this->data->customers=','.$this->data->customers.',';
@@ -275,6 +265,7 @@ class ZfExtended_UserController extends ZfExtended_RestController {
         $this->alreadyDecoded = true;
         $this->_request->isPost() || $this->checkIsEditable(); //checkEditable only if not POST
         parent::decodePutData();
+        $this->warnUserLanguages();
         //openId data may not be manipulated via API
         unset($this->data->openIdSubject);
         unset($this->data->openIdIssuer);
@@ -518,6 +509,20 @@ class ZfExtended_UserController extends ZfExtended_RestController {
         }
         if($userSession->data->id==$this->data->id){
             $this->entity->setUserSessionNamespaceWithoutPwCheck($userSession->data->login);
+        }
+    }
+
+    /***
+     * The auto assignment with source and target language for the users is not supported. Please use the default user
+     * assignment in the customers panel
+     */
+    protected function warnUserLanguages(){
+        if((isset($this->data->sourceLanguage) && !empty($this->data->sourceLanguage))
+        || (isset($this->data->targetLanguage) && !empty($this->data->targetLanguage))){
+            $logger = Zend_Registry::get('logger');
+            $logger->warn('E1347','Auto user assignment with defining source and target language for a user is no longer possible. Please use "user assoc default" api endpoint.');
+            unset($this->data->sourceLanguage);
+            unset($this->data->targetLanguage);
         }
     }
 }

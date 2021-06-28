@@ -50,8 +50,6 @@ class ZfExtended_Models_Validator_User extends ZfExtended_Models_Validator_Abstr
     //FIXME make a regex here!
     $this->setEmailValidator();
     $this->setPasswdValidator();
-    $this->setLanguageValidatod('sourceLanguage');
-    $this->setLanguageValidatod('targetLanguage');
     $this->addValidator('customers', 'stringLength', array('min' => 0, 'max' => 255));
     
     $this->addValidator('openIdIssuer', 'stringLength', array('min' => 0, 'max' => 500));
