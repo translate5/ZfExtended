@@ -127,27 +127,31 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
     /***
      * Load worker rows by given $worker, $state and $taskGuid
      *
-     * @param string $worker
      * @param string $state
-     * @param string $taskGuid
-     * @return array|array
+     * @param string $worker optional
+     * @param string $taskGuid optional
+     * @return array
      */
-    public function loadByState($worker,$state,$taskGuid) {
+    public function loadByState(string $state, string $worker = null, string $taskGuid = null): array {
         try{
-            $s=$this->db->select()
-            ->where('worker = ?',$worker)
-            ->where('state = ?',$state)
-            ->where('taskGuid = ?',$taskGuid)
+            $s = $this->db->select()
+            ->where('state = ?', $state)
             ->order('id ASC');
-            $rows=$this->db->fetchAll($s);
+            if(!empty($worker)) {
+                $s->where('worker = ?', $worker);
+            }
+            if(!empty($taskGuid)) {
+                $s->where('taskGuid = ?', $taskGuid);
+            }
+            $rows = $this->db->fetchAll($s);
         } catch (Exception $e) {
             $this->notFound('NotFound after other Error', $e);
-            return array();
+            return [];
         }
-        if($rows->count()>0){
+        if($rows->count() > 0){
             return $rows->toArray();
         }
-        return array();
+        return [];
     }
 
     /***

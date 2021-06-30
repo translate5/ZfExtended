@@ -137,7 +137,13 @@ class ZfExtended_WorkerController extends ZfExtended_RestController {
      * @throws ZfExtended_Models_Entity_NotFoundException
      */
     protected function testServerId($givenId) {
-        $localId = ZfExtended_Utils::installationHash('ZfExtended_Worker_Abstract');
+        if($givenId == ZfExtended_Worker_TriggerByHttp::WORKER_CHECK_IGNORE) {
+            $localId = $givenId;
+        }
+        else {
+            $localId = ZfExtended_Utils::installationHash('ZfExtended_Worker_Abstract');
+        }
+        
         $this->_response->setHeader(ZfExtended_Models_Worker::WORKER_SERVERID_HEADER, $localId);
         if($givenId !== $localId) {
             throw new ZfExtended_Models_Entity_NotFoundException('Server ID does not match, called worker on wrong server.');
