@@ -76,8 +76,29 @@ class ZfExtended_Session_SaveHandler_DbTable
         }
         
         $db = Zend_Db_Table_Abstract::getDefaultAdapter();
+//$db->query('SET TRANSACTION ISOLATION LEVEL READ COMMITTED');
         $db->query($sql, $bindings);
         
         return true; // session_write_close(): Session callback expects true/false return value
+    }
+    
+    /**
+     * {@inheritDoc}
+     * @see Zend_Session_SaveHandler_DbTable::destroy()
+     */
+    public function destroy($id)
+    {
+        $this->getAdapter()->query('SET TRANSACTION ISOLATION LEVEL READ COMMITTED');
+        return parent::destroy($id);
+    }
+    
+    /**
+     * {@inheritDoc}
+     * @see Zend_Session_SaveHandler_DbTable::gc()
+     */
+    public function gc($maxlifetime)
+    {
+        $this->getAdapter()->query('SET TRANSACTION ISOLATION LEVEL READ COMMITTED');
+        return parent::gc($id);
     }
 }

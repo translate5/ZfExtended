@@ -24,7 +24,7 @@ END LICENSE AND COPYRIGHT
 
 class ZfExtended_Worker_TriggerByHttp {
     const WORKER_HEADER = 'X-Translate5-Worker';
-    
+    const WORKER_CHECK_IGNORE = 'cli-ignore';
     
     private $host = 'localhost';
     private $port = 80; //attention the port alone does not define if SSL is used or no by fsockopent!
@@ -72,7 +72,14 @@ class ZfExtended_Worker_TriggerByHttp {
      * @return boolean true if everything is OK
      */
     protected function triggerUrl(string $url, $postParameters = array(), $method = 'GET') {
-        $postParameters['serverId'] = ZfExtended_Utils::installationHash('ZfExtended_Worker_Abstract');
+        $isCli = PHP_SAPI === 'cli';
+        if($isCli) {
+            $postParameters['serverId'] = self::WORKER_CHECK_IGNORE;
+        }
+        else {
+            $postParameters['serverId'] = ZfExtended_Utils::installationHash('ZfExtended_Worker_Abstract');
+        }
+        
         $host = $this->triggerInit($url, $postParameters, $method);
         $errno = 0;
         $errstr = '';
@@ -111,7 +118,7 @@ class ZfExtended_Worker_TriggerByHttp {
         }
         
         //if we are on CLI we can not check the serverId, so we assume that all is OK here!
-        $isServerIdEqual = PHP_SAPI === 'cli' || $postParameters['serverId'] === trim($serverId);
+        $isServerIdEqual = $isCli || $postParameters['serverId'] === trim($serverId);
         
         //if the other server does not send a server id, or an invalid server id, the target server is not the current system!
         if($state != 503 && !$isServerIdEqual) {

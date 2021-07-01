@@ -57,8 +57,8 @@ class ZfExtended_Models_SystemRequirement_Modules_Environment extends ZfExtended
      * checks the needed PHP version of translate5
      */
     protected function checkPhpVersion() {
-        if (version_compare(PHP_VERSION, '7.3', '<')) {
-            $this->errorsEnvironment[] = 'You are using PHP in version '.PHP_VERSION.', translate5 needs a PHP version >= 7.3.0';
+        if (version_compare(PHP_VERSION, '7.4', '<')) {
+            $this->errorsEnvironment[] = 'You are using PHP in version '.PHP_VERSION.', translate5 needs a PHP version >= 7.4.0';
             if ($this->isWin) {
                 $this->result->error[] = 'Please update your xampp package manually or reinstall Translate5 with the latest windows installer from http://www.translate5.net';
                 $this->result->error[] = 'Warning: Reinstallation can lead to data loss! Please contact support@translate5.net when you need assistance in data conversion!';
