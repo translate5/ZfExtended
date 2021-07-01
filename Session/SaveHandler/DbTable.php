@@ -76,7 +76,7 @@ class ZfExtended_Session_SaveHandler_DbTable
         }
         
         $db = Zend_Db_Table_Abstract::getDefaultAdapter();
-        $db->query('SET TRANSACTION ISOLATION LEVEL READ COMMITTED');
+//$db->query('SET TRANSACTION ISOLATION LEVEL READ COMMITTED');
         $db->query($sql, $bindings);
         
         return true; // session_write_close(): Session callback expects true/false return value
