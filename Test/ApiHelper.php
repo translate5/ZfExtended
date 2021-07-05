@@ -66,6 +66,12 @@ class ZfExtended_Test_ApiHelper {
      * @var string
      */
     private static $LOGOUT_PATH;
+    /**
+     * Holds if we're in capture mode (only when single tests are called)
+     * TODO: implement
+     * @var boolean
+     */
+    private static $CAPTURE_MODE;
     
     /**
      * Sets the Test API up. This needs to be set in the test bootstrapper
@@ -73,10 +79,11 @@ class ZfExtended_Test_ApiHelper {
      * @param string $dataDir
      * @param string $logoutPath
      */
-    public static function setup(string $apiUrl, string $dataDir, string $logoutPath){
+    public static function setup(string $apiUrl, string $dataDir, string $logoutPath, bool $captureMode=false){
         static::$API_URL = rtrim($apiUrl, '/').'/';
         static::$DATA_DIR = rtrim($dataDir, '/').'/';
         static::$LOGOUT_PATH = $logoutPath;
+        static::$CAPTURE_MODE = $captureMode;
     }
     
     /**
@@ -999,5 +1006,12 @@ class ZfExtended_Test_ApiHelper {
         $xmlDoc->formatOutput = true;
         $xmlDoc->loadXML($xml);
         return $xmlDoc->saveXML();
+    }
+    /**
+     * Retrieves, if the test is running in capturing mode, e.g. saving the fetched data as static data to compare againts (only for single tests)
+     * @return bool
+     */
+    public function isCapturing() : bool {
+        return static::$CAPTURE_MODE;
     }
 }
