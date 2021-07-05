@@ -259,19 +259,97 @@ class ZfExtended_Test_ApiHelper {
      * @param array $additionalParameters attached as plain form parameters
      * @return mixed a array/object structure (parsed from json) on HTTP Status 2XX, false otherwise
      */
-    public function requestJson($url, $method = 'GET', $parameters = [], $additionalParameters = [], $isTreeData=false) {
+    public function requestJson(string $url, string $method = 'GET', array $parameters = [], array $additionalParameters = [], string $jsonFileName = NULL) {
         if(empty($this->filesToAdd) && ($method == 'POST' || $method == 'PUT')){
             $parameters = array('data' => json_encode($parameters));
             $parameters = array_merge($parameters, $additionalParameters);
         }
+        return $this->fetchJson($url, $method, $parameters, $jsonFileName, false);
+    }
+    /**
+     * Sends a GET request to the application API to fetch JSON data
+     * @param string $url
+     * @param array $parameters
+     * @param string $jsonFileName
+     * @return mixed|boolean
+     */
+    public function getJson(string $url, array $parameters = [], string $jsonFileName = NULL) {
+        return $this->fetchJson($url, 'GET', $parameters, $jsonFileName, false);
+    }
+    /**
+     * Sends a GET request to the application API to get a ExtJS type JSON tree
+     * @param string $url
+     * @param array $parameters
+     * @return mixed a array/object structure (parsed from json) on HTTP Status 2XX, false otherwise
+     */
+    public function getJsonTree(string $url, array $parameters = [], string $jsonFileName = NULL) {
+        return $this->fetchJson($url, 'GET', $parameters, $jsonFileName, true);
+    }
+    /**
+     * Sends a PUT request to the application API to fetch JSON data
+     * @param string $url
+     * @param array $parameters
+     * @param string $jsonFileName
+     * @return mixed|boolean
+     */
+    public function putJson(string $url, array $parameters = [], string $jsonFileName = NULL) {
+        if(empty($this->filesToAdd)){
+            $parameters = array('data' => json_encode($parameters));
+        }
+        return $this->fetchJson($url, 'PUT', $parameters, $jsonFileName, false);
+    }
+    /**
+     * Sends a POST request to the application API to fetch JSON data
+     * @param string $url
+     * @param array $parameters
+     * @param string $jsonFileName
+     * @return mixed|boolean
+     */
+    public function postJson(string $url, array $parameters = [], string $jsonFileName = NULL) {
+        if(empty($this->filesToAdd)){
+            $parameters = array('data' => json_encode($parameters));
+        }
+        return $this->fetchJson($url, 'POST', $parameters, $jsonFileName, false);
+    }
+    /**
+     * Sends a GET request to the application API to fetch unencoded data
+     * @param string $url
+     * @param array $parameters
+     * @param string $jsonFileName
+     * @return string|boolean
+     */
+    public function getRaw(string $url, array $parameters = [], string $fileName = NULL){
+        $response = $this->request($url, 'GET', $parameters);
+        $status = $response->getStatus();
+        if(200 <= $status && $status < 300) {
+            $rawData = $response->getBody();
+            if($this->isCapturing() && !empty($fileName)){
+                file_put_contents($this->getFile($fileName, null, false), $rawData);
+            }
+            return $rawData;
+        }
+        return false;
+    }
+    /**
+     * Internal API to fetch JSON Data. Automatically saves the fetched file in capture-mode
+     * @param string $url
+     * @param string $method
+     * @param array $parameters
+     * @param string $jsonFileName
+     * @param bool $isTreeData
+     * @return mixed|boolean
+     */
+    private function fetchJson(string $url, string $method = 'GET', array $parameters = [], ?string $jsonFileName, bool $isTreeData) {
         $resp = $this->request($url, $method, $parameters);
         $result = $this->decodeJsonResponse($resp, $isTreeData);
         if($result === false) {
             error_log('apiTest '.$method.' on '.$url.' returned '.$resp->__toString());
+        } else if($this->isCapturing() && !empty($jsonFileName)){
+            // in capturing mode we save the requested data as the data to test against
+            file_put_contents($this->getFile($jsonFileName, null, false), json_encode($result, JSON_PRETTY_PRINT));
         }
         return $result;
     }
-    
     /**
      * Decodes a returned JSON answer from Translate5 REST API
      * @param Zend_Http_Response $resp

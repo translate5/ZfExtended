@@ -120,6 +120,15 @@ abstract class ZfExtended_Test_ApiTestcase extends \ZfExtended_Test_Testcase {
     public static function assertCustomer(){
         self::$api->loadCustomer();
     }
+    /**
+     * Asserts, that the passed actual string matches the contents of the given file
+     * @param string $fileName
+     * @param string $actual
+     * @param string $message
+     */
+    public function assertFileContents(string $fileName, string $actual, string $message=NULL){
+        $this->assertEquals(file_get_contents($this->api()->getFile($fileName, null, false)), $actual, $message);
+    }
     
     /***
      * Check if the current test request is from master tests.
