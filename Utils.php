@@ -293,4 +293,13 @@ class ZfExtended_Utils {
         $bom = pack('H*','EFBBBF');
         return preg_replace("/^$bom/", '', $text);
     }
+
+    /**
+     * returns true if a string is empty (respects 0 casting problems, so a 0 string is not empty here)
+     * @param string|null $mixed
+     * @return bool
+     */
+    public static function emptyString(?string $mixed): bool {
+        return is_null($mixed) || strlen($mixed) == 0;
+    }
 }
