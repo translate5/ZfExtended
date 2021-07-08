@@ -52,12 +52,34 @@ class ZfExtended_Controller_Helper_ExtJs extends Zend_Controller_Action_Helper_A
      */
     protected $_cssPath;
 
-    public function __construct(){
+    /***
+     * The selected user theme from the user config. This should be set from the controller based on the user specific config.
+     * @var
+     */
+    protected $userTheme = 'triton';
+
+    /***
+     * Extjs theme name to theme path mapping.
+     * @var string[]
+     */
+    protected $themesPathMap = [
+        'aria' => '/build/classic/theme-aria/resources/theme-aria-all.css',
+        'classic' => '/build/classic/theme-classic/resources/theme-classic-all.css',
+        'crisp' => '/build/classic/theme-crisp/resources/theme-crisp-all.css',
+        'crisp-touch' => '/build/classic/theme-crisp-touch/resources/theme-crisp-touch-all.css',
+        'gray' => '/build/classic/theme-gray/resources/theme-gray-all.css',
+        'neptune' => '/build/classic/theme-neptune/resources/theme-neptune-all.css',
+        'neptune-touch' => '/build/classic/theme-neptune-touch/resources/theme-neptune-touch-all.css',
+        'triton' => '/build/classic/theme-triton/resources/theme-triton-all.css'
+    ];
+
+    public function init(){
         $config = Zend_Registry::get('config');
         $general = ZfExtended_Zendoverwrites_Controller_Action_HelperBroker::getStaticHelper(
             'General'
         );
-        $this->_cssPath = $config->runtimeOptions->extJs->cssFile;
+
+        $this->_cssPath = $this->themesPathMap[$this->userTheme];
         $this->_extPaths = $config->runtimeOptions->extJs->basepath->toArray();
         $this->_extPaths = $general->natksortReverseUtf($this->_extPaths);
         $extConfig = $config->extVersionMapping;
@@ -135,5 +157,13 @@ class ZfExtended_Controller_Helper_ExtJs extends Zend_Controller_Action_Helper_A
      */
     public function getVersion() {
         return $this->_extVersion;
+    }
+
+    /***
+     * Set the extjs theme
+     * @param string $theme
+     */
+    public function setUserTheme(string $theme){
+        $this->userTheme = $theme;
     }
 }
