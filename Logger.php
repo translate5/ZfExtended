@@ -52,9 +52,19 @@ class ZfExtended_Logger {
     const CORE_DOMAIN = 'core';
     
     protected $logLevels = [];
-    
+
+    /**
+     * The textual domain to tag the created events
+     * @var mixed|string
+     */
     protected $domain = self::CORE_DOMAIN;
-    
+
+    /**
+     * A list of extra data to be added by default to the events created by this instance
+     * @var array
+     */
+    protected $extraDataDefaults = [];
+
     /**
      * @var ZfExtended_Logger_Writer_Abstract[]
      */
@@ -116,11 +126,13 @@ class ZfExtended_Logger {
      * Clones the logger instance and resets the domain in the returned instance.
      * The purpose of this is to provide a convenience way to set a separate domain for multiple log calls
      * @param string $domain
+     * @param array $extraDataDefaults optional extraData to be added by default to the events created by the cloned instance
      * @return ZfExtended_Logger
      */
-    public function cloneMe($domain) {
+    public function cloneMe($domain, $extraDataDefaults = []) {
         $clone = clone $this;
         $clone->domain = $domain;
+        $clone->extraDataDefaults = $extraDataDefaults + $clone->extraDataDefaults;
         return $clone;
     }
     
@@ -208,7 +220,7 @@ class ZfExtended_Logger {
         $event->level = $level;
         $event->eventCode = $code;
         $this->fillTrace($event);
-        $event->extra = $extraData;
+        $event->extra = $extraData + $this->extraDataDefaults;
         
         $this->fillStaticData($event);
         $event->levelName = $this->getLevelName($event->level);
