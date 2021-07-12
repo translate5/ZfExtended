@@ -209,10 +209,10 @@ class ZfExtended_Logger {
      * Prepares the event instance
      * @param int $level
      * @param string $code
-     * @param array $extraData or null
+     * @param array? $extraData or null
      * @return ZfExtended_Logger_Event
      */
-    protected function prepareEvent($level, $code, $extraData) {
+    protected function prepareEvent(int $level, string $code, ?array $extraData = []) {
         $event = new ZfExtended_Logger_Event();
         $event->created = NOW_ISO;
         
@@ -220,7 +220,7 @@ class ZfExtended_Logger {
         $event->level = $level;
         $event->eventCode = $code;
         $this->fillTrace($event);
-        $event->extra = $extraData + $this->extraDataDefaults;
+        $event->extra = ($extraData ?? []) + $this->extraDataDefaults;
         
         $this->fillStaticData($event);
         $event->levelName = $this->getLevelName($event->level);
