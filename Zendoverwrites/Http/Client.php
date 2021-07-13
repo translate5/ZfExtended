@@ -84,22 +84,22 @@ class  ZfExtended_Zendoverwrites_Http_Client extends Zend_Http_Client {
         if(!empty($this->paramsGet)) {
             $url .= ('?'.http_build_query($this->paramsGet));
         }
-        error_log("Request ($randKey): ".($method ?? $this->method).' '.$url);
-        error_log("Headers ".print_r($this->headers,1));
+        error_log("SEND Request ($randKey): ".($method ?? $this->method).' '.$url);
+        error_log("SEND Headers ".print_r($this->headers,1));
         if(!empty($this->raw_post_data)) {
             $bytes = '('.mb_strlen($this->raw_post_data).' bytes)';
-            error_log("Raw Data ($randKey) '.$bytes.': \n".$this->raw_post_data."\n\n");
+            error_log("SEND Raw Data ($randKey) '.$bytes.': \n".$this->raw_post_data."\n\n");
         }
         if(!empty($this->paramsPost)) {
-            error_log("Post Data ($randKey): \n".print_r($this->paramsPost,1));
+            error_log("SEND Post Data ($randKey): \n".print_r($this->paramsPost,1));
         }
     }
     
     protected function logResponse($randKey, $response) {
-        error_log("Status ($randKey): ".print_r($response->getStatus(),1));
-        error_log("Headers ($randKey):".($response->getHeadersAsString()));
-        error_log("Raw Body ($randKey):".print_r($response->getRawBody(),1));
-        error_log("Body ($randKey):".print_r($response->getBody(),1));
+        error_log("GOT Status ($randKey): ".print_r($response->getStatus(),1));
+        error_log("GOT Headers ($randKey):".($response->getHeadersAsString()));
+        error_log("GOT Raw Body ($randKey):".print_r($response->getRawBody(),1));
+        error_log("GOT Body ($randKey):".print_r($response->getBody(),1));
     }
     
     /**
