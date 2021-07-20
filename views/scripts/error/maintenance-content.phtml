@@ -1,0 +1,15 @@
+<?php
+$config = Zend_Registry::get('config');
+/* @var $config Zend_Config */
+?>
+
+<div id="header">
+    <img src="<?php echo APPLICATION_RUNDIR;?>/images/translate5.png?v=1" alt="<?php echo 'translate5'; ?>">
+</div>
+<h1>We&rsquo;ll be back <br>soon!</h1>
+<div style="clear:both;">
+    <p>Maintenance is in progress. <br><?php echo $config->runtimeOptions->appName; ?> will be available again after the maintenance is accomplished.</p>
+    <p>Translate5 will be back online in a few minutes!</p>
+    <p><?php echo htmlspecialchars($config->runtimeOptions->companyName); ?></p>
+    <p id="last-reload" style="color:#cdcdcd;font-size:8px;"></p>
+</div>
