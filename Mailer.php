@@ -36,7 +36,11 @@ class ZfExtended_Mailer extends Zend_Mail {
      * @var Zend_Config
      */
     protected $config;
-    
+
+    /**
+     * @var Throwable
+     */
+    protected $lastError = null;
     
     /**
      * Public constructor
@@ -70,6 +74,7 @@ class ZfExtended_Mailer extends Zend_Mail {
         try {
             return parent::send($transport);
         } catch (Throwable $e) {
+            $this->lastError = $e;
             //disable mail sending, so it not end up in endles loop
             self::$sendingDisabled=true;
             if(Zend_Registry::isRegistered('logger')){
@@ -80,5 +85,13 @@ class ZfExtended_Mailer extends Zend_Mail {
             
         }
         return null;
+    }
+
+    /**
+     * Returns the last email error or null if no error
+     * @return Throwable|null
+     */
+    public function getLastError(): ?Throwable {
+        return $this->lastError;
     }
 }
