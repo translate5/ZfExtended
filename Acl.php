@@ -265,7 +265,7 @@ class ZfExtended_Acl extends Zend_Acl {
             try {
                 $roleObject = $this->getRole($role);
             } catch (Zend_Acl_Role_Registry_Exception $exc) {
-                //if role is not registered because it is the role of a differnt module
+                //if role is not registered because it is the role of a different module
                 continue;
             }
             $res = $this->_getRules($this->get($resource), $roleObject);
@@ -274,5 +274,21 @@ class ZfExtended_Acl extends Zend_Acl {
             }
         }
         return array_values(array_unique($result));
+    }
+
+    /***
+     * This will get all auto-set roles for $newUserRoles roles array, and merge them together with $newUserRoles and $oldUserRoles.
+     * Info: Some user roles are required to be set for user if the user has a specific role.
+     *       ex: if a user has, admin and pm roles, the user must also have the editor role.
+     * @param array $newUserRoles
+     * @param array $oldUserRoles
+     * @return array
+     */
+    public function mergeAutoSetRoles(array $newUserRoles, array $oldUserRoles) : array{
+        // get all auto set roles for the newUserRoles array
+        $setAdditionally = $this->getRightsToRolesAndResource($newUserRoles, 'auto_set_role');
+
+        //merge the old roles and the allowed roles from the request
+        return array_unique(array_merge($newUserRoles, $oldUserRoles, $setAdditionally));
     }
 }

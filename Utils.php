@@ -40,7 +40,20 @@ END LICENSE AND COPYRIGHT
 class ZfExtended_Utils {
 
     const VERSION_DEVELOPMENT = 'development';
-    
+
+
+    /***
+     * Convert the input date to mysql accepted date time format (Y-m-d H:i:s)
+     * @param string $date
+     * @return false|string
+     */
+    public static function toMysqlDateTime(string $date){
+        $timestamp = strtotime($date);
+        if(empty($timestamp)){
+            return $date;
+        }
+        return date("Y-m-d H:i:s",$timestamp);
+    }
     /**
      * returns an value / array of values found by the xpath similar path.
      * Currently supported only:
