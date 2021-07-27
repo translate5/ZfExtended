@@ -22,6 +22,9 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
+/**
+ * Since no access is mostly an ACL misconfiguration we leave logging enabled.
+ */
 class ZfExtended_NoAccessException extends ZfExtended_Exception {
     /**
      * @var string
