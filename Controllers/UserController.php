@@ -489,12 +489,9 @@ class ZfExtended_UserController extends ZfExtended_RestController {
             }
         }
 
-        //after checking setaclrole the auto_set_role flag is evaluated,
-        // that means the value defined in the `right` column is used as needed role for the `role` column
-        $setAdditionally = $this->acl->getRightsToRolesAndResource($requestAclsArray, 'auto_set_role');
+        // merge the requested roles and the old roles and apply the autoset roles to them
+        $requestAclsArray = $this->acl->mergeAutoSetRoles($requestAclsArray,$oldRoles);
 
-        //merge the old roles and the allowed roles from the request
-        $requestAclsArray = array_unique(array_merge($requestAclsArray, $oldRoles, $setAdditionally));
         $this->data->roles = implode(',', $requestAclsArray);
     }
 

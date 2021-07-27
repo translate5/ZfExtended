@@ -344,6 +344,9 @@ class ZfExtended_OpenIDConnectClient{
         if(empty($roles)){
             throw new ZfExtended_OpenIDConnectClientException("E1331", $this->getExceptionData());
         }
+
+        // add the autoset roles to the calculated user roles
+        $roles = $acl->mergeAutoSetRoles($roles,[]);
         return $roles;
     }
 
