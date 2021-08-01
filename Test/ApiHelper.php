@@ -830,12 +830,15 @@ class ZfExtended_Test_ApiHelper {
     /**
      * Loads the file contents of a file with data to be compared
      * @param string $approvalFile
-     * @param string $class
+     * @param string $rawDataToCapture
      * @return string
      */
-    public function getFileContent($approvalFile, $class = null) {
+    public function getFileContent($approvalFile, $rawDataToCapture=null) {
+        if($this->isCapturing() && $rawDataToCapture != null){
+            file_put_contents($this->getFile($approvalFile, null, false), $rawDataToCapture);
+        }
         $t = $this->testClass;
-        $data = file_get_contents($this->getFile($approvalFile, $class));
+        $data = file_get_contents($this->getFile($approvalFile));
         if(preg_match('/\.json$/i', $approvalFile)){
             $data = json_decode($data);
             $t::assertEquals('No error', json_last_error_msg(), 'Test file '.$approvalFile.' does not contain valid JSON!');
