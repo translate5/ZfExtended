@@ -427,10 +427,7 @@ abstract class ZfExtended_Worker_Abstract {
         if (!$this->workerModel->isMutexAccess()){
             return false;
         }
-        
         $result = $this->_run();
-        $this->onRunQueuedFinished($result); // plugin method to e.g. chain another worker dynamically after queued work is done
-        
         $this->wakeUpAndStartNextWorkers();
         
         if(!empty($this->workerException)) {
@@ -488,6 +485,11 @@ abstract class ZfExtended_Worker_Abstract {
              // do the actual work
             $result = $this->work();
             
+            if($this->isWorkerThread){
+                // plugin method to e.g. chain another worker dynamically after queued work is done
+                // This has to be done, before this worker is set to be "DONE", as otherwise we have a tme-slot to start depending workers
+                $this->onRunQueuedFinished($result); 
+            }
             $this->workerModel->setState(ZfExtended_Models_Worker::STATE_DONE);
             $this->workerModel->setEndtime(new Zend_Db_Expr('NOW()'));
             $this->finishedWorker = clone $this->workerModel;
@@ -504,8 +506,9 @@ abstract class ZfExtended_Worker_Abstract {
             $this->finishedWorker = clone $this->workerModel;
             $this->handleWorkerException($workException);
         }
-        // TODO shouldn't this be moved to runQueued() as a progress update is not needed for the unthreaded run() method ?
-        $this->updateProgress(1);//update the worker progress to 1, when the worker status is set to done
+        if($this->isWorkerThread){
+            $this->updateProgress(1);//update the worker progress to 1, when the worker status is set to done
+        }
         return $result;
     }
     /**
