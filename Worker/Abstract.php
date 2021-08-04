@@ -506,9 +506,8 @@ abstract class ZfExtended_Worker_Abstract {
             $this->finishedWorker = clone $this->workerModel;
             $this->handleWorkerException($workException);
         }
-        if($this->isWorkerThread){
-            $this->updateProgress(1);//update the worker progress to 1, when the worker status is set to done
-        }
+        $this->updateProgress(1);//update the worker progress to 1, when the worker status is set to done
+
         return $result;
     }
     /**
