@@ -4,13 +4,13 @@ START LICENSE AND COPYRIGHT
 
  This file is part of ZfExtended library
  
- Copyright (c) 2013 - 2017 Marc Mittag; MittagQI - Quality Informatics;  All rights reserved.
+ Copyright (c) 2013 - 2021 Marc Mittag; MittagQI - Quality Informatics;  All rights reserved.
 
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
 
  This file may be used under the terms of the GNU LESSER GENERAL PUBLIC LICENSE version 3
- as published by the Free Software Foundation and appearing in the file lgpl3-license.txt
- included in the packaging of this file.  Please review the following information
+ as published by the Free Software Foundation and appearing in the file lgpl3-license.txt 
+ included in the packaging of this file.  Please review the following information 
  to ensure the GNU LESSER GENERAL PUBLIC LICENSE version 3.0 requirements will be met:
 https://www.gnu.org/licenses/lgpl-3.0.txt
 
@@ -830,12 +830,15 @@ class ZfExtended_Test_ApiHelper {
     /**
      * Loads the file contents of a file with data to be compared
      * @param string $approvalFile
-     * @param string $class
+     * @param string $rawDataToCapture
      * @return string
      */
-    public function getFileContent($approvalFile, $class = null) {
+    public function getFileContent($approvalFile, $rawDataToCapture=null) {
+        if($this->isCapturing() && $rawDataToCapture != null){
+            file_put_contents($this->getFile($approvalFile, null, false), $rawDataToCapture);
+        }
         $t = $this->testClass;
-        $data = file_get_contents($this->getFile($approvalFile, $class));
+        $data = file_get_contents($this->getFile($approvalFile));
         if(preg_match('/\.json$/i', $approvalFile)){
             $data = json_decode($data);
             $t::assertEquals('No error', json_last_error_msg(), 'Test file '.$approvalFile.' does not contain valid JSON!');

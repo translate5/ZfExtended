@@ -4,7 +4,7 @@ START LICENSE AND COPYRIGHT
 
  This file is part of ZfExtended library
  
- Copyright (c) 2013 - 2017 Marc Mittag; MittagQI - Quality Informatics;  All rights reserved.
+ Copyright (c) 2013 - 2021 Marc Mittag; MittagQI - Quality Informatics;  All rights reserved.
 
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
 
@@ -45,7 +45,8 @@ class ZfExtended_Controller_Helper_Access extends Zend_Controller_Action_Helper_
     /**
      * @var array
      */
-    protected $_roles = array('noRights');
+    protected $_roles = ['noRights'];
+
     /**
      * @var ZfExtended_Acl
      */
@@ -68,9 +69,18 @@ class ZfExtended_Controller_Helper_Access extends Zend_Controller_Action_Helper_
         $this->_request = $this->_front->getRequest();
         $this->_route = $this->_front->getRouter()->getCurrentRoute();
         $this->_acl = ZfExtended_Acl::getInstance();
-        
-        $this->setRoles();
-        $this->checkRights();
+
+        //normally basic and noRights are already set by login, but we keep this code here
+        if(Zend_Auth::getInstance()->hasIdentity()) {
+            $this->_roles[] = 'basic';
+        }
+        $user = new Zend_Session_Namespace('user');
+        settype($user->data, 'object');
+        settype($user->data->roles, 'array');
+        $this->_roles = $user->data->roles = array_unique(array_merge($user->data->roles, $this->_roles));
+        if(!$this->isAllowed()) {
+            $this->accessDenied();
+        }
     }
     
     /**
@@ -89,7 +99,7 @@ class ZfExtended_Controller_Helper_Access extends Zend_Controller_Action_Helper_
     /**
      * checks the rights of the user and redirects if no access is allowed
      */
-    protected function checkRights() {
+    protected function isAllowed(): bool {
         $module = Zend_Registry::get('module').'_';
         if($module === 'default_'){
             $module = '';
@@ -100,49 +110,9 @@ class ZfExtended_Controller_Helper_Access extends Zend_Controller_Action_Helper_
         if($action=='operation'){
             $action = $this->_request->getParam('operation').'Operation';
         }
-        if($this->_acl->isInAllowedRoles($this->_roles, $ressource, $action)){
-            return;
-        }
-        $this->notAuthenticated();
+        return $this->_acl->isInAllowedRoles($this->_roles, $ressource, $action);
     }
-    
-    /**
-     * returns true when the used router is a REST Router and when a path was given.
-     * When path is empty, thats the default controller which is surly not REST like 
-     * @return boolean
-     */
-    protected function isRestRoute() {
-        $routeInst = $this->_route;
-        $route = get_class($this->_route);
-        $restRoutes = ['Zend_Rest_Route', 'ZfExtended_Controller_RestLikeRoute', 'ZfExtended_Controller_RestFakeRoute'];
-        
-        $path = $this->_request->getPathInfo();
-        $path = trim($path, $routeInst::URI_DELIMITER);
-        $emptyPath = empty($path);
-        return !$emptyPath && in_array($route, $restRoutes);
-    }
-    
-    /**
-     * Sets the roles 
-     * 
-     * -adds the passed roles to Zend_Session_Namespace('user')->roles
-     * - sets Zend_Session_Namespace('user')->roles as array
-     * - ensures, that they are not added if already existent
-     * 
-     */
-    protected function setRoles() {
-        //normally basic and noRights are already set by login, but we keep this code here 
-        $roles2add = Zend_Auth::getInstance()->hasIdentity() ? array('basic','noRights') : $this->_roles;
-        $user = new Zend_Session_Namespace('user');
-        settype($user->data, 'object');
-        settype($user->data->roles, 'array');
-        foreach ($roles2add as $role) {
-            if(!in_array($role, $user->data->roles)) {
-                $user->data->roles[] = $role;
-            }
-        }
-        $this->_roles = $user->data->roles;
-    }
+
     /**
      * Returns the roles of the user
      * @return array
@@ -152,21 +122,33 @@ class ZfExtended_Controller_Helper_Access extends Zend_Controller_Action_Helper_
     }
     
     /**
-     * führt für Rest-Zugriffe und normale Zugriffe unterschiedliches Verhalten
-     * bei nicht authentifizierten Zugriffen durch
-     * - Rest: Exception
-     * - setzen von default/login/index bei Rolle noRights
-     * - Ansonsten: setzen von default/index/index bei allen anderen Rollen
-     *
-     * @throws ZfExtended_NotAuthenticatedException wenn Zugriff via route restDefault nicht (mehr) erlaubt
+     * handles access denied depending on route type and authentication
+     * @throws ZfExtended_NoAccessException if access via route restDefault is forbidden
+     * @throws ZfExtended_NotAuthenticatedException if no user is authenticated at all
      * @return false
      */
-    private function notAuthenticated(){
+    private function accessDenied(){
         if($this->isRestRoute()){
             //setting the message to empty here, since a textual message would break the JSON decoding
             // Exceptions in this early stage of the application would not be converted correctly to JSON
             // since RestContext is done in shutdown of the dispatching
-            $e = new ZfExtended_NotAuthenticatedException();
+            if(Zend_Auth::getInstance()->hasIdentity()) {
+                $e = new ZfExtended_NoAccessException();
+                $e->setLogging(false);
+                //having no access here is mostly because of missing ACL rules
+                // or wrong implementation in the GUI (missing is allowed there, showing not allowed functionality then)
+                // so we log it as error
+                Zend_Registry::get('logger')->exception($e, [
+                    'eventCode' => 'E1352',
+                    'message' => 'No access to requested URL - check ACL configuration or usage',
+                    'extra' => [
+                        'roles' => $this->_roles,
+                    ]
+                ]);
+            }
+            else {
+                $e = new ZfExtended_NotAuthenticatedException();
+            }
             $e->setMessage("");
             throw $e;
         }
@@ -180,5 +162,21 @@ class ZfExtended_Controller_Helper_Access extends Zend_Controller_Action_Helper_
             $redirector->gotoSimpleAndExit('index', 'index','default');
         }
         return false;
+    }
+
+    /**
+     * returns true when the used router is a REST Router and when a path was given.
+     * When path is empty, thats the default controller which is surly not REST like
+     * @return boolean
+     */
+    protected function isRestRoute() {
+        $routeInst = $this->_route;
+        $route = get_class($this->_route);
+        $restRoutes = ['Zend_Rest_Route', 'ZfExtended_Controller_RestLikeRoute', 'ZfExtended_Controller_RestFakeRoute'];
+
+        $path = $this->_request->getPathInfo();
+        $path = trim($path, $routeInst::URI_DELIMITER);
+        $emptyPath = empty($path);
+        return !$emptyPath && in_array($route, $restRoutes);
     }
 }

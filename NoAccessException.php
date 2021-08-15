@@ -4,7 +4,7 @@ START LICENSE AND COPYRIGHT
 
  This file is part of ZfExtended library
  
- Copyright (c) 2013 - 2017 Marc Mittag; MittagQI - Quality Informatics;  All rights reserved.
+ Copyright (c) 2013 - 2021 Marc Mittag; MittagQI - Quality Informatics;  All rights reserved.
 
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
 
@@ -22,6 +22,9 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
+/**
+ * Since no access is mostly an ACL misconfiguration we leave logging enabled.
+ */
 class ZfExtended_NoAccessException extends ZfExtended_Exception {
     /**
      * @var string

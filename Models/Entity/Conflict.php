@@ -4,7 +4,7 @@ START LICENSE AND COPYRIGHT
 
  This file is part of ZfExtended library
  
- Copyright (c) 2013 - 2017 Marc Mittag; MittagQI - Quality Informatics;  All rights reserved.
+ Copyright (c) 2013 - 2021 Marc Mittag; MittagQI - Quality Informatics;  All rights reserved.
 
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
 
@@ -21,9 +21,6 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 
 END LICENSE AND COPYRIGHT
 */
-
-
-
 
 /**
  * Should be used if the status of the entity does prevent normal processing: The entity is locked, the entity is used/referenced in other places.

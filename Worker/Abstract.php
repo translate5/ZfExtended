@@ -4,13 +4,13 @@ START LICENSE AND COPYRIGHT
 
  This file is part of ZfExtended library
  
- Copyright (c) 2013 - 2017 Marc Mittag; MittagQI - Quality Informatics;  All rights reserved.
+ Copyright (c) 2013 - 2021 Marc Mittag; MittagQI - Quality Informatics;  All rights reserved.
 
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
 
  This file may be used under the terms of the GNU LESSER GENERAL PUBLIC LICENSE version 3
- as published by the Free Software Foundation and appearing in the file lgpl3-license.txt
- included in the packaging of this file.  Please review the following information
+ as published by the Free Software Foundation and appearing in the file lgpl3-license.txt 
+ included in the packaging of this file.  Please review the following information 
  to ensure the GNU LESSER GENERAL PUBLIC LICENSE version 3.0 requirements will be met:
 https://www.gnu.org/licenses/lgpl-3.0.txt
 
@@ -427,10 +427,7 @@ abstract class ZfExtended_Worker_Abstract {
         if (!$this->workerModel->isMutexAccess()){
             return false;
         }
-        
         $result = $this->_run();
-        $this->onRunQueuedFinished($result); // plugin method to e.g. chain another worker dynamically after queued work is done
-        
         $this->wakeUpAndStartNextWorkers();
         
         if(!empty($this->workerException)) {
@@ -488,6 +485,11 @@ abstract class ZfExtended_Worker_Abstract {
              // do the actual work
             $result = $this->work();
             
+            if($this->isWorkerThread){
+                // plugin method to e.g. chain another worker dynamically after queued work is done
+                // This has to be done, before this worker is set to be "DONE", as otherwise we have a tme-slot to start depending workers
+                $this->onRunQueuedFinished($result); 
+            }
             $this->workerModel->setState(ZfExtended_Models_Worker::STATE_DONE);
             $this->workerModel->setEndtime(new Zend_Db_Expr('NOW()'));
             $this->finishedWorker = clone $this->workerModel;
@@ -504,8 +506,8 @@ abstract class ZfExtended_Worker_Abstract {
             $this->finishedWorker = clone $this->workerModel;
             $this->handleWorkerException($workException);
         }
-        // TODO shouldn't this be moved to runQueued() as a progress update is not needed for the unthreaded run() method ?
         $this->updateProgress(1);//update the worker progress to 1, when the worker status is set to done
+
         return $result;
     }
     /**
