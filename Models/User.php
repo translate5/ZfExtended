@@ -431,7 +431,11 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implement
         /* @var $userModel ZfExtended_Models_User */
         
         $userModel->load($sessionUser->id);
-        
+
+        // If current user has role 'termPM_allClients' - return all clients ids
+        if (in_array('termPM_allClients', $userModel->getRoles()))
+            return editor_Utils::db()->query('SELECT `id` FROM `LEK_customer`')->fetchAll(PDO::FETCH_COLUMN);
+
         if(empty($userModel->getCustomers())){
             return array();
         }
