@@ -543,4 +543,24 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implement
         $acl = ZfExtended_Acl::getInstance();
         return $acl->getRightsToRolesAndResource($this->getRoles(), self::APPLICATION_CONFIG_LEVEL);
     }
+
+    /**
+     * @return array
+     * @throws Zend_Db_Statement_Exception
+     * @throws Zend_Session_Exception
+     */
+    public function getAccessibleCollectionIds() {
+        return editor_Utils::db()->query('
+            SELECT DISTINCT `lr`.`id`
+            FROM
+              `LEK_languageresources` `lr`,
+              `LEK_languageresources_customerassoc` `lr2c`,
+              `Zf_users` `u`
+            WHERE TRUE
+              AND `lr`.`resourceType` = "termcollection"
+              AND `lr`.`id` = `lr2c`.`languageResourceId`
+              AND `u`.`customers` REGEXP CONCAT(",", `lr2c`.`customerId`,",")
+              AND `u`.`id` = ?
+        ', (new Zend_Session_Namespace('user'))->data->id)->fetchAll(PDO::FETCH_COLUMN);
+    }
 }
