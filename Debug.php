@@ -139,7 +139,7 @@ class ZfExtended_Debug {
      * Creates a summary about the current application and returns it.
      * @return stdClass
      */
-    public static function applicationState() {
+    public static function applicationState($includeServices = true) {
         $result = new stdClass();
         $downloader = ZfExtended_Factory::get('ZfExtended_Models_Installer_Downloader', array(APPLICATION_PATH.'/..'));
         /* @var $downloader ZfExtended_Models_Installer_Downloader */
@@ -156,6 +156,9 @@ class ZfExtended_Debug {
             $result->version = ZfExtended_Utils::VERSION_DEVELOPMENT;
             $result->branch = exec('cd '.APPLICATION_PATH.'; git status -bs | head -1');
         }
+
+        $mm = new ZfExtended_Models_Installer_Maintenance();
+        $result->maintenance = $mm->status();
         
         $dbUpdater = ZfExtended_Factory::get('ZfExtended_Models_Installer_DbUpdater');
         /* @var $dbUpdater ZfExtended_Models_Installer_DbUpdater */
@@ -172,13 +175,15 @@ class ZfExtended_Debug {
         $pm = Zend_Registry::get('PluginManager');
         /* @var $pm ZfExtended_Plugin_Manager */
         $result->pluginsLoaded = $pm->getLoaded();
-        
-        $events = ZfExtended_Factory::get('ZfExtended_EventManager', array(__CLASS__));
-        /* @var $events ZfExtended_EventManager */
-        $events->trigger('applicationState', __CLASS__, array('applicationState' => $result));
-        
-        self::addLanguageResources($result);
-        
+
+        if($includeServices) {
+            $events = ZfExtended_Factory::get('ZfExtended_EventManager', array(__CLASS__));
+            /* @var $events ZfExtended_EventManager */
+            $events->trigger('applicationState', __CLASS__, array('applicationState' => $result));
+
+            self::addLanguageResources($result);
+        }
+
         return $result;
     }
     
