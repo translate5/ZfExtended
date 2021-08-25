@@ -61,8 +61,8 @@ class ZfExtended_Controller_Helper_Access extends Zend_Controller_Action_Helper_
      *   die angefragte Resource
      * - existiert die Seite nicht, wird ein 404-Fehler via ErrorController geworfen
      *
-     * @throws Zend_Exception falls Benutzer keine Rechte zum Login hat
-     * @return boolean
+     * throws ZfExtended_NoAccessException if access via route restDefault is forbidden
+     * throws ZfExtended_NotAuthenticatedException if no user is authenticated at all
      */
     public function isAuthenticated(){
         $this->_front = $this->getFrontController();
@@ -78,9 +78,7 @@ class ZfExtended_Controller_Helper_Access extends Zend_Controller_Action_Helper_
         settype($user->data, 'object');
         settype($user->data->roles, 'array');
         $this->_roles = $user->data->roles = array_unique(array_merge($user->data->roles, $this->_roles));
-        if(!$this->isAllowed()) {
-            $this->accessDenied();
-        }
+        $this->checkAccess();
     }
     
     /**
@@ -99,7 +97,7 @@ class ZfExtended_Controller_Helper_Access extends Zend_Controller_Action_Helper_
     /**
      * checks the rights of the user and redirects if no access is allowed
      */
-    protected function isAllowed(): bool {
+    protected function checkAccess() {
         $module = Zend_Registry::get('module').'_';
         if($module === 'default_'){
             $module = '';
@@ -110,7 +108,9 @@ class ZfExtended_Controller_Helper_Access extends Zend_Controller_Action_Helper_
         if($action=='operation'){
             $action = $this->_request->getParam('operation').'Operation';
         }
-        return $this->_acl->isInAllowedRoles($this->_roles, $ressource, $action);
+        if(!$this->_acl->isInAllowedRoles($this->_roles, $ressource, $action)) {
+            $this->accessDenied($ressource, $action);
+        }
     }
 
     /**
@@ -124,10 +124,9 @@ class ZfExtended_Controller_Helper_Access extends Zend_Controller_Action_Helper_
     /**
      * handles access denied depending on route type and authentication
      * @throws ZfExtended_NoAccessException if access via route restDefault is forbidden
-     * @throws ZfExtended_NotAuthenticatedException if no user is authenticated at all
-     * @return false
+     * @throws ZfExtended_NotAuthenticatedException|Zend_Exception if no user is authenticated at all
      */
-    private function accessDenied(){
+    private function accessDenied($resource, $action) {
         if($this->isRestRoute()){
             //setting the message to empty here, since a textual message would break the JSON decoding
             // Exceptions in this early stage of the application would not be converted correctly to JSON
@@ -142,6 +141,8 @@ class ZfExtended_Controller_Helper_Access extends Zend_Controller_Action_Helper_
                     'eventCode' => 'E1352',
                     'message' => 'No access to requested URL - check ACL configuration or usage',
                     'extra' => [
+                        'resource' => $resource,
+                        'action' => $action,
                         'roles' => $this->_roles,
                     ]
                 ]);
@@ -161,7 +162,6 @@ class ZfExtended_Controller_Helper_Access extends Zend_Controller_Action_Helper_
         else{
             $redirector->gotoSimpleAndExit('index', 'index','default');
         }
-        return false;
     }
 
     /**
