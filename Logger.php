@@ -30,8 +30,8 @@ END LICENSE AND COPYRIGHT
  * @method void error() error(string $code, string $message, $extra = null, $writer = [])
  * @method void warn() warn  (string $code, string $message, $extra = null, $writer = [])
  * @method void info() info  (string $code, string $message, $extra = null, $writer = [])
- * @method void debug() debug(string $code, string $message, $extra = null, $writer = []) is only processed if filters are configured to do so (match domain and level)
- * @method void trace() trace(string $code, string $message, $extra = null, $writer = []) is only processed if filters are configured to do so (match domain and level)
+ * @method void debug() debug(string $code, string $message, $extra = null, $writer = []) is only processed if filters are configured to do so (matching domain and level)
+ * @method void trace() trace(string $code, string $message, $extra = null, $writer = []) is only processed if filters are configured to do so (matching domain and level)
  */
 class ZfExtended_Logger {
     /**
