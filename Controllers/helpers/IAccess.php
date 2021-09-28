@@ -32,8 +32,8 @@ END LICENSE AND COPYRIGHT
 interface ZfExtended_Controllers_helpers_IAccess {
     /**
      * authenticates the user
-     * @throws Zend_Exception if the user has no rights to login
-     * @return boolean
+     * @throws ZfExtended_NoAccessException if access via route restDefault is forbidden
+     * @throws ZfExtended_NotAuthenticatedException if no user is authenticated at all
      */
     public function isAuthenticated();
     
