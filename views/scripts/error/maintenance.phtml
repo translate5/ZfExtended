@@ -72,7 +72,7 @@ if(!empty($_GET['testmaintenance'])) {
 		setInterval(function(){
 		        var xhr = new XMLHttpRequest(),
                     d = new Date(),
-		        	url = '<?php echo APPLICATION_RUNDIR;?>/login?'+d.getTime();
+		        	url = '<?php echo APPLICATION_RUNDIR;?>/login?ts='+d.getTime();
 		        xhr.open('GET', url);
                 checkCount++;
 				xhr.onload = function() {
