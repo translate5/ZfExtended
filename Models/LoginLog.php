@@ -48,7 +48,21 @@ class ZfExtended_Models_LoginLog extends ZfExtended_Models_Entity_Abstract {
     const LOGIN_FAILED = 'failed';
     
     protected $dbInstanceClass = 'ZfExtended_Models_Db_LoginLog';
-    
+
+    /**
+     * loads the login log from latest to oldes, amount limited to the limit parameter
+     * @param string $userGuid
+     * @param int $limit
+     * @return array
+     */
+    public function loadByUserGuid(string $userGuid, int $limit): array {
+        $s = $this->db->select()
+            ->where('userGuid = ?', $userGuid)
+            ->order('id DESC')
+            ->limit($limit);
+        return $this->db->fetchAll($s)->toArray();
+    }
+
     /**
      * @param string $login
      * @param string $userGuid
