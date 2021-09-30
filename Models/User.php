@@ -433,8 +433,9 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implement
         $userModel->load($sessionUser->id);
 
         // If current user has role 'termPM_allClients' - return all clients ids
+        //FIXME not allowed that way!
         if (in_array('termPM_allClients', $userModel->getRoles()))
-            return editor_Utils::db()->query('SELECT `id` FROM `LEK_customer`')->fetchAll(PDO::FETCH_COLUMN);
+            return Zend_Db_Table_Abstract::getDefaultAdapter()->query('SELECT `id` FROM `LEK_customer`')->fetchAll(PDO::FETCH_COLUMN);
 
         if(empty($userModel->getCustomers())){
             return array();
@@ -554,7 +555,7 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implement
      * @throws Zend_Session_Exception
      */
     public function getAccessibleCollectionIds() {
-        return editor_Utils::db()->query('
+        return Zend_Db_Table_Abstract::getDefaultAdapter()->query('
             SELECT DISTINCT `lr`.`id`
             FROM
               `LEK_languageresources` `lr`,

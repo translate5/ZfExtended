@@ -266,11 +266,10 @@ abstract class ZfExtended_Plugin_Abstract {
     }
     
     /**
-     * FIXME: this should be named "addPublicSubFolder" as this API has nothing to do with file-types
      * Adds a sub-folder to the plugins "public" folder to make in publically accessible. Per default these are 'js' and 'css'
      * @param string $newType
      */
-    public function addPublicFileTypes($newType){
+    public function addPublicSubFolder($newType){
         array_push($this->publicFileTypes, $newType);
     }
     
@@ -284,20 +283,36 @@ abstract class ZfExtended_Plugin_Abstract {
     }
     
     /**
-     * FIXME: this should be named "getPublicSubFolder"
      * @return string[]
      */
-    public function getPublicFileTypes(){
+    public function getPublicSubFolder(){
         return $this->publicFileTypes;
     }
     
     /**
-     * FIXME: this should be named "isPublicSubFolder"
      * @param string $requestedType
      * @return boolean
      */
-    public function isPublicFileType($requestedType) {
-        return in_array($requestedType, $this->getPublicFileTypes());
+    public function isPublicSubFolder($requestedType) {
+        return in_array($requestedType, $this->getPublicSubFolder());
+    }
+
+    /**
+     * returns the requested file to be flushed to the browser or null if not allowed/not possible
+     * @param string $requestedType
+     * @param array $requestedFileParts
+     * @return SplFileInfo|null
+     */
+    public function getPublicFile(string $requestedType, array $requestedFileParts): ?SplFileInfo {
+        $absolutePath = null;
+        //get public files of the plugin to make a whitelist check of the file string from userland
+        $allowedFiles = $this->getPublicFiles($requestedType, $absolutePath);
+        $file = join(DIRECTORY_SEPARATOR, $requestedFileParts);
+        if (empty($allowedFiles) || !in_array($file, $allowedFiles)) {
+            return null;
+        }
+        //concat the absPath from above with filepath
+        return new SplFileInfo($absolutePath . DIRECTORY_SEPARATOR . $file);
     }
     
     /**
