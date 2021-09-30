@@ -68,17 +68,19 @@ if(!empty($_GET['testmaintenance'])) {
 }
 ?>
 	<script>
+        checkCount = 0;
 		setInterval(function(){
 		        var xhr = new XMLHttpRequest(),
-		        	url = '<?php echo APPLICATION_RUNDIR;?>/login';
+                    d = new Date(),
+		        	url = '<?php echo APPLICATION_RUNDIR;?>/login?ts='+d.getTime();
 		        xhr.open('GET', url);
+                checkCount++;
 				xhr.onload = function() {
 					if(xhr.status >= 200 && xhr.status < 400) {
     			        window.location.href = url;
     			        return;
 					}
-					var d = new Date();
-					document.getElementById('last-reload').innerHTML = 'Last check at: '+d.toLocaleString();
+					document.getElementById('last-reload').innerHTML = 'Last check started at: '+d.toLocaleString()+' (#'+checkCount+')';
 		        };
 		        xhr.send();
 		//}, 30000);

@@ -34,7 +34,12 @@ class ZfExtended_Logger_Writer_ErrorLog extends ZfExtended_Logger_Writer_Abstrac
 //             return;
 //         }
         if($event->eventCode == 'E9999') {
-            error_log($event);
+            if(is_dir(APPLICATION_ROOT.'/.idea')) {
+                //change trace so that phpstorm can directly jump to
+                $event = preg_replace('/([\s]+#[0-9]+ )([^(]+)\(([0-9]+)\):/', "$1in file://$2:$3 ", $event);
+                $event = preg_replace('#([\s]+in [^/]+)(/[^(]+) \(([0-9]+)\)#', "$1in file://$2:$3 ", $event);
+                error_log($event);
+            }
         }
         else {
             error_log($event->oneLine());

@@ -431,7 +431,12 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implement
         /* @var $userModel ZfExtended_Models_User */
         
         $userModel->load($sessionUser->id);
-        
+
+        // If current user has role 'termPM_allClients' - return all clients ids
+        //FIXME not allowed that way!
+        if (in_array('termPM_allClients', $userModel->getRoles()))
+            return Zend_Db_Table_Abstract::getDefaultAdapter()->query('SELECT `id` FROM `LEK_customer`')->fetchAll(PDO::FETCH_COLUMN);
+
         if(empty($userModel->getCustomers())){
             return array();
         }
@@ -542,5 +547,25 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implement
     public function getApplicationConfigLevel(){
         $acl = ZfExtended_Acl::getInstance();
         return $acl->getRightsToRolesAndResource($this->getRoles(), self::APPLICATION_CONFIG_LEVEL);
+    }
+
+    /**
+     * @return array
+     * @throws Zend_Db_Statement_Exception
+     * @throws Zend_Session_Exception
+     */
+    public function getAccessibleCollectionIds() {
+        return Zend_Db_Table_Abstract::getDefaultAdapter()->query('
+            SELECT DISTINCT `lr`.`id`
+            FROM
+              `LEK_languageresources` `lr`,
+              `LEK_languageresources_customerassoc` `lr2c`,
+              `Zf_users` `u`
+            WHERE TRUE
+              AND `lr`.`resourceType` = "termcollection"
+              AND `lr`.`id` = `lr2c`.`languageResourceId`
+              AND `u`.`customers` REGEXP CONCAT(",", `lr2c`.`customerId`,",")
+              AND `u`.`id` = ?
+        ', (new Zend_Session_Namespace('user'))->data->id)->fetchAll(PDO::FETCH_COLUMN);
     }
 }
