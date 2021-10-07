@@ -31,6 +31,11 @@ class  ZfExtended_Zendoverwrites_Controller_Action_Helper_Redirector extends Zen
     }
 
 
+    /***
+     * Add the query string as a hash to the redirect route. This is used when redirecting to instant translate or termportal after login.
+     * @param string $url
+     * @return string
+     */
     protected function addQueryStringAsHash(string $url){
         if(isset($_SERVER['REDIRECT_QUERY_STRING'])){
             return $url.'#'.$_SERVER['REDIRECT_QUERY_STRING'];
