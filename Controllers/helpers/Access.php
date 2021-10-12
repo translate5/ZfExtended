@@ -153,9 +153,10 @@ class ZfExtended_Controller_Helper_Access extends Zend_Controller_Action_Helper_
             $e->setMessage("");
             throw $e;
         }
-        $redirector = ZfExtended_Zendoverwrites_Controller_Action_HelperBroker::getStaticHelper(
-            'Redirector'
-        );
+
+        $redirector = ZfExtended_Factory::get('ZfExtended_Zendoverwrites_Controller_Action_Helper_Redirector');
+        /* @var $redirector ZfExtended_Zendoverwrites_Controller_Action_Helper_Redirector */
+
         if (in_array('noRights', $this->_roles) && count($this->_roles)>=1){
             $redirector->gotoSimpleAndExit('index', 'login','default');
         }
