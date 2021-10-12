@@ -49,14 +49,19 @@ class ZfExtended_Models_Installer_DbFileFinder {
     /**
      * returns all available SQL files, already in the order to be imported
      */
-    public function getSqlFilesOrdered() {
+    public function getSqlFilesOrdered(): array
+    {
         $this->addCoreSqlFiles();
         $this->addPluginsSearchPathList();
         $this->mergeReplacements();
         //@todo implement here the additionaly resort by dependencies, which are read out from meta file!
         return $this->flatten();
     }
-    
+
+    /**
+     * @throws ZfExtended_Exception
+     * @throws Zend_Exception
+     */
     protected function addCoreSqlFiles() {
         $searchPaths = $this->getSearchPathList();
         foreach($searchPaths as $path) {
@@ -72,8 +77,9 @@ class ZfExtended_Models_Installer_DbFileFinder {
     /**
      * merges the arrays in toImport together to one array
      */
-    protected function flatten() {
-        $result = array();
+    protected function flatten(): array
+    {
+        $result = [];
         foreach($this->toImport as $todo) {
             $result = array_merge($result, array_values($todo));
         }
@@ -181,12 +187,15 @@ class ZfExtended_Models_Installer_DbFileFinder {
         }
         return new SimpleXMLIterator($file, 0, true);
     }
-    
+
     /**
      * returns a list of paths where should be looked for sql files
-     * @return [string]
+     * @return array [string]
+     * @throws Zend_Exception
+     * @throws ZfExtended_Exception
      */
-    protected function getSearchPathList() {
+    public function getSearchPathList(): array
+    {
         $config = Zend_Registry::get('config');
         $res = $config->sqlPaths;
         if(empty($res)) {
