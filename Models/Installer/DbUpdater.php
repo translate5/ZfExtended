@@ -126,7 +126,7 @@ class ZfExtended_Models_Installer_DbUpdater {
     /**
      * loops over all configured SQL directories and find new or modified SQL files compared to the version in the DB.
      */
-    public function calculateChanges() {
+    public function calculateChanges(): array {
         $this->sqlFilesNew = array();
         $this->sqlFilesChanged = array();
         $dbversion = ZfExtended_Factory::get('ZfExtended_Models_Db_DbVersion');
@@ -137,7 +137,7 @@ class ZfExtended_Models_Installer_DbUpdater {
             $installHashed[$this->getEntryHash($row->origin, $row->filename)] = $row->md5;
         }
         
-        foreach($this->getFoundFiles() as $file) {
+        foreach($this->getFoundFiles($foundFiles) as $file) {
             $entryHash = $this->getEntryHash($file['origin'], $file['relativeToOrigin']);
             $file['entryHash'] = md5($entryHash);
             if(empty($installHashed[$entryHash])){
@@ -148,14 +148,17 @@ class ZfExtended_Models_Installer_DbUpdater {
                 $this->sqlFilesChanged[] = $file;
             }
         }
+        return $foundFiles;
     }
     
     /**
      * returns all found SQL files
      */
-    protected function getFoundFiles() {
+    protected function getFoundFiles(array &$usedPaths = null): array
+    {
         $filefinder = ZfExtended_Factory::get('ZfExtended_Models_Installer_DbFileFinder');
         /* @var $filefinder ZfExtended_Models_Installer_DbFileFinder */
+        $usedPaths = $filefinder->getSearchPathList();
         return $filefinder->getSqlFilesOrdered();
     }
     

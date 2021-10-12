@@ -418,11 +418,15 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implement
     }
     
     
-    /***
+    /**
      * Get assigned customers to the currently logged user
+     *
+     * @param bool $termportal If given as true - termPM_allClients role will be respected
      * @return array
+     * @throws Zend_Db_Statement_Exception
+     * @throws Zend_Session_Exception
      */
-    public function getUserCustomersFromSession(){
+    public function getUserCustomersFromSession($termportal = false){
         $sessionUser = new Zend_Session_Namespace('user');
         
         $sessionUser=$sessionUser->data;
@@ -434,7 +438,7 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implement
 
         // If current user has role 'termPM_allClients' - return all clients ids
         //FIXME not allowed that way!
-        if (in_array('termPM_allClients', $userModel->getRoles()))
+        if ($termportal && in_array('termPM_allClients', $userModel->getRoles()))
             return Zend_Db_Table_Abstract::getDefaultAdapter()->query('SELECT `id` FROM `LEK_customer`')->fetchAll(PDO::FETCH_COLUMN);
 
         if(empty($userModel->getCustomers())){
