@@ -52,45 +52,55 @@ class ZfExtended_Test_ApiHelper {
     const SEGMENT_DUPL_SAVE_CHECK = '<img src="data:image/gif;base64,R0lGODlhAQABAID/AMDAwAAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==" class="duplicatesavecheck" data-segmentid="%s" data-fieldname="%s">';
     
     /**
-     * Holds the api url as defined in zend config
+     * Holds internal configuration, as
+     * - the api url as defined in zend config
+     * - the task data dir as defined in zend config
+     * - the logout url
+     * - if we're in capture mode (only when single tests are called)
      * @var string
      */
-    private static $API_URL;
-    /**
-     * Holds the task data dir as defined in zend config
-     * @var string
-     */
-    private static $DATA_DIR;
-    /**
-     * Holds the logout url
-     * @var string
-     */
-    private static $LOGOUT_PATH;
-    /**
-     * Holds if we're in capture mode (only when single tests are called)
-     * TODO: implement
-     * @var boolean
-     */
-    private static $CAPTURE_MODE;
-    
+    private static array $CONFIG = [
+        'API_URL' => null,
+        'DATA_DIR' => null,
+        'LOGOUT_PATH' => null,
+        'CAPTURE_MODE' => false,
+        'XDEBUG_ENABLE' => false,
+        'KEEP_DATA' => false,
+        'LEGACY_DATA' => false,
+    ];
+
     /**
      * Sets the Test API up. This needs to be set in the test bootstrapper
-     * @param string $apiUrl
-     * @param string $dataDir
-     * @param string $logoutPath
+     * The given config MUST contain:
+     *  'API_URL' => the api url as defined in zend config
+     *  'DATA_DIR' => the task data dir as defined in zend config
+     *  'LOGOUT_PATH' => the logout url
+     *  'CAPTURE_MODE' => if true, defines if we're in capture mode (only when single tests are called), false by default
+     *  'XDEBUG_ENABLE' => if true, defines if we should enable XDEBUG on the called test instance , false by default
+     *  'KEEP_DATA' => if true, defines if test should be kept after test run, must be implemented in the test, false by default
+     * @param array $config
      */
-    public static function setup(string $apiUrl, string $dataDir, string $logoutPath, bool $captureMode=false){
-        static::$API_URL = rtrim($apiUrl, '/').'/';
-        static::$DATA_DIR = rtrim($dataDir, '/').'/';
-        static::$LOGOUT_PATH = $logoutPath;
-        static::$CAPTURE_MODE = $captureMode;
+    public static function setup(array $config){
+        //set the given config locally
+        static::$CONFIG = array_replace(static::$CONFIG, $config);
+
+        //fix path configs
+        foreach(['API_URL', 'DATA_DIR'] as $key) {
+            static::$CONFIG[$key] = rtrim(static::$CONFIG[$key], '/').'/';
+        }
     }
     
     /**
-     * enable xdebug debugger in eclipse
+     * enable xdebug debugger in IDE
      * @var boolean
      */
-    public $xdebug = false;
+    public bool $xdebug = false;
+
+    /**
+     * flag to be used in the test to check if test cleanup should be done (default) or the testfiles should be kept for further investigation
+     * @var boolean
+     */
+    public bool $cleanup = true;
 
     /**
      * Authentication / session cookie
@@ -161,6 +171,8 @@ class ZfExtended_Test_ApiHelper {
     public function __construct($testClass){
         $this->testClass = $testClass;
         $this->testRoot = getcwd();
+        $this->xdebug = static::$CONFIG['XDEBUG_ENABLE'];
+        $this->cleanup = !static::$CONFIG['KEEP_DATA'];
     }
     
     /**
@@ -195,7 +207,7 @@ class ZfExtended_Test_ApiHelper {
     public function request($url, $method = 'GET', $parameters = array()) {
 
         $http = new Zend_Http_Client();
-        $http->setUri(static::$API_URL.ltrim($url, '/'));
+        $http->setUri(static::$CONFIG['API_URL'].ltrim($url, '/'));
         $http->setHeaders('Accept', 'application/json');
         
         //enable xdebug debugger in eclipse
@@ -448,7 +460,7 @@ class ZfExtended_Test_ApiHelper {
      * Makes a request to the configured logout URL
      */
     public function logout() {
-        $this->request(static::$LOGOUT_PATH);
+        $this->request(static::$CONFIG['LOGOUT_PATH']);
         $this->authLogin = null;
     }
     
@@ -951,7 +963,7 @@ class ZfExtended_Test_ApiHelper {
      * @return string
      */
     public function getTaskDataDirectory() {
-        return static::$DATA_DIR.trim($this->task->taskGuid, '{}').'/';
+        return static::$CONFIG['DATA_DIR'].trim($this->task->taskGuid, '{}').'/';
     }
     
     public function addImportFile($path, $mime = 'application/zip') {
@@ -1093,6 +1105,14 @@ class ZfExtended_Test_ApiHelper {
      * @return bool
      */
     public function isCapturing() : bool {
-        return static::$CAPTURE_MODE;
+        return static::$CONFIG['CAPTURE_MODE'];
+    }
+
+    /**
+     * Retrieves, if the test is running in capturing mode, e.g. saving the fetched data as static data to compare againts (only for single tests)
+     * @return bool
+     */
+    public static function isLegacyData() : bool {
+        return static::$CONFIG['LEGACY_DATA'];
     }
 }
