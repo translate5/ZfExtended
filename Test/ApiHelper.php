@@ -66,6 +66,7 @@ class ZfExtended_Test_ApiHelper {
         'CAPTURE_MODE' => false,
         'XDEBUG_ENABLE' => false,
         'KEEP_DATA' => false,
+        'LEGACY_DATA' => false,
     ];
 
     /**
@@ -81,7 +82,7 @@ class ZfExtended_Test_ApiHelper {
      */
     public static function setup(array $config){
         //set the given config locally
-        self::$CONFIG = array_replace(self::$CONFIG, $config);
+        static::$CONFIG = array_replace(static::$CONFIG, $config);
 
         //fix path configs
         foreach(['API_URL', 'DATA_DIR'] as $key) {
@@ -170,8 +171,8 @@ class ZfExtended_Test_ApiHelper {
     public function __construct($testClass){
         $this->testClass = $testClass;
         $this->testRoot = getcwd();
-        $this->xdebug = self::$CONFIG['XDEBUG_ENABLE'];
-        $this->cleanup = !self::$CONFIG['KEEP_DATA'];
+        $this->xdebug = static::$CONFIG['XDEBUG_ENABLE'];
+        $this->cleanup = !static::$CONFIG['KEEP_DATA'];
     }
     
     /**
@@ -1105,5 +1106,13 @@ class ZfExtended_Test_ApiHelper {
      */
     public function isCapturing() : bool {
         return static::$CONFIG['CAPTURE_MODE'];
+    }
+
+    /**
+     * Retrieves, if the test is running in capturing mode, e.g. saving the fetched data as static data to compare againts (only for single tests)
+     * @return bool
+     */
+    public static function isLegacyData() : bool {
+        return static::$CONFIG['LEGACY_DATA'];
     }
 }
