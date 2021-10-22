@@ -100,6 +100,23 @@ class ZfExtended_Acl extends Zend_Acl {
         ->distinct();
         return array_column($db->fetchAll($s)->toArray(), 'role');
     }
+
+    /***
+     * Load acl entries for given resource and roles
+     * @param string $resource
+     * @param array $roles
+     * @return array
+     * @throws Zend_Db_Table_Exception
+     */
+    public function getResourceByRoles(string $resource, array $roles){
+        $db = ZfExtended_Factory::get('ZfExtended_Models_Db_AclRules');
+        /* @var $db ZfExtended_Models_Db_AclRules */
+        $s = $db->select()
+            ->from($db->info($db::NAME))
+            ->where('resource = ?',$resource)
+            ->where('role IN(?)',$roles);
+        return $db->fetchAll($s)->toArray();
+    }
     
     /**
      * checks if one of the passed roles allows the resource / privelege
@@ -128,7 +145,7 @@ class ZfExtended_Acl extends Zend_Acl {
         }
         return $allowed;
     }
-    
+
     /**
      * Checks if the configured rights were valid
      */
