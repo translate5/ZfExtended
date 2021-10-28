@@ -34,7 +34,7 @@ class ZfExtended_DbConfig_Type_CoreTypes extends ZfExtended_DbConfig_Type_Abstra
     /**
      * validates the given config value (basic type check)
      * @param string $type the underlying config type
-     * @param $value the value to be checked
+     * @param mixed $value the value to be checked
      * @param string|null $errorStr OUT the error message of the failed validation
      * @return bool false if not valid
      */
@@ -90,9 +90,10 @@ class ZfExtended_DbConfig_Type_CoreTypes extends ZfExtended_DbConfig_Type_Abstra
     /**
      * converts the config values stored in the DB to the applicable target format
      * @param string $type
-     * @param string $value
+     * @param string|null $value
+     * @return mixed|string|null
      */
-    public function convertValue($type, $value) {
+    public function convertValue(string $type, ?string $value) {
         $error = '';
         switch ($type) {
             case self::TYPE_LIST:
@@ -121,7 +122,7 @@ class ZfExtended_DbConfig_Type_CoreTypes extends ZfExtended_DbConfig_Type_Abstra
      * @param string $type
      * @return string
      */
-    public function getPhpType($type) {
+    public function getPhpType(string $type): string {
         switch ($type) {
             case self::TYPE_LIST:
             case self::TYPE_MAP:
@@ -137,7 +138,8 @@ class ZfExtended_DbConfig_Type_CoreTypes extends ZfExtended_DbConfig_Type_Abstra
      * @param string $path
      * @return string
      */
-    protected function convertFilepath($path) {
+    protected function convertFilepath(string $path): string
+    {
         $firstChar = mb_substr($path, 0, 1);
         //this is a absolute path
         if($firstChar == DIRECTORY_SEPARATOR) {

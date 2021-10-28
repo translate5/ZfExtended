@@ -25,5 +25,33 @@ END LICENSE AND COPYRIGHT
 /**
  */
 abstract class ZfExtended_DbConfig_Type_Abstract {
+    /**
+     * validates the given config value (basic type check)
+     * @param string $type the underlying config type
+     * @param mixed $value the value to be checked
+     * @param string|null $errorStr OUT the error message of the failed validation
+     * @return bool false if not valid
+     */
+    abstract public function validateValue(string $type, &$value, ?string &$errorStr): bool;
 
+    /**
+     * returns the GUI view class to be used or null for default handling
+     * @return string|null
+     */
+    abstract public function getGuiViewCls(): ?string;
+
+    /**
+     * converts the config values stored in the DB to the applicable target format
+     * @param string $type
+     * @param string|null $value
+     * @return mixed|string|null
+     */
+    abstract public function convertValue(string $type, ?string $value);
+
+    /**
+     * converts the type of the config value to the corresponding PHP type
+     * @param string $type
+     * @return string
+     */
+    abstract public function getPhpType(string $type): string;
 }
