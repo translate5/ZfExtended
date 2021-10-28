@@ -40,6 +40,7 @@ END LICENSE AND COPYRIGHT
  * @method void setDefault() setDefault(string $default)
  * @method void setDefaults() setDefaults(string $defaults) comma seperated values!
  * @method void setType() setType(string $type)
+ * @method void setTypeClass() setTypeClass(string $typeClass)
  * @method void setDescription() setDescription(string $desc)
  * @method void setComment() setComment(string $comment)
  *
@@ -54,6 +55,7 @@ END LICENSE AND COPYRIGHT
  * @method string getDefault() getDefault()
  * @method string getDefaults() getDefaults()
  * @method string getType() getType()
+ * @method string getTypeClass() getTypeClass()
  * @method string getDescription() getDescription()
  * @method string getComment() getComment()
  *
