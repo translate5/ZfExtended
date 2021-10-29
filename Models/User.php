@@ -572,4 +572,24 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implement
               AND `u`.`id` = ?
         ', (new Zend_Session_Namespace('user'))->data->id)->fetchAll(PDO::FETCH_COLUMN);
     }
+
+    /**
+     * Return id => userName pairs, fetched by given user ids
+     *
+     * @param array $ids
+     * @return array
+     * @throws Zend_Db_Statement_Exception
+     */
+    public function getNamesByIds(array $ids): array {
+
+        // Prepare WHERE clause
+        $where = $this->db->getAdapter()->quoteInto('`id` IN (?)', $ids ?: [0]);
+
+        // Fetch and return id => userName pairs
+        return $this->db->getAdapter()->query('
+            SELECT `id`, CONCAT(`firstName`, " ", `surName`) AS `userName`
+            FROM `Zf_users`
+            WHERE ' . $where
+        )->fetchAll(PDO::FETCH_KEY_PAIR);
+    }
 }
