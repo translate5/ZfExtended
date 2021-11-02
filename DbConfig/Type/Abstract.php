@@ -28,11 +28,11 @@ abstract class ZfExtended_DbConfig_Type_Abstract {
     /**
      * validates the given config value (basic type check)
      * @param string $type the underlying config type
-     * @param mixed $value the value to be checked
+     * @param string $value the value to be checked
      * @param string|null $errorStr OUT the error message of the failed validation
      * @return bool false if not valid
      */
-    abstract public function validateValue(string $type, &$value, ?string &$errorStr): bool;
+    abstract public function validateValue(string $type, string &$value, ?string &$errorStr): bool;
 
     /**
      * returns the GUI view class to be used or null for default handling

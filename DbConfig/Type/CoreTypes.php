@@ -32,49 +32,50 @@ class ZfExtended_DbConfig_Type_CoreTypes extends ZfExtended_DbConfig_Type_Abstra
 
 
     /**
-     * validates the given config value (basic type check)
+     * validates and converts the given config value (basic type check and conversion ("true"|"on" to valid bool true and so on)
      * @param string $type the underlying config type
-     * @param mixed $value the value to be checked
+     * @param string $value the value to be checked
      * @param string|null $errorStr OUT the error message of the failed validation
      * @return bool false if not valid
      */
-    public function validateValue(string $type, &$value, ?string &$errorStr): bool {
-        $originalValue = $value;
+    public function validateValue(string $type, string &$value, ?string &$errorStr): bool {
         switch($type) {
             case self::TYPE_LIST:
-                $typeForComparsion = 'array';
-                $value = $this->jsonDecode($value, $errorStr);
-                break;
-
             case self::TYPE_MAP:
-                $typeForComparsion = 'object';
-                $value = $this->jsonDecode($value, $errorStr);
+                $typeForComparsion = $type == self::TYPE_LIST ? 'array' : 'object';
+                $valueDecoded = $this->jsonDecode($value, $errorStr);
+
+                if(!empty($errorStr)) {
+                    $errorStr = "type $type needs a valid JSON value, error is '".$errorStr."'";
+                    return false;
+                }
+
+                if($typeForComparsion != gettype($valueDecoded)) {
+                    //not a valid array or object
+                    $errorStr = "not a valid $typeForComparsion '$value'";
+                    return false;
+                }
                 break;
 
-            case self::TYPE_ABSPATH:
-                $typeForComparsion = 'string';
-                break;
+            case 'boolean':
+                $res = parse_ini_string('value = '.$value, false, INI_SCANNER_TYPED);
+                $value = boolval($res['value'] ?? false) ? '1' : '0'; //ensure bool, then from bool we make 0 or 1 as string
+                return true; // no error is possible here
 
+            case 'integer':
             case 'float':
-                $typeForComparsion = 'double'; //see gettype documentation why is this
+                //must be is_numeric otherwise error
+                if(!is_numeric($value)) {
+                    $errorStr = "not a valid $type '$value'";
+                    return false;
+                }
+                $value = strval($type == 'float' ? doubleval($value) : intval($value)); //cast the value to the desired number then back to string
                 break;
 
+            case 'string':
+            case self::TYPE_ABSPATH:
             default:
-                $typeForComparsion = $type;
-                break;
-
-            //all others are basic php types
-        }
-
-        if(!empty($errorStr)) {
-            $errorStr = "type $type needs a valid JSON value, error is '".$errorStr."'";
-            return false;
-        }
-
-        if($typeForComparsion != gettype($value)) {
-            //not a valid $type
-            $errorStr = "not a valid $type '$originalValue'";
-            return false;
+                return true; // no error is possible here, its always a string
         }
         return true;
     }
