@@ -309,15 +309,17 @@ abstract class ZfExtended_Worker_Abstract {
         $this->workerModel->schedulePrepared();
         $this->wakeUpAndStartNextWorkers();
     }
-    
+
     /**
      * Sets the queue call of this worker to blocking,
      *  that means the current process remains in an endless loop until the worker was called.
      *  Like stream set blocking
      * @param bool $blocking
+     * @param int $timeOut
      */
-    public function setBlocking($blocking = true) {
+    public function setBlocking(bool $blocking = true, int $timeOut = 3600) {
         $this->isBlocking = $blocking;
+        $this->blockingTimeout = $timeOut;
     }
     
     /**
