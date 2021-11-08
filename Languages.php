@@ -408,18 +408,22 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract {
      *      "3"=>" rfc ",
      * ]
      * If field key is provided, this lek_languages field will be used as key for each language in the return array.
+     * If optional param $onlyName is sumbitted with TRUE, only the name without rfc5646 in brackets will be returned
+     *
      * @param string $field
+     * @param bool $onlyName
      * @return array
      * @throws Zend_Exception
      */
-    public function loadAllForDisplay(string $fieldKey = ''){
+    public function loadAllForDisplay(string $fieldKey = '', bool $onlyName = FALSE) {
         $translate= ZfExtended_Zendoverwrites_Translate::getInstance();
         $langs = $this->loadAll();
         $result = [];
         foreach ($langs as $lang) {
             $name = $translate->_($lang['langName']);
             $key = empty($fieldKey) ? $name : $lang[$fieldKey];
-            $result[$key] = [$lang['id'], $name.' ('.$lang['rfc5646'].')', $lang['rtl'],$lang['rfc5646']];
+            $tempName = $name.(($onlyName !== TRUE) ? ' ('.$lang['rfc5646'].')' : '');
+            $result[$key] = [$lang['id'], $tempName, $lang['rtl'],$lang['rfc5646']];
         }
         ksort($result); //sort by name of language
         if(empty($result)){
