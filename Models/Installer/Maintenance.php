@@ -84,6 +84,8 @@ class ZfExtended_Models_Installer_Maintenance {
     public function disable() {
         $this->db->query("UPDATE `Zf_configuration` SET `value` = null WHERE `name` = 'runtimeOptions.maintenance.startDate'");
         $this->db->query("UPDATE `Zf_configuration` SET `value` = null WHERE `name` = 'runtimeOptions.maintenance.message'");
+        //on leaving maintenance mode we clear the allowed IPs to not keep them accidentally for the next maintenance
+        $this->db->query("UPDATE `Zf_configuration` SET `value` = '[]' WHERE `name` = 'runtimeOptions.maintenance.allowedIPs'");
         //when  we disable the maintenance mode, we trigger the worker queue
         $wq = new ZfExtended_Worker_Queue();
         $wq->trigger();

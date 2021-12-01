@@ -41,13 +41,20 @@ trait ZfExtended_Controllers_MaintenanceTrait{
         if(!isset($config->runtimeOptions->maintenance)){
             return;
         }
-        
+        if(isset($config->runtimeOptions->maintenance->allowedIPs)){
+            $allowedByIP = in_array($_SERVER['REMOTE_ADDR'], $config->runtimeOptions->maintenance->allowedIPs->toArray() ?? []);
+        }
+        else {
+            $allowedByIP = false;
+        }
+
         //maintenance can be enabled by setting a debug level or for just testing the layout by adding the testmaintenance=1 parameter to the URL
         $directMaintenance = ZfExtended_Debug::hasLevel('core', 'maintenance') || !empty($_GET['testmaintenance']);
         $maintenanceStartDate=$config->runtimeOptions->maintenance->startDate;
         $maintenanceMessage = $config->runtimeOptions->maintenance->message ?? '';
         
-        if(!$directMaintenance && (!$maintenanceStartDate || !(strtotime($maintenanceStartDate)<= (time()+ 86400)))){//if there is no date and the start date is not in the next 24H
+        //if there is no date and the start date is not in the next 24H, then just show a message if configured
+        if(!$directMaintenance && (!$maintenanceStartDate || !(strtotime($maintenanceStartDate)<= (time()+ 86400)))){
             if(!empty($maintenanceMessage)) {
                 $this->_response->setHeader('x-translate5-maintenance-message', $maintenanceMessage);
                 $this->view->displayMaintenancePanel = true;
@@ -61,6 +68,11 @@ trait ZfExtended_Controllers_MaintenanceTrait{
         }
         
         if($directMaintenance || new DateTime() >= new DateTime($maintenanceStartDate)){
+            if($allowedByIP) {
+                $this->_response->setHeader('x-translate5-maintenance-message', 'Maintenance is active! But your IP is allowed to access the application.');
+                $this->view->displayMaintenancePanel = true;
+                return;
+            }
             throw new ZfExtended_Models_MaintenanceException();
         }
         $maintenanceTimeToNotify= max(1, (int) $config->runtimeOptions->maintenance->timeToNotify);
@@ -77,6 +89,9 @@ trait ZfExtended_Controllers_MaintenanceTrait{
         
         if($this->enableMaintenanceHeader) {
             $this->_response->setHeader('x-translate5-shownotice', date(DATE_ISO8601, $maintenanceStartDate));
+            if($allowedByIP) {
+                $maintenanceMessage .= ' But your IP will still have access!';
+            }
             if(!empty($maintenanceMessage)) {
                 $this->_response->setHeader('x-translate5-maintenance-message', $maintenanceMessage);
             }
@@ -92,7 +107,13 @@ trait ZfExtended_Controllers_MaintenanceTrait{
         /* @var $config Zend_Config */
         $config = Zend_Registry::get('config');
         $rop = $config->runtimeOptions;
-        if(!isset($rop->maintenance)){
+        if(isset($config->runtimeOptions->maintenance->allowedIPs)){
+            $allowedByIP = in_array($_SERVER['REMOTE_ADDR'], $config->runtimeOptions->maintenance->allowedIPs->toArray() ?? []);
+        }
+        else {
+            $allowedByIP = false;
+        }
+        if(!isset($rop->maintenance) || $allowedByIP){
             return false;
         }
         
