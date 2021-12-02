@@ -161,6 +161,7 @@ class ZfExtended_BaseIndex{
             }else {
                 error_log('Fatal: Could not connect to the database!');
             }
+            include('layouts/dbdown.phtml');
             die('Fatal: Could not connect to the database! <b>If you get this message in the Browser: try to reload the application.</b> <br>See error log for details.');
         }
     }
