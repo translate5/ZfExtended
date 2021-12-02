@@ -95,8 +95,8 @@ class ZfExtended_WorkerController extends ZfExtended_RestController {
             $this->testServerId($this->data->serverId);
             return false;
         }
-        //if maintenance is scheduled we disallow starting workers
-        if($this->maintenanceIsScheduled) {
+        //if maintenance is near, we disallow starting workers
+        if($this->isMaintenanceLoginLock()) {
             throw new ZfExtended_Models_MaintenanceException();
         }
         

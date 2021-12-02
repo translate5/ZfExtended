@@ -99,11 +99,13 @@ trait ZfExtended_Controllers_MaintenanceTrait{
         $this->view->displayMaintenancePanel = true;
     }
 
-    /***
+    /**
      * Locks the login (configurable minutes) before the mainteance mode
+     * @param int|null $timeToMaintenance optional, provide an integer here to compare the maintenance start against, instead the configured loginLock time
      * @return boolean
+     * @throws Zend_Exception
      */
-    protected function isMaintenanceLoginLock(): bool{
+    protected function isMaintenanceLoginLock(int $timeToMaintenance = null): bool{
         /* @var $config Zend_Config */
         $config = Zend_Registry::get('config');
         $rop = $config->runtimeOptions;
@@ -122,7 +124,7 @@ trait ZfExtended_Controllers_MaintenanceTrait{
             return false;
         }
     
-        $timeToLoginLock = max(1, (int) $rop->maintenance->timeToLoginLock);
+        $timeToLoginLock = max(1, $timeToMaintenance ?? (int) $rop->maintenance->timeToLoginLock);
         
         $time = strtotime($maintenanceStartDate);
         $time = $time - ($timeToLoginLock * 60);
