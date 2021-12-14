@@ -315,4 +315,30 @@ class ZfExtended_Utils {
     public static function emptyString(?string $mixed): bool {
         return is_null($mixed) || strlen($mixed) == 0;
     }
+
+    /***
+     * Add incremental number to file if the given $filename exist in $path
+     * Ex: Filename.xliff -> Filename(1).xliff
+     * @param string $filename
+     * @param string $path
+     * @return string
+     */
+    public static function addNumberIfExist(string $filename,string $path): string
+    {
+        $actual_name = pathinfo($filename,PATHINFO_FILENAME);
+        $original_name = $actual_name;
+        $extension = pathinfo($filename, PATHINFO_EXTENSION);
+
+        if(!str_ends_with($path,DIRECTORY_SEPARATOR)){
+            $path = $path.DIRECTORY_SEPARATOR;
+        }
+        $i = 1;
+        while(file_exists($path.$actual_name.".".$extension))
+        {
+            $actual_name = $original_name.'('.$i.')';
+            $filename = $actual_name.".".$extension;
+            $i++;
+        }
+        return $filename;
+    }
 }
