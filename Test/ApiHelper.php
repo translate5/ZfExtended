@@ -450,7 +450,7 @@ class ZfExtended_Test_ApiHelper {
         /* @var $t \ZfExtended_Test_ApiTestcase */
         $t::assertEquals(200, $plainResponse->getStatus(), 'Server did not respond HTTP 200');
         $t::assertNotFalse($response, 'JSON Login request was not successfull!');
-        $t::assertRegExp('/[a-zA-Z0-9]{26}/', $response->sessionId, 'Login call does not return a valid sessionId!');
+        $t::assertMatchesRegularExpression('/[a-zA-Z0-9]{26}/', $response->sessionId, 'Login call does not return a valid sessionId!');
 
         $this->authCookie = $response->sessionId;
         $this->authLogin = $login;
