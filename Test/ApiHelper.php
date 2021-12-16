@@ -34,7 +34,7 @@ class ZfExtended_Test_ApiHelper {
      * How many times the language reosurces status will be checked while the resource is importing
      * @var integer
      */
-    const RELOAD_RESOURCE_LIMIT = 20;
+    const RELOAD_RESOURCE_LIMIT = 40;
     
     /***
      * Project taskType
@@ -486,8 +486,10 @@ class ZfExtended_Test_ApiHelper {
         
         $test = $this->testClass;
         $test::assertLogin('testmanager');
-        
+
         $this->task = $this->requestJson('editor/task', 'POST', $task);
+        $this->task->originalSourceLang = $task['sourceLang'];
+        $this->task->originalTargetLang = $task['targetLang'];
         $resp = $this->getLastResponse();
         $test::assertEquals(200, $resp->getStatus(), 'Import Request does not respond HTTP 200! Body was: '.$resp->getBody());
         
@@ -500,10 +502,9 @@ class ZfExtended_Test_ApiHelper {
         return $this->checkTaskStateLoop($failOnError);
     }
     
-    /***
+    /**
      * Check the task state. The test will fail when $failOnError = true and if the task is in state error or after RELOAD_TASK_LIMIT task state checks
      * @param bool $failOnError
-     * @throws Exception
      * @return boolean
      */
     public function checkTaskStateLoop(bool $failOnError = true): bool {
@@ -518,7 +519,7 @@ class ZfExtended_Test_ApiHelper {
             }
             if($taskResult->state == 'unconfirmed') {
                 //with task templates we could implement separate tests for that feature:
-                throw new Exception("runtimeOptions.import.initialTaskState = unconfirmed is not supported at the moment!");
+                $test::fail('runtimeOptions.import.initialTaskState = unconfirmed is not supported at the moment!');
             }
             if($taskResult->state == 'error') {
                 if($failOnError) {
@@ -693,7 +694,7 @@ class ZfExtended_Test_ApiHelper {
      * @param bool $waitForImport: wait until the resource is imported
      * @return mixed|boolean
      */
-    public function addResource(array $params ,string $fileName = null, bool $waitForImport=false){
+    public function addResource(array $params, string $fileName = null, bool $waitForImport=false){
         
         $test = $this->testClass;
         //if filename is provided, set the file upload field
@@ -728,7 +729,7 @@ class ZfExtended_Test_ApiHelper {
             if($counter==self::RELOAD_RESOURCE_LIMIT){
                 break;
             }
-            sleep(5);
+            sleep(2);
             $resp = $this->requestJson('editor/languageresourceinstance/'.$resp->id, 'GET',[]);
             error_log('Languageresources status check '.$counter.'/'.self::RELOAD_RESOURCE_LIMIT.' state: '.$resp->status);
             $counter++;
@@ -736,6 +737,27 @@ class ZfExtended_Test_ApiHelper {
         
         $test::assertEquals('available',$resp->status,'Resource import stoped. Resource state is:'.$resp->status);
         return $resp;
+    }
+
+    /**
+     * Add the translation memory resource (type DummyTM)
+     * @param string $fileName
+     * @param string $name
+     */
+    public function addDummyTm(string $fileName, ?string $name = null, ?string $sourceLang = null, ?string $targetLang = null){
+        $params = [
+            'resourceId'    =>  'editor_Services_DummyFileTm',
+            'sourceLang'    => $sourceLang ?? $this->task->originalSourceLang,
+            'targetLang'    => $targetLang ?? $this->task->originalTargetLang,
+            'customerIds' => [$this->getCustomer()->id],
+            'customerUseAsDefaultIds' => [],
+            'customerWriteAsDefaultIds' => [],
+            'serviceType' => 'editor_Services_DummyFileTm',
+            'serviceName'=> 'DummyFile TM',
+            'name' => $name ?? $this->testClass,
+        ];
+        //create the resource 1 and import the file
+        $this->addResource($params,$fileName,true);
     }
     
     /***
@@ -800,22 +822,24 @@ class ZfExtended_Test_ApiHelper {
      *   add the segment field with its data
      * @param string $field
      * @param string $value
-     * @param mixed $idOrObject
+     * @param mixed $idOrArray
      * @param number $duration optional, defaults to 666
      * @return array
      */
-    public function prepareSegmentPut($field, $value, $idOrObject, $duration = 666) {
-        if(is_numeric($idOrObject)) {
+    public function prepareSegmentPut($field, $value, $idOrArray, $duration = 666) {
+        if(is_numeric($idOrArray)) {
             $result = array(
                 "autoStateId" => 999,
                 "durations" => array(),
-                "id" => $idOrObject,
+                "id" => $idOrArray,
             );
+            $id = $idOrArray;
         }
         else {
-            $result = $idOrObject;
+            $result = $idOrArray;
+            $id = $idOrArray['id'];
         }
-        $result[$field] = $value.sprintf(self::SEGMENT_DUPL_SAVE_CHECK, $idOrObject, $field);
+        $result[$field] = $value.sprintf(self::SEGMENT_DUPL_SAVE_CHECK, $id, $field);
         $result['durations'][$field] = $duration;
         return $result;
     }
