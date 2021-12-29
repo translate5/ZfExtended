@@ -137,6 +137,7 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract {
     protected function loaderByIds($langs, $field) {
         $s = $this->db->select();
         $s->where($field.' IN('.$langs.')');
+        $s->order('rfc5646 ASC');
         $retval = $this->db->fetchAll($s)->toArray();
         if(empty($retval)){
             $this->notFound('#by'.ucfirst($field), $langs);

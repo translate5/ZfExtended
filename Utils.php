@@ -341,4 +341,14 @@ class ZfExtended_Utils {
         }
         return $filename;
     }
+
+    /***
+     * Parse the file extension for given file name
+     * @param string $fileName
+     * @return string
+     */
+    public static function getFileExtension(string $fileName): string
+    {
+        return pathinfo($fileName,PATHINFO_EXTENSION);
+    }
 }
