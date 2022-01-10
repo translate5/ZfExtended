@@ -27,5 +27,3 @@
 
 -- needed to support new formats of google cloud api-keys
 ALTER TABLE `Zf_configuration` CHANGE `value` `value` TEXT NULL DEFAULT NULL COMMENT 'the config value';
-ALTER TABLE `LEK_customer_config` CHANGE `value` `value` TEXT NULL DEFAULT NULL;
-ALTER TABLE `LEK_task_config` CHANGE `value` `value` TEXT NULL DEFAULT NULL;
