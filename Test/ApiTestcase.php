@@ -120,14 +120,20 @@ abstract class ZfExtended_Test_ApiTestcase extends \ZfExtended_Test_Testcase {
     public static function assertCustomer(){
         self::$api->loadCustomer();
     }
+
     /**
      * Asserts, that the passed actual string matches the contents of the given file
      * @param string $fileName
      * @param string $actual
-     * @param string $message
+     * @param string|null $message
+     * @param bool $capture here can be passed the isCapturing parameter from outside if it is a test not extending JsonTest
      */
-    public function assertFileContents(string $fileName, string $actual, string $message=NULL){
-        $this->assertEquals(file_get_contents($this->api()->getFile($fileName, null, false)), $actual, $message);
+    public function assertFileContents(string $fileName, string $actual, string $message=NULL, bool $capture = false) {
+        $filePath = $this->api()->getFile($fileName, null, false);
+        if($capture) {
+            file_put_contents($filePath, $actual);
+        }
+        $this->assertEquals(file_get_contents($filePath), $actual, $message);
     }
     
     /***
