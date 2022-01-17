@@ -153,7 +153,7 @@ class ZfExtended_Test_ApiHelper {
      * stdObject with the values of the test customer
      * @var stdClass
      */
-    protected $customer;
+    protected stdClass $customer;
     
     
     /***
@@ -259,7 +259,7 @@ class ZfExtended_Test_ApiHelper {
         $this->lastResponse = $http->request($method);
         return $this->lastResponse;
     }
-    
+
     /**
      * Sends a JSON request to the application API, returns
      *   - false on HTTP response state other than 2XX
@@ -269,9 +269,11 @@ class ZfExtended_Test_ApiHelper {
      * @param string $method
      * @param array $parameters added as json in data parameter
      * @param array $additionalParameters attached as plain form parameters
+     * @param string|null $jsonFileName
      * @return mixed a array/object structure (parsed from json) on HTTP Status 2XX, false otherwise
      */
-    public function requestJson(string $url, string $method = 'GET', array $parameters = [], array $additionalParameters = [], string $jsonFileName = NULL) {
+    public function requestJson(string $url, string $method = 'GET', array $parameters = [], array $additionalParameters = [], string $jsonFileName = NULL): mixed
+    {
         if(empty($this->filesToAdd) && ($method == 'POST' || $method == 'PUT')){
             $parameters = array('data' => json_encode($parameters));
             $parameters = array_merge($parameters, $additionalParameters);
@@ -342,12 +344,13 @@ class ZfExtended_Test_ApiHelper {
         }
         return false;
     }
+
     /**
      * Internal API to fetch JSON Data. Automatically saves the fetched file in capture-mode
      * @param string $url
      * @param string $method
      * @param array $parameters
-     * @param string $jsonFileName
+     * @param string|null $jsonFileName the filename to be used for capturing the data
      * @param bool $isTreeData
      * @return mixed|boolean
      */
