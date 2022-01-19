@@ -282,8 +282,12 @@ abstract class ZfExtended_Models_Entity_Abstract {
     /**
      * saves the Entity to the DB
      * @return mixed  The primary key value(s), as an associative array if the key is compound, or a scalar if the key is single-column.
+     * @throws Zend_Db_Statement_Exception
+     * @throws ZfExtended_Models_Entity_Exceptions_IntegrityConstraint
+     * @throws ZfExtended_Models_Entity_Exceptions_IntegrityDuplicateKey
      */
-    public function save() {
+    public function save()
+    {
         $this->events->trigger("beforeSave", $this, array(
                 'entity' => $this,
         ));
