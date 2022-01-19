@@ -382,7 +382,7 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
         }
         else{
             //if there user has no valid locale in the DB we set the current locale
-            $this->_userModel->setLocale($this->_session->locale);
+            $this->_userModel->setLocale($this->_session->locale ?? 'en');
         }
     }
     
