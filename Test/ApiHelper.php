@@ -1139,4 +1139,13 @@ class ZfExtended_Test_ApiHelper {
     public static function isLegacyData() : bool {
         return static::$CONFIG['LEGACY_DATA'];
     }
+
+    /**
+     * Setter for $this->task
+     *
+     * @param $task
+     */
+    public function setTask($task) {
+        $this->task = $task;
+    }
 }
