@@ -22,16 +22,6 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
-//include phar archive, if installation has been done via phar
-try {
-    //check if class can be included by search path, if not try phpunit.phar
-    if(!class_exists('PHPUnit_Framework_TestCase', true)) {
-        include_once 'phpunit.phar';
-    }
-} catch (Exception $exc) {
-    error_log('Could not load phpunit.phar'); //On debugging only
-}
-
 abstract class ZfExtended_Test_Testcase extends \PHPUnit\Framework\TestCase {
     /**
      * @var array
