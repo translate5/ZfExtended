@@ -50,6 +50,9 @@ class ZfExtended_Models_Db_Session extends Zend_Db_Table_Abstract {
             return self::GET_VALID_SESSIONS_SQL;
         }
         $merged = array_merge(...$res);
+        if(empty($merged)) {
+            return self::GET_VALID_SESSIONS_SQL;
+        }
 
         return 'SELECT internalSessionUniqId FROM sessionMapInternalUniqId m WHERE '.$this->getAdapter()->quoteInto('m.session_id IN (?)', $merged);
     }
