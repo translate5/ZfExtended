@@ -35,6 +35,8 @@ END LICENSE AND COPYRIGHT
  */
 ?>
 <h2><?php echo $this->exception->getMessage(); ?></h2>
+<h3>Request URI:</h3>
+<pre><?php echo $_SERVER['REQUEST_URI']; ?>
 <h3>Stack trace:</h3>
 <pre><?php echo $this->exception; ?>
 </pre>
