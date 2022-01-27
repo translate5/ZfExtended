@@ -54,4 +54,12 @@ abstract class ZfExtended_DbConfig_Type_Abstract {
      * @return string
      */
     abstract public function getPhpType(string $type): string;
+
+    /**
+     * returns true if the given value string is valid regarding the underlying defaults
+     * @param editor_Models_Config $config
+     * @param string $value
+     * @return bool
+     */
+    abstract public function isValidInDefaults(editor_Models_Config $config, string $value): bool;
 }
