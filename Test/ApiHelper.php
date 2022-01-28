@@ -996,6 +996,16 @@ class ZfExtended_Test_ApiHelper {
     public function addImportFile($path, $mime = 'application/zip') {
         $this->addFile('importUpload', $path, $mime);
     }
+
+    /***
+     * Add multiple work-files for upload.
+     * @param $path
+     * @param $mime
+     * @return void
+     */
+    public function addImportFiles($path, $mime = 'application/zip') {
+        $this->addFile('importUpload[]', $path, $mime);
+    }
     
     public function addImportTbx($path, $mime = 'application/xml') {
         $this->addFile('importTbx', $path, $mime);
