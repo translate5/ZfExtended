@@ -81,6 +81,27 @@ class ZfExtended_DbConfig_Type_CoreTypes extends ZfExtended_DbConfig_Type_Abstra
     }
 
     /**
+     * returns true if there are "defaults" values and the given value is one of them
+     */
+    public function isValidInDefaults(editor_Models_Config $config, string $value): bool {
+        $defaults = $config->getDefaults();
+        if(empty($defaults)) {
+            return true;
+        }
+        $defaults = explode(',', $defaults);
+        //since list is a core type, we can include the check here
+        if($config->getType() == self::TYPE_LIST) {
+            $value = json_decode($value);
+            $diff = array_diff($value, $defaults);
+            return empty($diff);
+        }
+
+        //currently for all other types we just check of the new value is in the default list.
+        // TODO For a map the defaults could be a json with an assoc array to compare against, but thats just not implemented yet
+        return in_array(trim($value), $defaults);
+    }
+
+    /**
      * returns the GUI view class to be used or null for default handling
      * @return string|null
      */
