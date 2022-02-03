@@ -47,7 +47,16 @@ class ZfExtended_Plugin_Manager {
         }
         return array_unique($config->runtimeOptions->plugins->active->toArray());
     }
-    
+
+    /**
+     * returns true if a given plugin name is active
+     * @param string $plugin
+     * @return bool
+     */
+    public function isActive(string $plugin): bool {
+        return in_array($this->getAvailable()[$plugin] ?? '', $this->getActive());
+    }
+
     /**
      * Activates the plugin given by name
      * @param string $plugin
