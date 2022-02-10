@@ -49,7 +49,7 @@ class ZfExtended_Models_Db_Session extends Zend_Db_Table_Abstract {
         if($res->isEmpty()) {
             return self::GET_VALID_SESSIONS_SQL;
         }
-        $merged = array_merge(...$res);
+        $merged = []; foreach($res as $item) { $merged = array_merge($merged, (array) $item);}
         if(empty($merged)) {
             return self::GET_VALID_SESSIONS_SQL;
         }
