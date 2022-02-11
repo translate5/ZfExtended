@@ -358,22 +358,20 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract {
         $this->memCache->save($result, $cacheId);
         return $result;
     }
-
+    
     /***
      * Search languages by given search string.
-     * The search will provide any match on rfc5646 field.
+     * The search will provide any match on langName field.
      *
      * @param string $searchString
-     * @param array $fields
-     * @return array
+     * @return array|array
      */
-    public function search(string $searchString,array $fields = []): array
-    {
+    public function search($searchString,$fields=array()) {
         $s = $this->db->select();
         if(!empty($fields)){
             $s->from($this->tableName,$fields);
         }
-        $s->where('lower(rfc5646) LIKE lower(?)','%'.$searchString.'%');
+        $s->where('lower(langName) LIKE lower(?)','%'.$searchString.'%');
         return $this->db->fetchAll($s)->toArray();
     }
     
