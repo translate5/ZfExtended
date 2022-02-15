@@ -22,9 +22,34 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
-abstract class ZfExtended_Test_Testcase extends \PHPUnit\Framework\TestCase {
+/**
+ */
+class ZfExtended_DbConfig_Type_Manager {
+
+    private ZfExtended_DbConfig_Type_CoreTypes $coreTypes;
+
     /**
+     * The mapping of
      * @var array
      */
-    public static $messages = array();
+    private static array $customTypes = [];
+
+    public function __construct() {
+        $this->coreTypes = new ZfExtended_DbConfig_Type_CoreTypes();
+    }
+
+    /**
+     * returns the config type instance or the default type if none configured
+     * @param string|null $typeCls
+     * @return ZfExtended_DbConfig_Type_Abstract|null
+     */
+    public function getType(?string $typeCls): ?ZfExtended_DbConfig_Type_Abstract {
+        if(empty($typeCls)) {
+            return $this->coreTypes;
+        }
+        if(empty(self::$customTypes[$typeCls])) {
+            self::$customTypes[$typeCls] = ZfExtended_Factory::get($typeCls);
+        }
+        return self::$customTypes[$typeCls];
+    }
 }

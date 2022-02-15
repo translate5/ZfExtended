@@ -1,7 +1,7 @@
 {
 	"require" : {
 		"phpoffice/phpspreadsheet" : "~1.12",
-        "dream-group/horde-text-diff" : "dev-master",
+		"dream-group/horde-text-diff" : "dev-master",
 		"jumbojett/openid-connect-php" : "~0.9"
 	},
 	"name" : "mittagqi/library-zfextended-requirements",

@@ -37,7 +37,26 @@ class ZfExtended_Models_Db_Session extends Zend_Db_Table_Abstract {
     const GET_VALID_SESSIONS_SQL = 'select internalSessionUniqId from sessionMapInternalUniqId m, session s  where s.modified + lifetime >= UNIX_TIMESTAMP() and s.session_id = m.session_id';
     protected $_name    = 'session';
     public $_primary = 'session_id';
-    
+
+    /**
+     * returns a SQL select to get the valid internalSessionUniqId values
+     * @return string
+     */
+    public function getValidSessionsSql(): string {
+        /** @var $events ZfExtended_EventManager */
+        $events = ZfExtended_Factory::get('ZfExtended_EventManager', [__CLASS__]);
+        $res = $events->trigger('getValidSessionsSql', __CLASS__);
+        if($res->isEmpty()) {
+            return self::GET_VALID_SESSIONS_SQL;
+        }
+        $merged = []; foreach($res as $item) { $merged = array_merge($merged, (array) $item);}
+        if(empty($merged)) {
+            return self::GET_VALID_SESSIONS_SQL;
+        }
+
+        return 'SELECT internalSessionUniqId FROM sessionMapInternalUniqId m WHERE '.$this->getAdapter()->quoteInto('m.session_id IN (?)', $merged);
+    }
+
     /**
      * updates the authToken for the given Session ID in the DB and returns it
      * @return string

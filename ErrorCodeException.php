@@ -101,6 +101,20 @@ class ZfExtended_ErrorCodeException extends ZfExtended_Exception {
         $origData = $this->getErrors();
         $this->setErrors(array_merge($origData, $extraData));
     }
+
+    /**
+     * returns the extra data value with the given name, if not found return the default value
+     * @param string $name
+     * @param mixed $default
+     * @return mixed
+     */
+    public function getExtra(string $name, mixed $default = null): mixed {
+        $data = $this->getErrors();
+        if(array_key_exists($name, $data)) {
+            return $data[$name];
+        }
+        return $default;
+    }
     
     /**
      * returns the internally used error code of that exception instance

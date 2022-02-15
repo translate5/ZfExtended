@@ -73,8 +73,8 @@ class ZfExtended_BaseIndex{
      *
      */
     protected function  __construct($indexpath) {
-        if (version_compare(PHP_VERSION, '7.4', '<')) {
-            $msg = array('Please use PHP version >= 7.4!');
+        if (version_compare(PHP_VERSION, '8.0', '<')) {
+            $msg = array('Please use PHP version ~ 8.0!');
             if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
                 $msg[] = 'Please update your xampp package manually or reinstall Translate5 with the latest windows installer from http://www.translate5.net';
                 $msg[] = 'Warning: Reinstallation can lead to data loss! Please contact support@translate5.net when you need assistance in data conversion!';
@@ -161,6 +161,7 @@ class ZfExtended_BaseIndex{
             }else {
                 error_log('Fatal: Could not connect to the database!');
             }
+            include('layouts/dbdown.phtml');
             die('Fatal: Could not connect to the database! <b>If you get this message in the Browser: try to reload the application.</b> <br>See error log for details.');
         }
     }

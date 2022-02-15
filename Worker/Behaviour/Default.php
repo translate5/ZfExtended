@@ -45,7 +45,7 @@ class ZfExtended_Worker_Behaviour_Default {
     
     /**
      * some behaviour is configurable ($config['configName'] => value):
-     * "isMaintenanceScheduled": false: worker ignores maintenance, true: isMaintenanceLoginLock check is called
+     * "isMaintenanceScheduled": false: worker ignores maintenance, true: isMaintenanceLoginLock check is called, integer: disallow worker run the value in minutes before scheduled maintenance
      * @param array $config
      */
     public function setConfig(array $config) {
@@ -124,9 +124,10 @@ class ZfExtended_Worker_Behaviour_Default {
      * @return bool
      */
     public function isMaintenanceScheduled(): bool {
-        if($this->config['isMaintenanceScheduled']) {
-            return $this->isMaintenanceLoginLock();
+        $conf = $this->config['isMaintenanceScheduled'];
+        if($conf === false) {
+            return false;
         }
-        return false;
+        return $this->isMaintenanceLoginLock(is_int($conf) ? $conf : null);
     }
 }

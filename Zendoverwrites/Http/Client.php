@@ -36,9 +36,9 @@ class  ZfExtended_Zendoverwrites_Http_Client extends Zend_Http_Client {
                 return parent::request($method);
             }
             $randKey = substr(md5(rand()), 0, 7);
-            $this->logRequest($randKey, $method, $url);
+            $log = $this->logRequest($randKey, $method, $url);
             $response = parent::request($method);
-            $this->logResponse($randKey, $response);
+            $this->logResponse($log, $randKey, $response);
             return $response;
         } catch(Zend_Http_Client_Exception | Zend_Http_Client_Adapter_Exception $httpException) {
             $this->handleException($httpException, $method, $url);
@@ -80,26 +80,54 @@ class  ZfExtended_Zendoverwrites_Http_Client extends Zend_Http_Client {
         throw $httpException;
     }
     
-    protected function logRequest($randKey, $method, $url) {
+    protected function logRequest($randKey, $method, $url): ZfExtended_Logger {
         if(!empty($this->paramsGet)) {
             $url .= ('?'.http_build_query($this->paramsGet));
         }
-        error_log("SEND Request ($randKey): ".($method ?? $this->method).' '.$url);
-        error_log("SEND Headers ".print_r($this->headers,1));
+        $headers = [];
+        foreach($this->_prepareHeaders() as $header) {
+            $header = explode(':', $header);
+            $headers[$header[0]] = trim($header[1]);
+        }
+        $logData = [
+            'id' => $randKey,
+            'url' => $url,
+            'method' => ($method ?? $this->method),
+            'headers' => $headers,
+        ];
+        //error_log("SEND Request ($randKey): ".($method ?? $this->method).' '.$url);
+        //error_log("SEND Headers ".print_r($this->headers,1));
         if(!empty($this->raw_post_data)) {
             $bytes = '('.mb_strlen($this->raw_post_data).' bytes)';
-            error_log("SEND Raw Data ($randKey) '.$bytes.': \n".$this->raw_post_data."\n\n");
+            //error_log("SEND Raw Data ($randKey) $bytes : \n".($this->raw_post_data)."\n\n");
+            $logData['raw_post_data_bytes'] = $bytes;
+            $logData['raw_post_data'] = $this->raw_post_data;
         }
         if(!empty($this->paramsPost)) {
-            error_log("SEND Post Data ($randKey): \n".print_r($this->paramsPost,1));
+            //error_log("SEND Post Data ($randKey): \n".print_r($this->paramsPost,1));
+            $logData['paramsPost'] = $this->paramsPost;
         }
+        $log = Zend_Registry::get("logger")->cloneMe('http.client');
+        /* @var $log ZfExtended_Logger */
+        //we overwrite the default error log logger, so that the content is logged to the error log anyway regardless the configured filters
+        $log->addWriter('default', ZfExtended_Logger_Writer_Abstract::create([
+            'type' => 'ErrorLog',
+            'level' => $log::LEVEL_DEBUG
+        ]));
+        $log->debug('E0001', 'HTTP SEND {id} - {method} {url}', $logData);
+        return $log;
     }
-    
-    protected function logResponse($randKey, $response) {
-        error_log("GOT Status ($randKey): ".print_r($response->getStatus(),1));
-        error_log("GOT Headers ($randKey):".($response->getHeadersAsString()));
-        error_log("GOT Raw Body ($randKey):".print_r($response->getRawBody(),1));
-        error_log("GOT Body ($randKey):".print_r($response->getBody(),1));
+
+    protected function logResponse(ZfExtended_Logger $log, $randKey, $response) {
+//        error_log("GOT Status ($randKey): ".print_r($response->getStatus(),1));
+//        error_log("GOT Headers ($randKey):".($response->getHeadersAsString()));
+//        error_log("GOT Raw Body ($randKey):".print_r($response->getRawBody(),1));
+//        error_log("GOT Body ($randKey):".print_r($response->getBody(),1));
+        $log->debug('E0002', 'HTTP RECEIVE {id}', [
+            'id' => $randKey,
+            'headers' => $response->getHeaders(),
+            'rawBody' => $response->getRawBody(),
+        ]);
     }
     
     /**

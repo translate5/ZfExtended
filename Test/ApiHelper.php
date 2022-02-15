@@ -34,7 +34,7 @@ class ZfExtended_Test_ApiHelper {
      * How many times the language reosurces status will be checked while the resource is importing
      * @var integer
      */
-    const RELOAD_RESOURCE_LIMIT = 20;
+    const RELOAD_RESOURCE_LIMIT = 40;
     
     /***
      * Project taskType
@@ -153,7 +153,7 @@ class ZfExtended_Test_ApiHelper {
      * stdObject with the values of the test customer
      * @var stdClass
      */
-    protected $customer;
+    protected stdClass $customer;
     
     
     /***
@@ -259,7 +259,7 @@ class ZfExtended_Test_ApiHelper {
         $this->lastResponse = $http->request($method);
         return $this->lastResponse;
     }
-    
+
     /**
      * Sends a JSON request to the application API, returns
      *   - false on HTTP response state other than 2XX
@@ -269,9 +269,11 @@ class ZfExtended_Test_ApiHelper {
      * @param string $method
      * @param array $parameters added as json in data parameter
      * @param array $additionalParameters attached as plain form parameters
+     * @param string|null $jsonFileName
      * @return mixed a array/object structure (parsed from json) on HTTP Status 2XX, false otherwise
      */
-    public function requestJson(string $url, string $method = 'GET', array $parameters = [], array $additionalParameters = [], string $jsonFileName = NULL) {
+    public function requestJson(string $url, string $method = 'GET', array $parameters = [], array $additionalParameters = [], string $jsonFileName = NULL): mixed
+    {
         if(empty($this->filesToAdd) && ($method == 'POST' || $method == 'PUT')){
             $parameters = array('data' => json_encode($parameters));
             $parameters = array_merge($parameters, $additionalParameters);
@@ -342,12 +344,13 @@ class ZfExtended_Test_ApiHelper {
         }
         return false;
     }
+
     /**
      * Internal API to fetch JSON Data. Automatically saves the fetched file in capture-mode
      * @param string $url
      * @param string $method
      * @param array $parameters
-     * @param string $jsonFileName
+     * @param string|null $jsonFileName the filename to be used for capturing the data
      * @param bool $isTreeData
      * @return mixed|boolean
      */
@@ -450,7 +453,7 @@ class ZfExtended_Test_ApiHelper {
         /* @var $t \ZfExtended_Test_ApiTestcase */
         $t::assertEquals(200, $plainResponse->getStatus(), 'Server did not respond HTTP 200');
         $t::assertNotFalse($response, 'JSON Login request was not successfull!');
-        $t::assertRegExp('/[a-zA-Z0-9]{26}/', $response->sessionId, 'Login call does not return a valid sessionId!');
+        $t::assertMatchesRegularExpression('/[a-zA-Z0-9]{26}/', $response->sessionId, 'Login call does not return a valid sessionId!');
 
         $this->authCookie = $response->sessionId;
         $this->authLogin = $login;
@@ -486,8 +489,10 @@ class ZfExtended_Test_ApiHelper {
         
         $test = $this->testClass;
         $test::assertLogin('testmanager');
-        
+
         $this->task = $this->requestJson('editor/task', 'POST', $task);
+        $this->task->originalSourceLang = $task['sourceLang'];
+        $this->task->originalTargetLang = $task['targetLang'];
         $resp = $this->getLastResponse();
         $test::assertEquals(200, $resp->getStatus(), 'Import Request does not respond HTTP 200! Body was: '.$resp->getBody());
         
@@ -500,10 +505,9 @@ class ZfExtended_Test_ApiHelper {
         return $this->checkTaskStateLoop($failOnError);
     }
     
-    /***
+    /**
      * Check the task state. The test will fail when $failOnError = true and if the task is in state error or after RELOAD_TASK_LIMIT task state checks
      * @param bool $failOnError
-     * @throws Exception
      * @return boolean
      */
     public function checkTaskStateLoop(bool $failOnError = true): bool {
@@ -518,7 +522,7 @@ class ZfExtended_Test_ApiHelper {
             }
             if($taskResult->state == 'unconfirmed') {
                 //with task templates we could implement separate tests for that feature:
-                throw new Exception("runtimeOptions.import.initialTaskState = unconfirmed is not supported at the moment!");
+                $test::fail('runtimeOptions.import.initialTaskState = unconfirmed is not supported at the moment!');
             }
             if($taskResult->state == 'error') {
                 if($failOnError) {
@@ -693,7 +697,7 @@ class ZfExtended_Test_ApiHelper {
      * @param bool $waitForImport: wait until the resource is imported
      * @return mixed|boolean
      */
-    public function addResource(array $params ,string $fileName = null, bool $waitForImport=false){
+    public function addResource(array $params, string $fileName = null, bool $waitForImport=false){
         
         $test = $this->testClass;
         //if filename is provided, set the file upload field
@@ -728,7 +732,7 @@ class ZfExtended_Test_ApiHelper {
             if($counter==self::RELOAD_RESOURCE_LIMIT){
                 break;
             }
-            sleep(5);
+            sleep(2);
             $resp = $this->requestJson('editor/languageresourceinstance/'.$resp->id, 'GET',[]);
             error_log('Languageresources status check '.$counter.'/'.self::RELOAD_RESOURCE_LIMIT.' state: '.$resp->status);
             $counter++;
@@ -736,6 +740,27 @@ class ZfExtended_Test_ApiHelper {
         
         $test::assertEquals('available',$resp->status,'Resource import stoped. Resource state is:'.$resp->status);
         return $resp;
+    }
+
+    /**
+     * Add the translation memory resource (type DummyTM)
+     * @param string $fileName
+     * @param string $name
+     */
+    public function addDummyTm(string $fileName, ?string $name = null, ?string $sourceLang = null, ?string $targetLang = null){
+        $params = [
+            'resourceId'    =>  'editor_Services_DummyFileTm',
+            'sourceLang'    => $sourceLang ?? $this->task->originalSourceLang,
+            'targetLang'    => $targetLang ?? $this->task->originalTargetLang,
+            'customerIds' => [$this->getCustomer()->id],
+            'customerUseAsDefaultIds' => [],
+            'customerWriteAsDefaultIds' => [],
+            'serviceType' => 'editor_Services_DummyFileTm',
+            'serviceName'=> 'DummyFile TM',
+            'name' => $name ?? $this->testClass,
+        ];
+        //create the resource 1 and import the file
+        $this->addResource($params,$fileName,true);
     }
     
     /***
@@ -800,22 +825,24 @@ class ZfExtended_Test_ApiHelper {
      *   add the segment field with its data
      * @param string $field
      * @param string $value
-     * @param mixed $idOrObject
+     * @param mixed $idOrArray
      * @param number $duration optional, defaults to 666
      * @return array
      */
-    public function prepareSegmentPut($field, $value, $idOrObject, $duration = 666) {
-        if(is_numeric($idOrObject)) {
+    public function prepareSegmentPut($field, $value, $idOrArray, $duration = 666) {
+        if(is_numeric($idOrArray)) {
             $result = array(
                 "autoStateId" => 999,
                 "durations" => array(),
-                "id" => $idOrObject,
+                "id" => $idOrArray,
             );
+            $id = $idOrArray;
         }
         else {
-            $result = $idOrObject;
+            $result = $idOrArray;
+            $id = $idOrArray['id'];
         }
-        $result[$field] = $value.sprintf(self::SEGMENT_DUPL_SAVE_CHECK, $idOrObject, $field);
+        $result[$field] = $value.sprintf(self::SEGMENT_DUPL_SAVE_CHECK, $id, $field);
         $result['durations'][$field] = $duration;
         return $result;
     }
@@ -969,6 +996,16 @@ class ZfExtended_Test_ApiHelper {
     public function addImportFile($path, $mime = 'application/zip') {
         $this->addFile('importUpload', $path, $mime);
     }
+
+    /***
+     * Add multiple work-files for upload.
+     * @param $path
+     * @param $mime
+     * @return void
+     */
+    public function addImportFiles($path, $mime = 'application/zip') {
+        $this->addFile('importUpload[]', $path, $mime);
+    }
     
     public function addImportTbx($path, $mime = 'application/xml') {
         $this->addFile('importTbx', $path, $mime);
@@ -1114,5 +1151,14 @@ class ZfExtended_Test_ApiHelper {
      */
     public static function isLegacyData() : bool {
         return static::$CONFIG['LEGACY_DATA'];
+    }
+
+    /**
+     * Setter for $this->task
+     *
+     * @param $task
+     */
+    public function setTask($task) {
+        $this->task = $task;
     }
 }

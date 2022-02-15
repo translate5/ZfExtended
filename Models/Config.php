@@ -40,6 +40,7 @@ END LICENSE AND COPYRIGHT
  * @method void setDefault() setDefault(string $default)
  * @method void setDefaults() setDefaults(string $defaults) comma seperated values!
  * @method void setType() setType(string $type)
+ * @method void setTypeClass() setTypeClass(string $typeClass)
  * @method void setDescription() setDescription(string $desc)
  * @method void setComment() setComment(string $comment)
  *
@@ -54,6 +55,7 @@ END LICENSE AND COPYRIGHT
  * @method string getDefault() getDefault()
  * @method string getDefaults() getDefaults()
  * @method string getType() getType()
+ * @method string getTypeClass() getTypeClass()
  * @method string getDescription() getDescription()
  * @method string getComment() getComment()
  *
@@ -77,18 +79,6 @@ class ZfExtended_Models_Config extends ZfExtended_Models_Entity_Abstract {
         $this->db->update($update, ['name = ?' => $name]);
         $this->loadByName($name);
         return $this;
-    }
-    
-    /**
-     * returns true if there are "defaults" values and the given value is one of them
-     */
-    public function isValidInDefaults($value) {
-        $defaults = $this->getDefaults();
-        if(empty($defaults)) {
-            return true;
-        }
-        $defaults = explode(',', $defaults);
-        return in_array(trim($value), $defaults);
     }
     
     /**
