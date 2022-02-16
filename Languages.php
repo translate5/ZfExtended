@@ -86,7 +86,7 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract {
 
     /**
      * loads the languages by the given DB ID's
-     * @param string $id's
+     * @param mixed $id's
      * @return Zend_Db_Table_Row_Abstract | null
      */
     public function loadByIds($ids){
@@ -136,7 +136,13 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract {
      */
     protected function loaderByIds($langs, $field) {
         $s = $this->db->select();
+        //FIXME convert that to array only after merge of TRANSLATE-2834
+        if(is_array($langs)) {
+            $s->where($field.' IN(?)', $langs);
+        }
+        else{
         $s->where($field.' IN('.$langs.')');
+        }
         $s->order('rfc5646 ASC');
         $retval = $this->db->fetchAll($s)->toArray();
         if(empty($retval)){
