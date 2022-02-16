@@ -529,8 +529,8 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implement
         if(empty($userGuid) || empty($domain)){
             return null;
         }
-        $customer=ZfExtended_Factory::get('editor_Models_Customer');
-        /* @var $customer editor_Models_Customer */
+        $customer=ZfExtended_Factory::get('editor_Models_Customer_Customer');
+        /* @var $customer editor_Models_Customer_Customer */
         $customer->loadByDomain($domain);
         if($customer->getId()==null){
             return null;
