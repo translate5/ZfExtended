@@ -349,15 +349,13 @@ class ZfExtended_Logger_Event {
         }
         $isObject = is_object($toSanitize);
         foreach($toSanitize as $key => $value) {
-            if(!in_array(strtolower($key), $sensitiveKeys)) {
-                continue;
-            }
-            $value = substr($value, 0, 2).'XXX...';
-            if($isObject) {
-                $toSanitize->$key = $value;
-            }
-            else {
-                $toSanitize[$key] = $value;
+            if($value && in_array(strtolower($key), $sensitiveKeys)) {
+                $value = substr($value, 0, 2).'XXX...';
+                if($isObject) {
+                    $toSanitize->$key = $value;
+                } else {
+                    $toSanitize[$key] = $value;
+                }
             }
         }
         return $toSanitize;

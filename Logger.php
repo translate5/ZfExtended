@@ -418,8 +418,8 @@ class ZfExtended_Logger {
      * @return string
      */
     public function formatMessage($message, array $extra = null){
-        if(empty($extra)) {
-            return $message;
+        if(empty($extra) || !$message) {
+            return $message ?: '';
         }
         $keys = array_keys($extra);
         $data = array_values($extra);
