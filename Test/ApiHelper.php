@@ -216,7 +216,7 @@ class ZfExtended_Test_ApiHelper {
             $http->setConfig(array('timeout'      => 3600));
         }
         else {
-            $http->setConfig(array('timeout'      => 60));
+            $http->setConfig(array('timeout'      => 3600));
         }
         
         if(!empty($this->authCookie)) {
