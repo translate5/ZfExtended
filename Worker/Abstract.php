@@ -592,13 +592,4 @@ abstract class ZfExtended_Worker_Abstract {
     public function updateProgress(float $progress = 1){
         $this->workerModel->updateProgress($progress);
     }
-    
-    /**
-     * Worker weight/percent of the total import proccess.
-     * @return integer
-     */
-    public function getWeight(): int
-    {
-        return 1;
-    }
 }
