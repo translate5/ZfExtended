@@ -125,6 +125,7 @@ class  ZfExtended_Zendoverwrites_Http_Client extends Zend_Http_Client {
 //        error_log("GOT Body ($randKey):".print_r($response->getBody(),1));
         $log->debug('E0002', 'HTTP RECEIVE {id}', [
             'id' => $randKey,
+            'code' => $response->getStatus(),
             'headers' => $response->getHeaders(),
             'rawBody' => $response->getRawBody(),
         ]);

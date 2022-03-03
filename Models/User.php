@@ -426,7 +426,8 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implement
      * @throws Zend_Db_Statement_Exception
      * @throws Zend_Session_Exception
      */
-    public function getUserCustomersFromSession($termportal = false){
+    public function getUserCustomersFromSession(bool $termportal = false): array
+    {
         $sessionUser = new Zend_Session_Namespace('user');
         
         $sessionUser=$sessionUser->data;
