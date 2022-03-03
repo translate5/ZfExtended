@@ -113,6 +113,12 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller
      */
     protected $offset = 0;
 
+    /***
+     * Should the data post/put param be decoded to associative array
+     * @var bool
+     */
+    protected bool $decodePutAssociative = false;
+
     /**
      * inits the internal entity Object, handels given limit, filter and sort parameters
      * @see Zend_Controller_Action::init()
@@ -473,12 +479,11 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller
     }
 
     /***
-     * @param bool|null $associative When TRUE, returned objects will be converted into associative arrays.
      * @return void
      */
-    protected function decodePutData(?bool $associative = false)
+    protected function decodePutData()
     {
-        $this->data = json_decode($this->_getParam('data'), $associative);
+        $this->data = json_decode($this->_getParam('data'), $this->decodePutAssociative);
     }
 
     /**

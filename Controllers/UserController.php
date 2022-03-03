@@ -260,7 +260,7 @@ class ZfExtended_UserController extends ZfExtended_RestController {
      * @throws Zend_Exception
      * @throws ZfExtended_NoAccessException
      */
-    protected function decodePutData(?bool $associative = false){
+    protected function decodePutData(){
         if($this->alreadyDecoded) {
             return;
         }
