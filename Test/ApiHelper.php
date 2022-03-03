@@ -491,6 +491,9 @@ class ZfExtended_Test_ApiHelper {
         $test::assertLogin('testmanager');
 
         $this->task = $this->requestJson('editor/task', 'POST', $task);
+        if(isset($this->task->projectTasks)){
+            $this->projectTasks = is_array($this->task->projectTasks) ? $this->task->projectTasks : [$this->task->projectTasks];
+        }
         $this->task->originalSourceLang = $task['sourceLang'];
         $this->task->originalTargetLang = $task['targetLang'];
         $resp = $this->getLastResponse();
