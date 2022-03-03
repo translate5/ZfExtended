@@ -648,15 +648,15 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
         return $this->parameters;
     }
 
-    /***
+    /**
      * Update the worker model progress field with given $progress value.
      * This will trigger updateProgress event on each call.
      *
      * @param float $progress
-     * @param int $context: The context(worker parentId or workerId) represents set of workers connected with same parentId.
      * @return boolean
+     * @throws ZfExtended_Models_Db_Exceptions_DeadLockHandler
      */
-    public function updateProgress(float $progress = 1, int $context = 0) {
+    public function updateProgress(float $progress = 1): bool {
         $id = $this->getId();
         $isUpdated = $this->retryOnDeadlock(function() use ($progress, $id){
             $this->db->reduceDeadlocks();
@@ -664,16 +664,9 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
                 'progress'=>$progress
             ], [
                 'id = ?'=>$id
-            ])>0;
+            ]) > 0;
             
         });
-        
-        //fire event if progress was called
-        $this->events->trigger("updateProgress", $this, [
-            'taskGuid' =>$this->getTaskGuid(),
-            'progress'=>$progress,
-            'context' => $context
-        ]);
         return $isUpdated;
     }
     

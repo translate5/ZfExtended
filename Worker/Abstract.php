@@ -582,22 +582,23 @@ abstract class ZfExtended_Worker_Abstract {
             error_log($msg);
         }
     }
-    
-    /***
-     * Update the progres for the current worker model. The progress value needs to be calculated in the worker class.
+
+    /**
+     * Update the progress for the current worker model. The progress value needs to be calculated in the worker class.
      *
      * @param float $progress
+     * @throws ZfExtended_Models_Db_Exceptions_DeadLockHandler
      */
     public function updateProgress(float $progress = 1){
-        $parentId = $this->workerModel->getParentId() ? $this->workerModel->getParentId() : $this->workerModel->getId();
-        $this->workerModel->updateProgress($progress, $parentId);
+        $this->workerModel->updateProgress($progress);
     }
     
-    /***
+    /**
      * Worker weight/percent of the total import proccess.
-     * @return number
+     * @return integer
      */
-    public function getWeight() {
+    public function getWeight(): int
+    {
         return 1;
     }
 }
