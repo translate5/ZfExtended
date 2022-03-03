@@ -89,11 +89,11 @@ class ZfExtended_BaseIndex{
             define('APPLICATION_ROOT', realpath(dirname($indexpath) . DIRECTORY_SEPARATOR.'..'));
         }
         $this->application_path = APPLICATION_ROOT . DIRECTORY_SEPARATOR.'application';
-        defined('APPLICATION_PATH') || define('APPLICATION_PATH', $this->application_path);
+        defined('APPLICATION_PATH')   || define('APPLICATION_PATH', $this->application_path);
         // Define application environment
-        defined('APPLICATION_ENV') || define('APPLICATION_ENV', ( getenv('APPLICATION_ENV') ? getenv('APPLICATION_ENV') : 'application'));
-        defined('APPLICATION_AGENCY') || define('APPLICATION_AGENCY', ( getenv('APPLICATION_AGENCY') ? getenv('APPLICATION_AGENCY') : $this->getAgency()));
-        defined('APPLICATION_RUNDIR') || define('APPLICATION_RUNDIR', ( getenv('APPLICATION_RUNDIR') ? getenv('APPLICATION_RUNDIR') : ''));
+        defined('APPLICATION_ENV')    || define('APPLICATION_ENV',    ( getenv('APPLICATION_ENV')    ?: 'application'));
+        defined('APPLICATION_AGENCY') || define('APPLICATION_AGENCY', ( getenv('APPLICATION_AGENCY') ?: $this->getAgency()));
+        defined('APPLICATION_RUNDIR') || define('APPLICATION_RUNDIR', ( getenv('APPLICATION_RUNDIR') ?: ''));
         $this->applicationInis = $this->getApplicationInis();
     }
     /**
@@ -324,7 +324,7 @@ class ZfExtended_BaseIndex{
     public function getModules(){
         $modules = scandir(APPLICATION_PATH.'/modules');
         foreach ($modules as $key => &$module) {
-            if(!is_dir(APPLICATION_PATH .'/modules/'.$module) or $module === '.' or $module === '..' or $module === '.svn'){
+            if(str_starts_with($module, '.') || !is_dir(APPLICATION_PATH .'/modules/'.$module)){
                 unset($modules[$key]);
             }
         }

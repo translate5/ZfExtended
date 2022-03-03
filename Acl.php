@@ -115,6 +115,7 @@ class ZfExtended_Acl extends Zend_Acl {
             try {
                 if($this->isAllowed($role,$resource,$privilege)){
                     $allowed = true;
+                    break;
                 }
             } catch (Zend_Acl_Role_Registry_Exception $exc) {
                 //if role is not registered because it is the role of a different module

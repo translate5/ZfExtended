@@ -84,15 +84,14 @@ class  ZfExtended_Zendoverwrites_Translate extends Zend_Translate
         $this->getLogPath();
         
         
-        try {
-            $log = Zend_Registry::get('translationLog');
-        }
-        catch (Exception $exc) {
+        if(!Zend_Registry::isRegistered('translationLog')) {
             $writer = new Zend_Log_Writer_Stream($this->getLogPath());
             $formatter = new Zend_Log_Formatter_Simple('%message%' . PHP_EOL);
             $writer->setFormatter($formatter);
             $log    = new Zend_Log($writer);
             Zend_Registry::set('translationLog', $log);
+        } else {
+            $log = Zend_Registry::get('translationLog');
         }
 
         // Lade Übersetzungen und speichere Translate Objekt in der Session
