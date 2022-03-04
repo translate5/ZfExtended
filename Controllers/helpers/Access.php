@@ -103,13 +103,13 @@ class ZfExtended_Controller_Helper_Access extends Zend_Controller_Action_Helper_
             $module = '';
         }
         $action = $this->_request->getActionName();
-        $ressource = $module.$this->_request->getControllerName();
+        $resource = $module.$this->_request->getControllerName();
         //set the real operation action
         if($action=='operation'){
             $action = $this->_request->getParam('operation').'Operation';
         }
-        if(!$this->_acl->isInAllowedRoles($this->_roles, $ressource, $action)) {
-            $this->accessDenied($ressource, $action);
+        if(!$this->_acl->isInAllowedRoles($this->_roles, $resource, $action)) {
+            $this->accessDenied($resource, $action);
         }
     }
 

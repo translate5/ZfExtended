@@ -35,7 +35,7 @@ class ZfExtended_OpenIDConnectClient{
 
     /***
      * Current customer used in the request domain
-     * @var editor_Models_Customer
+     * @var editor_Models_Customer_Customer
      */
     protected $customer;
 
@@ -368,10 +368,10 @@ class ZfExtended_OpenIDConnectClient{
 
     /***
      * Get the customer from the current used domain.
-     * @return editor_Models_Customer
+     * @return editor_Models_Customer_Customer
      */
     protected function initCustomerFromDomain(){
-        $customer=ZfExtended_Factory::get('editor_Models_Customer');
+        $customer=ZfExtended_Factory::get('editor_Models_Customer_Customer');
         $customer->loadByDomain($this->getBaseUrl());
         //the customer for the domain does not exist, load the default customer
         if($customer->getId()==null){

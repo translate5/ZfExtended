@@ -491,6 +491,9 @@ class ZfExtended_Test_ApiHelper {
         $test::assertLogin('testmanager');
 
         $this->task = $this->requestJson('editor/task', 'POST', $task);
+        if(isset($this->task->projectTasks)){
+            $this->projectTasks = is_array($this->task->projectTasks) ? $this->task->projectTasks : [$this->task->projectTasks];
+        }
         $this->task->originalSourceLang = $task['sourceLang'];
         $this->task->originalTargetLang = $task['targetLang'];
         $resp = $this->getLastResponse();
@@ -666,12 +669,12 @@ class ZfExtended_Test_ApiHelper {
      * adds the given user to the actual task
      * @param string $username one of the predefined users (testmanager, testlector, testtranslator)
      * @param string $state open, waiting, finished, as available by the workflow
-     * @param string $role reviewer or translator, as available by the workflow
+     * @param string $step reviewing or translation, as available by the workflow
      * @param array $params add additional taskuserassoc params to the add user call
      *
      * @return stdClass taskuserassoc result
      */
-    public function addUser($username, $state = 'open', $role = 'reviewer',array $params=[]) {
+    public function addUser($username, string $state = 'open', string $step = 'reviewing', array $params = []) {
         $test = $this->testClass;
         $test::assertFalse(empty($this->testusers[$username]), 'Given testuser "'.$username.'" does not exist!');
         $p = array(
@@ -680,7 +683,7 @@ class ZfExtended_Test_ApiHelper {
                 "taskGuid" => $this->task->taskGuid,
                 "userGuid" => $this->testusers[$username],
                 "state" => $state,
-                "role" => $role,
+                "workflowStepName" => $step,
         );
         $p=array_merge($p,$params);
         $json = $this->requestJson('editor/taskuserassoc', 'POST', $p);
@@ -699,6 +702,9 @@ class ZfExtended_Test_ApiHelper {
      */
     public function addResource(array $params, string $fileName = null, bool $waitForImport=false){
         
+        if(!empty($this->filesToAdd)) {
+            throw new Exception('There are already some files added as pending request and not sent yet! Send them first to the server before calling addResource!');
+        }
         $test = $this->testClass;
         //if filename is provided, set the file upload field
         if($fileName){

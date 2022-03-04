@@ -69,23 +69,24 @@ if(!empty($_GET['testmaintenance'])) {
 ?>
 	<script>
         checkCount = 0;
-		setInterval(function(){
+        checkIntervalMs = 5000;
+		checkMaintenance = function(){
 		        var xhr = new XMLHttpRequest(),
                     d = new Date(),
-		        	url = '<?php echo APPLICATION_RUNDIR;?>/login?ts='+d.getTime();
-		        xhr.open('GET', url);
+		        	url = '<?php echo APPLICATION_RUNDIR;?>/login'; // browser will not cache HEAD requests
+		        xhr.open('HEAD', url);
                 checkCount++;
 				xhr.onload = function() {
 					if(xhr.status >= 200 && xhr.status < 400) {
     			        window.location.href = url;
-    			        return;
-					}
-					document.getElementById('last-reload').innerHTML = 'Last check started at: '+d.toLocaleString()+' (#'+checkCount+')';
+					} else {
+                        document.getElementById('last-reload').innerHTML = 'Last check started at: '+d.toLocaleString()+' (#'+checkCount+')';
+                        setTimeout(checkMaintenance, checkIntervalMs);
+                    }
 		        };
 		        xhr.send();
-		//}, 30000);
-		}, 5000);
-	
+		};
+        setTimeout(checkMaintenance, checkIntervalMs);
 	</script>
 <?php
 if(!empty($_GET['testmaintenance'])) {

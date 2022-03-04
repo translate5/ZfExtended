@@ -33,7 +33,7 @@ class ZfExtended_Session_SaveHandler_DbTable
      * We store the session data here for comparsion before save
      * @var string
      */
-    protected $data = '';
+    protected string $data = '';
     
     /**
      * {@inheritDoc}
@@ -99,6 +99,6 @@ class ZfExtended_Session_SaveHandler_DbTable
     public function gc($maxlifetime)
     {
         $this->getAdapter()->query('SET TRANSACTION ISOLATION LEVEL READ COMMITTED');
-        return parent::gc($id);
+        return parent::gc($maxlifetime);
     }
 }

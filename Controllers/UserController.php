@@ -253,12 +253,14 @@ class ZfExtended_UserController extends ZfExtended_RestController {
         }
     }
 
-    /**
+    /***
      * overridden to prepare data on user creation
-     * (non-PHPdoc)
-     * @see ZfExtended_RestController::decodePutData()
+     * @param bool|null $associative
+     * @return void
+     * @throws Zend_Exception
+     * @throws ZfExtended_NoAccessException
      */
-    protected function decodePutData() {
+    protected function decodePutData(){
         if($this->alreadyDecoded) {
             return;
         }

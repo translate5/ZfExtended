@@ -89,11 +89,11 @@ class ZfExtended_BaseIndex{
             define('APPLICATION_ROOT', realpath(dirname($indexpath) . DIRECTORY_SEPARATOR.'..'));
         }
         $this->application_path = APPLICATION_ROOT . DIRECTORY_SEPARATOR.'application';
-        defined('APPLICATION_PATH') || define('APPLICATION_PATH', $this->application_path);
+        defined('APPLICATION_PATH')   || define('APPLICATION_PATH', $this->application_path);
         // Define application environment
-        defined('APPLICATION_ENV') || define('APPLICATION_ENV', ( getenv('APPLICATION_ENV') ? getenv('APPLICATION_ENV') : 'application'));
-        defined('APPLICATION_AGENCY') || define('APPLICATION_AGENCY', ( getenv('APPLICATION_AGENCY') ? getenv('APPLICATION_AGENCY') : $this->getAgency()));
-        defined('APPLICATION_RUNDIR') || define('APPLICATION_RUNDIR', ( getenv('APPLICATION_RUNDIR') ? getenv('APPLICATION_RUNDIR') : ''));
+        defined('APPLICATION_ENV')    || define('APPLICATION_ENV',    ( getenv('APPLICATION_ENV')    ?: 'application'));
+        defined('APPLICATION_AGENCY') || define('APPLICATION_AGENCY', ( getenv('APPLICATION_AGENCY') ?: $this->getAgency()));
+        defined('APPLICATION_RUNDIR') || define('APPLICATION_RUNDIR', ( getenv('APPLICATION_RUNDIR') ?: ''));
         $this->applicationInis = $this->getApplicationInis();
     }
     /**
@@ -161,11 +161,20 @@ class ZfExtended_BaseIndex{
             }else {
                 error_log('Fatal: Could not connect to the database!');
             }
-            include('layouts/dbdown.phtml');
-            die('Fatal: Could not connect to the database! <b>If you get this message in the Browser: try to reload the application.</b> <br>See error log for details.');
+            header('HTTP/1.1 500 Internal Server Error');
+            $headers = apache_request_headers();
+            if($headers) {
+                $headers = array_change_key_case($headers, CASE_LOWER);
+                if(empty($headers['accept']) || stripos($headers['accept'], 'json') === false) {
+                    error_log(print_r($headers,1));
+                    include('layouts/dbdown.phtml');
+                    return;
+                }
+            }
+            die('{"success": false, "httpStatus": 500, "errorMessage": "<b>Fatal: Could not connect to the database!</b> <br>If you get this message in the Browser: try to reload the application. <br>See error log for details."}');
         }
     }
-    
+
     /**
      * @throws Zend_Exception
      * @return Zend_Application
@@ -315,7 +324,7 @@ class ZfExtended_BaseIndex{
     public function getModules(){
         $modules = scandir(APPLICATION_PATH.'/modules');
         foreach ($modules as $key => &$module) {
-            if(!is_dir(APPLICATION_PATH .'/modules/'.$module) or $module === '.' or $module === '..' or $module === '.svn'){
+            if(str_starts_with($module, '.') || !is_dir(APPLICATION_PATH .'/modules/'.$module)){
                 unset($modules[$key]);
             }
         }
@@ -365,6 +374,8 @@ class ZfExtended_BaseIndex{
         
         //a customized configuration file for the local installation:
         $applicationInis[] = APPLICATION_PATH.'/config/installation.ini';
+        //for installations with read only/shared code base only the data directory is usable for the instance, so we have to load optionally the installation.ini from there
+        $applicationInis[] = APPLICATION_ROOT.'/data/installation.ini';
         //a customized configuration file for the local installation, called only for a specific module:
         // this feature is currently not documented!
         $applicationInis[] = APPLICATION_PATH.'/config/installation-'.$this->currentModule.'.ini';
