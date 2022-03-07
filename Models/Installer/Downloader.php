@@ -341,11 +341,36 @@ class ZfExtended_Models_Installer_Downloader {
         }
 
         $targetDir = $this->applicationRoot.'/'.$dependency->target;
+
+        //if the target dir is a symlink, we assume the content is handled as shared code in a multi instance environment
+        // therefore we try to re-link to targetDir appended with the version "-a.b.c" and use that via symlink.
+        // if the targetDir-a.b.c does not exist, we unzip there
+        $version = ZfExtended_Utils::getAppVersion();
+        $linkItSelf = rtrim($targetDir, '\\/'.DIRECTORY_SEPARATOR);
+        if(is_link($linkItSelf) && $version !== ZfExtended_Utils::VERSION_DEVELOPMENT) {
+            $dirName = basename($linkItSelf);  //example/vendor -> vendor
+            $link = readlink($linkItSelf);     //../shared/vendor
+            $linkPath = dirname($link);       //../shared
+            $linkTarget = $linkPath.DIRECTORY_SEPARATOR.$dirName.'-'.$version; //../shared/vendor-a.b.c
+            unlink($linkItSelf); //remove vendor symlink
+            symlink($linkTarget, $linkItSelf); //symlink example/vendor to shared/vendor-123
+            $this->log('Target for download is a symlink - update link target ! '.$dependency->name.'! Target:'.$linkTarget);
+            if(!file_exists($linkTarget) && !empty($linkTarget)) {
+                //reset targetDir so that $linkTarget is created if not available
+                $targetDir = $linkTarget.'/';
+            }
+            else {
+                $this->log('Target for download is a link with an existing target - ignored download! '.$dependency->name.'! ZipFile:'.$dependency->targetFile);
+                return true;
+            }
+        }
+
         if(!empty($dependency->preventTargetCleaning)) {
             $overwrite = true;
         }
 
-        if(!$overwrite && file_exists($targetDir)) {
+        //cleaning only if we are inside the applicationRoot folder!
+        if(!$overwrite && file_exists($targetDir) && str_starts_with(realpath($targetDir), realpath($this->applicationRoot))) {
             if(!$cleanBefore) {
                 $this->log('Could not unzip target directory for dependency package '.$dependency->name.' already exists! ZipFile:'.$dependency->targetFile);
                 return false;
