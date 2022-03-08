@@ -270,6 +270,7 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
         $this->_helper->general->logoutUser();
         $this->postDispatch(); //trigger after action events before redirecting
         if ($this->getRequest()->getParam('noredirect')) {
+            //on sendBeacon logouts we do not want any redirect, so just exit.
             exit();
         }
         if($this->getRequest()->getParam('openidredirect', true)){
