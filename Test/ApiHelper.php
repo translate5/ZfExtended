@@ -167,10 +167,14 @@ class ZfExtended_Test_ApiHelper {
         'testlector' => '{00000000-0000-0000-C100-CCDDEE000002}',
         'testtranslator' => '{00000000-0000-0000-C100-CCDDEE000003}',
     );
-    
+
+    /**
+     * @throws ReflectionException
+     */
     public function __construct($testClass){
+        $reflector = new \ReflectionClass($testClass);
         $this->testClass = $testClass;
-        $this->testRoot = getcwd();
+        $this->testRoot = dirname($reflector->getFileName());
         $this->xdebug = static::$CONFIG['XDEBUG_ENABLE'];
         $this->cleanup = !static::$CONFIG['KEEP_DATA'];
     }
@@ -196,13 +200,14 @@ class ZfExtended_Test_ApiHelper {
     public function setAuthCookie(string $cookie) {
         $this->authCookie = $cookie;
     }
-    
+
     /**
      * requests the REST API, can handle file uploads, add file methods must be called first
      * @param string $url
      * @param string $method GET;POST;PUT;DELETE must be POST or PUT to transfer added files
      * @param string $url
      * @return Zend_Http_Response
+     * @throws Zend_Http_Client_Exception
      */
     public function request($url, $method = 'GET', $parameters = array()) {
 
@@ -230,7 +235,7 @@ class ZfExtended_Test_ApiHelper {
                     continue;
                 }
                 //file paths can also be absolute:
-                if(substr($file['path'], 0, 1) === '/') {
+                if(str_starts_with($file['path'], '/')) {
                     $abs = $file['path'];
                 }
                 else {
@@ -240,7 +245,7 @@ class ZfExtended_Test_ApiHelper {
                 $t::assertFileExists($abs);
                 $http->setFileUpload($abs, $file['name'], file_get_contents($abs), $file['mime']);
             }
-            $this->filesToAdd = array();
+            $this->filesToAdd = [];
         }
         
         if($method == 'POST' || $method == 'PUT') {
@@ -864,7 +869,7 @@ class ZfExtended_Test_ApiHelper {
         if(empty($class)) {
             $class = $this->testClass;
         }
-        $path = join('/', array($this->testRoot, 'editorAPI', $class, $approvalFile));
+        $path = join('/', array($this->testRoot, $class, $approvalFile));
         if($assert) {
             $t = $this->testClass;
             $t::assertFileExists($path);
