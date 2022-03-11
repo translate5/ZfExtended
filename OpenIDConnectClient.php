@@ -346,7 +346,25 @@ class ZfExtended_OpenIDConnectClient{
         }
 
         // add the autoset roles to the calculated user roles
+        return $this->mergeAutoSetRoles($roles);
+    }
+
+    /***
+     * Merge the calculated user roles and add the autoset roles to them
+     * @param array $roles
+     * @return array
+     */
+    protected function mergeAutoSetRoles(array $roles): array
+    {
+        // set the module to editor so the correct acl auto set roles are loaded
+        Zend_Registry::set('module','editor');
+        $acl = ZfExtended_Acl::getInstance(true);
+        /* @var $acl ZfExtended_Acl */
+        // add the autoset roles to the calculated user roles
         $roles = $acl->mergeAutoSetRoles($roles,[]);
+        // reset the module back to default and reset the acl cache
+        Zend_Registry::set('module','default');
+        ZfExtended_Acl::getInstance()::reset();
         return $roles;
     }
 
