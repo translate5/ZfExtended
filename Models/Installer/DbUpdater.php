@@ -70,7 +70,7 @@ class ZfExtended_Models_Installer_DbUpdater {
      * @param string $path optional
      */
     public function __construct(stdClass $db = null, $exec = null, $path = null) {
-        if(class_exists('Zend_Registry', false) && defined('APPLICATION_PATH')) {
+        if(is_null($db) && is_null($exec) && is_null($path)) {
             $config = Zend_Registry::get('config');
             /* @var $config Zend_Config */
             $db = (object) $config->resources->db->params->toArray();
