@@ -37,6 +37,12 @@ END LICENSE AND COPYRIGHT
  *
  */
 class ZfExtended_Acl extends Zend_Acl {
+
+    /***
+     * Initial page resource name
+     */
+    const INITIAL_PAGE_RESOURCE = 'initial_page';
+
     /**
      * Singleton Instanzen
      *
@@ -117,6 +123,26 @@ class ZfExtended_Acl extends Zend_Acl {
             ->where('role IN(?)',$roles);
         return $db->fetchAll($s)->toArray();
     }
+
+    /***
+     * Get all initial page modules for given roles
+     * @param array $roles
+     * @return array
+     * @throws Zend_Db_Table_Exception
+     */
+    public function getInitialPageModulesForRoles(array $roles): array
+    {
+        $db = ZfExtended_Factory::get('ZfExtended_Models_Db_AclRules');
+        /* @var $db ZfExtended_Models_Db_AclRules */
+        $s = $db->select()
+            ->from($db->info($db::NAME), 'module')
+            ->where('resource = ?',self::INITIAL_PAGE_RESOURCE)
+            ->where('role IN(?)',$roles)
+            ->distinct();
+        return array_column($db->fetchAll($s)->toArray(), 'module');
+    }
+
+
     
     /**
      * checks if one of the passed roles allows the resource / privelege
