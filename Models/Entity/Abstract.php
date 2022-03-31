@@ -135,11 +135,12 @@ abstract class ZfExtended_Models_Entity_Abstract {
     public function __clone() {
         $this->row = clone $this->row;
     }
-    
-    
+
+
     /**
      * loads the Entity by Primary Key Id
      * @param int $id
+     * @throws ZfExtended_Models_Entity_NotFoundException
      */
     public function load($id) {
         try {
