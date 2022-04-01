@@ -338,8 +338,8 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract {
      *    de-DE -> de, de-DE, de-AT, de-CH
      *
      * @param int $id
-     * @param string $field
-     * @param boolean $includeMajor include major language when fuzzy matching
+     * @param string $field the field to be returned
+     * @param boolean $includeMajor include major language when fuzzy matching for sub-languages (no effect on querying major itself!)
      * @return array
      * @throws Zend_Cache_Exception
      */
@@ -350,15 +350,15 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract {
         if($result !== false) {
             return $result;
         }
-        
-        $rfc = $this->loadLangRfc5646($id);
+
+        $rfc = $this->loadLangRfc5646($id); //loads the language internally
         //if it is a sub language (de-DE), take only that but include the general (major) language (de) if set via param
         if(str_contains($rfc, '-')){
-            $result = [$id];
+            $result = [$this->get($field)];
             if($includeMajor){
                 $major = $this->findMajorLanguage($rfc);
                 if(!empty($major)){
-                    $result[] = $major['id'];
+                    $result[] = $major[$field];
                 }
             }
         }
