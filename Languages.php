@@ -313,10 +313,11 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract {
      */
     public function findLanguageGroup($rfc): array
     {
-        $rfc=explode('-',$rfc);
-        $rfc=$rfc[0];
+        $rfc = explode('-',$rfc);
+        $rfc = strtolower($rfc[0]);
         $s = $this->db->select();
-        $s->where('lower(rfc5646) = ? or lower(rfc5646) LIKE lower(?)',$rfc.'-%');
+        $s->where('lower(rfc5646) = ?',$rfc);
+        $s->orWhere('lower(rfc5646) LIKE ?',$rfc.'-%');
         $retval = $this->db->fetchAll($s)->toArray();
         if(empty($retval)){
             return [];
