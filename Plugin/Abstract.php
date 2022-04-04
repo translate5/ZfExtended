@@ -230,27 +230,6 @@ abstract class ZfExtended_Plugin_Abstract {
     }
     
     /**
-     * returns a list of files from plugins public directory. List is normally used as whitelist on file inclusion.
-     * @param string $subdirectory optional, subdirectory to start in
-     * @param string $absolutePath optional, passed by reference to get the absolutePath from this method
-     * @return multitype:string
-     */
-    public function getPublicFiles($subdirectory = '', & $absolutePath = null) {
-        $publicDirectory = $this->absolutePluginPath.'/public/'.$subdirectory;
-        $absolutePath = $publicDirectory;
-        $objects = new RecursiveIteratorIterator(
-            new RecursiveDirectoryIterator($publicDirectory, FilesystemIterator::SKIP_DOTS), RecursiveIteratorIterator::SELF_FIRST
-        );
-        $result = array();
-        foreach($objects as $file) {
-            if($file->isFile()) {
-                $result[] = trim(str_replace(array($publicDirectory,'\\'), array('','/'), $file), '/');
-            }
-        }
-        return $result;
-    }
-    
-    /**
      * returns the plugin specific config
      * @throws ZfExtended_Exception
      * @return Zend_Config
@@ -288,12 +267,12 @@ abstract class ZfExtended_Plugin_Abstract {
     public function getPublicSubFolder(){
         return $this->publicFileTypes;
     }
-    
     /**
      * @param string $requestedType
-     * @return boolean
+     * @param array $config
+     * @return bool
      */
-    public function isPublicSubFolder($requestedType) {
+    public function isPublicSubFolder(string $requestedType, array $config) : bool {
         return in_array($requestedType, $this->getPublicSubFolder());
     }
 
@@ -301,18 +280,41 @@ abstract class ZfExtended_Plugin_Abstract {
      * returns the requested file to be flushed to the browser or null if not allowed/not possible
      * @param string $requestedType
      * @param array $requestedFileParts
+     * @param array $config:  may holds further controller specific environment variables
      * @return SplFileInfo|null
      */
-    public function getPublicFile(string $requestedType, array $requestedFileParts): ?SplFileInfo {
+    public function getPublicFile(string $requestedType, array $requestedFileParts, array $config): ?SplFileInfo {
         $absolutePath = null;
         //get public files of the plugin to make a whitelist check of the file string from userland
-        $allowedFiles = $this->getPublicFiles($requestedType, $absolutePath);
+        $allowedFiles = $this->getPublicFiles($requestedType, $absolutePath, $config);
         $file = join(DIRECTORY_SEPARATOR, $requestedFileParts);
         if (empty($allowedFiles) || !in_array($file, $allowedFiles)) {
             return null;
         }
         //concat the absPath from above with filepath
         return new SplFileInfo($absolutePath . DIRECTORY_SEPARATOR . $file);
+    }
+
+    /**
+     * returns a list of files from plugins public directory. List is normally used as whitelist on file inclusion.
+     * @param string $subdirectory optional, subdirectory to start in
+     * @param string $absolutePath optional, passed by reference to get the absolutePath from this method
+     * @param array $config:  may holds further controller specific environment variables
+     * @return multitype:string
+     */
+    public function getPublicFiles($subdirectory='', & $absolutePath=null, array $config) {
+        $publicDirectory = $this->absolutePluginPath.'/public/'.$subdirectory;
+        $absolutePath = $publicDirectory;
+        $objects = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($publicDirectory, FilesystemIterator::SKIP_DOTS), RecursiveIteratorIterator::SELF_FIRST
+        );
+        $result = array();
+        foreach($objects as $file) {
+            if($file->isFile()) {
+                $result[] = trim(str_replace(array($publicDirectory,'\\'), array('','/'), $file), '/');
+            }
+        }
+        return $result;
     }
     
     /**
