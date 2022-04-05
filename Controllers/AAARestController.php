@@ -216,6 +216,7 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller
             'view' => $this->view,
             'data' => $this->data,
             'request' => $this->getRequest(),
+            'controller' => $this,
         ]);
     }
 
