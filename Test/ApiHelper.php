@@ -212,7 +212,16 @@ class ZfExtended_Test_ApiHelper {
     public function request($url, $method = 'GET', $parameters = array()) {
 
         $http = new Zend_Http_Client();
-        $http->setUri(static::$CONFIG['API_URL'].ltrim($url, '/'));
+        $url = ltrim($url, '/');
+
+        //prepend the taskid to the URL if the test has a task with id.
+        // that each request has then the taskid is no problem, this is handled by .htaccess and finally by the called controller.
+        // If the called controller does not need the taskid it just does nothing there...
+        if(($this->getTask()->id ?? 0) > 0) {
+            $url = preg_replace('#^editor/#', 'editor/taskid/'.$this->getTask()->id.'/', $url);
+        }
+
+        $http->setUri(static::$CONFIG['API_URL'].$url);
         $http->setHeaders('Accept', 'application/json');
         
         //enable xdebug debugger in eclipse
