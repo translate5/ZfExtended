@@ -304,60 +304,65 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract {
         return $this->getRfc5646();
     }
     
-    /***
+    /**
      * Find languages which are belonging to the same language group
      * Ex:
      * when the $rfc = "de"
-     * the result will be the ids from the de-at, de-ch, de-de, de-lu etc...
+     * the result will be the ids from the de, de-at, de-ch, de-de, de-lu etc...
      * @param string $rfc
      */
-    public function findLanguageGroup($rfc){
-        $rfc=explode('-',$rfc);
-        $rfc=$rfc[0];
+    public function findLanguageGroup($rfc): array
+    {
+        $rfc = explode('-',$rfc);
+        $rfc = strtolower($rfc[0]);
         $s = $this->db->select();
-        $s->where('lower(rfc5646) LIKE lower(?)',$rfc.'%');
+        $s->where('lower(rfc5646) = ?',$rfc);
+        $s->orWhere('lower(rfc5646) LIKE ?',$rfc.'-%');
         $retval = $this->db->fetchAll($s)->toArray();
         if(empty($retval)){
             return [];
         }
         return $retval;
     }
-    
-    /***
+
+    /**
      * Return fuzzy languages for the given language id.
-     * Languages with '-' in the rfc field are not searched for fuzzy.
-     * if $includeMajor is set to true, the mayor language will be included in the return result
-     * when the input language is non mayor language
      *
-     * ex: $includeMajor=false
-     *    de -> de-DE,de-AT,de-CH,de-LI,de-LU
+     * Examples:
+     *    de -> de, de-DE, de-AT, de-CH
      *
-     * ex: $includeMajor=true
-     *     de -> de,de-DE,de-AT,de-CH,de-LI,de-LU
+     *    $includeMajor == false
+     *    de-DE -> de-DE, de-AT, de-CH
+     *
+     *    $includeMajor == true
+     *    de-DE -> de, de-DE, de-AT, de-CH
      *
      * @param int $id
-     * @param string $field
-     * @param boolean $includeMajor : include mayor language when fuzzy matching
+     * @param string $field the field to be returned
+     * @param boolean $includeMajor include major language when fuzzy matching for sub-languages (no effect on querying major itself!)
      * @return array
+     * @throws Zend_Cache_Exception
      */
-    public function getFuzzyLanguages($id,$field='id',$includeMajor = false){
+    public function getFuzzyLanguages($id, string $field = 'id', bool $includeMajor = false): array
+    {
         $cacheId = __FUNCTION__.'_'.$id.'_'.$field.'_'.var_export($includeMajor,true).'_includeMajor';
         $result = $this->memCache->load($cacheId);
         if($result !== false) {
             return $result;
         }
-        
-        $rfc = $this->loadLangRfc5646($id);
-        //check if language fuzzy matching is needed
-        if(strpos($rfc, '-') !== false){
-            $result = [$id];
+
+        $rfc = $this->loadLangRfc5646($id); //loads the language internally
+        //if it is a sub language (de-DE), take only that but include the general (major) language (de) if set via param
+        if(str_contains($rfc, '-')){
+            $result = [$this->get($field)];
             if($includeMajor){
-                $mayor = $this->findMajorLanguage($rfc);
-                if(!empty($mayor)){
-                    $result[] = $mayor['id'];
+                $major = $this->findMajorLanguage($rfc);
+                if(!empty($major)){
+                    $result[] = $major[$field];
                 }
             }
         }
+        // if it is general language, include all sub languages too
         else {
             $result = array_column($this->findLanguageGroup($rfc), $field);
         }
