@@ -512,7 +512,7 @@ class ZfExtended_Test_ApiHelper {
         }
         return $this->checkTaskStateLoop($failOnError);
     }
-    
+
     /**
      * Check the task state. The test will fail when $failOnError = true and if the task is in state error or after RELOAD_TASK_LIMIT task state checks
      * @param bool $failOnError
@@ -870,6 +870,12 @@ class ZfExtended_Test_ApiHelper {
             $class = $this->testClass;
         }
         $path = join('/', array($this->testRoot, $class, $approvalFile));
+
+        // Fix Windows paths problem
+        if (preg_match('~WIN~', PHP_OS)) {
+            $path = preg_replace('~^[A-Z]+:~', '', $path);
+            $path = str_replace('\\', '/', $path);
+        }
         if($assert) {
             $t = $this->testClass;
             $t::assertFileExists($path);
