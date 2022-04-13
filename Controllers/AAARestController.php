@@ -489,10 +489,12 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller
 
     /**
      * encapsulating the entity load for simpler overwritting purposes
+     * @return ZfExtended_Models_Entity_Abstract
      */
     protected function entityLoad()
     {
         $this->entity->load($this->_getParam('id'));
+        return $this->entity;
     }
 
     /**
