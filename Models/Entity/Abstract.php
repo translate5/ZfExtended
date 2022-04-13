@@ -142,7 +142,7 @@ abstract class ZfExtended_Models_Entity_Abstract {
      * @param int $id
      * @throws ZfExtended_Models_Entity_NotFoundException
      */
-    public function load($id) {
+    public function load($id): ?Zend_Db_Table_Row_Abstract {
         try {
             $rowset = $this->db->find($id);
         } catch (Exception $e) {
@@ -166,6 +166,7 @@ abstract class ZfExtended_Models_Entity_Abstract {
      * @param string whereType OPTIONAL Entspricht dem dritten Parameter einer Zend_Db_Select-Where-Methode
      * @param string|array $order OPTIONAL An SQL ORDER clause.
      * @return Zend_Db_Table_Row_Abstract
+     * @throws ZfExtended_Models_Entity_NotFoundException
      */
     public function loadRow($where=NULL, $whereValue=NULL, $whereType=NULL, $order=NULL) {
         $s = NULL;
@@ -246,11 +247,11 @@ abstract class ZfExtended_Models_Entity_Abstract {
             $s->limit($this->limit, $this->offset);
         }
     }
-    
+
     /**
      * returns the total (without LIMIT) count of rows
      */
-    public function getTotalCount(){
+    public function getTotalCount(): int {
       $s = $this->db->select();
       return $this->computeTotalCount($s);
     }
@@ -260,7 +261,7 @@ abstract class ZfExtended_Models_Entity_Abstract {
      * @param Zend_Db_Select $s
      * @return integer
      */
-    protected function computeTotalCount(Zend_Db_Select $s){
+    protected function computeTotalCount(Zend_Db_Select $s) : int {
       if(!empty($this->filter)) {
         $this->filter->applyToSelect($s, false);
       }
@@ -275,7 +276,7 @@ abstract class ZfExtended_Models_Entity_Abstract {
           $s->reset($s::COLUMNS);
           $s->columns(array('numrows' => 'count(*)'));
       }
-      $totalCount = $this->db->fetchRow($s)->numrows;
+      $totalCount = (int) $this->db->fetchRow($s)->numrows;
       $s->reset($s::COLUMNS);
       $s->reset($s::FROM);
       return $totalCount;

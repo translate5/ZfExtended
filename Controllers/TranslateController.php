@@ -87,7 +87,7 @@ class TranslateController extends ZfExtended_Controllers_Action
                             $file = preg_replace('"(->_\(\'[^\']*)\"([^\']*\')"s','\\1___transquot___\\2',$file);
                         }
                         $file = preg_replace('"(->_\()\'([^\']*)\'"s','\\1"\\2"',$file);
-                        $file = preg_split('"(->_\(\")([^\"]*)(\")"s',$file , NULL, PREG_SPLIT_DELIM_CAPTURE);
+                        $file = preg_split('"(->_\(\")([^\"]*)(\")"s',$file , flags: PREG_SPLIT_DELIM_CAPTURE);
                         $file = str_replace('___transquot___', '"', $file);
                         $count = count($file);
                         if($count>1){
@@ -171,7 +171,7 @@ class TranslateController extends ZfExtended_Controllers_Action
                 $xliff = preg_replace('"(<trans-unit[^>]*id=\'[^\']*)\"([^\']*\')"s','\\1___transquot___\\2',$xliff);
             }
             $xliff = preg_replace('"(<trans-unit[^>]*id=)\'([^\']*)\'"s','\\1"\\2"',$xliff);
-            $xliff = preg_split('"(<trans-unit[^>]*id=\")([^\"]*)(\")"s', $xliff, NULL, PREG_SPLIT_DELIM_CAPTURE);
+            $xliff = preg_split('"(<trans-unit[^>]*id=\")([^\"]*)(\")"s', $xliff, flags: PREG_SPLIT_DELIM_CAPTURE);
             $count = count($xliff);
             for ($i = 1; $i < $count;) {
                 $i++;
