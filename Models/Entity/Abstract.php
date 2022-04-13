@@ -142,7 +142,7 @@ abstract class ZfExtended_Models_Entity_Abstract {
      * @param int $id
      * @throws ZfExtended_Models_Entity_NotFoundException
      */
-    public function load($id): ?Zend_Db_Table_Row_Abstract {
+    public function load($id) {
         try {
             $rowset = $this->db->find($id);
         } catch (Exception $e) {
