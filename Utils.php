@@ -236,6 +236,14 @@ class ZfExtended_Utils {
         return self::VERSION_DEVELOPMENT;
     }
 
+    /**
+     * returns if the installation is a development installation
+     * @return bool
+     */
+    public static function isDevelopment(): bool {
+        return self::getAppVersion() === self::VERSION_DEVELOPMENT;
+    }
+
     /***
      * Multibyte safe uppercase first function
      * @param string $string

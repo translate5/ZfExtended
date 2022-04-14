@@ -40,7 +40,7 @@ class ZfExtended_Controllers_Plugins_Access extends Zend_Controller_Plugin_Abstr
      * @param  Zend_Controller_Request_Abstract $request
      * @return void
      */
-    public function RouteShutdown(Zend_Controller_Request_Abstract $request)
+    public function routeShutdown(Zend_Controller_Request_Abstract $request)
     {
         $accessHelper = ZfExtended_Zendoverwrites_Controller_Action_HelperBroker::getStaticHelper(
             'Access'
