@@ -100,7 +100,7 @@ class ZfExtended_View_Helper_Php2JsVars extends Zend_View_Helper_Abstract{
         if(isset($this->data->{$name})){
             return $this->data->{$name};
         }
-        return new stdClass();
+        return $this->data->{$name} = new stdClass();
     }
 
     /**
