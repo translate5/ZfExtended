@@ -391,18 +391,14 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implement
     
     /**
      * Check if currently logged in user is allowed to access the given ressource and right
-     *
+     * @deprecated
      * @param string $resource
      * @param string $right
      *
      * @return boolean
      */
     public function isAllowed($resource,$right) {
-        $userRoles=null;
-        $aclInstance = ZfExtended_Acl::getInstance();
-        $userSession = new Zend_Session_Namespace('user');
-        $userRoles=$userSession->data->roles;
-        return $aclInstance->isInAllowedRoles($userRoles,$resource,$right);
+        throw new Exception("refactor my usage to editor_User::isAllowed!");
     }
     
     

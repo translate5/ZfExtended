@@ -40,7 +40,7 @@ class ZfExtended_Controllers_Plugins_RegisterRestControllerPluginRestHandler ext
      * @param  Zend_Controller_Request_Abstract $request
      * @return void
      */
-    public function RouteShutdown(Zend_Controller_Request_Abstract $request)
+    public function routeShutdown(Zend_Controller_Request_Abstract $request)
     {
         $front = Zend_Controller_Front::getInstance();
         $restFulRoutes = array('ZfExtended_Controller_RestLikeRoute', 'Zend_Rest_Route');
