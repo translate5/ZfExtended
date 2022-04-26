@@ -109,9 +109,9 @@ class ZfExtended_Controller_Helper_Access extends Zend_Controller_Action_Helper_
             $action = $this->_request->getParam('operation').'Operation';
         }
 
+        $userDeleted = false;
         try {
             editor_User::instance(); //load current user
-            $userDeleted = false;
         }
         catch (ZfExtended_NotAuthenticatedException) {
             // on not authenticated we do nothing, just do normal processing to redirect to login
