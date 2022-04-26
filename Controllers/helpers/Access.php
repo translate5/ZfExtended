@@ -108,7 +108,21 @@ class ZfExtended_Controller_Helper_Access extends Zend_Controller_Action_Helper_
         if($action=='operation'){
             $action = $this->_request->getParam('operation').'Operation';
         }
-        if(!$this->_acl->isInAllowedRoles($this->_roles, $resource, $action)) {
+
+        try {
+            editor_User::instance(); //load current user
+            $userDeleted = false;
+        }
+        catch (ZfExtended_NotAuthenticatedException) {
+            // on not authenticated we do nothing, just do normal processing to redirect to login
+        }
+        catch (ZfExtended_Models_Entity_NotFoundException) {
+            // if the user ID in the session is not found anymore, the user was deleted and we have to delete the session
+            $userDeleted = true;
+            Zend_Session::destroy();
+        }
+
+        if($userDeleted || !$this->_acl->isInAllowedRoles($this->_roles, $resource, $action)) {
             $this->accessDenied($resource, $action);
         }
         else {
@@ -212,6 +226,9 @@ class ZfExtended_Controller_Helper_Access extends Zend_Controller_Action_Helper_
      */
     private function updateStoredRedirectTo() {
         $target = $this->getRequest()->getRequestUri();
+        if(Zend_Session::isDestroyed()) {
+            return;
+        }
         $s = new Zend_Session_Namespace();
 
         //if we should redirect to the same location, this is a loop and we should break it, for default processing after login redirect.
