@@ -54,7 +54,7 @@ class ZfExtended_Models_Db_Session extends Zend_Db_Table_Abstract {
             return self::GET_VALID_SESSIONS_SQL;
         }
 
-        return self::GET_VALID_SESSIONS_SQL.$this->getAdapter()->quoteInto('AND m.session_id NOT IN (?)', $merged);
+        return self::GET_VALID_SESSIONS_SQL.$this->getAdapter()->quoteInto(' AND m.session_id NOT IN (?)', $merged);
     }
 
     /**
