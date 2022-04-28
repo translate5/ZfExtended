@@ -316,6 +316,7 @@ abstract class ZfExtended_Models_Entity_Abstract {
 
     /**
      * Handles DB Exceptions: encapsualates Integrity constraint violation into separate expcetions, all others are thrown directly
+     * @return never // TODO: add return type on switch to PHP 8.1
      */
     protected function handleIntegrityConstraintException(Zend_Db_Statement_Exception $e) {
         $msg = $e->getMessage();
