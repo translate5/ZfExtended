@@ -252,7 +252,7 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implement
      * with role $role
      * @param array $roles - acl roles
      * @param integer $parentIdFilter - the parent id which the select should check
-     * @return array
+     * @return integer
      */
     public function getTotalByRole(array $roles, $parentIdFilter = false) {
         $s = $this->_loadAll();
@@ -315,7 +315,7 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implement
     /**
      * returns the total (without LIMIT) count of rows
      */
-    public function getTotalCount(){
+    public function getTotalCount(): int {
         $s = $this->db->select();
         $s->where('login != ?', self::SYSTEM_LOGIN); //filter out the system user
         return $this->computeTotalCount($s);

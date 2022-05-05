@@ -54,7 +54,7 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller
     protected $response;
 
     /**
-     * @var array
+     * @var array - request parameters and reults of request processing
      */
     protected $data = array();
     /**
@@ -118,6 +118,13 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller
      * @var bool
      */
     protected bool $decodePutAssociative = false;
+
+    /**
+     * View object
+     * @var ZfExtended_View
+     * @see Zend_Controller_Action::$view
+     */
+    public $view;
 
     /**
      * inits the internal entity Object, handels given limit, filter and sort parameters

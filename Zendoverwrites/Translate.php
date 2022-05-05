@@ -316,7 +316,7 @@ class  ZfExtended_Zendoverwrites_Translate extends Zend_Translate
     }
     
     /***
-     *
+     * @uses Zend_Translate_Adapter::_
      * @param string $s: string to be translated
      * @param string $locale: language locale
      * @throws Zend_Exception
