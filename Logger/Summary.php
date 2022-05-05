@@ -52,7 +52,8 @@ class ZfExtended_Logger_Summary {
         }
         $user = ZfExtended_Factory::get('ZfExtended_Models_User');
         /* @var $user ZfExtended_Models_User */
-        $admins = $user->loadAllByRole(['admin']);
+        $acl = ZfExtended_Acl::getInstance();
+        $admins = $user->loadAllByRole($acl->getRolesWith('backend', 'systemLogSummary'));
         
         $mail = ZfExtended_Factory::get('ZfExtended_Mailer', ['utf8']);
         /* @var $mail ZfExtended_Mailer */

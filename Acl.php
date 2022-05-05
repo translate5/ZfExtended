@@ -100,7 +100,24 @@ class ZfExtended_Acl extends Zend_Acl {
         ->distinct();
         return array_column($db->fetchAll($s)->toArray(), 'role');
     }
-    
+
+    /**
+     * Returns all roles having a specifc resource and privilege
+     * @param string $resource
+     * @param string $privilege
+     * @return array
+     */
+    public function getRolesWith(string $resource, string $privilege): array {
+        $allRoles = $this->getAllRoles();
+        $result = [];
+        foreach($allRoles as $role) {
+            if($this->isAllowed($role, $resource, $privilege)){
+                $result[] = $role;
+            }
+        }
+        return $result;
+    }
+
     /**
      * checks if one of the passed roles allows the resource / privelege
      *
