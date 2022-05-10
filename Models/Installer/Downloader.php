@@ -65,7 +65,7 @@ class ZfExtended_Models_Installer_Downloader {
      */
     public function applicationIsUptodate(){
         $needed = $this->dependencies->getNeeded();
-        if(empty($needed)) {
+        if(empty($needed) || ZfExtended_Utils::isDevelopment()) {
             return true;
         }
         $app = $needed->application;
