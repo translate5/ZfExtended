@@ -134,19 +134,24 @@ class ZfExtended_Debug {
         error_log(__CLASS__.' #'.$key.' duration (in s): '.($stop - $start));
         unset(self::$profiler[$key]);
     }
-    
+
     /**
      * Creates a summary about the current application and returns it.
+     * @param bool $includeServices
      * @return stdClass
+     * @throws Zend_Exception
      */
-    public static function applicationState($includeServices = true) {
+    public static function applicationState(bool $includeServices = true): stdClass
+    {
         $result = new stdClass();
         $downloader = ZfExtended_Factory::get('ZfExtended_Models_Installer_Downloader', array(APPLICATION_PATH.'/..'));
         /* @var $downloader ZfExtended_Models_Installer_Downloader */
         try {
-            $result->isUptodate = $downloader->applicationIsUptodate();
-        } catch (Exception $e) {
             $result->isUptodate = -1;
+            if($includeServices) {
+                $result->isUptodate = $downloader->applicationIsUptodate();
+            }
+        } catch (Exception) {
         }
         $versionFile = APPLICATION_PATH.'../version';
         if(file_exists($versionFile)) {

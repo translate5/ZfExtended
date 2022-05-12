@@ -73,6 +73,8 @@ trait ZfExtended_Controllers_MaintenanceTrait{
                 $this->view->displayMaintenancePanel = true;
                 return;
             }
+            $this->_response->setHeader('x-translate5-shownotice', date(DATE_ISO8601, strtotime($maintenanceStartDate)));
+            $this->_response->setHeader('x-translate5-maintenance-message', $maintenanceMessage);
             throw new ZfExtended_Models_MaintenanceException();
         }
         $maintenanceTimeToNotify= max(1, (int) $config->runtimeOptions->maintenance->timeToNotify);
