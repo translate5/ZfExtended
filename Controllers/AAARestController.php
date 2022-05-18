@@ -597,7 +597,10 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller
     {
         $action = $this->getParam('operation') . 'Operation';
         $hasPlainOperation = method_exists($this, $action);
-        $this->getAction();
+
+        if($this->entity){
+            $this->getAction();
+        }
 
         $module = Zend_Registry::get('module');
         $controller = $this->_request->getControllerName();
@@ -612,11 +615,14 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller
         if ($hasPlainOperation) {
             $this->$action();
         }
-        $response = $this->events->trigger($action, $this, [
-            'entity' => $this->entity,
+        $eventParams = [
             'params' => $this->getAllParams(),
             'controller' => $this
-        ]);
+        ];
+        if($this->entity){
+            $eventParams['entity'] = $this->entity;
+        }
+        $response = $this->events->trigger($action, $this, $eventParams);
         if ($response->isEmpty() && !$hasPlainOperation) {
             unset($this->view->rows);
             throw new ZfExtended_NotFoundException('Operation not supported');
