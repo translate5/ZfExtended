@@ -41,10 +41,7 @@ END LICENSE AND COPYRIGHT
  */
 class ZfExtended_Controller_RestLikeRoute extends Zend_Controller_Router_Route {
     
-    private array $operationPatterns = [
-        '@([a-zA-Z]+)/([a-zA-Z_]+)/([a-zA-Z0-9]+)/([a-zA-Z]+)/operation@m',// module/controller/entityId/operationName/operation
-        '@([a-zA-Z]+)/([a-zA-Z_]+)/([a-zA-Z]+)/operation@m',// module/controller/operationName/operation
-    ];
+    
     /**
      * Matches a user submitted path with parts defined by a map. Assigns and
      * returns an array of variables on a successful match.
@@ -56,21 +53,29 @@ class ZfExtended_Controller_RestLikeRoute extends Zend_Controller_Router_Route {
      */
     public function match($path, $partial = false)
     {
-        $return=parent::match($path,$partial);
+        $return = parent::match($path, $partial);
+        // TODO the below used regex does not allow module and entity names to contain numbers, currently no problem, just to mention.
 
-        foreach ($this->operationPatterns as $operationPattern) {
-            //match operation path route
-            if(preg_match($operationPattern, $path)){
-
-                //inject the operation action
-                if(!empty($this->_defaults) && isset($this->_defaults['action']) && $this->_defaults['action']==""){
-                    $this->_defaults['action']="operation";
-                    $return['action']="operation";
-                    return $return;
-                }
-            }
+        //match operation path route
+        if($return && preg_match('@([a-zA-Z-_]+)/([a-zA-Z-_]+)/([a-zA-Z0-9]+)/([a-zA-Z-_]+)/operation@m', $path)){
+            return $this->injectAction($return, 'operation');
         }
+        //match batch operation path route
+        if($return && preg_match('@([a-zA-Z-_]+)/([a-zA-Z-_]+)/([a-zA-Z-_]+)/batch@m', $path)){
+            return $this->injectAction($return, 'batch');
+        }
+        return $return;
+    }
 
-        return $return; 
+    private function injectAction(array $return, string $action): array {
+        //inject the operation/batch action
+        if(!empty($this->_defaults) && isset($this->_defaults['action']) && $this->_defaults['action'] == ''){
+            $this->_defaults['action'] = $action;
+            if($return === false) {
+                $return = [];
+            }
+            $return['action'] = $action;
+        }
+        return $return;
     }
 }
