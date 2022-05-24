@@ -1127,7 +1127,7 @@ class ZfExtended_Test_ApiHelper {
     public function getTask() {
         return $this->task;
     }
-    
+
     /***
      * return the test customer
      * @return stdClass
@@ -1186,5 +1186,52 @@ class ZfExtended_Test_ApiHelper {
      */
     public function setTask($task) {
         $this->task = $task;
+    }
+
+    /**
+     * Sets the current task to open
+     */
+    public function setTaskToOpen() {
+        if($this->task){
+            $this->requestJson('editor/task/'.$this->task->id, 'PUT', array('userState' => 'open', 'id' => $this->task->id));
+        }
+    }
+
+    /**
+     * Sets the current task to edit
+     */
+    public function setTaskToEdit() {
+        if($this->task){
+            $this->requestJson('editor/task/'.$this->task->id, 'PUT', array('userState' => 'edit', 'id' => $this->task->id));
+        }
+    }
+
+    /**
+     * Sets the current task to finished
+     */
+    public function setTaskToFinished() {
+        if($this->task){
+            $this->requestJson('editor/task/'.$this->task->id, 'PUT', array('userState' => 'finished', 'id' => $this->task->id));
+        }
+    }
+
+    /**
+     * Removes the current loaded Task
+     * @return stdClass
+     */
+    public function deleteTask() {
+        if($this->task){
+            $this->deleteUrl('editor/task/' . $this->task->id);
+        }
+    }
+
+    /**
+     * Performs a delete request to the given endpoint
+     * @param string $url
+     */
+    public function deleteUrl(string $url) {
+        if($this->cleanup){
+            $this->requestJson($url, 'DELETE');
+        }
     }
 }
