@@ -714,7 +714,7 @@ class ZfExtended_Test_ApiHelper {
      * @param bool $waitForImport: wait until the resource is imported
      * @return mixed|boolean
      */
-    public function addResource(array $params, string $fileName = null, bool $waitForImport=false){
+    public function addResource(array $params, string $fileName = null, bool $waitForImport=false, string $testDir = ''){
         
         if(!empty($this->filesToAdd)) {
             throw new Exception('There are already some files added as pending request and not sent yet! Send them first to the server before calling addResource!');
@@ -722,7 +722,7 @@ class ZfExtended_Test_ApiHelper {
         $test = $this->testClass;
         //if filename is provided, set the file upload field
         if($fileName){
-            $this->addFile('tmUpload', $this->getFile($fileName), "application/xml");
+            $this->addFile('tmUpload', $this->getFile($fileName,$testDir), "application/xml");
             $resource = $this->requestJson('editor/languageresourceinstance', 'POST',$params);
         }else{
             //request because the requestJson will encode the params with "data" as parent
