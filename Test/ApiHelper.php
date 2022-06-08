@@ -837,10 +837,7 @@ class ZfExtended_Test_ApiHelper {
         if(!isset($task['autoStartImport'])) {
             $task['autoStartImport'] = 1;
         }
-        if(!isset($task['bconfId'])) {
-            // we pass a "virtual" bconfId here, that will signal the API to use the system default bconf and not complain about a missing param
-            $task['bconfId'] = 0;
-        }
+        $task['orderer'] = 'unittest';
     }
     
     /**
