@@ -213,8 +213,14 @@ class  ZfExtended_Zendoverwrites_Translate extends Zend_Translate
     protected function setTargetLang($lang = null) {
         $this->targetLang = $lang;
         if(is_null($this->targetLang)){
-            $targetLocaleObj = Zend_Registry::get('Zend_Locale');
-            $this->targetLang = $targetLocaleObj->getLanguage();
+            if(Zend_Registry::isRegistered('Zend_Locale')) {
+                $targetLocaleObj = Zend_Registry::get('Zend_Locale');
+                $this->targetLang = $targetLocaleObj->getLanguage();
+            }
+            else {
+                //fallback EN if no locale registered
+                $this->targetLang = 'en';
+            }
         }
     }
     

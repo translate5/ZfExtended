@@ -35,35 +35,11 @@ END LICENSE AND COPYRIGHT
  */
 
 class ZfExtended_Controller_Helper_Recursivedircleaner extends Zend_Controller_Action_Helper_Abstract {
-    /*
+    /**
      * @param string $directory Pfad zum rekursiv mit allen Inhalten zu löschenden Verzeichnis
      */
-
     public function delete(string $directory) {
-        $iterator = new DirectoryIterator($directory);
-        foreach ($iterator as $fileinfo) {
-            if ($fileinfo->isDot()) {
-                continue;
-            }
-            if ($fileinfo->isDir()) {
-                $this->delete($directory . DIRECTORY_SEPARATOR . $fileinfo->getFilename());
-            }
-            if ($fileinfo->isFile()) {
-                try {
-                    unlink($directory . DIRECTORY_SEPARATOR . $fileinfo->getFilename());
-                }
-                catch (Exception $e){
-                       
-                }
-            }
-        }
-        //FIXME try catch ist nur eine übergangslösung!!!
-        try {
-            rmdir($directory);
-        }
-        catch (Exception $e){
-
-        }
+        ZfExtended_Utils::recursiveDelete($directory);
     }
     
     /***

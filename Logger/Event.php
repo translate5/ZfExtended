@@ -77,6 +77,12 @@ class ZfExtended_Logger_Event {
      * @var string
      */
     public $message;
+
+    /**
+     * The raw message (without variables replaced)
+     * @var string
+     */
+    public string $messageRaw;
     
     /**
      * the current application version
@@ -155,7 +161,7 @@ class ZfExtended_Logger_Event {
      * @var string|null
      */
     public $duplicationHash = null;
-    
+
     /**
      * overwrites the data defined in the associative array into the current event
      * The extra array is merged - same named keys in the extra array are overwritten
