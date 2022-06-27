@@ -32,13 +32,17 @@ class ZfExtended_Logger_Writer_EcodeWriter extends ZfExtended_Logger_Writer_Abst
         //sanitize event message (no pipes allowed)
         $event->messageRaw = str_replace('|', '/', $event->messageRaw);
 
+        //E0000 and E9999 are multipurpose codes, so therefore they are ignored and are not added/updated to/in the docu
+        if($event->eventCode == 'E0000' || $event->eventCode == 'E9999') {
+            return;
+        }
+
         $ecodes = file(self::ECODE_FILE);
 
         $lastEcodeLine = 0;
         $replace = false;
         foreach($ecodes as $idx => $line) {
             $linkKey = '['.$event->eventCode.'](#'.$event->eventCode.')';
-            //FIXME do not replace E0000 and E9999
             if(str_contains($line, $linkKey)) {
                 $replace = true;
                 $lastEcodeLine = $idx;
