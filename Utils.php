@@ -359,4 +359,34 @@ class ZfExtended_Utils {
     {
         return pathinfo($fileName,PATHINFO_EXTENSION);
     }
+
+    /**
+     * deletes recursivly a directory
+     * @param string $directory
+     */
+    public static function recursiveDelete(string $directory)
+    {
+        $iterator = new DirectoryIterator($directory);
+        foreach ($iterator as $fileinfo) {
+            if ($fileinfo->isDot()) {
+                continue;
+            }
+            if ($fileinfo->isDir()) {
+                self::recursiveDelete($directory . DIRECTORY_SEPARATOR . $fileinfo->getFilename());
+            }
+            if ($fileinfo->isFile()) {
+                try {
+                    unlink($directory . DIRECTORY_SEPARATOR . $fileinfo->getFilename());
+                }
+                catch (Exception){
+                }
+            }
+        }
+        //FIXME try catch ist nur eine übergangslösung!!!
+        try {
+            rmdir($directory);
+        }
+        catch (Exception){
+        }
+    }
 }
