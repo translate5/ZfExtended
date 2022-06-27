@@ -32,8 +32,8 @@ class ZfExtended_Logger_Writer_EcodeWriter extends ZfExtended_Logger_Writer_Abst
         //sanitize event message (no pipes allowed)
         $event->messageRaw = str_replace('|', '/', $event->messageRaw);
 
-        //E0000 and E9999 are multipurpose codes, so therefore they are ignored and are not added/updated to/in the docu
-        if($event->eventCode == 'E0000' || $event->eventCode == 'E9999') {
+        //E0000, E1027 and E9999 are multipurpose codes, so therefore they are ignored and are not added/updated to/in the docu
+        if($event->eventCode == 'E0000' || $event->eventCode == 'E9999' || $event->eventCode == 'E1027') {
             return;
         }
 

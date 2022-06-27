@@ -201,6 +201,7 @@ class ZfExtended_Logger {
             $event->message = substr($message, 0, $tracePos);
             $event->trace = substr($message, $tracePos);
         }
+        $event->messageRaw = $event->message;
         $event->file = $file;
         $event->line = $line;
         $this->processEvent($event);
