@@ -146,6 +146,8 @@ class ZfExtended_BaseIndex{
      */
     public function startApplication() {
         try {
+            //set the locales to the ones configured by env variables, see TRANSLATE-2992
+            setlocale(LC_ALL, '');
             $this->initApplication()->bootstrap()->run();
         }
         catch(Zend_Db_Adapter_Exception $e) {
