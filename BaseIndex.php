@@ -85,6 +85,8 @@ class ZfExtended_BaseIndex{
         if(!mb_internal_encoding("UTF-8")){
             throw new Exception('mb_internal_encoding("UTF-8") could not be set!');
         }
+        //set the locales to the ones configured by env variables, see TRANSLATE-2992
+        setlocale(LC_ALL, '');
         if(!defined('APPLICATION_ROOT')) {
             define('APPLICATION_ROOT', realpath(dirname($indexpath) . DIRECTORY_SEPARATOR.'..'));
         }
@@ -146,8 +148,6 @@ class ZfExtended_BaseIndex{
      */
     public function startApplication() {
         try {
-            //set the locales to the ones configured by env variables, see TRANSLATE-2992
-            setlocale(LC_ALL, '');
             $this->initApplication()->bootstrap()->run();
         }
         catch(Zend_Db_Adapter_Exception $e) {
@@ -190,8 +190,11 @@ class ZfExtended_BaseIndex{
         require_once 'Zend/Loader/Autoloader.php';
         Zend_Loader_Autoloader::getInstance()->setFallbackAutoloader(true);
         /** Zend_Application */
-        require_once dirname(__FILE__).'/Application.php';
-        $application=new ZfExtended_Application( APPLICATION_ENV,[ 'config' => $this->applicationInis]);
+        require_once __DIR__.'/Application.php';
+        ZfExtended_Application::setConfigParserOptions([
+            'scannerMode' => INI_SCANNER_TYPED
+        ]);
+        $application = new ZfExtended_Application( APPLICATION_ENV,[ 'config' => $this->applicationInis]);
         $this->initAdditionalConstants();
         return $application;
     }
