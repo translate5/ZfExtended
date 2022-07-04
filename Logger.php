@@ -481,7 +481,8 @@ class ZfExtended_Logger {
      */
     public function request(array $additionalData = []) {
         $additionalData['requestData'] = $_REQUEST;
-        $this->debug('E1014', 'HTTP request '.$_SERVER['REQUEST_URI'], $additionalData);
+        $additionalData['route'] = $_SERVER['REQUEST_URI'];
+        $this->debug('E1014','Log HTTP Request {route}', $additionalData);
     }
     
     /**
