@@ -28,12 +28,23 @@ class ZfExtended_Logger_Writer_EcodeWriter extends ZfExtended_Logger_Writer_Abst
 
     const ECODE_FILE = APPLICATION_ROOT.'/docs/ERRORCODES.md';
 
+    //E0000, E1027 and E9999 are multipurpose codes, so therefore they are ignored and are not added/updated to/in the docu
+    const MULTI_PURPOSE_CODES = [
+        'E0000', // Code used for multi purposes: Mostly for debug messages below level warn, where no fixed message is needed.
+        'E9999', // Default code used for old error messages, which are not converted yet to the new error code system.
+        'E1027', // PHP Fatal Error
+        'E1029', // PHP Warning
+        'E1030', // PHP Info
+        'E1011', // Multi Purpose Code logging in the context of a task
+        'E1012', // Multi Purpose Code logging in the context of jobs (task user association)
+        'E1013', // Multi Purpose Code logging in the context of pure workflow processing
+    ];
+
     public function write(ZfExtended_Logger_Event $event) {
         //sanitize event message (no pipes allowed)
         $event->messageRaw = str_replace('|', '/', $event->messageRaw);
 
-        //E0000, E1027 and E9999 are multipurpose codes, so therefore they are ignored and are not added/updated to/in the docu
-        if($event->eventCode == 'E0000' || $event->eventCode == 'E9999' || $event->eventCode == 'E1027') {
+        if(in_array($event->eventCode, self::MULTI_PURPOSE_CODES)) {
             return;
         }
 
