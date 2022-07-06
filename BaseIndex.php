@@ -193,6 +193,13 @@ class ZfExtended_BaseIndex{
         require_once dirname(__FILE__).'/Application.php';
         $application=new ZfExtended_Application( APPLICATION_ENV,[ 'config' => $this->applicationInis]);
         $this->initAdditionalConstants();
+
+
+        foreach ($this->getModules() as $module){
+            require_once $module.'/Bootstrap.php';
+            $class = ucfirst($module).'_Bootstrap';
+            $class::registerApplet();
+        }
         return $application;
     }
 
@@ -346,6 +353,9 @@ class ZfExtended_BaseIndex{
         if(is_null($this->currentModule)){
           $this->currentModule = $this->getCurrentModule();
         }
+
+        error_log("getApplicationInis: ".$this->currentModule);
+
         $applicationInis = $this->getIniList();
         $result = array();
         foreach($applicationInis as $ini) {
