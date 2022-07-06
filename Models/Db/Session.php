@@ -45,7 +45,7 @@ class ZfExtended_Models_Db_Session extends Zend_Db_Table_Abstract {
     public function getValidSessionsSql(): string {
         /** @var $events ZfExtended_EventManager */
         $events = ZfExtended_Factory::get('ZfExtended_EventManager', [__CLASS__]);
-        $res = $events->trigger('getValidSessionsSql', __CLASS__);
+        $res = $events->trigger('getStalledSessions', __CLASS__);
         if($res->isEmpty()) {
             return self::GET_VALID_SESSIONS_SQL;
         }
@@ -54,7 +54,7 @@ class ZfExtended_Models_Db_Session extends Zend_Db_Table_Abstract {
             return self::GET_VALID_SESSIONS_SQL;
         }
 
-        return 'SELECT internalSessionUniqId FROM sessionMapInternalUniqId m WHERE '.$this->getAdapter()->quoteInto('m.session_id IN (?)', $merged);
+        return self::GET_VALID_SESSIONS_SQL.$this->getAdapter()->quoteInto(' AND m.session_id NOT IN (?)', $merged);
     }
 
     /**

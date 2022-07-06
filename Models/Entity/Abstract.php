@@ -135,11 +135,12 @@ abstract class ZfExtended_Models_Entity_Abstract {
     public function __clone() {
         $this->row = clone $this->row;
     }
-    
-    
+
+
     /**
      * loads the Entity by Primary Key Id
      * @param int $id
+     * @throws ZfExtended_Models_Entity_NotFoundException
      */
     public function load($id) {
         try {
@@ -165,6 +166,7 @@ abstract class ZfExtended_Models_Entity_Abstract {
      * @param string whereType OPTIONAL Entspricht dem dritten Parameter einer Zend_Db_Select-Where-Methode
      * @param string|array $order OPTIONAL An SQL ORDER clause.
      * @return Zend_Db_Table_Row_Abstract
+     * @throws ZfExtended_Models_Entity_NotFoundException
      */
     public function loadRow($where=NULL, $whereValue=NULL, $whereType=NULL, $order=NULL) {
         $s = NULL;
@@ -185,6 +187,7 @@ abstract class ZfExtended_Models_Entity_Abstract {
      *
      * @param Zend_Db_Table_Select
      * @return Zend_Db_Table_Row_Abstract|null
+     * @throws ZfExtended_Models_Entity_NotFoundException
      */
     public function loadRowBySelect(Zend_Db_Table_Select $s) {
         $this->row = $this->db->fetchRow($s);
@@ -245,11 +248,11 @@ abstract class ZfExtended_Models_Entity_Abstract {
             $s->limit($this->limit, $this->offset);
         }
     }
-    
+
     /**
      * returns the total (without LIMIT) count of rows
      */
-    public function getTotalCount(){
+    public function getTotalCount(): int {
       $s = $this->db->select();
       return $this->computeTotalCount($s);
     }
@@ -259,7 +262,7 @@ abstract class ZfExtended_Models_Entity_Abstract {
      * @param Zend_Db_Select $s
      * @return integer
      */
-    protected function computeTotalCount(Zend_Db_Select $s){
+    protected function computeTotalCount(Zend_Db_Select $s) : int {
       if(!empty($this->filter)) {
         $this->filter->applyToSelect($s, false);
       }
@@ -274,7 +277,7 @@ abstract class ZfExtended_Models_Entity_Abstract {
           $s->reset($s::COLUMNS);
           $s->columns(array('numrows' => 'count(*)'));
       }
-      $totalCount = $this->db->fetchRow($s)->numrows;
+      $totalCount = (int) $this->db->fetchRow($s)->numrows;
       $s->reset($s::COLUMNS);
       $s->reset($s::FROM);
       return $totalCount;
@@ -314,6 +317,7 @@ abstract class ZfExtended_Models_Entity_Abstract {
 
     /**
      * Handles DB Exceptions: encapsualates Integrity constraint violation into separate expcetions, all others are thrown directly
+     * @return never // TODO: add return type on switch to PHP 8.1
      */
     protected function handleIntegrityConstraintException(Zend_Db_Statement_Exception $e) {
         $msg = $e->getMessage();

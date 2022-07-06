@@ -54,7 +54,7 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller
     protected $response;
 
     /**
-     * @var array
+     * @var array - request parameters and reults of request processing
      */
     protected $data = array();
     /**
@@ -118,6 +118,13 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller
      * @var bool
      */
     protected bool $decodePutAssociative = false;
+
+    /**
+     * View object
+     * @var ZfExtended_View
+     * @see Zend_Controller_Action::$view
+     */
+    public $view;
 
     /**
      * inits the internal entity Object, handels given limit, filter and sort parameters
@@ -216,6 +223,7 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller
             'view' => $this->view,
             'data' => $this->data,
             'request' => $this->getRequest(),
+            'controller' => $this,
         ]);
     }
 
@@ -582,14 +590,32 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller
     }
 
     /**
-     * Operations extend the REST world about function calls on a given REST entity.
-     * Therefore a fooOperation function must exist in the controller.
+     * Batch operations extend the REST world about function calls on a given REST entity index endpoint.
+     * Therefore a fooBatch function must exist in the controller or exist as event binding later on.
      */
-    public function operationAction()
+    public function batchAction()
     {
-        $action = $this->getParam('operation') . 'Operation';
-        $hasPlainOperation = method_exists($this, $action);
+        $this->dispatchOperation('Batch');
+    }
+
+    /**
+     * Operations extend the REST world about function calls on a given REST entity.
+     * Therefore a fooOperation function must exist in the controller or exist as event binding later on.
+     */
+    public function operationAction(){
         $this->getAction();
+        $this->dispatchOperation('Operation');
+    }
+
+    /**
+     * @throws Zend_Exception
+     * @throws ZfExtended_NoAccessException
+     * @throws ZfExtended_NotFoundException
+     */
+    private function dispatchOperation(string $type)
+    {
+        $action = $this->getParam('operation') . $type;
+        $hasPlainMethod = method_exists($this, $action);
 
         $module = Zend_Registry::get('module');
         $controller = $this->_request->getControllerName();
@@ -597,11 +623,9 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller
             $controller = $module . '_' . $controller;
         }
 
-        if (!$this->isAllowed($controller, $action)) {
-            throw new ZfExtended_NoAccessException('Access to Operation not permitted');
-        }
+        $this->checkAccess($controller, $action, $type);
 
-        if ($hasPlainOperation) {
+        if ($hasPlainMethod) {
             $this->$action();
         }
         $response = $this->events->trigger($action, $this, [
@@ -609,9 +633,23 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller
             'params' => $this->getAllParams(),
             'controller' => $this
         ]);
-        if ($response->isEmpty() && !$hasPlainOperation) {
+        if ($response->isEmpty() && !$hasPlainMethod) {
             unset($this->view->rows);
-            throw new ZfExtended_NotFoundException('Operation not supported');
+            throw new ZfExtended_NotFoundException($type.' not supported');
+        }
+    }
+
+    /**
+     * Checks ACL access to given resource and right and throws no access if needed
+     * @param string $resource
+     * @param string $right
+     * @param string $resourceName
+     * @throws ZfExtended_NoAccessException
+     */
+    protected function checkAccess(string $resource, string $right, string $resourceName): void
+    {
+        if (!$this->isAllowed($resource, $right)) {
+            throw new ZfExtended_NoAccessException('Access to ' . $resourceName . ' not permitted');
         }
     }
 }

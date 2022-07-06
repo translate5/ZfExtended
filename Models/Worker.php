@@ -475,8 +475,16 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
         
         return $rows;
     }
-    
-    
+
+    /**
+     * Clean the worker table by given state list and remove the matching worker entries immediatelly
+     * @param array $states
+     */
+    public function clean(array $states) {
+        $this->db->reduceDeadlocks();
+        $this->db->delete(['state in (?)' => $states]);
+    }
+
     public function cleanGarbage() {
         // first clean all 'archived' worker (state=done and endtim older than 1 HOUR)
         $where = array();

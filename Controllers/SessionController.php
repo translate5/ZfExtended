@@ -67,16 +67,19 @@ class ZfExtended_SessionController extends ZfExtended_RestController {
     }
     
     public function indexAction() {
-        throw new ZfExtended_BadMethodCallException(__CLASS__.'->index');
-        
-        //for debugging:
-        echo '<form method="POST" action="'.APPLICATION_RUNDIR.'/editor/session/">';
-        echo '<input type="text" name="login" value="login"/><br />';
-        echo '<input type="text" name="passwd" value="passwd"/><br />';
-        echo '<input type="text" name="taskGuid" value="taskGuid"/><br />';
-        echo '<input type="submit" value="POST"/>';
-        echo '</form>';
-        exit;
+        if(! ZfExtended_Utils::isDevelopment()) {
+            throw new ZfExtended_BadMethodCallException(__CLASS__.'->index');
+        }
+        $this->_helper
+            ->getHelper('contextSwitch')
+            ->addContext('html', [
+                'headers' => [
+                    'Content-Type'          => 'text/html',
+                ]
+            ])
+            ->initContext('html');
+        //since we are in a rest controller we have to load and echo manually
+        echo $this->view->render('session/index.phtml');
     }
     
     /**

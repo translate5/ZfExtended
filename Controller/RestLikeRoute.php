@@ -53,17 +53,29 @@ class ZfExtended_Controller_RestLikeRoute extends Zend_Controller_Router_Route {
      */
     public function match($path, $partial = false)
     {
-        $return=parent::match($path,$partial);
-        
+        $return = parent::match($path, $partial);
+        // TODO the below used regex does not allow module and entity names to contain numbers, currently no problem, just to mention.
+
         //match operation path route
-        if(preg_match('@([a-zA-Z]+)/([a-zA-Z]+)/([a-zA-Z0-9]+)/([a-zA-Z]+)/operation@m', $path)){
-            
-            //inject the operation action
-            if(!empty($this->_defaults) && isset($this->_defaults['action']) && $this->_defaults['action']==""){
-                $this->_defaults['action']="operation";
-                $return['action']="operation";
-            }
+        if($return && preg_match('@([a-zA-Z-_]+)/([a-zA-Z-_]+)/([a-zA-Z0-9]+)/([a-zA-Z-_]+)/operation@m', $path)){
+            return $this->injectAction($return, 'operation');
         }
-        return $return; 
+        //match batch operation path route
+        if($return && preg_match('@([a-zA-Z-_]+)/([a-zA-Z-_]+)/([a-zA-Z-_]+)/batch@m', $path)){
+            return $this->injectAction($return, 'batch');
+        }
+        return $return;
+    }
+
+    private function injectAction(array $return, string $action): array {
+        //inject the operation/batch action
+        if(!empty($this->_defaults) && isset($this->_defaults['action']) && $this->_defaults['action'] == ''){
+            $this->_defaults['action'] = $action;
+            if($return === false) {
+                $return = [];
+            }
+            $return['action'] = $action;
+        }
+        return $return;
     }
 }

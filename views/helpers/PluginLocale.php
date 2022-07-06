@@ -28,11 +28,11 @@ class ZfExtended_View_Helper_PluginLocale extends Zend_View_Helper_Abstract{
     /**
      * @var array
      */
-    protected $paths = array();
+    protected array $paths = array();
     /**
      * @var ZfExtended_Plugin_Abstract
      */
-    protected $plugin;
+    protected ZfExtended_Plugin_Abstract $plugin;
     
     /**
      * The here added phtmls are rendered at the end of localizedjsstrings.phtml
@@ -41,7 +41,7 @@ class ZfExtended_View_Helper_PluginLocale extends Zend_View_Helper_Abstract{
      * @param ZfExtended_Plugin_Abstract $plugin
      * @param string $localePhtmlPath
      */
-    public function add(ZfExtended_Plugin_Abstract $plugin, $localePhtmlPath) {
+    public function add(ZfExtended_Plugin_Abstract $plugin, string $localePhtmlPath) {
         $this->paths[] = $plugin->getPluginPath().DIRECTORY_SEPARATOR.$localePhtmlPath;
     }
     
@@ -49,7 +49,7 @@ class ZfExtended_View_Helper_PluginLocale extends Zend_View_Helper_Abstract{
      * Helper call
      * @return ZfExtended_View_Helper_PluginLocale
      */
-    public function pluginLocale(){
+    public function pluginLocale(): static {
         return $this;
     }
 
@@ -57,7 +57,7 @@ class ZfExtended_View_Helper_PluginLocale extends Zend_View_Helper_Abstract{
      * renders the stored
      * @return array
      */
-    public function getLocalePaths() {
+    public function getLocalePaths(): array {
         return $this->paths;
     }
 }

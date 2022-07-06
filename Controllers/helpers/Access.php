@@ -108,8 +108,25 @@ class ZfExtended_Controller_Helper_Access extends Zend_Controller_Action_Helper_
         if($action=='operation'){
             $action = $this->_request->getParam('operation').'Operation';
         }
-        if(!$this->_acl->isInAllowedRoles($this->_roles, $resource, $action)) {
+
+        $userDeleted = false;
+        try {
+            editor_User::instance(); //load current user
+        }
+        catch (ZfExtended_NotAuthenticatedException) {
+            // on not authenticated we do nothing, just do normal processing to redirect to login
+        }
+        catch (ZfExtended_Models_Entity_NotFoundException) {
+            // if the user ID in the session is not found anymore, the user was deleted and we have to delete the session
+            $userDeleted = true;
+            Zend_Session::destroy();
+        }
+
+        if($userDeleted || !$this->_acl->isInAllowedRoles($this->_roles, $resource, $action)) {
             $this->accessDenied($resource, $action);
+        }
+        else {
+            $this->cleanRedirectTo($resource);
         }
     }
 
@@ -154,10 +171,11 @@ class ZfExtended_Controller_Helper_Access extends Zend_Controller_Action_Helper_
             throw $e;
         }
 
-        $redirector = ZfExtended_Factory::get('ZfExtended_Zendoverwrites_Controller_Action_Helper_Redirector');
-        /* @var $redirector ZfExtended_Zendoverwrites_Controller_Action_Helper_Redirector */
+        $redirector = ZfExtended_Factory::get('Zend_Controller_Action_Helper_Redirector');
+        /* @var $redirector Zend_Controller_Action_Helper_Redirector */
 
         if (in_array('noRights', $this->_roles) && count($this->_roles)>=1){
+            $this->updateStoredRedirectTo();
             $redirector->gotoSimpleAndExit('index', 'login','default');
         }
         else{
@@ -179,5 +197,63 @@ class ZfExtended_Controller_Helper_Access extends Zend_Controller_Action_Helper_
         $path = trim($path, $routeInst::URI_DELIMITER);
         $emptyPath = empty($path);
         return !$emptyPath && in_array($route, $restRoutes);
+    }
+
+    /**
+     * Stores the given redirecthash from the login process into
+     */
+    public function addHashToOrigin(string $hash) {
+        if(!empty($hash)){
+            $s = new Zend_Session_Namespace();
+            $redTo = explode('#', $this->_session->redirectTo ?? '');
+            $s->redirectTo = $redTo[0] .'#'. trim($hash, '#');
+        }
+    }
+
+    /**
+     * Redirects and exits to the originating request before calling the login
+     */
+    public function redirectToOrigin() {
+        $s = new Zend_Session_Namespace();
+        if(!empty($s->redirectTo)) {
+            //$this->redirect($redTo, ['code' => 302, 'exit' => true]);
+            $this->_actionController->redirect($s->redirectTo, ['code' => 302, 'exit' => true]);
+        }
+    }
+
+    /**
+     * Updates on denied access the originally requested URL for redirection after login
+     */
+    private function updateStoredRedirectTo() {
+        $target = $this->getRequest()->getRequestUri();
+        if(Zend_Session::isDestroyed()) {
+            return;
+        }
+        $s = new Zend_Session_Namespace();
+
+        //if we should redirect to the same location, this is a loop and we should break it, for default processing after login redirect.
+        if($target == $s->redirectTo) {
+            unset($s->redirectTo);
+        }
+        else {
+            $s->redirectTo = $target;
+        }
+    }
+
+    /**
+     * Cleans the stored redirect to variable after successful page access (unless it is not the login page itself!)
+     * @param string $resource
+     */
+    private function cleanRedirectTo(string $resource)
+    {
+        // UGLY, but convienent: do not unset the redirect to after successfully opening the login page,
+        // we need the value on the next request
+        if($resource === 'login') {
+            return;
+        }
+        $s = new Zend_Session_Namespace();
+        if(!empty($s->redirectTo)) {
+            unset($s->redirectTo);
+        }
     }
 }

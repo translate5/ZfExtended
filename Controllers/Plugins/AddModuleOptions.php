@@ -45,7 +45,7 @@ class ZfExtended_Controllers_Plugins_AddModuleOptions extends Zend_Controller_Pl
      * @param  Zend_Controller_Request_Abstract $request
      * @return void
      */
-    public function RouteShutdown(Zend_Controller_Request_Abstract $request) {
+    public function routeShutdown(Zend_Controller_Request_Abstract $request) {
         $config = Zend_Registry::get('config');
         if(isset($config->runtimeOptions->addModuleOptions)){
             $index = ZfExtended_BaseIndex::getInstance();

@@ -236,6 +236,14 @@ class ZfExtended_Utils {
         return self::VERSION_DEVELOPMENT;
     }
 
+    /**
+     * returns if the installation is a development installation
+     * @return bool
+     */
+    public static function isDevelopment(): bool {
+        return self::getAppVersion() === self::VERSION_DEVELOPMENT;
+    }
+
     /***
      * Multibyte safe uppercase first function
      * @param string $string
@@ -350,5 +358,35 @@ class ZfExtended_Utils {
     public static function getFileExtension(string $fileName): string
     {
         return pathinfo($fileName,PATHINFO_EXTENSION);
+    }
+
+    /**
+     * deletes recursivly a directory
+     * @param string $directory
+     */
+    public static function recursiveDelete(string $directory)
+    {
+        $iterator = new DirectoryIterator($directory);
+        foreach ($iterator as $fileinfo) {
+            if ($fileinfo->isDot()) {
+                continue;
+            }
+            if ($fileinfo->isDir()) {
+                self::recursiveDelete($directory . DIRECTORY_SEPARATOR . $fileinfo->getFilename());
+            }
+            if ($fileinfo->isFile()) {
+                try {
+                    unlink($directory . DIRECTORY_SEPARATOR . $fileinfo->getFilename());
+                }
+                catch (Exception){
+                }
+            }
+        }
+        //FIXME try catch ist nur eine übergangslösung!!!
+        try {
+            rmdir($directory);
+        }
+        catch (Exception){
+        }
     }
 }

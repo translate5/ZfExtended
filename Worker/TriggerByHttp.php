@@ -255,6 +255,9 @@ class ZfExtended_Worker_TriggerByHttp {
         if(isset($_COOKIE['XDEBUG_SESSION'])){
             $debug = $_COOKIE['XDEBUG_SESSION'];
         }
+        if(isset($_SERVER['XDEBUG_CONFIG'])){
+            $debug = $_SERVER['XDEBUG_CONFIG'];
+        }
         //forced debug by config
         if(ZfExtended_Debug::hasLevel('core', 'worker')) {
             $debug = 'ECLIPSE';

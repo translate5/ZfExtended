@@ -83,14 +83,14 @@ class ZfExtended_Acl extends Zend_Acl {
     protected function __construct() {
         $db = ZfExtended_Factory::get('ZfExtended_Models_Db_AclRules');
         /* @var $db ZfExtended_Models_Db_AclRules */
-        
-        $roles = $db->loadRoles(Zend_Registry::get('module'));
-        $this->addRoles($roles);
-        
-        $resources = $db->loadResources(Zend_Registry::get('module'));
-        $this->addResources($resources);
 
-        $rules = $db->loadByModule(Zend_Registry::get('module'));
+        //currently we load the rules for all modules, if we ever need to differ,
+        // we have to do that in the isAllowed call
+        // the previous module filter was producing to much problems
+        $rules = $db->loadAll();
+
+        $this->addRoles(array_unique(array_column($rules, 'role')));
+        $this->addResources(array_unique(array_column($rules, 'resource')));
         $this->addRules($rules);
     }
     
@@ -143,7 +143,24 @@ class ZfExtended_Acl extends Zend_Acl {
     }
 
 
-    
+
+    /**
+     * Returns all roles having a specifc resource and privilege
+     * @param string $resource
+     * @param string $privilege
+     * @return array
+     */
+    public function getRolesWith(string $resource, string $privilege): array {
+        $allRoles = $this->getAllRoles();
+        $result = [];
+        foreach($allRoles as $role) {
+            if($this->isAllowed($role, $resource, $privilege)){
+                $result[] = $role;
+            }
+        }
+        return $result;
+    }
+
     /**
      * checks if one of the passed roles allows the resource / privelege
      *

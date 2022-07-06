@@ -212,7 +212,16 @@ class ZfExtended_Test_ApiHelper {
     public function request($url, $method = 'GET', $parameters = array()) {
 
         $http = new Zend_Http_Client();
-        $http->setUri(static::$CONFIG['API_URL'].ltrim($url, '/'));
+        $url = ltrim($url, '/');
+
+        //prepend the taskid to the URL if the test has a task with id.
+        // that each request has then the taskid is no problem, this is handled by .htaccess and finally by the called controller.
+        // If the called controller does not need the taskid it just does nothing there...
+        if(($this->getTask()->id ?? 0) > 0) {
+            $url = preg_replace('#^editor/#', 'editor/taskid/'.$this->getTask()->id.'/', $url);
+        }
+
+        $http->setUri(static::$CONFIG['API_URL'].$url);
         $http->setHeaders('Accept', 'application/json');
         
         //enable xdebug debugger in eclipse
@@ -512,7 +521,7 @@ class ZfExtended_Test_ApiHelper {
         }
         return $this->checkTaskStateLoop($failOnError);
     }
-    
+
     /**
      * Check the task state. The test will fail when $failOnError = true and if the task is in state error or after RELOAD_TASK_LIMIT task state checks
      * @param bool $failOnError
@@ -705,7 +714,7 @@ class ZfExtended_Test_ApiHelper {
      * @param bool $waitForImport: wait until the resource is imported
      * @return mixed|boolean
      */
-    public function addResource(array $params, string $fileName = null, bool $waitForImport=false){
+    public function addResource(array $params, string $fileName = null, bool $waitForImport=false, string $testDir = ''){
         
         if(!empty($this->filesToAdd)) {
             throw new Exception('There are already some files added as pending request and not sent yet! Send them first to the server before calling addResource!');
@@ -713,7 +722,7 @@ class ZfExtended_Test_ApiHelper {
         $test = $this->testClass;
         //if filename is provided, set the file upload field
         if($fileName){
-            $this->addFile('tmUpload', $this->getFile($fileName), "application/xml");
+            $this->addFile('tmUpload', $this->getFile($fileName,$testDir), "application/xml");
             $resource = $this->requestJson('editor/languageresourceinstance', 'POST',$params);
         }else{
             //request because the requestJson will encode the params with "data" as parent
@@ -828,6 +837,7 @@ class ZfExtended_Test_ApiHelper {
         if(!isset($task['autoStartImport'])) {
             $task['autoStartImport'] = 1;
         }
+        $task['orderer'] = 'unittest';
     }
     
     /**
@@ -870,6 +880,12 @@ class ZfExtended_Test_ApiHelper {
             $class = $this->testClass;
         }
         $path = join('/', array($this->testRoot, $class, $approvalFile));
+
+        // Fix Windows paths problem
+        if (preg_match('~WIN~', PHP_OS)) {
+            $path = preg_replace('~^[A-Z]+:~', '', $path);
+            $path = str_replace('\\', '/', $path);
+        }
         if($assert) {
             $t = $this->testClass;
             $t::assertFileExists($path);
@@ -1112,7 +1128,7 @@ class ZfExtended_Test_ApiHelper {
     public function getTask() {
         return $this->task;
     }
-    
+
     /***
      * return the test customer
      * @return stdClass
@@ -1171,5 +1187,52 @@ class ZfExtended_Test_ApiHelper {
      */
     public function setTask($task) {
         $this->task = $task;
+    }
+
+    /**
+     * Sets the current task to open
+     */
+    public function setTaskToOpen() {
+        if($this->task){
+            $this->requestJson('editor/task/'.$this->task->id, 'PUT', array('userState' => 'open', 'id' => $this->task->id));
+        }
+    }
+
+    /**
+     * Sets the current task to edit
+     */
+    public function setTaskToEdit() {
+        if($this->task){
+            $this->requestJson('editor/task/'.$this->task->id, 'PUT', array('userState' => 'edit', 'id' => $this->task->id));
+        }
+    }
+
+    /**
+     * Sets the current task to finished
+     */
+    public function setTaskToFinished() {
+        if($this->task){
+            $this->requestJson('editor/task/'.$this->task->id, 'PUT', array('userState' => 'finished', 'id' => $this->task->id));
+        }
+    }
+
+    /**
+     * Removes the current loaded Task
+     * @return stdClass
+     */
+    public function deleteTask() {
+        if($this->task){
+            $this->deleteUrl('editor/task/' . $this->task->id);
+        }
+    }
+
+    /**
+     * Performs a delete request to the given endpoint
+     * @param string $url
+     */
+    public function deleteUrl(string $url) {
+        if($this->cleanup){
+            $this->requestJson($url, 'DELETE');
+        }
     }
 }

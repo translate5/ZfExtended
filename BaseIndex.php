@@ -85,6 +85,8 @@ class ZfExtended_BaseIndex{
         if(!mb_internal_encoding("UTF-8")){
             throw new Exception('mb_internal_encoding("UTF-8") could not be set!');
         }
+        //set the locales to the ones configured by env variables, see TRANSLATE-2992
+        setlocale(LC_ALL, '');
         if(!defined('APPLICATION_ROOT')) {
             define('APPLICATION_ROOT', realpath(dirname($indexpath) . DIRECTORY_SEPARATOR.'..'));
         }

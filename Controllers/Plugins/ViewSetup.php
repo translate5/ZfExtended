@@ -103,7 +103,6 @@ class ZfExtended_Controllers_Plugins_ViewSetup extends Zend_Controller_Plugin_Ab
      */
     private function setPhp2Js() {
         $view = $this->_viewRenderer->view;
-        $view->headScript()->prependScript('var '.ucfirst($this->_viewRenderer->view->module).' = {}');
         $view->headScript()->appendScript($this->_viewRenderer->view->Php2JsVars());
         $view->php2JsVars()->set('pathToRunDir', APPLICATION_RUNDIR);
         $view->php2JsVars()->set('zfModule', $this->_viewRenderer->view->module);

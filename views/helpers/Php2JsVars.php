@@ -100,7 +100,7 @@ class ZfExtended_View_Helper_Php2JsVars extends Zend_View_Helper_Abstract{
         if(isset($this->data->{$name})){
             return $this->data->{$name};
         }
-        return new stdClass();
+        return $this->data->{$name} = new stdClass();
     }
 
     /**
@@ -118,8 +118,8 @@ class ZfExtended_View_Helper_Php2JsVars extends Zend_View_Helper_Abstract{
      */
     public function  __toString() {
         try {
-            $module = Zend_Controller_Front::getInstance()->getRequest()->getModuleName();
-            return ucfirst($module).'.data = '.Zend_Json::encode($this->data);
+            $module = ucfirst(Zend_Controller_Front::getInstance()->getRequest()->getModuleName());
+            return 'var '.$module.' = {data: '.Zend_Json::encode($this->data).'}';
         } catch(Exception $e) {
             $log = ZfExtended_Factory::get('ZfExtended_Log');
             /* @var $log ZfExtended_Log */

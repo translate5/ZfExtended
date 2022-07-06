@@ -402,6 +402,15 @@ abstract class ZfExtended_Models_Filter {
       $db = $this->entity->db;
       return $db->info($db::NAME);
   }
+
+    /**
+     * returns the internally stored entity instance
+     * @return ZfExtended_Models_Entity_Abstract
+     */
+    public function getEntity(): ZfExtended_Models_Entity_Abstract
+    {
+        return $this->entity;
+    }
   
   /**
    * decodes the filter/sort string, return always an array

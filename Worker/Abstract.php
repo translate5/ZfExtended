@@ -103,9 +103,9 @@ abstract class ZfExtended_Worker_Abstract {
     protected $result;
     
     /**
-     * @var ZfExtended_Log
+     * @var ZfExtended_Logger
      */
-    protected $log;
+    protected ZfExtended_Logger $log;
     
      /**
      * resourcePool for the different Operations
@@ -157,7 +157,7 @@ abstract class ZfExtended_Worker_Abstract {
     public $isWorkerThread=true;
     
     public function __construct() {
-        $this->log = ZfExtended_Factory::get('ZfExtended_Log');
+        $this->log = Zend_Registry::get('logger');
         $this->maxParallelProcesses = $this->getMaxParallelProcesses();
         $this->events = ZfExtended_Factory::get('ZfExtended_EventManager', array(get_class($this)));
         $this->behaviour = ZfExtended_Factory::get($this->behaviourClass);

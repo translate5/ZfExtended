@@ -165,6 +165,7 @@ class ZfExtended_Logger {
      */
     protected function log($code, $message, $level = self::LEVEL_INFO, array $extraData = null, array $writerNames = null) {
         $event = $this->prepareEvent($level, $code, $extraData);
+        $event->messageRaw = $message;
         $event->message = $this->formatMessage($message, $extraData);
         $this->processEvent($event, is_null($writerNames) ? [] : $writerNames);
     }
@@ -200,6 +201,7 @@ class ZfExtended_Logger {
             $event->message = substr($message, 0, $tracePos);
             $event->trace = substr($message, $tracePos);
         }
+        $event->messageRaw = $event->message;
         $event->file = $file;
         $event->line = $line;
         $this->processEvent($event);
@@ -252,6 +254,7 @@ class ZfExtended_Logger {
         
         $event->exception = $exception;
         $event->eventCode = $exception instanceof ZfExtended_ErrorCodeException ? 'E'.$exception->getCode() : self::ECODE_LEGACY_ERRORS;
+        $event->messageRaw = $exception->getMessage();
         $event->message = $this->formatMessage($exception->getMessage(), $extraData);
         $this->fillTrace($event, $exception);
         $event->extra = $extraData;
@@ -478,7 +481,8 @@ class ZfExtended_Logger {
      */
     public function request(array $additionalData = []) {
         $additionalData['requestData'] = $_REQUEST;
-        $this->debug('E1014', 'HTTP request '.$_SERVER['REQUEST_URI'], $additionalData);
+        $additionalData['route'] = $_SERVER['REQUEST_URI'];
+        $this->debug('E1014','Log HTTP Request {route}', $additionalData);
     }
     
     /**
