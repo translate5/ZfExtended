@@ -187,6 +187,7 @@ abstract class ZfExtended_Models_Entity_Abstract {
      *
      * @param Zend_Db_Table_Select
      * @return Zend_Db_Table_Row_Abstract|null
+     * @throws ZfExtended_Models_Entity_NotFoundException
      */
     public function loadRowBySelect(Zend_Db_Table_Select $s) {
         $this->row = $this->db->fetchRow($s);
