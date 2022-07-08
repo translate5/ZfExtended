@@ -111,7 +111,7 @@ abstract class ZfExtended_Models_Entity_Abstract {
 
     /**
      * inits the Entity, resets the internal data
-     * if data object is given, use this values.
+     * if data object is given, use it's values.
      * If $assumeDatabase we "assume" that the given data really already exists in database.
      * @param array $data
      * @param bool $assumeDatabase
@@ -126,6 +126,14 @@ abstract class ZfExtended_Models_Entity_Abstract {
                 $this->row->refresh();
             }
         }
+    }
+
+    /**
+     * Initializes an entity by the related Zend-Db table row
+     * @param Zend_Db_Table_Row_Abstract $row
+     */
+    protected function initByRow(Zend_Db_Table_Row_Abstract $row){
+        $this->row = $row;
     }
 
     /**
@@ -213,7 +221,9 @@ abstract class ZfExtended_Models_Entity_Abstract {
      */
     protected function notFound($key = '', $value = '') {
         $cls = explode('_', get_class($this));
-        throw new ZfExtended_Models_Entity_NotFoundException(end($cls)." Entity Not Found: Key: " . $key . '; Value: ' . $value);
+        // some classes have names like My_Special_Item_Entity and we do not want the message just to be "Entity Entity Not Found"
+        $clsName = (strtolower(end($cls)) === 'entity' && count($cls) > 1) ? $cls[count($cls) - 2].end($cls) : end($cls);
+        throw new ZfExtended_Models_Entity_NotFoundException($clsName.' Entity Not Found: Key: ' . $key . '; Value: ' . $value);
     }
 
     /**
@@ -225,6 +235,22 @@ abstract class ZfExtended_Models_Entity_Abstract {
         return $this->loadFilterdCustom($s);
     }
 
+    /**
+     * Fetches all filtered entities from the DB
+     * Opposed to loadAll this will not return raw data but Entity Objects
+     * @return ZfExtended_Models_Entity_Abstract[]
+     */
+    protected function loadAllEntities() : array {
+        $entities = [];
+        $select = $this->db->select();
+        $this->applyFilterAndSort($select);
+        foreach($this->db->fetchAll($select) as $row){
+            $entity = new static();
+            $entity->initByRow($row);
+            $entities[] = $entity;
+        }
+        return $entities;
+    }
 
     /**
      * @param Zend_Db_Select $s
