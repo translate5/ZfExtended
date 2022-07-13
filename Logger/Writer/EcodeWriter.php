@@ -32,6 +32,7 @@ class ZfExtended_Logger_Writer_EcodeWriter extends ZfExtended_Logger_Writer_Abst
     const MULTI_PURPOSE_CODES = [
         'E0000', // Code used for multi purposes: Mostly for debug messages below level warn, where no fixed message is needed.
         'E9999', // Default code used for old error messages, which are not converted yet to the new error code system.
+        'E1019', // HTTP Status 404
         'E1027', // PHP Fatal Error
         'E1029', // PHP Warning
         'E1030', // PHP Info
