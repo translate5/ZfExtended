@@ -195,10 +195,13 @@ class ZfExtended_BaseIndex{
         $this->initAdditionalConstants();
 
 
+        // for each module, call the module specific function. This will register the module as applet
         foreach ($this->getModules() as $module){
             require_once $module.'/Bootstrap.php';
             $class = ucfirst($module).'_Bootstrap';
-            $class::registerApplet();
+            if(method_exists($class,'initModuleSpecific')){
+                $class::initModuleSpecific();
+            }
         }
         return $application;
     }
@@ -353,8 +356,6 @@ class ZfExtended_BaseIndex{
         if(is_null($this->currentModule)){
           $this->currentModule = $this->getCurrentModule();
         }
-
-        error_log("getApplicationInis: ".$this->currentModule);
 
         $applicationInis = $this->getIniList();
         $result = array();
