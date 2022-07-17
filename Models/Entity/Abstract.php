@@ -159,7 +159,7 @@ abstract class ZfExtended_Models_Entity_Abstract {
         if (!$rowset || $rowset->count() == 0) {
             $this->notFound('#PK', $id);
         }
-        $rowset->rewind(); // triggers loading
+        $rowset->rewind();
         //load implies loading one Row, so use only the first row
         return $this->row = $rowset->current();
     }
