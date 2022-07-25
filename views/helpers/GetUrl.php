@@ -35,10 +35,6 @@ END LICENSE AND COPYRIGHT
 class ZfExtended_View_Helper_GetUrl extends Zend_View_Helper_Abstract{
     public $view;
 
-    public function setView(Zend_View_Interface $view) {
-        $this->view = $view;
-    }
-    
     /**
      * generiert die aktuelle url
      *
