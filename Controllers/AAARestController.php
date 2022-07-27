@@ -40,7 +40,7 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller
      * Default Filter Class to use
      * @var string
      */
-    protected $filterClass = 'ZfExtended_Models_Filter_ExtJs';
+    protected $filterClass = 'ZfExtended_Models_Filter_ExtJs6';
 
     /**
      * Instance of the Entity

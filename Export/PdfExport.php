@@ -22,6 +22,5 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
-require_once('tfpdf/tfpdf.php');
 class ZfExtended_Export_PdfExport extends tFPDF{
 }
