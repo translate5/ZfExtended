@@ -34,6 +34,20 @@ END LICENSE AND COPYRIGHT
  * Adds hints to IDE autocompletion
  * @see ZfExtended_RestController
  * @see Zend_View_Interface
+ *
+ * @property array rows entities that resulted from an SQL query
+ * @property string result
+ * @property stdClass metaData
+ * @property array<string> errors
+ * @property boolean success
+ * @property string publicModulePath
+ * @see Editor_IndexController::indexAction:143
+ *
+ * @method ZfExtended_View_Helper_PluginLocale PluginLocale()
+ * @method ZfExtended_View_Helper_Php2JsVars Php2JsVars()
+ * @method ZfExtended_View_Helper_GetUrl GetUrl()
+ * @method ZfExtended_View_Helper_TemplateApply TemplateApply()
+ * @method ZfExtended_View_Helper_MailEmployeeSalutation MailEmployeeSalutation()
  */
 class ZfExtended_View extends Zend_View implements Zend_View_Interface {
 
