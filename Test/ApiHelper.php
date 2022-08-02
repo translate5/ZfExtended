@@ -275,6 +275,32 @@ class ZfExtended_Test_ApiHelper {
     }
 
     /**
+     * Posts raw content (not form-encoded, not as form-data)
+     * @param string $url
+     * @param string $content
+     * @param array $parameters
+     * @return bool|mixed|stdClass|null
+     * @throws Zend_Http_Client_Exception
+     */
+    public function postRaw(string $url, string $content, array $parameters=[]) {
+        $http = new Zend_Http_Client();
+        $http->setUri(static::$CONFIG['API_URL'].ltrim($url, '/'));
+        $http->setHeaders('Accept', 'application/json');
+        if(!empty($this->authCookie)) {
+            $http->setCookie(self::AUTH_COOKIE_KEY, $this->authCookie);
+        }
+        $http->setRawData($content, 'application/octet-stream');
+        $http->setHeaders(Zend_Http_Client::CONTENT_TYPE, 'application/octet-stream');
+        if(!empty($parameters)) {
+            foreach($parameters as $key => $value) {
+                $http->setParameterGet($key, $value); // when setting the raw request-body params can only be set as GET params!
+            }
+        }
+        $this->lastResponse = $http->request('POST');
+        return $this->decodeJsonResponse($this->lastResponse);
+    }
+
+    /**
      * Sends a JSON request to the application API, returns
      *   - false on HTTP response state other than 2XX
      *   - the decoded JSON result on HTTP == 2XX
