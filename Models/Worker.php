@@ -464,15 +464,16 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
             ->order('count ASC');
         
         $rows = $db->fetchAll($sql)->toArray();
-        
+
         if(is_array($validSlots)) {
-            foreach ($rows as $key => $row) {
-                if(!in_array($row['slot'], $validSlots)) {
-                    unset($rows[$key]);
+            $validatedRows = [];
+            foreach ($rows as $row) {
+                if(in_array($row['slot'], $validSlots)) {
+                    $validatedRows[] = $row;
                 }
             }
+            return $validatedRows;
         }
-        
         return $rows;
     }
 
