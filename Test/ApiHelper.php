@@ -401,7 +401,7 @@ class ZfExtended_Test_ApiHelper {
             error_log('apiTest '.$method.' on '.$url.' returned '.$resp->__toString());
         } else if($this->isCapturing() && !empty($jsonFileName)){
             // in capturing mode we save the requested data as the data to test against
-            file_put_contents($this->getFile($jsonFileName, null, false), json_encode($result, JSON_PRETTY_PRINT));
+            file_put_contents($this->getFile($jsonFileName, null, false), json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
         }
         return $result;
     }
