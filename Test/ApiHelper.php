@@ -1126,6 +1126,10 @@ class ZfExtended_Test_ApiHelper {
         // let's iterate
         foreach ($files as $name => $file) {
             $filePath = $file->getRealPath();
+            if (preg_match('~WIN~', PHP_OS)) {
+                $filePath = preg_replace('~^[A-Z]+:~', '', $filePath);
+                $filePath = str_replace(DIRECTORY_SEPARATOR, '/', $filePath);
+            }
             $zip->addFile($file, str_replace('^'.$dir, '', '^'.$filePath));
         }
         
