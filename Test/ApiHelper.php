@@ -297,7 +297,7 @@ class ZfExtended_Test_ApiHelper {
             }
         }
         $this->lastResponse = $http->request('POST');
-        return $this->decodeJsonResponse($this->lastResponse);
+        return $this->decodeRawResponse($this->lastResponse);
     }
 
     /**
@@ -386,6 +386,19 @@ class ZfExtended_Test_ApiHelper {
     }
 
     /**
+     * Retrieves a JSON, ignores Server errors but will add a "success" prop to the returned JSON in any case
+     * @param string $url
+     * @param string $method
+     * @param array $parameters
+     * @return stdClass
+     * @throws Zend_Http_Client_Exception
+     */
+    public function getJsonRaw(string $url, string $method = 'GET', array $parameters=[]) {
+        $resp = $this->request($url, $method, $parameters);
+        return $this->decodeRawResponse($resp);
+    }
+
+    /**
      * Internal API to fetch JSON Data. Automatically saves the fetched file in capture-mode
      * @param string $url
      * @param string $method
@@ -401,7 +414,7 @@ class ZfExtended_Test_ApiHelper {
             error_log('apiTest '.$method.' on '.$url.' returned '.$resp->__toString());
         } else if($this->isCapturing() && !empty($jsonFileName)){
             // in capturing mode we save the requested data as the data to test against
-            file_put_contents($this->getFile($jsonFileName, null, false), json_encode($result, JSON_PRETTY_PRINT));
+            file_put_contents($this->getFile($jsonFileName, null, false), json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
         }
         return $result;
     }
@@ -440,6 +453,24 @@ class ZfExtended_Test_ApiHelper {
             }
         }
         return false;
+    }
+
+    /**
+     * Parses a raw result that may represents a server error to be able to retrieve failed requests without forcing a failing test (e.g. if wishing to validate the errors)
+     * The result may already has a success-property, if not, it will be set by status-code
+     * @param Zend_Http_Response $resp
+     * @return stdClass
+     */
+    public function decodeRawResponse(Zend_Http_Response $resp){
+        $result = json_decode($resp->getBody());
+        if(!$result){
+            $result = new stdClass();
+        }
+        if(!property_exists($result, 'success')){
+            $status = $resp->getStatus();
+            $result->success = (200 <= $status && $status < 300);
+        }
+        return $result;
     }
     
     /**
