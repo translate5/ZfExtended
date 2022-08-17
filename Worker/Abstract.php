@@ -489,7 +489,7 @@ abstract class ZfExtended_Worker_Abstract {
             
             if($this->isWorkerThread){
                 // plugin method to e.g. chain another worker dynamically after queued work is done
-                // This has to be done, before this worker is set to be "DONE", as otherwise we have a tme-slot to start depending workers
+                // This has to be done, before this worker is set to be "DONE", as otherwise we have a time-slot to start depending workers
                 $this->onRunQueuedFinished($result); 
             }
             $this->workerModel->setState(ZfExtended_Models_Worker::STATE_DONE);
