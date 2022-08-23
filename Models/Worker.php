@@ -376,7 +376,7 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
      * Set all Workers not yet finished as done for the current task & worker without the worker calling this API
      */
     public function setRemainingToDone() {
-        // set unfinished workers to done albeit the passed one
+        // set unfinished workers to done
         $bindings = [ self::STATE_DONE, $this->getTaskGuid(), $this->getWorker(), $this->getId(), self::STATE_PREPARE, self::STATE_SCHEDULED, self::STATE_WAITING, self::STATE_RUNNING ];
         $sql = 'UPDATE `Zf_worker` SET `state` = ?  WHERE `taskGuid` = ? AND `worker` = ? AND `id` != ? AND `state` IN (?, ?, ?, ?)';
         $this->retryOnDeadlock(function() use ($sql, $bindings){
