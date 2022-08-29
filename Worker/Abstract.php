@@ -479,6 +479,7 @@ abstract class ZfExtended_Worker_Abstract {
         $this->workerModel->load($this->workerModel->getId());
         
         $this->logit('set to running!');
+
         try {
             $this->events->trigger('beforeWork', $this, [
                 'worker' => $this,
@@ -492,13 +493,18 @@ abstract class ZfExtended_Worker_Abstract {
                 // This has to be done, before this worker is set to be "DONE", as otherwise we have a time-slot to start depending workers
                 $this->onRunQueuedFinished($result); 
             }
+            $progressDone = $this->calculateProgressDone();
             $this->workerModel->setState(ZfExtended_Models_Worker::STATE_DONE);
+            $this->workerModel->setProgress($progressDone);
             $this->workerModel->setEndtime(new Zend_Db_Expr('NOW()'));
             $this->finishedWorker = clone $this->workerModel;
             $this->retryOnDeadlock(function(){
                 $this->workerModel->save();
             });
+            $this->onProgressUpdated($progressDone);
+
         } catch(Throwable $workException) {
+
             $this->reconnectDb();
             $result = false;
             $this->workerModel->setState(ZfExtended_Models_Worker::STATE_DEFUNCT);
@@ -508,10 +514,36 @@ abstract class ZfExtended_Worker_Abstract {
             $this->finishedWorker = clone $this->workerModel;
             $this->handleWorkerException($workException);
         }
-        $this->updateProgress(1);//update the worker progress to 1, when the worker status is set to done
-
         return $result;
     }
+    /**
+     * Update the progress for the current worker model with the given value (float between 0 ad 1)
+     *
+     * @param float $progress
+     * @throws ZfExtended_Models_Db_Exceptions_DeadLockHandler
+     */
+    public function updateProgress(float $progress){
+        if($this->workerModel->updateProgress($progress)){
+            $this->onProgressUpdated($progress);
+        }
+    }
+
+    /**
+     * Calculates the progress when we're done
+     * @return float
+     */
+    protected function calculateProgressDone() : float {
+        return 1;
+    }
+
+    /**
+     * trigger function to add logic needed to be done after progress was updated
+     * @param float $progress
+     */
+    protected function onProgressUpdated(float $progress){
+
+    }
+
     /**
      * This method can be used in extending classes to add code that is executed after a queued worker has run and before the new worker-state in the model is set
      * @param bool $success
@@ -581,15 +613,5 @@ abstract class ZfExtended_Worker_Abstract {
             }
             error_log($msg);
         }
-    }
-
-    /**
-     * Update the progress for the current worker model. The progress value needs to be calculated in the worker class.
-     *
-     * @param float $progress
-     * @throws ZfExtended_Models_Db_Exceptions_DeadLockHandler
-     */
-    public function updateProgress(float $progress = 1){
-        $this->workerModel->updateProgress($progress);
     }
 }
