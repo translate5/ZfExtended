@@ -707,4 +707,17 @@ abstract class ZfExtended_Models_Entity_Abstract {
         }
         return $result;
     }
+
+    /***
+     * Load all rows in the table as key value pair
+     * @param string $key
+     * @param string $value
+     * @return array|false
+     * @throws Zend_Db_Statement_Exception
+     */
+    public function loadAllKeyValue(string $key, string $value){
+        $s = $this->db->select()
+            ->from($this->db, [$key,$value]);
+        return $this->db->getAdapter()->query($s)->fetchAll(PDO::FETCH_KEY_PAIR);
+    }
 }
