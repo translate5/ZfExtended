@@ -693,7 +693,7 @@ class ZfExtended_Test_ApiHelper {
                 return false;
             }
             $counter++;
-            sleep(3);
+            sleep(10);
         }
     }
     
