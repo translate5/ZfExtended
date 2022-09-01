@@ -67,6 +67,7 @@ class ZfExtended_Test_ApiHelper {
         'XDEBUG_ENABLE' => false,
         'KEEP_DATA' => false,
         'LEGACY_DATA' => false,
+        'LEGACY_JSON' => false,
     ];
 
     /**
@@ -78,6 +79,8 @@ class ZfExtended_Test_ApiHelper {
      *  'CAPTURE_MODE' => if true, defines if we're in capture mode (only when single tests are called), false by default
      *  'XDEBUG_ENABLE' => if true, defines if we should enable XDEBUG on the called test instance , false by default
      *  'KEEP_DATA' => if true, defines if test should be kept after test run, must be implemented in the test, false by default
+     *  'LEGACY_DATA' => if true, defines to use the "old" data field sort order (to reduce diff clutter on capturing)
+     *  'LEGACY_JSON' => if true, defines to use the "old" json encoding config (to reduce diff clutter on capturing)
      * @param array $config
      */
     public static function setup(array $config){
@@ -414,7 +417,8 @@ class ZfExtended_Test_ApiHelper {
             error_log('apiTest '.$method.' on '.$url.' returned '.$resp->__toString());
         } else if($this->isCapturing() && !empty($jsonFileName)){
             // in capturing mode we save the requested data as the data to test against
-            file_put_contents($this->getFile($jsonFileName, null, false), json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+            $encConf = static::$CONFIG['LEGACY_JSON'] ? JSON_PRETTY_PRINT : JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES;
+            file_put_contents($this->getFile($jsonFileName, null, false), json_encode($result, $encConf));
         }
         return $result;
     }
