@@ -67,6 +67,7 @@ class ZfExtended_Test_ApiHelper {
         'XDEBUG_ENABLE' => false,
         'KEEP_DATA' => false,
         'LEGACY_DATA' => false,
+        'LEGACY_JSON' => false,
     ];
 
     /**
@@ -78,6 +79,8 @@ class ZfExtended_Test_ApiHelper {
      *  'CAPTURE_MODE' => if true, defines if we're in capture mode (only when single tests are called), false by default
      *  'XDEBUG_ENABLE' => if true, defines if we should enable XDEBUG on the called test instance , false by default
      *  'KEEP_DATA' => if true, defines if test should be kept after test run, must be implemented in the test, false by default
+     *  'LEGACY_DATA' => if true, defines to use the "old" data field sort order (to reduce diff clutter on capturing)
+     *  'LEGACY_JSON' => if true, defines to use the "old" json encoding config (to reduce diff clutter on capturing)
      * @param array $config
      */
     public static function setup(array $config){
@@ -365,21 +368,21 @@ class ZfExtended_Test_ApiHelper {
         }
         return $this->fetchJson($url, 'POST', $parameters, $jsonFileName, false);
     }
+
     /**
      * Sends a GET request to the application API to fetch unencoded data
      * @param string $url
      * @param array $parameters
-     * @param string $jsonFileName
+     * @param string|null $fileName
      * @return string|boolean
+     * @throws Zend_Http_Client_Exception
      */
-    public function getRaw(string $url, array $parameters = [], string $fileName = NULL){
+    public function getRaw(string $url, array $parameters = [], string $fileName = NULL): string|bool {
         $response = $this->request($url, 'GET', $parameters);
         $status = $response->getStatus();
         if(200 <= $status && $status < 300) {
             $rawData = $response->getBody();
-            if($this->isCapturing() && !empty($fileName)){
-                file_put_contents($this->getFile($fileName, null, false), $rawData);
-            }
+            $this->captureData($fileName, $rawData);
             return $rawData;
         }
         return false;
@@ -414,10 +417,34 @@ class ZfExtended_Test_ApiHelper {
             error_log('apiTest '.$method.' on '.$url.' returned '.$resp->__toString());
         } else if($this->isCapturing() && !empty($jsonFileName)){
             // in capturing mode we save the requested data as the data to test against
-            file_put_contents($this->getFile($jsonFileName, null, false), json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+            $this->captureData($jsonFileName, $this->encodeTestData($result));
         }
         return $result;
     }
+
+    /**
+     * save the given data to the given file on capturing data
+     * all JSON data is now: JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
+     * to reduce git glutter on diffing after capturing this legacy config can be used for easier comparsion of data
+     * @param string|null $fileName
+     * @param string|array|object|null $rawData
+     * @param bool $encode
+     */
+    public function captureData(?string $fileName, mixed $rawData, bool $encode = false): void {
+        if(!$this->isCapturing() || empty($fileName) || is_null($rawData)) {
+            return;
+        }
+
+        if($encode) {
+            $rawData = $this->encodeTestData($rawData);
+        } elseif(static::$CONFIG['LEGACY_JSON'] && str_ends_with($fileName, '.json')) {
+            //if data is already encoded we have to decode and recode it
+            $rawData = $this->encodeTestData(json_decode($rawData));
+        }
+
+        file_put_contents($this->getFile($fileName, assert: false), $rawData);
+    }
+
     /**
      * Decodes a returned JSON answer from Translate5 REST API
      * @param Zend_Http_Response $resp
@@ -953,13 +980,11 @@ class ZfExtended_Test_ApiHelper {
     /**
      * Loads the file contents of a file with data to be compared
      * @param string $approvalFile
-     * @param string $rawDataToCapture
+     * @param string|null $rawDataToCapture
      * @return string
      */
-    public function getFileContent($approvalFile, $rawDataToCapture=null) {
-        if($this->isCapturing() && $rawDataToCapture != null){
-            file_put_contents($this->getFile($approvalFile, null, false), $rawDataToCapture);
-        }
+    public function getFileContent(string $approvalFile, string $rawDataToCapture = null) {
+        $this->captureData($approvalFile, $rawDataToCapture);
         $t = $this->testClass;
         $data = file_get_contents($this->getFile($approvalFile));
         if(preg_match('/\.json$/i', $approvalFile)){
@@ -1295,5 +1320,21 @@ class ZfExtended_Test_ApiHelper {
         if($this->cleanup){
             $this->requestJson($url, 'DELETE');
         }
+    }
+
+    /**
+     * Json encode for test data
+     * @param mixed $data
+     * @return string
+     */
+    private function encodeTestData(mixed $data): string
+    {
+        if(is_null($data)) {
+            return '';
+        }
+        if(static::$CONFIG['LEGACY_JSON']) {
+            return json_encode($data, JSON_PRETTY_PRINT);
+        }
+        return json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     }
 }
