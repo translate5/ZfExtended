@@ -167,6 +167,8 @@ class ZfExtended_UserController extends ZfExtended_RestController {
         $this->setParam('id', $id);
         if($this->_request->isPut()){
             $this->entity->load($id);
+            $this->decodePutData();
+            $this->checkOldPassword();
             $this->filterDataForAuthenticated();
             return $this->putAction();
         }
@@ -214,7 +216,6 @@ class ZfExtended_UserController extends ZfExtended_RestController {
      */
     protected function filterDataForAuthenticated() {
         $allowed = array('passwd');
-        $this->decodePutData();
         $data = get_object_vars($this->data);
         $keys = array_keys($data);
         $this->data = new stdClass();
@@ -222,6 +223,34 @@ class ZfExtended_UserController extends ZfExtended_RestController {
             if(in_array($allow, $keys)){
                 $this->data->$allow = $data[$allow];
             }
+        }
+    }
+
+    /***
+     * Check the old password on password changed. This will check if the old password is correct and if the old password
+     * field is provided.
+     * @return void
+     * @throws ZfExtended_ErrorCodeException
+     */
+    protected function checkOldPassword(): void
+    {
+        ZfExtended_UnprocessableEntity::addCodes([
+            'E1420' => 'Old password is required',
+            'E1421' => 'Old password does not match',
+        ]);
+
+        $oldpwd = $this->getParam('oldpasswd');
+
+        if(empty($oldpwd)){
+            throw ZfExtended_UnprocessableEntity::createResponse('E1420', [
+                'oldpasswd' => 'Old password is required'
+            ]);
+        }
+
+        if($this->_helper->auth->isValid($this->entity->getLogin(),$oldpwd) === false){
+            throw ZfExtended_UnprocessableEntity::createResponse('E1421', [
+                'oldpasswd' => 'Old password does not match'
+            ]);
         }
     }
 
