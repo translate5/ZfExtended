@@ -22,22 +22,15 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
-/**#@+
- * @author Marc Mittag
- * @package ZfExtended
- * @version 2.0
- *
- */
+use ZfExtended_Models_User as User;
+use ZfExtended_Authentication as Auth;
+
 /**
  * methods needed vor login and password handling
  *
  */
 abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Action {
     use ZfExtended_Controllers_MaintenanceTrait;
-    /**
-     * @var ZfExtended_Models_SessionUserInterface
-     */
-    protected  $_userModel;
     /**
      * @var Zend_Session_Namespace
      */
@@ -60,7 +53,6 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
         $this->_translate = ZfExtended_Zendoverwrites_Translate::getInstance();
         $this->_session = new Zend_Session_Namespace();
         $this->_user = new Zend_Session_Namespace('user');
-        $this->_userModel = ZfExtended_Factory::get(Zend_Registry::get('config')->authentication->userEntityClass);
     }
 
     /**
@@ -77,31 +69,31 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
         //if the user click on the openid redirect link in the login form
         if($this->isOpenIdRedirect()){
             //set login status to 'login needed'
-            $this->view->loginStatus=ZfExtended_Models_SessionUserInterface::LOGIN_STATUS_OPENID;
+            $this->view->loginStatus=ZfExtended_Authentication::LOGIN_STATUS_OPENID;
             return ;
         }
         if($this->isMaintenanceLoginLock()){
             //set login status to 'maintenance'
             $this->_form->addError($this->_translate->_("Eine Wartung steht unmittelbar bevor, Sie können sich daher nicht anmelden. Bitte versuchen Sie es in Kürze erneut."));
-            $this->view->loginStatus=ZfExtended_Models_SessionUserInterface::LOGIN_STATUS_MAINTENANCE;
+            $this->view->loginStatus=ZfExtended_Authentication::LOGIN_STATUS_MAINTENANCE;
             return;
         }
         
         if($this->isLoginRequest()){
             //set the translate5 login status
-            $this->view->loginStatus= $this->isValidLogin() ? ZfExtended_Models_SessionUserInterface::LOGIN_STATUS_SUCCESS : ZfExtended_Models_SessionUserInterface::LOGIN_STATUS_REQUIRED;
+            $this->view->loginStatus= $this->isValidLogin() ? ZfExtended_Authentication::LOGIN_STATUS_SUCCESS : ZfExtended_Authentication::LOGIN_STATUS_REQUIRED;
             return;
         }
         //redirect the user if the session contains already a user
         if($this->isAuthenticated()) {
             //set login status to 'authenticated'
-            $this->view->loginStatus=ZfExtended_Models_SessionUserInterface::LOGIN_STATUS_AUTHENTICATED;
+            $this->view->loginStatus=ZfExtended_Authentication::LOGIN_STATUS_AUTHENTICATED;
             $this->initDataAndRedirect();
             return;
         }
         
         //set login status to 'login with openid'
-        $this->view->loginStatus=ZfExtended_Models_SessionUserInterface::LOGIN_STATUS_OPENID;
+        $this->view->loginStatus=ZfExtended_Authentication::LOGIN_STATUS_OPENID;
     }
     
     /**
@@ -151,11 +143,10 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
         if($this->hasUserAlreadyASession($login)) {
             return false;
         }
-        if ($this->authIsValid($login, $passwd)) {
+        if (Auth::getInstance()->authenticate($login, $passwd)) {
             $invalidLoginCounter->resetCounter(); // bei erfolgreichem login den counter zurücksetzen
-            $this->_userModel->setUserSessionNamespaceWithPwCheck($login, $passwd);
 
-            ZfExtended_Models_LoginLog::addSuccess($this->_userModel, "plainlogin");
+            ZfExtended_Models_LoginLog::addSuccess(Auth::getInstance()->getUser(), "plainlogin");
 
             // check for already valid session for the current authenticated user
             ZfExtended_Session::updateSession(true,true);
@@ -172,15 +163,6 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
         $this->_form->addError(sprintf($this->_translate->_('Ungültige Logindaten!<br/>Haben Sie Ihr Passwort vergessen oder bislang noch kein Passwort für Ihren Login gesetzt?  Sie können jederzeit einen neuen Link %shier%s anfordern.'),
                 '<a href="'. APPLICATION_RUNDIR .'/login/passwdreset">','</a>'));
         return false;
-    }
-    
-    /**
-     * Shortcut method for convenience
-     * @param string $login
-     * @param string $passwd
-     */
-    protected function authIsValid($login, $passwd) {
-        return $this->_helper->auth->isValid($login,$passwd);
     }
     
     /**
@@ -267,7 +249,7 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
         Zend_Layout::getMvcInstance()->disableLayout();
 
         $this->doOnLogout();
-        $this->_helper->general->logoutUser();
+        Auth::getInstance()->logoutUser();
         $this->postDispatch(); //trigger after action events before redirecting
         if ($this->getRequest()->getParam('noredirect')) {
             //on sendBeacon logouts we do not want any redirect, so just exit.
@@ -283,12 +265,9 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
      */
     protected function doOnLogout(){
     }
+
     /**
      * reset password and sent hash to set new password by mail
-     *
-     *
-     * @return bool
-     *
      */
     public function passwdresetAction() {
         $this->_form = new ZfExtended_Zendoverwrites_Form('loginPasswdreset.ini');
@@ -308,15 +287,20 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
         }
         $this->view->form = $this->_form;
     }
-    
+
     /**
      * sets the password and passwdReset to false in the LEK_user-table
      *
      * - needs a resetHash as getParam, as for this user is stored in the database
      * - on succes shows login
      *
-     * @return bool
-     *
+     * @throws Zend_Db_Statement_Exception
+     * @throws Zend_Exception
+     * @throws Zend_Form_Exception
+     * @throws Zend_Validate_Exception
+     * @throws ZfExtended_Models_Entity_Exceptions_IntegrityConstraint
+     * @throws ZfExtended_Models_Entity_Exceptions_IntegrityDuplicateKey
+     * @throws ZfExtended_Models_Entity_NotFoundException
      */
      public function passwdnewAction() {
         $this->view->passwdResetInfo = false;
@@ -344,10 +328,12 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
                     return;
                 }
 
-                $user = ZfExtended_Factory::get('ZfExtended_Models_User');
-                /* @var $user ZfExtended_Models_User */
+                $user = ZfExtended_Factory::get(User::class);
                 $user->load($passwdreset->getUserId());
-                $user->setNewPasswd($this->_form->getValue('passwd'));
+                $pwd = $this->_form->getValue('passwd');
+                $pwd = ZfExtended_Authentication::getInstance()->encryptPassword($pwd);
+                $user->setPasswd($pwd);
+                $user->save();
                 
                 $invalidLogin = ZfExtended_Factory::get('ZfExtended_Models_Invalidlogin',array($user->getLogin()));
                 /* @var $invalidLogin ZfExtended_Models_Invalidlogin */
@@ -380,19 +366,20 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
      * updates the session locale by the locale stored in the DB for this user
      */
     protected function localeSetup() {
-        $locale = $this->_user->data->locale;
-        if(Zend_Locale::isLocale($locale)){
+        $locale = $this->_user?->data?->locale ?? null;
+        if(!is_null($locale) && Zend_Locale::isLocale($locale)){
             $this->_setLocale($locale);
         }
         else{
-            //if there user has no valid locale in the DB we set the current locale
-            $this->_userModel->setLocale($this->_session->locale ?? 'en');
+            //if the user has no valid locale in the DB we set the current locale
+            Auth::getInstance()->getUser()->setLocale($this->_session->locale ?? 'en');
         }
     }
-    
+
     /**
      * internal, overwriteable helper function to set the locale information
      * @param string $locale
+     * @throws Zend_Locale_Exception
      */
     protected function _setLocale($locale) {
         $Zend_Locale = new Zend_Locale($locale);
@@ -401,6 +388,5 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
         // set locale as Zend App default locale
         Zend_Registry::set('Zend_Locale', $Zend_Locale);
     }
-    
 }
 

@@ -22,63 +22,66 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
-/**#@+
- * @author Marc Mittag
- * @package translate5
- * @version 1.0
- *
- * Helper, der bei jedem http-request prüft, ob der Benutzer noch authentifiziert ist
+/**
+ * code to check access of the authenticated user to the requested URL per request
  */
-class ZfExtended_Controller_Helper_Access extends Zend_Controller_Action_Helper_Abstract implements ZfExtended_Controllers_helpers_IAccess {
+class ZfExtended_Controller_Helper_Access extends Zend_Controller_Action_Helper_Abstract {
     /**
-     * @var Zend_Controller_Front
+     * @var Zend_Controller_Router_Route_Interface
      */
-    protected $_front = NULL;
+    protected Zend_Controller_Router_Route_Interface $_route;
+
     /**
-     * @var Zend_Controller_Router_Route_Abstract
+     * @var Zend_Controller_Request_Abstract|null
      */
-    protected $_route = NULL;
-    /**
-     * @var Zend_Controller_Request_Abstract
-     */
-    protected $_request = NULL;
+    protected ?Zend_Controller_Request_Abstract $_request = null;
+
     /**
      * @var array
      */
-    protected $_roles = ['noRights'];
+    protected array $_roles = ['noRights'];
+
+    public function __construct() {
+        $front = $this->getFrontController();
+        $this->_request = $front->getRequest();
+        $this->_route = $front->getRouter()->getCurrentRoute();
+    }
 
     /**
-     * @var ZfExtended_Acl
-     */
-    protected $_acl;
-
-    /**
-     * Authentifiziert den Benutzer
-     *
-     * - leitet den Nutzer bei fehlender Berechtigung zur Loginseite weiter (falls
-     *   nicht eingeloggt) oder zur index-Seite (falls eingeloggt)
-     * - prüft in diesem Zuge auf erfolgte Berechtigung und vorhandene Rechte für
-     *   die angefragte Resource
-     * - existiert die Seite nicht, wird ein 404-Fehler via ErrorController geworfen
-     *
-     * throws ZfExtended_NoAccessException if access via route restDefault is forbidden
-     * throws ZfExtended_NotAuthenticatedException if no user is authenticated at all
+     * authenticates the user by session
+     * fill up the roles, check ACL and redirect the user to the desired page
+     * @throws Zend_Exception
      */
     public function isAuthenticated(){
-        $this->_front = $this->getFrontController();
-        $this->_request = $this->_front->getRequest();
-        $this->_route = $this->_front->getRouter()->getCurrentRoute();
-        $this->_acl = ZfExtended_Acl::getInstance();
+        $acl = ZfExtended_Acl::getInstance();
 
-        //normally basic and noRights are already set by login, but we keep this code here
-        if(Zend_Auth::getInstance()->hasIdentity()) {
-            $this->_roles[] = 'basic';
+        $auth = ZfExtended_Authentication::getInstance();
+        $authStatus = 0;
+        if($authenticated = $auth->isAuthenticated($authStatus)) {
+
+            $locale = (string) Zend_Registry::get('Zend_Locale');
+            $user = $auth->getUser();
+            $this->_roles = $user->getRoles();
+            if($locale !== $user->getLocale()) {
+                $user->setLocale($locale);
+                $user->save();
+            }
         }
-        $user = new Zend_Session_Namespace('user');
-        settype($user->data, 'object');
-        settype($user->data->roles, 'array');
-        $this->_roles = $user->data->roles = array_unique(array_merge($user->data->roles, $this->_roles));
-        $this->checkAccess();
+
+        $resource = $this->getResource();
+        $action = $this->getAction();
+
+        $userDeleted = $authStatus == $auth::AUTH_DENY_USER_NOT_FOUND;
+        if($userDeleted) {
+            Zend_Session::destroy();
+        }
+
+        if($userDeleted || !$acl->isInAllowedRoles($this->_roles, $resource, $action)) {
+            $this->accessDenied($authenticated, $resource, $action);
+        }
+        else {
+            $this->cleanRedirectTo($resource);
+        }
     }
     
     /**
@@ -95,60 +98,16 @@ class ZfExtended_Controller_Helper_Access extends Zend_Controller_Action_Helper_
     }
     
     /**
-     * checks the rights of the user and redirects if no access is allowed
-     */
-    protected function checkAccess() {
-        $module = Zend_Registry::get('module').'_';
-        if($module === 'default_'){
-            $module = '';
-        }
-        $action = $this->_request->getActionName();
-        $resource = $module.$this->_request->getControllerName();
-        //set the real operation action
-        if($action=='operation'){
-            $action = $this->_request->getParam('operation').'Operation';
-        }
-
-        $userDeleted = false;
-        try {
-            editor_User::instance(); //load current user
-        }
-        catch (ZfExtended_NotAuthenticatedException) {
-            // on not authenticated we do nothing, just do normal processing to redirect to login
-        }
-        catch (ZfExtended_Models_Entity_NotFoundException) {
-            // if the user ID in the session is not found anymore, the user was deleted and we have to delete the session
-            $userDeleted = true;
-            Zend_Session::destroy();
-        }
-
-        if($userDeleted || !$this->_acl->isInAllowedRoles($this->_roles, $resource, $action)) {
-            $this->accessDenied($resource, $action);
-        }
-        else {
-            $this->cleanRedirectTo($resource);
-        }
-    }
-
-    /**
-     * Returns the roles of the user
-     * @return array
-     */
-    public function getRoles() {
-      return $this->_roles;
-    }
-    
-    /**
      * handles access denied depending on route type and authentication
      * @throws ZfExtended_NoAccessException if access via route restDefault is forbidden
      * @throws ZfExtended_NotAuthenticatedException|Zend_Exception if no user is authenticated at all
      */
-    private function accessDenied($resource, $action) {
+    private function accessDenied(bool $authenticated, string $resource, string $action) {
         if($this->isRestRoute()){
             //setting the message to empty here, since a textual message would break the JSON decoding
             // Exceptions in this early stage of the application would not be converted correctly to JSON
             // since RestContext is done in shutdown of the dispatching
-            if(Zend_Auth::getInstance()->hasIdentity()) {
+            if($authenticated) {
                 $e = new ZfExtended_NoAccessException();
                 $e->setLogging(false);
                 //having no access here is mostly because of missing ACL rules
@@ -255,5 +214,32 @@ class ZfExtended_Controller_Helper_Access extends Zend_Controller_Action_Helper_
         if(!empty($s->redirectTo)) {
             unset($s->redirectTo);
         }
+    }
+
+    /**
+     * @return string
+     * @throws Zend_Exception
+     */
+    private function getResource(): string
+    {
+        $module = Zend_Registry::get('module') . '_';
+        if ($module === 'default_') {
+            $module = '';
+        }
+        $resource = $module . $this->_request->getControllerName();
+        return $resource;
+    }
+
+    /**
+     * @return string
+     */
+    private function getAction(): string
+    {
+        $action = $this->_request->getActionName();
+        //set the real operation action
+        if ($action == 'operation') {
+            $action = $this->_request->getParam('operation') . 'Operation';
+        }
+        return $action;
     }
 }

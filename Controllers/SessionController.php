@@ -22,6 +22,8 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
+use ZfExtended_Authentication as Auth;
+
 class ZfExtended_SessionController extends ZfExtended_RestController {
     
     const STATE_AUTHENTICATED = 'authenticated';
@@ -115,12 +117,9 @@ class ZfExtended_SessionController extends ZfExtended_RestController {
         
         $invalidLoginCounter = ZfExtended_Factory::get('ZfExtended_Models_Invalidlogin',array($login));
         /* @var $invalidLoginCounter ZfExtended_Models_Invalidlogin */
-        
-        if($this->_helper->auth->isValid($login, $passwd)) {
-            $userClass = Zend_Registry::get('config')->authentication->userEntityClass;
-            $userModel = ZfExtended_Factory::get($userClass);
-            /* @var $userModel ZfExtended_Models_SessionUserInterface */
-            $userModel->setUserSessionNamespaceWithPwCheck($login, $passwd);
+
+        if(Auth::getInstance()->authenticate($login, $passwd)) {
+            $userModel = Auth::getInstance()->getUser();
 
             // check for existing valid session for the current user
             $sessionId = ZfExtended_Session::updateSession(true,true);
@@ -147,13 +146,14 @@ class ZfExtended_SessionController extends ZfExtended_RestController {
         $this->log('User authentication by API failed for '.$login);
         throw new ZfExtended_NoAccessException();
     }
-    
+
     /**
      * Sets the locale in the session
      * @param Zend_Session_Namespace $session
-     * @param ZfExtended_Models_SessionUserInterface $userModel
+     * @param ZfExtended_Models_User $userModel
+     * @throws Zend_Exception
      */
-    protected function setLocale(Zend_Session_Namespace $session, ZfExtended_Models_SessionUserInterface $userModel) {
+    protected function setLocale(Zend_Session_Namespace $session, ZfExtended_Models_User $userModel) {
         $locale = $userModel->getLocale();
         if(!Zend_Locale::isLocale($locale)){
             $locale = Zend_Registry::get('config')->runtimeOptions->defaultLanguage;
