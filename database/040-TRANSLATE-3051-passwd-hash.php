@@ -96,9 +96,8 @@ foreach($result as $rowObject) {
     if(is_null($rowObject->passwd) || strlen($rowObject->passwd) > 32) {
         continue;
     }
-    error_log($rowObject->login.' # '.$secret.' # '.$rowObject->passwd.' # '.$auth->encryptPassword($rowObject->passwd, $secret));
     $user->db->update([
-        'passwd' => $auth::COMPAT_PREFIX.$auth->encryptPassword($rowObject->passwd)
+        'passwd' => $auth::COMPAT_PREFIX.$auth->encryptPassword($rowObject->passwd, $secret)
     ], ['id = ?' => $rowObject->id]);
 }
 
