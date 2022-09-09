@@ -206,6 +206,15 @@ class ZfExtended_Authentication {
     }
 
     /**
+     * there may be gap in access control between the user and the auth roles due basic and noRights role
+     * so this method may return more roles as the user getRoles
+     */
+    public function getRoles(): array {
+        $userSession = new Zend_Session_Namespace('user');
+        return $userSession?->data?->roles ?? ['noRights'];
+    }
+
+    /**
      * sets the current user data into the session
      */
     protected function setUserDataInSession() {

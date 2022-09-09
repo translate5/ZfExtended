@@ -60,8 +60,8 @@ class ZfExtended_Controller_Helper_Access extends Zend_Controller_Action_Helper_
         if($authenticated = $auth->isAuthenticated($authStatus)) {
 
             $locale = (string) Zend_Registry::get('Zend_Locale');
+            $this->_roles = $auth->getRoles();
             $user = $auth->getUser();
-            $this->_roles = $user->getRoles();
             if($locale !== $user->getLocale()) {
                 $user->setLocale($locale);
                 $user->save();
