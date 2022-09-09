@@ -298,13 +298,8 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
                 && $this->_form->isValid($this->_request->getParams())){
             $passwdreset = ZfExtended_Factory::get('ZfExtended_Models_Passwdreset');
             /* @var $passwdreset ZfExtended_Models_Passwdreset */
-            if($passwdreset->reset($this->_form->getValue('login'))){
-                $this->view->message = $this->_translate->_('Per E-Mail wurde Ihnen ein Link zugesandt, mit welchem Sie Ihr Passwort neu setzen können. Dieser Link ist 30 min gültig und funktioniert nur, so lange Sie Ihren Browser nicht zwischenzeitlich geschlossen haben. Sie können jederzeit einen neuen Link über dieses Formular anfordern.');
-            }
-            else{
-                $this->view->errors = true;
-                $this->_form->addError($this->_translate->_('Der angegebene Benutzername existiert nicht!'));
-            }
+            $passwdreset->reset($this->_form->getValue('login'));
+            $this->view->message = $this->_translate->_('Per E-Mail wurde Ihnen ein Link zugesandt, mit welchem Sie Ihr Passwort neu setzen können. Dieser Link ist 30 min gültig und funktioniert nur, so lange Sie Ihren Browser nicht zwischenzeitlich geschlossen haben. Sie können jederzeit einen neuen Link über dieses Formular anfordern.');
         }
         $this->view->form = $this->_form;
     }
