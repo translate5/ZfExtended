@@ -22,12 +22,6 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
-/**#@+
- * @author Marc Mittag
- * @package ZfExtended
- * @version 2.0
- *
- */
 /**
  * Plugin, das Locale und Sprache aufsetzt
  */
@@ -69,7 +63,6 @@ class ZfExtended_Controllers_Plugins_LocaleSetup extends Zend_Controller_Plugin_
         $locale = $request->getParam('locale');
         if ($locale && Zend_Locale::isLocale($locale)) {
             $session->locale = $locale;
-            $this->updateUserLocale($locale);
             $this->registerLocale($locale);
             return;
         }
@@ -93,7 +86,6 @@ class ZfExtended_Controllers_Plugins_LocaleSetup extends Zend_Controller_Plugin_
                 $session->locale = $fallback;
             }
         }
-        $this->updateUserLocale($session->locale);
         $this->registerLocale($session->locale);
     }
     
@@ -124,28 +116,8 @@ class ZfExtended_Controllers_Plugins_LocaleSetup extends Zend_Controller_Plugin_
     protected function registerLocale($locale) {
         // Speicher locale und translation-object in Registry - so gilt sie für alle locale und
         $localeRegObj = new Zend_Locale($locale);
-        
+        $localeRegObj->getLanguage();
         //Prüfe, ob für die locale eine xliff-Datei vorhanden ist - wenn nicht fallback
         Zend_Registry::set('Zend_Locale', $localeRegObj);
-    }
-    
-    /**
-     * updates the locale of the currently authenticated user
-     */
-    protected function updateUserLocale($locale) {
-        if(!Zend_Auth::getInstance()->hasIdentity()){
-            return;
-        }
-        $sessionUser = new Zend_Session_Namespace('user');
-        $user = ZfExtended_Factory::get('ZfExtended_Models_User');
-        /* @var $user ZfExtended_Models_User */
-        try {
-            $user->load($sessionUser->data->id);
-            $user->setLocale($locale);
-            $user->save();
-        }
-        catch(ZfExtended_Models_Entity_NotFoundException $e) {
-            //if the user does not exist (anymore) do nothing here
-        }
     }
 }
