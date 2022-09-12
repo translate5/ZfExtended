@@ -29,7 +29,7 @@ END LICENSE AND COPYRIGHT
  */
 class ZfExtended_DbConfig_Type_CoreTypes extends ZfExtended_DbConfig_Type_Abstract {
 
-    const TYPE_STRING = 'map';
+    const TYPE_STRING = 'string';
 
     const TYPE_INTEGER = 'integer';
 
