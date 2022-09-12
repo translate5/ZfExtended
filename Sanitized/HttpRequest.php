@@ -134,10 +134,15 @@ class ZfExtended_Sanitized_HttpRequest extends REST_Controller_Request_Http {
      */
     public function getData(bool $decodeAssociative, array $typeMap = []){
         $data = json_decode(parent::getParam('data'), $decodeAssociative);
-        if($decodeAssociative){
+        if(is_array($data)){
             return self::sanitizeArray($data, $typeMap);
+        } else if(is_object($data)){
+            return self::sanitizeObject($data, $typeMap);
+        } else if(is_string($data)){
+            return ZfExtended_Sanitizer::string($data);
         }
-        return self::sanitizeObject($data, $typeMap);
+        // can only be number, bool or null here, so needs no sanitization
+        return $data;
     }
 
     /**
@@ -149,12 +154,12 @@ class ZfExtended_Sanitized_HttpRequest extends REST_Controller_Request_Http {
     }
 
     /**
-     * Helper for data-sanitization
-     * @param array|stdClass $data
+     * Helper for data-sanitization of arrays
+     * @param array $data
      * @param array $typeMap
      * @return mixed
      */
-    private function sanitizeArray($data, array $typeMap){
+    private function sanitizeArray(array $data, array $typeMap){
         foreach($data as $key => $val){
             if(is_string($val)){
                 $data[$key] = self::sanitizeDataValue($key, $val, $typeMap);
@@ -167,6 +172,12 @@ class ZfExtended_Sanitized_HttpRequest extends REST_Controller_Request_Http {
         return $data;
     }
 
+    /**
+     * Helper for data-sanitization of stdClass Objects
+     * @param $data
+     * @param array $typeMap
+     * @return mixed
+     */
     private function sanitizeObject($data, array $typeMap){
         foreach($data as $key => $val){
             if(is_string($val)){
