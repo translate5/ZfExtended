@@ -49,7 +49,7 @@ class ZfExtended_DbConfig_Type_CoreTypes extends ZfExtended_DbConfig_Type_Abstra
 
     const TYPE_REGEX = 'regex';
 
-    const TYPE_REGEXLIST = 'regexes';
+    const TYPE_REGEXLIST = 'regexlist';
 
     public static function getSanitizationType(string $configType) : string {
         switch($configType){
