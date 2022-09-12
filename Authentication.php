@@ -109,17 +109,31 @@ class ZfExtended_Authentication {
     }
 
     /**
-     * Encrypt the given password
+     * Creates a secure password out of a plain one
      * @param string $plainPassword
      * @param string $secretFallback optional, normally from config
      * @return string
      * @throws Zend_Exception
      */
-    public function encryptPassword(string $plainPassword, string $secretFallback = 'translate5'): string {
-        $secret = Zend_Registry::get('config')->runtimeOptions?->authentication?->secret ?? $secretFallback;
+    public function createSecurePassword(string $plainPassword): string {
+        $secret = Zend_Registry::get('config')->runtimeOptions?->authentication?->secret ?? 'translate5';
+        return $this->encryptPassword($plainPassword, $secret);
+    }
+
+    /**
+     * @param string $plainPassword
+     * @param string $secret
+     * @return string
+     */
+    public function encryptPassword(string $plainPassword, string $secret): string {
         return password_hash($this->addPepper($plainPassword, $secret), $this->algorithm);
     }
 
+    /**
+     * @param string $plainPassword
+     * @param string $secret
+     * @return string
+     */
     private function addPepper(string $plainPassword, string $secret): string {
         return hash_hmac('sha256', $plainPassword, $secret);
     }
@@ -147,7 +161,7 @@ class ZfExtended_Authentication {
             return password_verify($this->addPepper($password, $secret), $passwordHash);
         });
         if($valid && $isOldPassword) {
-            $this->authenticatedUser->setPasswd($this->encryptPassword($password));
+            $this->authenticatedUser->setPasswd($this->createSecurePassword($password));
             $this->authenticatedUser->save();
         }
         return $valid;

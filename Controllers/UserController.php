@@ -295,7 +295,7 @@ class ZfExtended_UserController extends ZfExtended_RestController {
                 $this->data->passwd = null;
             }
             else {
-                $this->data->passwd = ZfExtended_Authentication::getInstance()->encryptPassword($this->data->passwd);
+                $this->data->passwd = ZfExtended_Authentication::getInstance()->createSecurePassword($this->data->passwd);
             }
             $this->entity->setPasswd($this->data->passwd);
         }
