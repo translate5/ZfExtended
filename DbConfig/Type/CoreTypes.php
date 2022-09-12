@@ -23,8 +23,8 @@ END LICENSE AND COPYRIGHT
 */
 
 /**
- * Contains the config handler for core types
- * In the table these are: string | integer | boolean | list | map | absolutepath | float | markup | json | regex | regexes
+ * Contains the config handler for core config types
+ * These are (see table definition): string | integer | boolean | list | map | absolutepath | float | markup | json | regex | regexlist
  * TODO XSS: regex list
  */
 class ZfExtended_DbConfig_Type_CoreTypes extends ZfExtended_DbConfig_Type_Abstract {
@@ -51,11 +51,19 @@ class ZfExtended_DbConfig_Type_CoreTypes extends ZfExtended_DbConfig_Type_Abstra
 
     const TYPE_REGEXLIST = 'regexlist';
 
+    /**
+     * Retrieves the sanititzation-type for a config-type
+     * Note, that the application therefore is responsible to sanitize REGEX & REGEXLIST types (what for Config-values is achieved with the validation via ::validateValue)
+     * @param string $configType
+     * @return string
+     */
     public static function getSanitizationType(string $configType) : string {
         switch($configType){
+
             case self::TYPE_REGEX:
             case self::TYPE_REGEXLIST:
                 return ZfExtended_Sanitizer::UNSANITIZED;
+
             case self::TYPE_MARKUP:
                 return ZfExtended_Sanitizer::MARKUP;
         }
