@@ -207,10 +207,12 @@ class ZfExtended_DbConfig_Type_CoreTypes extends ZfExtended_DbConfig_Type_Abstra
      */
     public function getPhpType(string $type): string {
         switch ($type) {
+
             case self::TYPE_LIST:
             case self::TYPE_MAP:
             case self::TYPE_REGEXLIST:
                 return 'array';
+
             case self::TYPE_ABSPATH:
             case self::TYPE_JSON:
             case self::TYPE_MARKUP:
