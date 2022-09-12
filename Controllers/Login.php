@@ -331,7 +331,7 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
                 $user = ZfExtended_Factory::get(User::class);
                 $user->load($passwdreset->getUserId());
                 $pwd = $this->_form->getValue('passwd');
-                $pwd = ZfExtended_Authentication::getInstance()->encryptPassword($pwd);
+                $pwd = ZfExtended_Authentication::getInstance()->createSecurePassword($pwd);
                 $user->setPasswd($pwd);
                 $user->save();
                 
