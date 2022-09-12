@@ -122,7 +122,7 @@ class ZfExtended_DbConfig_Type_CoreTypes extends ZfExtended_DbConfig_Type_Abstra
                 $valueDecoded = $this->jsonDecode($value, $errorStr);
                 foreach($valueDecoded as $regex){
                     if(preg_match($regex, '') === false){
-                        $errorStr = "not valid $type '$value'";
+                        $errorStr = "not a valid $type '$value'";
                         return false;
                     }
                 }
