@@ -476,4 +476,13 @@ class ZfExtended_Models_Installer_DbUpdater {
         }
         $this->errors[] = $msg;
     }
+
+    /**
+     * function for generating output when using PHP alter scripts
+     * @param string $msg
+     */
+    public function output(string $msg) {
+        echo $msg."\n";
+        error_log($msg);
+    }
 }

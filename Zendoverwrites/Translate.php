@@ -149,9 +149,6 @@ class  ZfExtended_Zendoverwrites_Translate extends Zend_Translate
         $session = new Zend_Session_Namespace();
         $sourceLocale = $this->config->runtimeOptions->translation->sourceLocale;
         
-        $generalHelper = ZfExtended_Zendoverwrites_Controller_Action_HelperBroker::getStaticHelper(
-                        'General'
-        );
         $locales = array();
         $xliffFiles = scandir($this->config->runtimeOptions->dir->locales);
         foreach ($xliffFiles as $key => &$file) {
@@ -167,7 +164,8 @@ class  ZfExtended_Zendoverwrites_Translate extends Zend_Translate
             $lang = Zend_Locale::getTranslation($locale, 'language', $session->locale);
             $locales[$locale] = $lang;
         }
-        return $generalHelper->natcasesortUtf($locales);
+        asort($locales, SORT_NATURAL);
+        return $locales;
     }
     
     public function getXliffStartString() {

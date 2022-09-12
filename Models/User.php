@@ -22,40 +22,39 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
-/**#@+
- * @author Marc Mittag
- * @package ZfExtended
- * @version 2.0
- *
- */
 /**
  * @method void setId() setId(int $id)
  * @method void setUserGuid() setUserGuid(string $guid)
  * @method void setFirstName() setFirstName(string $name)
  * @method void setSurName() setSurName(string $name)
- * @method void setEmail() setEmail(string $email)
- * @method void setPasswd() setPassword(string $passwd)
  * @method void setGender() setGender(string $gender)
+ * @method void setLogin() setLogin(string $login)
+ * @method void setEmail() setEmail(string $email)
+ * @method void setPasswd() setPasswd(string $hash)
+ * @method void setEditable() setEditable(bool $editable)
+ * @method void setLocale() setLocale(string $locale)
  * @method void setParentIds() setParentIds(string $parentIds)
  * @method void setCustomers() setCustomers(string $customers)
  * @method void setOpenIdIssuer() setOpenIdIssuer(string $openIdIssuer)
- * @method void setOpenIdSubject() setOpenIdSubject(string $openIdsubject)
+ * @method void setOpenIdSubject() setOpenIdSubject(string $openIdSubject)
  *
- * @method void setLogin() setLogin(string $login)
  * @method integer getId() getId()
  * @method string getUserGuid() getUserGuid()
  * @method string getFirstName() getFirstName()
  * @method string getSurName() getSurName()
- * @method string getEmail() getEmail()
- * @method string getPasswd() getPasswd()
  * @method string getGender() getGender()
  * @method string getLogin() getLogin()
- * @method void getParentIds() getParentIds()
- * @method void getCustomers() getCustomers()
- * @method void getOpenIdIssuer() getOpenIdIssuer()
- * @method void getOpenIdSubject() getOpenIdSubject()
+ * @method string getEmail() getEmail()
+ *                getRoles defined natively
+ * @method string getPasswd() getPasswd()
+ * @method bool getEditable() getEditable()
+ * @method string getLocale() getLocale()
+ * @method string getParentIds() getParentIds()
+ * @method string getCustomers() getCustomers()
+ * @method string getOpenIdIssuer() getOpenIdIssuer()
+ * @method string getOpenIdSubject() getOpenIdSubject()
  */
-class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implements ZfExtended_Models_SessionUserInterface {
+class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract {
     
     /***
      * resource key for the acl level record
@@ -84,78 +83,7 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implement
          ->where('userGuid IN (?)', array_unique($guids));
          return $this->loadFilterdCustom($s);
      }
-  
-    /**
-     * sets the user in Zend_Session_Namespace('user')
-     *
-     * @param string login
-     * @return void
-     */
-    public function setUserSessionNamespaceWithoutPwCheck(string $login) {
-        $s = $this->db->select();
-        $s->where('login = ?',$login);
-        $this->setUserSessionNamespace($s);
-    }
-    /**
-     * sets the user in
-     *
-     * @param string login
-     * @param string passwd unverschlüsseltes Passwort, wie vom Benutzer eingegeben
-     * @return void
-     */
-    public function setUserSessionNamespaceWithPwCheck(string $login, string $passwd) {
-        $s = $this->db->select();
-        $s->where('login = ?',$login)
-          ->where('passwd = ?',md5($passwd));
-        $this->setUserSessionNamespace($s);
-    }
-    /**
-     * Registriert die Employee-Rolle im Zend_Session_Namespace('user')
-     *
-     * - wird registriert in employee->role
-     *
-     * @param Zend_Db_Table_Select select of ZfExtended_Models_Db_User
-     * @param string passwd unverschlüsseltes Passwort, wie vom Benutzer eingegeben
-     * @return void
-     */
-    protected function setUserSessionNamespace(Zend_Db_Table_Select $s) {
-        $userSession = new Zend_Session_Namespace('user');
-        $this->loadRowBySelect($s);
-        $userData = $this->getDataObject();
-        $userData->roles = $this->getRoles();
-        $userData->roles[] = 'basic';
-        $userData->roles[] = 'noRights'; //the user always has this roles
-        $userData->roles = array_unique($userData->roles);
-        $userData->userName = $userData->firstName.' '.$userData->surName;
-        $userData->loginTimeStamp = $_SERVER['REQUEST_TIME'];
-        $userData->passwd = '********'; // We don't need and don't want the PW hash in the session
-        $userData->openIdIssuer='';
-        foreach ($userData as &$value) {
-            if(is_numeric($value)){
-                $value = (int)$value;
-            }
-        }
-        $userSession->data = $userData;
-    }
-    
-    /**
-     * {@inheritDoc}
-     * @see ZfExtended_Models_SessionUserInterface::setLocale()
-     */
-    public function setLocale(string $locale) {
-        //piping the method to __call, declaration is needed for interface
-        $this->__call('setLocale', [$locale]);
-    }
-    
-    /**
-     * {@inheritDoc}
-     * @see ZfExtended_Models_SessionUserInterface::getLocale()
-     */
-    public function getLocale() {
-        //piping the method to __call, declaration is needed for interface
-        return $this->__call('getLocale', []);
-    }
-    
+
     /**
      * set the user roles
      * @param array $roles
@@ -285,10 +213,10 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implement
             $s->where('parentIds like "%,'.$parentIdFilter.',%" OR id='.$adapter->quote($parentIdFilter));
         }
     }
-    
+
     /**
-     *
      * @return Zend_Db_Table_Select
+     * @throws Zend_Db_Table_Exception
      */
     private function _loadAll() {
         $db = $this->db;
@@ -350,59 +278,6 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implement
     }
     
     /**
-     * @todo This method is a working draft and is not tested yet!
-     * Return true if the given user is a child of the currently loaded one
-     *
-     * @param ZfExtended_Models_User $user
-     * @return boolean
-     */
-    public function isChildOf(ZfExtended_Models_User $user) {
-        return $user->isParentOf($this);
-    }
-    
-    /**
-     * @todo This method is a working draft and is not tested yet!
-     * Return true if the given user is a parent of the currently loaded one
-     *
-     * @param ZfExtended_Models_User $user
-     * @return boolean
-     */
-    public function isParentOf(ZfExtended_Models_User $user) {
-        $parentIds = explode(',', trim($user->getParentIds(), ' ,'));
-        $toCheck = $this->getRoles();
-        $toCheck[] = $this->getId();
-        $parentFound = array_intersect($toCheck, $parentIds);
-        return !empty($parentFound);
-    }
-    
-    /**
-     * @param mixed $newPasswd string or null
-     * @param bool $save
-     */
-    public function setNewPasswd($newPasswd, $save = true) {
-        if(!is_null($newPasswd))
-            $newPasswd = md5($newPasswd);
-        $this->setPasswd($newPasswd);
-        if($save) {
-            $this->validate();
-            $this->save();
-        }
-    }
-    
-    /**
-     * Check if currently logged in user is allowed to access the given ressource and right
-     * @deprecated
-     * @param string $resource
-     * @param string $right
-     *
-     * @return boolean
-     */
-    public function isAllowed($resource,$right) {
-        throw new Exception("refactor my usage to editor_User::isAllowed!");
-    }
-    
-    
-    /**
      * Check if currently logged in user has the given role
      *
      * @param string $role
@@ -412,40 +287,7 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implement
         $userSession = new Zend_Session_Namespace('user');
         return in_array($role, $userSession->data->roles);
     }
-    
-    
-    /**
-     * Get assigned customers to the currently logged user
-     *
-     * @param bool $termportal If given as true - termPM_allClients role will be respected
-     * @return array
-     * @throws Zend_Db_Statement_Exception
-     * @throws Zend_Session_Exception
-     */
-    public function getUserCustomersFromSession(bool $termportal = false): array
-    {
-        $sessionUser = new Zend_Session_Namespace('user');
-        
-        $sessionUser=$sessionUser->data;
-        
-        $userModel=ZfExtended_Factory::get('ZfExtended_Models_User');
-        /* @var $userModel ZfExtended_Models_User */
-        
-        $userModel->load($sessionUser->id);
 
-        // If current user has role 'termPM_allClients' - return all clients ids
-        //FIXME not allowed that way!
-        if ($termportal && in_array('termPM_allClients', $userModel->getRoles()))
-            return Zend_Db_Table_Abstract::getDefaultAdapter()->query('SELECT `id` FROM `LEK_customer`')->fetchAll(PDO::FETCH_COLUMN);
-
-        if(empty($userModel->getCustomers())){
-            return array();
-        }
-        
-        $customers=trim($userModel->getCustomers(),",");
-        return explode(',', $customers);
-    }
-    
     /**
      * merges firstname and surname to username
      */
@@ -465,7 +307,7 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implement
      * Return the user customers as array
      * @return array
      */
-    public function getCustomersArray() {
+    public function getCustomersArray(): array {
         return explode(',', trim($this->getCustomers(),","));
     }
     
@@ -551,26 +393,6 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implement
     }
 
     /**
-     * @return array
-     * @throws Zend_Db_Statement_Exception
-     * @throws Zend_Session_Exception
-     */
-    public function getAccessibleCollectionIds() {
-        return Zend_Db_Table_Abstract::getDefaultAdapter()->query('
-            SELECT DISTINCT `lr`.`id`
-            FROM
-              `LEK_languageresources` `lr`,
-              `LEK_languageresources_customerassoc` `lr2c`,
-              `Zf_users` `u`
-            WHERE TRUE
-              AND `lr`.`resourceType` = "termcollection"
-              AND `lr`.`id` = `lr2c`.`languageResourceId`
-              AND `u`.`customers` REGEXP CONCAT(",", `lr2c`.`customerId`,",")
-              AND `u`.`id` = ?
-        ', (new Zend_Session_Namespace('user'))->data->id)->fetchAll(PDO::FETCH_COLUMN);
-    }
-
-    /**
      * Return id => userName pairs, fetched by given user ids
      *
      * @param array $ids
@@ -584,7 +406,7 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract implement
 
         // Fetch and return id => userName pairs
         return $this->db->getAdapter()->query('
-            SELECT `id`, CONCAT(`firstName`, " ", `surName`) AS `userName`
+            SELECT `id`, CONCAT(`firstName`, \' \', `surName`) AS `userName`
             FROM `Zf_users`
             WHERE ' . $where
         )->fetchAll(PDO::FETCH_KEY_PAIR);
