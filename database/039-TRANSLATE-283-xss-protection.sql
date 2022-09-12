@@ -26,4 +26,4 @@
 -- */
 
 -- needed to support proper sanitization of the sent values
-ALTER TABLE `Zf_configuration` CHANGE `type` `type` ENUM('string','integer','float','boolean','list','map','absolutepath','markup','json','regex','regexes') NOT NULL DEFAULT 'string' COMMENT 'the type of the config value is needed also for GUI';
+ALTER TABLE `Zf_configuration` CHANGE `type` `type` ENUM('string','integer','float','boolean','list','map','absolutepath','markup','json','regex','regexlist') NOT NULL DEFAULT 'string' COMMENT 'the type of the config value is needed also for GUI';
