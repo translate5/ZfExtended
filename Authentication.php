@@ -121,6 +121,7 @@ class ZfExtended_Authentication {
     }
 
     /**
+     * Encrypting a plaintext password securely
      * @param string $plainPassword
      * @param string $secret
      * @return string
