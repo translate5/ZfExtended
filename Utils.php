@@ -139,28 +139,63 @@ class ZfExtended_Utils {
     }
 
     /**
-     * does a recursive copy of the given directory
-     * @param string $src Source Directory
-     * @param string $dst Destination Directory
+     * Does a recursive copy of the given directory. Optionally a extension blacklist prevents files with the given extension(s) to be copied
+     * @param string $sourceDir
+     * @param string $destinationDir
+     * @param array|null $extensionBlacklist: optional: if set, files with the given extensions will not be copied
      */
-    public static function recursiveCopy(string $src, string $dst) {
-        $dir = opendir($src);
-        if(!file_exists($dst)) {
-            @mkdir($dst);
+    public static function recursiveCopy(string $sourceDir, string $destinationDir, ?array $extensionBlacklist = null) {
+        $dir = opendir($sourceDir);
+        if(!file_exists($destinationDir)) {
+            @mkdir($destinationDir);
         }
-        $SEP = DIRECTORY_SEPARATOR;
         while(false !== ( $file = readdir($dir)) ) {
             if ($file == '.' || $file == '..') {
                 continue;
             }
-            if (is_dir($src.$SEP.$file)) {
-                self::recursiveCopy($src.$SEP.$file, $dst.$SEP.$file);
-            }
-            else {
-                copy($src.$SEP.$file, $dst.$SEP.$file);
+            if (is_dir($sourceDir.DIRECTORY_SEPARATOR.$file)) {
+                self::recursiveCopy(
+                    $sourceDir.DIRECTORY_SEPARATOR.$file,
+                    $destinationDir.DIRECTORY_SEPARATOR.$file,
+                    $extensionBlacklist);
+            } else {
+                if($extensionBlacklist === null || !in_array(pathinfo($file, PATHINFO_EXTENSION), $extensionBlacklist)){
+                    copy($sourceDir.DIRECTORY_SEPARATOR.$file, $destinationDir.DIRECTORY_SEPARATOR.$file);
+                }
             }
         }
         closedir($dir);
+    }
+
+    /**
+     * Deletes recursivly a directory. Optionally a extension whitelist can be passed that will only delete files with the given extension (and not the directories anymore, even if they are empty then)
+     * @param string $directory
+     * @param array|null $extensionWhitelist
+     */
+    public static function recursiveDelete(string $directory, ?array $extensionWhitelist = null){
+        $iterator = new DirectoryIterator($directory);
+        foreach ($iterator as $fileinfo) {
+            if ($fileinfo->isDot()) {
+                continue;
+            }
+            if ($fileinfo->isDir()) {
+                self::recursiveDelete($directory.DIRECTORY_SEPARATOR.$fileinfo->getFilename());
+            } else if($fileinfo->isFile() && ($extensionWhitelist === null || in_array(pathinfo($fileinfo->getFilename(), PATHINFO_EXTENSION), $extensionWhitelist))) {
+                try {
+                    unlink($directory.DIRECTORY_SEPARATOR.$fileinfo->getFilename());
+                } catch (Exception){
+                    error_log('ZfExtended_Utils::recursiveDelete: Could not delete file '.$directory.DIRECTORY_SEPARATOR.$fileinfo->getFilename());
+                }
+            }
+        }
+        if($extensionWhitelist === null){
+            //FIXME try catch ist nur eine übergangslösung!!!
+            try {
+                rmdir($directory);
+            } catch (Exception){
+                error_log('ZfExtended_Utils::recursiveDelete: Could not delete directory '.$directory);
+            }
+        }
     }
 
     /**
@@ -358,35 +393,5 @@ class ZfExtended_Utils {
     public static function getFileExtension(string $fileName): string
     {
         return pathinfo($fileName,PATHINFO_EXTENSION);
-    }
-
-    /**
-     * deletes recursivly a directory
-     * @param string $directory
-     */
-    public static function recursiveDelete(string $directory)
-    {
-        $iterator = new DirectoryIterator($directory);
-        foreach ($iterator as $fileinfo) {
-            if ($fileinfo->isDot()) {
-                continue;
-            }
-            if ($fileinfo->isDir()) {
-                self::recursiveDelete($directory . DIRECTORY_SEPARATOR . $fileinfo->getFilename());
-            }
-            if ($fileinfo->isFile()) {
-                try {
-                    unlink($directory . DIRECTORY_SEPARATOR . $fileinfo->getFilename());
-                }
-                catch (Exception){
-                }
-            }
-        }
-        //FIXME try catch ist nur eine übergangslösung!!!
-        try {
-            rmdir($directory);
-        }
-        catch (Exception){
-        }
     }
 }
