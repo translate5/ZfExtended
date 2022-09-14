@@ -29,5 +29,5 @@ END LICENSE AND COPYRIGHT
  *
  */
 /* @var $this Zend_View */
-echo $this->errorMessage;
+echo htmlspecialchars($this->errorMessage);
 unset($this->translate);
