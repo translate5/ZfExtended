@@ -247,7 +247,7 @@ class ZfExtended_UserController extends ZfExtended_RestController {
             ]);
         }
 
-        if($this->_helper->auth->isValid($this->entity->getLogin(),$oldpwd) === false){
+        if(ZfExtended_Authentication::getInstance()->authenticate($this->entity->getLogin(),$oldpwd) === false){
             throw ZfExtended_UnprocessableEntity::createResponse('E1421', [
                 'oldpasswd' => 'Old password does not match'
             ]);
