@@ -45,8 +45,16 @@ class ZfExtended_Models_SystemRequirement_Validator {
     public function __construct(bool $installationBootstrapOnly) {
         $this->installationBootstrapOnly = $installationBootstrapOnly;
         //load modules directory based
-        $this->addModules(__DIR__.'/Modules', 'ZfExtended_Models_SystemRequirement_Modules_');
-        $this->addModules('application/modules/default/Models/SystemRequirement/Modules', 'Models_SystemRequirement_Modules_');
+        if($installationBootstrapOnly) {
+            $sysPath = __DIR__.'/Modules';
+            $modPath = 'application/modules/default/Models/SystemRequirement/Modules';
+        }
+        else {
+            $sysPath = APPLICATION_ROOT.'/library/ZfExtended/Models/SystemRequirement/Modules';
+            $modPath = APPLICATION_ROOT.'/application/modules/default/Models/SystemRequirement/Modules';
+        }
+        $this->addModules($sysPath, 'ZfExtended_Models_SystemRequirement_Modules_');
+        $this->addModules($modPath, 'Models_SystemRequirement_Modules_');
         
     }
     
