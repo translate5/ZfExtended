@@ -472,7 +472,7 @@ abstract class ZfExtended_Models_Entity_Abstract {
      * returns $this as data in an stdObject
      * @return stdClass
      */
-    public function getDataObject() {
+    public function getDataObject(): stdClass {
         $data = $this->row->toArray();
         $mapping = array_flip($this->mapping);
         $result = new stdClass();

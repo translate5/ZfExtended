@@ -311,7 +311,7 @@ class ZfExtended_UserController extends ZfExtended_RestController {
     }
 
     /**
-     * overridden to save the user password not unencrypted and to reset passwd if requested
+     * overridden to save the user password encrypted and to reset passwd if requested
      * (non-PHPdoc)
      * @see ZfExtended_RestController::setDataInEntity()
      */
@@ -319,10 +319,14 @@ class ZfExtended_UserController extends ZfExtended_RestController {
         $this->prepareParentIds();
         parent::setDataInEntity($fields, $mode);
         if(isset($this->data->passwd)) {
-            if($this->data->passwd===''||  is_null($this->data->passwd)) {//convention for passwd being reset;
+            //convention for passwd being reset;
+            if($this->data->passwd===''||  is_null($this->data->passwd)) {
                 $this->data->passwd = null;
             }
-            $this->entity->setNewPasswd($this->data->passwd,false);
+            else {
+                $this->data->passwd = ZfExtended_Authentication::getInstance()->createSecurePassword($this->data->passwd);
+            }
+            $this->entity->setPasswd($this->data->passwd);
         }
         //if is post add current user as "owner" of the newly created one
         if(!$this->_request->isPost()) {
@@ -536,7 +540,7 @@ class ZfExtended_UserController extends ZfExtended_RestController {
             return;
         }
         if($userSession->data->id==$this->data->id){
-            $this->entity->setUserSessionNamespaceWithoutPwCheck($userSession->data->login);
+            ZfExtended_Authentication::getInstance()->authenticateByLogin($userSession->data->login);
         }
     }
 

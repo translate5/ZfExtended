@@ -41,10 +41,9 @@ class ZfExtended_Controller_Helper_ExtJs extends Zend_Controller_Action_Helper_A
     protected $_extVersion = 0;
     
     /**
-     * @var array extPaths Array mit allen basePath-Pfaden von extJs gemäß application.ini
-     * sortiert gemäß ZfExtended_Controller_Helper_General->natksortReverseUtf
+     * @var array extPaths list with all extjs base paths
      */
-    protected $_extPaths = array();
+    protected array $_extPaths = [];
     
     /**
      * Pfad zur css Datei unterhalb des ext basepaths
@@ -75,13 +74,11 @@ class ZfExtended_Controller_Helper_ExtJs extends Zend_Controller_Action_Helper_A
 
     public function init(){
         $config = Zend_Registry::get('config');
-        $general = ZfExtended_Zendoverwrites_Controller_Action_HelperBroker::getStaticHelper(
-            'General'
-        );
 
         $this->_cssPath = $this->themesPathMap[$this->userTheme];
-        $this->_extPaths = $config->runtimeOptions->extJs->basepath->toArray();
-        $this->_extPaths = $general->natksortReverseUtf($this->_extPaths);
+        $extJsPaths = $config->runtimeOptions->extJs->basepath->toArray();
+        ksort($extJsPaths, SORT_NATURAL | SORT_FLAG_CASE);
+        $this->_extPaths = array_reverse($extJsPaths, true);
         $extConfig = $config->extVersionMapping;
         
         if(!empty($extConfig)) {
@@ -124,20 +121,9 @@ class ZfExtended_Controller_Helper_ExtJs extends Zend_Controller_Action_Helper_A
     }
 
     /**
-     * Gibt den http-orientierten Pfad zu ExtJs auf Basis der application.ini zurück
-     *
-     * - sind unterhalb von runtimeOptions.extJs.basepath mehrere Ext-Pfade gelistet,
-     *   wird der Pfad zurückgegeben, der in /application/extVersionMapping.ini
-     *   der aktuellen Kombination aus Modul / Controller zugeordnet ist
-     * - Ist die aktuelle Kombination dort nicht gelistet oder existiert die Datei nicht,
-     *   wird der Pfad zurück gegeben, der gemäß der an letzter
-     *   Stelle in der Sortierreihenfolge steht, wenn man die nach runtimeOptions.extJs.basepath
-     *   folgenden Schlüssel mit ZfExtended_Controller_Helper_General->natksortUtf sortiert (also bei Verwendung
-     *   von Versionsnummern als Schüssel die jeweils neueste gelistete Version)
-     *
-     * @return string http-orientierten Pfad zu ExtJs auf Basis der application.ini
+     * @return string
      */
-    public function getHttpPath() {
+    public function getHttpPath(): string {
         return $this->_extPaths[$this->_extVersion];
     }
 
