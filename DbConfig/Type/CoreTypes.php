@@ -151,7 +151,7 @@ class ZfExtended_DbConfig_Type_CoreTypes extends ZfExtended_DbConfig_Type_Abstra
         }
         $defaults = explode(',', $defaults);
         //since list is a core type, we can include the check here
-        if($config->getType() == self::TYPE_LIST) {
+        if($config->getType() == self::TYPE_LIST || $config->getType() == self::TYPE_REGEXLIST) {
             $value = json_decode($value);
             $diff = array_diff($value, $defaults);
             return empty($diff);
@@ -180,6 +180,7 @@ class ZfExtended_DbConfig_Type_CoreTypes extends ZfExtended_DbConfig_Type_Abstra
         $error = '';
         switch ($type) {
             case self::TYPE_LIST:
+            case self::TYPE_REGEXLIST:
             case self::TYPE_MAP:
                 return $this->jsonDecode($value, $error);
             case self::TYPE_ABSPATH:

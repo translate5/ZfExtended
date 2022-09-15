@@ -29,6 +29,7 @@ class ZfExtended_SessionController extends ZfExtended_RestController {
     const STATE_AUTHENTICATED = 'authenticated';
     const STATE_NOT_AUTHENTICATED = 'not authenticated';
 
+    protected array $dataSanitizationMap = ['passwd' => ZfExtended_Sanitizer::UNSANITIZED];
     /**
      * inits the internal entity Object, handels given limit, filter and sort parameters
      * @see Zend_Controller_Action::init()
@@ -87,7 +88,10 @@ class ZfExtended_SessionController extends ZfExtended_RestController {
     /**
      * (non-PHPdoc)
      * @see ZfExtended_RestController::postAction()
-     * @return boolean true if login was successful, false otherwise
+     * @return bool true if login was successful, false otherwise
+     * @throws Zend_Db_Table_Exception
+     * @throws Zend_Exception
+     * @throws ZfExtended_NoAccessException
      */
     public function postAction() {
         $this->decodePutData();
