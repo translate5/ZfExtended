@@ -39,6 +39,7 @@ class ZfExtended_Logger_Writer_EcodeWriter extends ZfExtended_Logger_Writer_Abst
         'E1011', // Multi Purpose Code logging in the context of a task
         'E1012', // Multi Purpose Code logging in the context of jobs (task user association)
         'E1013', // Multi Purpose Code logging in the context of pure workflow processing
+        'E1028', // Multi Purpose Code logging in the context of a TBX import
     ];
 
     public function write(ZfExtended_Logger_Event $event) {
