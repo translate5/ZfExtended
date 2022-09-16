@@ -37,9 +37,9 @@ class ZfExtended_Sanitized_HttpRequest extends REST_Controller_Request_Http {
         if(isset($this->_params[$key])){
             return $this->_params[$key];
         } else if($key != 'data' && isset($_GET[$key])){
-            return ZfExtended_Sanitizer::string($_GET[$key]);
+            return self::sanitizeRequestValue($_GET[$key]);
         } else if($key != 'data' && isset($_POST[$key])){
-            return ZfExtended_Sanitizer::string($_POST[$key]);
+            return self::sanitizeRequestValue($_POST[$key]);
         }
         return parent::__get($key);
     }
@@ -65,9 +65,9 @@ class ZfExtended_Sanitized_HttpRequest extends REST_Controller_Request_Http {
         if (isset($this->_params[$keyName])) {
             return $this->_params[$keyName];
         } elseif ($keyName != 'data' && in_array('_GET', $paramSources) && (isset($_GET[$keyName]))) {
-            return ZfExtended_Sanitizer::string($_GET[$keyName]);
+            return self::sanitizeRequestValue($_GET[$keyName]);
         } elseif ($keyName != 'data' && in_array('_POST', $paramSources) && (isset($_POST[$keyName]))) {
-            return ZfExtended_Sanitizer::string($_POST[$keyName]);
+            return self::sanitizeRequestValue($_POST[$keyName]);
         }
         return $default;
     }
@@ -107,12 +107,12 @@ class ZfExtended_Sanitized_HttpRequest extends REST_Controller_Request_Http {
         $paramSources = $this->getParamSources();
         if (in_array('_GET', $paramSources) && isset($_GET) && is_array($_GET)){
             foreach($_GET as $key => $val){
-                $return[$key] = ($key === 'data') ? $val : ZfExtended_Sanitizer::string($val);
+                $return[$key] = ($key === 'data') ? $val : self::sanitizeRequestValue($val);
             }
         }
         if (in_array('_POST', $paramSources) && isset($_POST) && is_array($_POST)){
             foreach($_POST as $key => $val){
-                $return[$key] = ($key === 'data') ? $val : ZfExtended_Sanitizer::string($val);
+                $return[$key] = ($key === 'data') ? $val : self::sanitizeRequestValue($val);
             }
         }
         return $return;
@@ -151,6 +151,21 @@ class ZfExtended_Sanitized_HttpRequest extends REST_Controller_Request_Http {
      */
     public static function getRawData($default = null){
         return parent::getParam('data', $default);
+    }
+
+    /**
+     * Sanitizes a single request value, which can only be string or array
+     * @param array|string $value
+     * @return array|string
+     */
+    private static function sanitizeRequestValue($value){
+        if(is_array($value)){
+            foreach($value as $key => $aval){
+                $value[$key] = self::sanitizeRequestValue($aval);
+            }
+            return $value;
+        }
+        return ZfExtended_Sanitizer::string($value);
     }
 
     /**
