@@ -32,7 +32,8 @@ final class ZfExtended_Sanitizer {
      */
     const STRING = 'string';
     /**
-     * Leads to stripping of script-tags & on** handlers
+     * Leads to checking for script-tags & on** handlers and javascript: URLs
+     * In these cases exceptions are thrown
      */
     const MARKUP = 'markup';
     /**

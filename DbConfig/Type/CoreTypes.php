@@ -25,7 +25,6 @@ END LICENSE AND COPYRIGHT
 /**
  * Contains the config handler for core config types
  * These are (see table definition): string | integer | boolean | list | map | absolutepath | float | markup | json | regex | regexlist
- * TODO XSS: regex list
  */
 class ZfExtended_DbConfig_Type_CoreTypes extends ZfExtended_DbConfig_Type_Abstract {
 
