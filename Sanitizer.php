@@ -47,17 +47,14 @@ final class ZfExtended_Sanitizer {
      * @param string $val
      * @param string $type
      * @return string
+     * @throws ZfExtended_SecurityException
      */
     public static function sanitize(string $val, string $type) : string {
-        switch($type){
-
-            case self::MARKUP:
-                return self::markup($val);
-
-            case self::UNSANITIZED:
-                return $val;
-        }
-        return self::string($val);
+        return match ($type) {
+            self::MARKUP => self::markup($val),
+            self::UNSANITIZED => $val,
+            default => self::string($val),
+        };
     }
 
     /**
@@ -75,12 +72,13 @@ final class ZfExtended_Sanitizer {
      * Note, that invalid markup will be stripped and the text returned
      * @param string $markup
      * @return string
+     * @throws ZfExtended_SecurityException
      */
     public static function markup(string $markup) : string {
         $dom = new ZfExtended_Dom();
         $nodeList = $dom->loadUnicodeMarkup($markup);
         // this is debatable: when invalid markup is posted, we remove it and use the posted text contents
-        // this is neccessary, as browsers are much more tolerant than DOMDocument and we can not expect the broken markup to be "broken enough" to not make attacks possible
+        // this is neccessary, as browsers are much more tolerant than DOMDocument, and we can not expect the broken markup to be "broken enough" to not make attacks possible
         // may it is better to throw an "invalid markup exception" here ?
         if($nodeList === null){
             return strip_tags($markup);
@@ -105,13 +103,13 @@ final class ZfExtended_Sanitizer {
                 foreach ($node->attributes as $attribute){ /* @var $attribute DOMNode */
                     $name = strtolower($attribute->nodeName);
                     // any event-handler attribute will be rejected. We do not check, if this is actually a valid event-handler, so "onanything" will also be invalid
-                    if(strlen($name) > 2 && substr($name, 0, 2) === 'on'){
+                    if(strlen($name) > 2 && str_starts_with($name, 'on')){
                         throw new ZfExtended_SecurityException('Event-handler attributes are not allowed in the sent markup');
                     }
                     // old-school but still possible: attack with "javascript:" pseudo-protocol
                     if($name === 'href'){
                         $href = preg_replace('/\s+/', '', strtolower($attribute->nodeValue));
-                        if(substr($href, 0, 11) === 'javascript:'){
+                        if(str_starts_with($href, 'javascript:')){
                             throw new ZfExtended_SecurityException('JavaScript-hrefs are not allowed in the sent markup');
                         }
                     }

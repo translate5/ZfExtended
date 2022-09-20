@@ -37,9 +37,9 @@ class ZfExtended_Sanitized_HttpRequest extends REST_Controller_Request_Http {
         if(isset($this->_params[$key])){
             return $this->_params[$key];
         } else if($key != 'data' && isset($_GET[$key])){
-            return self::sanitizeRequestValue($_GET[$key]);
+            return $this->sanitizeRequestValue($_GET[$key]);
         } else if($key != 'data' && isset($_POST[$key])){
-            return self::sanitizeRequestValue($_POST[$key]);
+            return $this->sanitizeRequestValue($_POST[$key]);
         }
         return parent::__get($key);
     }
@@ -65,9 +65,9 @@ class ZfExtended_Sanitized_HttpRequest extends REST_Controller_Request_Http {
         if (isset($this->_params[$keyName])) {
             return $this->_params[$keyName];
         } elseif ($keyName != 'data' && in_array('_GET', $paramSources) && (isset($_GET[$keyName]))) {
-            return self::sanitizeRequestValue($_GET[$keyName]);
+            return $this->sanitizeRequestValue($_GET[$keyName]);
         } elseif ($keyName != 'data' && in_array('_POST', $paramSources) && (isset($_POST[$keyName]))) {
-            return self::sanitizeRequestValue($_POST[$keyName]);
+            return $this->sanitizeRequestValue($_POST[$keyName]);
         }
         return $default;
     }
@@ -79,10 +79,11 @@ class ZfExtended_Sanitized_HttpRequest extends REST_Controller_Request_Http {
      * @param string $type
      * @param null $default
      * @return mixed
+     * @throws ZfExtended_SecurityException
      */
     public function getSanitizedParam(string $key, string $type, $default = null){
-        $param = param::getParam($key, $default);
-        if($param !== null && is_string($param)){
+        $param = parent::getParam($key, $default);
+        if(is_string($param)){
             return ZfExtended_Sanitizer::sanitize($param, $type);
         }
         return $param;
@@ -90,7 +91,7 @@ class ZfExtended_Sanitized_HttpRequest extends REST_Controller_Request_Http {
 
     /**
      * Retrieves an unsanitized request parameter
-     * @param $key
+     * @param string $key
      * @param mixed $default
      * @return mixed
      */
@@ -99,7 +100,7 @@ class ZfExtended_Sanitized_HttpRequest extends REST_Controller_Request_Http {
     }
 
     /**
-     * Retrieves an sanitized array of all parameters
+     * Retrieves a sanitized array of all parameters
      * @return array
      */
     public function getParams(){
@@ -107,12 +108,12 @@ class ZfExtended_Sanitized_HttpRequest extends REST_Controller_Request_Http {
         $paramSources = $this->getParamSources();
         if (in_array('_GET', $paramSources) && isset($_GET) && is_array($_GET)){
             foreach($_GET as $key => $val){
-                $return[$key] = ($key === 'data') ? $val : self::sanitizeRequestValue($val);
+                $return[$key] = ($key === 'data') ? $val : $this->sanitizeRequestValue($val);
             }
         }
         if (in_array('_POST', $paramSources) && isset($_POST) && is_array($_POST)){
             foreach($_POST as $key => $val){
-                $return[$key] = ($key === 'data') ? $val : self::sanitizeRequestValue($val);
+                $return[$key] = ($key === 'data') ? $val : $this->sanitizeRequestValue($val);
             }
         }
         return $return;
@@ -129,15 +130,16 @@ class ZfExtended_Sanitized_HttpRequest extends REST_Controller_Request_Http {
     /**
      * Sanitizes the "data" param that represents the JSON data of a PUT or POST
      * @param bool $decodeAssociative
-     * @param array $typeMap: a map of param-names and types as defined in ZfExtended_Sanitizer as constants. The default sanitization is always "string"
-     * @return stdClass|array
+     * @param array $typeMap
+     * @return stdClass|array|string
+     * @throws ZfExtended_SecurityException
      */
     public function getData(bool $decodeAssociative, array $typeMap = []){
         $data = json_decode(parent::getParam('data'), $decodeAssociative);
         if(is_array($data)){
-            return self::sanitizeArray($data, $typeMap);
+            return $this->sanitizeArray($data, $typeMap);
         } else if(is_object($data)){
-            return self::sanitizeObject($data, $typeMap);
+            return $this->sanitizeObject($data, $typeMap);
         } else if(is_string($data)){
             return ZfExtended_Sanitizer::string($data);
         }
@@ -149,39 +151,40 @@ class ZfExtended_Sanitized_HttpRequest extends REST_Controller_Request_Http {
      * Retrieves the raw data-request param
      * @return mixed|string|null
      */
-    public static function getRawData($default = null){
+    public function getRawData($default = null){
         return parent::getParam('data', $default);
     }
 
     /**
      * Sanitizes a single request value, which can only be string or array
-     * @param array|string $value
+     * @param array|string $requestValue
      * @return array|string
      */
-    private static function sanitizeRequestValue($value){
-        if(is_array($value)){
-            foreach($value as $key => $aval){
-                $value[$key] = self::sanitizeRequestValue($aval);
+    private function sanitizeRequestValue($requestValue){
+        if(is_array($requestValue)){
+            foreach($requestValue as $key => $value){
+                $value[$key] = $this->sanitizeRequestValue($value);
             }
-            return $value;
+            return $requestValue;
         }
-        return ZfExtended_Sanitizer::string($value);
+        return ZfExtended_Sanitizer::string($requestValue);
     }
 
     /**
      * Helper for data-sanitization of arrays
      * @param array $data
      * @param array $typeMap
-     * @return mixed
+     * @return array
+     * @throws ZfExtended_SecurityException
      */
-    private function sanitizeArray(array $data, array $typeMap){
+    private function sanitizeArray(array $data, array $typeMap) : array {
         foreach($data as $key => $val){
             if(is_string($val)){
-                $data[$key] = self::sanitizeDataValue($key, $val, $typeMap);
+                $data[$key] = $this->sanitizeDataValue($key, $val, $typeMap);
             } else if(is_array($val)){
-                $data[$key] = self::sanitizeArray($val, []);
+                $data[$key] = $this->sanitizeArray($val, []);
             } else if(is_object($val)){
-                $data[$key] = self::sanitizeObject($val, []);
+                $data[$key] = $this->sanitizeObject($val, []);
             }
         }
         return $data;
@@ -192,15 +195,16 @@ class ZfExtended_Sanitized_HttpRequest extends REST_Controller_Request_Http {
      * @param $data
      * @param array $typeMap
      * @return mixed
+     * @throws ZfExtended_SecurityException
      */
     private function sanitizeObject($data, array $typeMap){
         foreach($data as $key => $val){
             if(is_string($val)){
-                $data->$key = self::sanitizeDataValue($key, $val, $typeMap);
+                $data->$key = $this->sanitizeDataValue($key, $val, $typeMap);
             } else if(is_array($val)){
-                $data->$key = self::sanitizeArray($val, []);
+                $data->$key = $this->sanitizeArray($val, []);
             } else if(is_object($val)){
-                $data->$key = self::sanitizeObject($val, []);
+                $data->$key = $this->sanitizeObject($val, []);
             }
         }
         return $data;
@@ -211,9 +215,10 @@ class ZfExtended_Sanitized_HttpRequest extends REST_Controller_Request_Http {
      * @param string $key
      * @param string $val
      * @param array $typeMap
-     * @return mixed
+     * @return string
+     * @throws ZfExtended_SecurityException
      */
-    private function sanitizeDataValue(string $key, string $val, array $typeMap){
+    private function sanitizeDataValue(string $key, string $val, array $typeMap) : string {
         if(array_key_exists($key, $typeMap)){
             return ZfExtended_Sanitizer::sanitize($val, $typeMap[$key]);
         }

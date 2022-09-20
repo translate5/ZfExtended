@@ -20,7 +20,7 @@ START LICENSE AND COPYRIGHT
   
  @copyright  Marc Mittag, MittagQI - Quality Informatics
  @author     MittagQI - Quality Informatics
- @license    GNU AFFERO GENERAL PUBLIC LICENSE version 3 with plugin-execption
+ @license    GNU AFFERO GENERAL PUBLIC LICENSE version 3 with plugin-excecption
 			 http://www.gnu.org/licenses/agpl.html http://www.translate5.net/plugin-exception.txt
 
 END LICENSE AND COPYRIGHT
@@ -31,18 +31,13 @@ END LICENSE AND COPYRIGHT
  * To not change the original API we do not throw exceptions but collect the errors instead of reporting them and make them accessible
  * Also an added API makes it simpler to load Unicode HTML (only XML will be loaded as UTF-8 by default) properly
  */
-class ZfExtended_Dom extends DOMDocument {
+final class ZfExtended_Dom extends DOMDocument {
     const LIBXML_LEVEL_NAME = [
         LIBXML_ERR_WARNING => 'warning',
         LIBXML_ERR_ERROR   => 'error',
         LIBXML_ERR_FATAL   => 'fatal',
     ];
     
-    /**
-     * Used to set UTF-8 encoding for Documents
-     * @var string
-     */
-    const UTF8_PROCESSINGINSTRUCTION = '<?xml encoding="UTF-8">';
     /**
      * Used to set UTF-8 encoding for Markup
      * @var string
@@ -65,29 +60,27 @@ class ZfExtended_Dom extends DOMDocument {
      * 
      * @var libXMLError[]
      */
-    private $domErrors = [];
+    private array $domErrors = [];
     /**
      * 
      * @var boolean
      */
-    private $traceDomErrors = false;
+    private bool $traceDomErrors = false;
 
     private DOMXPath $xpath;
 
-    /**
-     * @return DOMXPath
-     */
-    public function getXpath(): DOMXPath {
-        return $this->xpath ?? ($this->xpath = new DOMXPath($this));
-    }
-    
     public function __construct($version=null, $encoding=null){
         parent::__construct($version, $encoding);
         // as long as libxml reports completely outdated errors (-> HTML 4.0.1 strict specs) we disable this
         $this->strictErrorChecking = false;
     }
 
-    public function load ($filename, $options=NULL): bool { // returns bool when called dynamic
+    /**
+     * @param string $filename
+     * @param null $options
+     * @return bool|DOMDocument
+     */
+    public function load ($filename, $options=NULL) { // returns bool when called dynamic
         $filename = realpath($filename);
         $this->domErrors = [];
         libxml_clear_errors();
@@ -103,7 +96,12 @@ class ZfExtended_Dom extends DOMDocument {
         $this->traceWarningsAndErrors();
         return $result;
     }
-    
+
+    /**
+     * @param string $source
+     * @param null $options
+     * @return bool|DOMDocument
+     */
     public function loadXML ($source, $options=NULL){
         $this->domErrors = [];
         libxml_clear_errors();
@@ -120,6 +118,11 @@ class ZfExtended_Dom extends DOMDocument {
         return $result;
     }
 
+    /**
+     * @param string $source
+     * @param null $options
+     * @return bool|DOMDocument
+     */
     public function loadHTML ($source, $options=NULL){
         $this->domErrors = [];
         libxml_clear_errors();
@@ -140,7 +143,7 @@ class ZfExtended_Dom extends DOMDocument {
      * @param string $source
      * @return DOMNodeList|NULL
      */
-    public function loadUnicodeMarkup (string $source){
+    public function loadUnicodeMarkup (string $source): ?DOMNodeList {
         $result = $this->loadHTML('<html><head>'.self::UTF8_METATAG.'</head><body>'.$source.'</body>');
         if($result){
             $this->encoding = 'UTF-8';
@@ -158,7 +161,7 @@ class ZfExtended_Dom extends DOMDocument {
      * @param string $source
      * @return DOMElement|NULL
      */
-    public function loadUnicodeElement (string $source){
+    public function loadUnicodeElement (string $source) : ?DOMElement {
         $nodes = $this->loadUnicodeMarkup($source);
         if($nodes != NULL){
             for($i=0; $i < $nodes->length; $i++){
@@ -170,7 +173,12 @@ class ZfExtended_Dom extends DOMDocument {
         }
         return NULL;
     }
-    
+
+    /**
+     * @param string $filename
+     * @param null $options
+     * @return bool|DOMDocument
+     */
     public function loadHTMLFile ($filename, $options=NULL){
         $filename = realpath($filename);
         $this->domErrors = [];
@@ -193,10 +201,9 @@ class ZfExtended_Dom extends DOMDocument {
      */
     /**
      * @param bool $allowErrors
-     * @param bool $allowWarnings
      * @return bool
      */
-    public function isValid(bool $allowErrors=true){
+    public function isValid(bool $allowErrors=true) : bool {
         if(count($this->domErrors) == 0){
             return true;
         }
@@ -208,12 +215,12 @@ class ZfExtended_Dom extends DOMDocument {
         return true;
     }
     /**
-     * Evaluates, if a string is a valid XML string in the sense, taht it produces no fatal errors when loaded as such
+     * Evaluates, if a string is a valid XML string in the sense, that it produces no fatal errors when loaded as such
      * @param string $string
      * @return boolean
      */
-    public function isValidXmlString($string){
-        //surround with dummy tags so the string validation can be done with domdocument
+    public function isValidXmlString(string $string) : bool {
+        //surround with dummy tags so the string validation can be done with DOMDocument
         $testString = '<dummytag>'.$string.'</dummytag>';
         $this->loadXML($testString);
         return $this->isValid();
@@ -228,23 +235,23 @@ class ZfExtended_Dom extends DOMDocument {
      *
      * @return boolean
      */
-    public function hasWarningsOrErrors(){
+    public function hasWarningsOrErrors() : bool {
         return (count($this->domErrors) > 0);
     }
     /**
-     * Checks, if there were any fatals, errors or warnings when loading a document
+     * Checks, if there were any errors or warnings when loading a document
      * @return libXMLError[]
      */
-    public function getWarningsAndErrors(){
+    public function getWarningsAndErrors() : array {
         return $this->domErrors;
     }
     /**
-     * Retrieves the fatals, errors and warmings as a concatenated string
+     * Retrieves the errors and warnings as a concatenated string
      * @param string $glue
      * @param bool $verbose enables column and line number
      * @return string
      */
-    public function getErrorMsg(string $glue=', ', bool $verbose = false): string{
+    public function getErrorMsg(string $glue=', ', bool $verbose = false) : string {
         $errors = [];
         if(count($this->domErrors) > 0){
             foreach($this->domErrors as $error){ /* @var $error libXMLError */
@@ -259,11 +266,11 @@ class ZfExtended_Dom extends DOMDocument {
         return implode($glue, $errors);
     }
     /**
-     * Traces the capured errors if there were any
+     * Traces the captured errors if there were any
      */
     private function traceWarningsAndErrors(){
         if($this->traceDomErrors && count($this->domErrors) > 0){
-            foreach($this->domErrors as $error){ /* @var $error libXMLError */
+            foreach($this->domErrors as $error){
                 error_log($this->createLibXmlErrorMsg($error));
             }
         }
@@ -273,14 +280,13 @@ class ZfExtended_Dom extends DOMDocument {
      * @param libXMLError $error
      * @return string
      */
-    private function createLibXmlErrorMsg(libXMLError $error): string{
-        $errname = ($error->level == LIBXML_ERR_FATAL) ? 'FATAL ERROR' : (($error->level == LIBXML_ERR_ERROR) ? 'ERROR' : 'WARNING');
-        return 'LibXML '.$errname.': '.$error->message;
+    private function createLibXmlErrorMsg(libXMLError $error): string {
+        $errorName = ($error->level == LIBXML_ERR_FATAL) ? 'FATAL ERROR' : (($error->level == LIBXML_ERR_ERROR) ? 'ERROR' : 'WARNING');
+        return 'LibXML '.$errorName.': '.$error->message;
     }
     /**
-     * 
      * @param string $message
-     * @param string $file
+     * @param string|null $file
      * @param int $level
      * @return libXMLError
      */
@@ -292,6 +298,17 @@ class ZfExtended_Dom extends DOMDocument {
         return $error;
     }
 
+    /**
+     * @return DOMXPath
+     */
+    public function getXpath(): DOMXPath {
+        return $this->xpath ?? ($this->xpath = new DOMXPath($this));
+    }
+
+    /**
+     * @param string $selector
+     * @return DOMNodeList|false
+     */
     public function query(string $selector) {
         return $this->getXpath()->query($selector);
     }
