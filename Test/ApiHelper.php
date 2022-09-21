@@ -205,79 +205,6 @@ class ZfExtended_Test_ApiHelper {
     }
 
     /**
-     * requests the REST API, can handle file uploads, add file methods must be called first
-     * @param string $url
-     * @param string $method GET;POST;PUT;DELETE must be POST or PUT to transfer added files
-     * @param string $url
-     * @return Zend_Http_Response
-     * @throws Zend_Http_Client_Exception
-     */
-    public function request($url, $method = 'GET', $parameters = array()) {
-
-        $http = new Zend_Http_Client();
-        $url = ltrim($url, '/');
-
-        //prepend the taskid to the URL if the test has a task with id.
-        // that each request has then the taskid is no problem, this is handled by .htaccess and finally by the called controller.
-        // If the called controller does not need the taskid it just does nothing there...
-        if(($this->getTask()->id ?? 0) > 0) {
-            $url = preg_replace('#^editor/#', 'editor/taskid/'.$this->getTask()->id.'/', $url);
-        }
-
-        $http->setUri(static::$CONFIG['API_URL'].$url);
-        $http->setHeaders('Accept', 'application/json');
-        
-        //enable xdebug debugger in eclipse
-        if($this->xdebug) {
-            $http->setCookie('XDEBUG_SESSION','ECLIPSE');
-            $http->setConfig(array('timeout'      => 3600));
-        }
-        else {
-            $http->setConfig(array('timeout'      => 30));
-        }
-        
-        if(!empty($this->authCookie)) {
-            $http->setCookie(self::AUTH_COOKIE_KEY, $this->authCookie);
-        }
-        
-        if(!empty($this->filesToAdd) && ($method == 'POST' || $method == 'PUT')) {
-            foreach($this->filesToAdd as $file) {
-                if(empty($file['path']) && !empty($file['data'])){
-                    $http->setFileUpload($file['filename'], $file['name'], $file['data'], $file['mime']);
-                    continue;
-                }
-                //file paths can also be absolute:
-                if(str_starts_with($file['path'], '/')) {
-                    $abs = $file['path'];
-                }
-                else {
-                    $abs = $this->testRoot.'/'.$file['path'];
-                }
-                $t = $this->testClass;
-                $t::assertFileExists($abs);
-                $http->setFileUpload($abs, $file['name'], file_get_contents($abs), $file['mime']);
-            }
-            $this->filesToAdd = [];
-        }
-        
-        if($method == 'POST' || $method == 'PUT') {
-            $addParamsMethod = 'setParameterPost';
-        }
-        else {
-            $addParamsMethod = 'setParameterGet';
-        }
-        
-        if(!empty($parameters)) {
-            foreach($parameters as $key => $value) {
-                $http->$addParamsMethod($key, $value);
-            }
-        }
-        
-        $this->lastResponse = $http->request($method);
-        return $this->lastResponse;
-    }
-
-    /**
      * Posts raw content (not form-encoded, not as form-data)
      * @param string $url
      * @param string $content
@@ -363,6 +290,28 @@ class ZfExtended_Test_ApiHelper {
      */
     public function get(string $url, array $parameters = []) {
         return $this->request($url, 'GET', $parameters);
+    }
+
+    /**
+     * Sends a simple PUT request
+     * @param string $url
+     * @param array $parameters
+     * @return Zend_Http_Response
+     * @throws Zend_Http_Client_Exception
+     */
+    public function put(string $url, array $parameters = []) {
+        return $this->request($url, 'PUT', $parameters);
+    }
+
+    /**
+     * Sends a simple POST request
+     * @param string $url
+     * @param array $parameters
+     * @return Zend_Http_Response
+     * @throws Zend_Http_Client_Exception
+     */
+    public function post(string $url, array $parameters = []) {
+        return $this->request($url, 'POST', $parameters);
     }
 
     /**
@@ -452,6 +401,79 @@ class ZfExtended_Test_ApiHelper {
         }
 
         file_put_contents($this->getFile($fileName, assert: false), $rawData);
+    }
+
+    /**
+     * requests the REST API, can handle file uploads, add file methods must be called first
+     * @param string $url
+     * @param string $method GET;POST;PUT;DELETE must be POST or PUT to transfer added files
+     * @param string $url
+     * @return Zend_Http_Response
+     * @throws Zend_Http_Client_Exception
+     */
+    private function request($url, $method = 'GET', $parameters = array()) {
+
+        $http = new Zend_Http_Client();
+        $url = ltrim($url, '/');
+
+        //prepend the taskid to the URL if the test has a task with id.
+        // that each request has then the taskid is no problem, this is handled by .htaccess and finally by the called controller.
+        // If the called controller does not need the taskid it just does nothing there...
+        if(($this->getTask()->id ?? 0) > 0) {
+            $url = preg_replace('#^editor/#', 'editor/taskid/'.$this->getTask()->id.'/', $url);
+        }
+
+        $http->setUri(static::$CONFIG['API_URL'].$url);
+        $http->setHeaders('Accept', 'application/json');
+
+        //enable xdebug debugger in eclipse
+        if($this->xdebug) {
+            $http->setCookie('XDEBUG_SESSION','ECLIPSE');
+            $http->setConfig(array('timeout'      => 3600));
+        }
+        else {
+            $http->setConfig(array('timeout'      => 30));
+        }
+
+        if(!empty($this->authCookie)) {
+            $http->setCookie(self::AUTH_COOKIE_KEY, $this->authCookie);
+        }
+
+        if(!empty($this->filesToAdd) && ($method == 'POST' || $method == 'PUT')) {
+            foreach($this->filesToAdd as $file) {
+                if(empty($file['path']) && !empty($file['data'])){
+                    $http->setFileUpload($file['filename'], $file['name'], $file['data'], $file['mime']);
+                    continue;
+                }
+                //file paths can also be absolute:
+                if(str_starts_with($file['path'], '/')) {
+                    $abs = $file['path'];
+                }
+                else {
+                    $abs = $this->testRoot.'/'.$file['path'];
+                }
+                $t = $this->testClass;
+                $t::assertFileExists($abs);
+                $http->setFileUpload($abs, $file['name'], file_get_contents($abs), $file['mime']);
+            }
+            $this->filesToAdd = [];
+        }
+
+        if($method == 'POST' || $method == 'PUT') {
+            $addParamsMethod = 'setParameterPost';
+        }
+        else {
+            $addParamsMethod = 'setParameterGet';
+        }
+
+        if(!empty($parameters)) {
+            foreach($parameters as $key => $value) {
+                $http->$addParamsMethod($key, $value);
+            }
+        }
+
+        $this->lastResponse = $http->request($method);
+        return $this->lastResponse;
     }
 
     /**
