@@ -135,9 +135,9 @@ abstract class ZfExtended_Plugin_Abstract {
      * @return array
      */
     protected function getFrontendControllersFromAcl() {
-        $result = array();
-        $userSession = new Zend_Session_Namespace('user');
-        if(empty($userSession) || empty($userSession->data)) {
+        $result = [];
+        $auth = ZfExtended_Authentication::getInstance();
+        if(! $auth->isAuthenticated()) {
             return $result;
         }
         $acl = ZfExtended_Acl::getInstance();
@@ -146,7 +146,7 @@ abstract class ZfExtended_Plugin_Abstract {
             return $result;
         }
         foreach($this->frontendControllers as $right => $controller) {
-            if($acl->isInAllowedRoles($userSession->data->roles, 'frontend', $right)) {
+            if($acl->isInAllowedRoles($auth->getRoles(), 'frontend', $right)) {
                 $result[] = $controller;
             }
         }

@@ -538,8 +538,7 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller
      */
     protected function isAllowed($resource = null, $privilege = null)
     {
-        $userSession = new Zend_Session_Namespace('user');
-        return $this->acl->isInAllowedRoles($userSession->data->roles, $resource, $privilege);
+        return $this->acl->isInAllowedRoles(ZfExtended_Authentication::getInstance()->getRoles(), $resource, $privilege);
     }
 
     /***
