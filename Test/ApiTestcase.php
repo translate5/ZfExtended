@@ -53,7 +53,7 @@ abstract class ZfExtended_Test_ApiTestcase extends \ZfExtended_Test_Testcase {
     public static function assertAppState() {
         self::$api->login('testapiuser', 'asdfasdf');
         self::assertLogin('testapiuser');
-        $state = self::$api->requestJson('editor/index/applicationstate');
+        $state = self::$api->getJson('editor/index/applicationstate');
         self::assertTrue(is_object($state), 'Application state data is no object!');
         //other system checks
         self::assertEquals(0, $state->worker->scheduled, 'For API testing no scheduled workers are allowed in DB!');
@@ -71,7 +71,7 @@ abstract class ZfExtended_Test_ApiTestcase extends \ZfExtended_Test_Testcase {
      * @return stdClass the login/status JSON for further processing
      */
     public static function assertLogin($user) {
-        $json = self::$api->requestJson('editor/session/'.self::$api->getAuthCookie());
+        $json = self::$api->getJson('editor/session/'.self::$api->getAuthCookie());
         
         self::assertTrue(is_object($json), 'User "'.$user.'" is not authenticated!');
         self::assertEquals('authenticated', $json->state, 'User "'.$user.'" is not authenticated!');

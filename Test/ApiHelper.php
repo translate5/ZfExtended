@@ -103,7 +103,7 @@ class ZfExtended_Test_ApiHelper {
      * flag to be used in the test to check if test cleanup should be done (default) or the testfiles should be kept for further investigation
      * @var boolean
      */
-    public bool $cleanup = true;
+    protected bool $cleanup = true;
 
     /**
      * Authentication / session cookie
@@ -304,26 +304,6 @@ class ZfExtended_Test_ApiHelper {
     }
 
     /**
-     * Sends a JSON request to the application API, returns
-     *   - false on HTTP response state other than 2XX
-     *   - the decoded JSON result on HTTP == 2XX
-     * The raw response object is stored in lastResponse
-     * @param string $url
-     * @param string $method
-     * @param array $parameters added as json in data parameter
-     * @param array $additionalParameters attached as plain form parameters
-     * @param string|null $jsonFileName
-     * @return mixed a array/object structure (parsed from json) on HTTP Status 2XX, false otherwise
-     */
-    public function requestJson(string $url, string $method = 'GET', array $parameters = [], array $additionalParameters = [], string $jsonFileName = NULL): mixed
-    {
-        if(empty($this->filesToAdd) && ($method == 'POST' || $method == 'PUT')){
-            $parameters = array('data' => json_encode($parameters));
-            $parameters = array_merge($parameters, $additionalParameters);
-        }
-        return $this->fetchJson($url, $method, $parameters, $jsonFileName, false);
-    }
-    /**
      * Sends a GET request to the application API to fetch JSON data
      * @param string $url
      * @param array $parameters
@@ -333,6 +313,7 @@ class ZfExtended_Test_ApiHelper {
     public function getJson(string $url, array $parameters = [], string $jsonFileName = NULL) {
         return $this->fetchJson($url, 'GET', $parameters, $jsonFileName, false);
     }
+
     /**
      * Sends a GET request to the application API to get a ExtJS type JSON tree
      * @param string $url
@@ -342,6 +323,7 @@ class ZfExtended_Test_ApiHelper {
     public function getJsonTree(string $url, array $parameters = [], string $jsonFileName = NULL) {
         return $this->fetchJson($url, 'GET', $parameters, $jsonFileName, true);
     }
+
     /**
      * Sends a PUT request to the application API to fetch JSON data
      * @param string $url
@@ -356,6 +338,7 @@ class ZfExtended_Test_ApiHelper {
         }
         return $this->fetchJson($url, 'PUT', $parameters, $jsonFileName, false);
     }
+
     /**
      * Sends a POST request to the application API to fetch JSON data
      * @param string $url
@@ -372,13 +355,27 @@ class ZfExtended_Test_ApiHelper {
     }
 
     /**
+     * Sends a simple GET request
+     * @param string $url
+     * @param array $parameters
+     * @return Zend_Http_Response
+     * @throws Zend_Http_Client_Exception
+     */
+    public function get(string $url, array $parameters = []) {
+        return $this->request($url, 'GET', $parameters);
+    }
+
+    /**
      * Sends a DELETE request
      * @param string $url
      * @param array $parameters
      * @return bool|mixed
      */
     public function delete(string $url, array $parameters = []) {
-        return $this->fetchJson($url, 'DELETE', $parameters, null, false);
+        if($this->cleanup){
+            return $this->fetchJson($url, 'DELETE', $parameters, null, false);
+        }
+        return false;
     }
 
     /**
@@ -551,7 +548,7 @@ class ZfExtended_Test_ApiHelper {
             }
         }
         
-        $response = $this->requestJson('editor/session', 'POST', [
+        $response = $this->postJson('editor/session', [
             'login' => $login,
             'passwd' => $password,
         ]);
@@ -600,7 +597,7 @@ class ZfExtended_Test_ApiHelper {
         $test = $this->testClass;
         $test::assertLogin('testmanager');
 
-        $this->task = $this->requestJson('editor/task', 'POST', $task);
+        $this->task = $this->postJson('editor/task', $task);
         if(isset($this->task->projectTasks)){
             $this->projectTasks = is_array($this->task->projectTasks) ? $this->task->projectTasks : [$this->task->projectTasks];
         }
@@ -628,7 +625,7 @@ class ZfExtended_Test_ApiHelper {
         $counter=0;
         while(true){
             error_log('Task state check '.$counter.'/'.self::RELOAD_TASK_LIMIT.' state: '.$this->task->state.' ['.$test.']');
-            $taskResult = $this->requestJson('editor/task/'.$this->task->id);
+            $taskResult = $this->getJson('editor/task/'.$this->task->id);
             if($taskResult->state == 'open') {
                 $this->task = $taskResult;
                 return true;
@@ -716,7 +713,7 @@ class ZfExtended_Test_ApiHelper {
      * @return mixed|boolean
      */
     public function addTaskImportConfig(string $taskGuid, string $configName, string $configValue){
-        $this->requestJson('editor/config', 'PUT', [
+        $this->putJson('editor/config', [
             'name' => $configName,
             'value' => $configValue,
             'taskGuid'=> $taskGuid
@@ -735,7 +732,7 @@ class ZfExtended_Test_ApiHelper {
         $filter='[{"operator":"eq","value":"123456789","property":"number"}]';
         $filter=urlencode($filter);
         $url='editor/customer?page=1&start=0&limit=20&filter='.$filter;
-        $customerData=$this->requestJson($url, 'GET');
+        $customerData = $this->getJson($url);
         $test::assertNotEmpty($customerData,"Unable to load test customer.No test customer was found for number:123456789");
         $this->customer = $customerData[0];
         $resp = $this->getLastResponse();
@@ -746,8 +743,7 @@ class ZfExtended_Test_ApiHelper {
      * Get all available langues from lek_languages table
      */
     public function getLanguages() {
-        $this->requestJson('editor/language');
-        $resp = $this->getLastResponse();
+        $resp = $this->get('editor/language');
         $this->testClass::assertEquals(200, $resp->getStatus(), 'Import Request does not respond HTTP 200! Body was: '.$resp->getBody());
         return $this->decodeJsonResponse($resp);
     }
@@ -764,7 +760,7 @@ class ZfExtended_Test_ApiHelper {
             $filter = array_merge([
                 'filter' => '[{"type":"string","value":"'.$name.'","property":"name","operator":"like"}]',
             ], $plainFilter);
-            $config = $this->requestJson('editor/config', 'GET', $filter);
+            $config = $this->getJson('editor/config', $filter);
             $test::assertCount(1, $config, 'No Config entry for config "'.$name.'" found in instance config!');
             if(is_null($value)) {
                 $test::assertNotEmpty($config[0]->value, 'Config '.$name.' in instance is empty but should be set with a value!');
@@ -795,8 +791,8 @@ class ZfExtended_Test_ApiHelper {
                 "state" => $state,
                 "workflowStepName" => $step,
         );
-        $p=array_merge($p,$params);
-        $json = $this->requestJson('editor/taskuserassoc', 'POST', $p);
+        $p = array_merge($p, $params);
+        $json = $this->postJson('editor/taskuserassoc', $p);
         $resp = $this->getLastResponse();
         $test::assertEquals(200, $resp->getStatus(), 'User "'.$username.'" could not be added to test task '.$this->task->taskGuid.'! Body was: '.$resp->getBody());
         return $json;
@@ -819,10 +815,10 @@ class ZfExtended_Test_ApiHelper {
         //if filename is provided, set the file upload field
         if($fileName){
             $this->addFile('tmUpload', $this->getFile($fileName,$testDir), "application/xml");
-            $resource = $this->requestJson('editor/languageresourceinstance', 'POST',$params);
+            $resource = $this->postJson('editor/languageresourceinstance', $params);
         }else{
             //request because the requestJson will encode the params with "data" as parent
-            $response =$this->request('editor/languageresourceinstance', 'POST',$params);
+            $response = $this->request('editor/languageresourceinstance', 'POST',$params);
             $resource = $this->decodeJsonResponse($response);
         }
         $test::assertTrue(is_object($resource), 'Unable to create the language resource:'.$params['name']);
@@ -833,7 +829,7 @@ class ZfExtended_Test_ApiHelper {
         
         error_log("Language resources created. ".$resource->name);
         
-        $resp = $this->requestJson('editor/languageresourceinstance/'.$resource->id, 'GET',[]);
+        $resp = $this->getJson('editor/languageresourceinstance/'.$resource->id);
         
         if(!$waitForImport){
             return $resp;
@@ -849,7 +845,7 @@ class ZfExtended_Test_ApiHelper {
                 break;
             }
             sleep(2);
-            $resp = $this->requestJson('editor/languageresourceinstance/'.$resp->id, 'GET',[]);
+            $resp = $this->getJson('editor/languageresourceinstance/'.$resp->id);
             error_log('Languageresources status check '.$counter.'/'.self::RELOAD_RESOURCE_LIMIT.' state: '.$resp->status);
             $counter++;
         }
@@ -887,11 +883,10 @@ class ZfExtended_Test_ApiHelper {
     public function addTermCollection(array $params,string $filename=null) {
         //create the language resource
         $collection = $this->addResource($params,$filename);
-
         //validate the results
-        $response=$this->requestJson('editor/termcollection/export', 'POST',['collectionId' =>$collection->id]);
-        $this->assertTrue(is_object($response),"Unable to export the terms by term collection");
-        $this->assertNotEmpty($response->filedata,"The exported tbx file by collection is empty");
+        $response = $this->postJson('editor/termcollection/export', [ 'collectionId' => $collection->id ]);
+        $this->assertTrue(is_object($response), "Unable to export the terms by term collection");
+        $this->assertNotEmpty($response->filedata, "The exported tbx file by collection is empty");
         error_log("Termcollection created. ".$collection->name);
     }
     
@@ -906,9 +901,9 @@ class ZfExtended_Test_ApiHelper {
         
         foreach ($this->getResources() as $resource){
             // associate languageresource to task
-            $this->requestJson('editor/languageresourcetaskassoc', 'POST',[
-                'languageResourceId'=>$resource->id,
-                'taskGuid'=>$taskGuid,
+            $this->postJson('editor/languageresourcetaskassoc', [
+                'languageResourceId' => $resource->id,
+                'taskGuid' => $taskGuid,
                 'segmentsUpdateable' => 0
             ]);
             error_log('Languageresources assoc to task. '.$resource->name.' -> '.$taskGuid);
@@ -1093,7 +1088,7 @@ class ZfExtended_Test_ApiHelper {
      * @return stdClass
      */
     public function reloadTask(int $id = null) {
-        return $this->task = $this->requestJson('editor/task/'.($id ?? $this->task->id));
+        return $this->task = $this->getJson('editor/task/'.($id ?? $this->task->id));
     }
     
     /***
@@ -1101,19 +1096,11 @@ class ZfExtended_Test_ApiHelper {
      * @return mixed|boolean
      */
     public function reloadProjectTasks() {
-        return $this->projectTasks = $this->requestJson('editor/task/', 'GET',[
+        return $this->projectTasks = $this->getJson('editor/task/', [
             'filter' => '[{"operator":"eq","value":"'.$this->task->projectId.'","property":"projectId"}]',
         ]);
     }
-    
-    /**
-     * returns the absolute data path to the task
-     * @return string
-     */
-    public function getTaskDataDirectory() {
-        return static::$CONFIG['DATA_DIR'].trim($this->task->taskGuid, '{}').'/';
-    }
-    
+
     public function addImportFile($path, $mime = 'application/zip') {
         $this->addFile('importUpload', $path, $mime);
     }
@@ -1215,7 +1202,7 @@ class ZfExtended_Test_ApiHelper {
             if($resource->serviceName == 'TermCollection'){
                 $route = 'editor/termcollection/'.$resource->id;
             }
-            $this->requestJson($route,'DELETE');
+            $this->delete($route);
         }
     }
     
@@ -1225,6 +1212,14 @@ class ZfExtended_Test_ApiHelper {
      */
     public function getTask() {
         return $this->task;
+    }
+
+    /**
+     * returns the absolute data path to the task
+     * @return string
+     */
+    public function getTaskDataDirectory() {
+        return static::$CONFIG['DATA_DIR'].trim($this->task->taskGuid, '{}').'/';
     }
 
     /***
@@ -1305,7 +1300,7 @@ class ZfExtended_Test_ApiHelper {
      */
     public function setTaskToOpen() {
         if($this->task){
-            $this->requestJson('editor/task/'.$this->task->id, 'PUT', array('userState' => 'open', 'id' => $this->task->id));
+            $this->putJson('editor/task/'.$this->task->id, array('userState' => 'open', 'id' => $this->task->id));
         }
     }
 
@@ -1314,7 +1309,7 @@ class ZfExtended_Test_ApiHelper {
      */
     public function setTaskToEdit() {
         if($this->task){
-            $this->requestJson('editor/task/'.$this->task->id, 'PUT', array('userState' => 'edit', 'id' => $this->task->id));
+            $this->putJson('editor/task/'.$this->task->id, array('userState' => 'edit', 'id' => $this->task->id));
         }
     }
 
@@ -1323,7 +1318,7 @@ class ZfExtended_Test_ApiHelper {
      */
     public function setTaskToFinished() {
         if($this->task){
-            $this->requestJson('editor/task/'.$this->task->id, 'PUT', array('userState' => 'finished', 'id' => $this->task->id));
+            $this->putJson('editor/task/'.$this->task->id, array('userState' => 'finished', 'id' => $this->task->id));
         }
     }
 
@@ -1333,17 +1328,7 @@ class ZfExtended_Test_ApiHelper {
      */
     public function deleteTask() {
         if($this->task){
-            $this->deleteUrl('editor/task/' . $this->task->id);
-        }
-    }
-
-    /**
-     * Performs a delete request to the given endpoint
-     * @param string $url
-     */
-    public function deleteUrl(string $url) {
-        if($this->cleanup){
-            $this->requestJson($url, 'DELETE');
+            $this->delete('editor/task/' . $this->task->id);
         }
     }
 
