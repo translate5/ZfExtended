@@ -1234,6 +1234,19 @@ class ZfExtended_Test_ApiHelper {
     public function getCustomer(){
         return $this->customer;
     }
+
+    /**
+     * Retrieves the segments as JSON
+     * @param string|null $jsonFileName
+     * @param int $limit
+     * @param int $start
+     * @param int $page
+     * @return bool|mixed|stdClass|null
+     */
+    public function getSegments(string $jsonFileName = null, int $limit = 200, int $start = 0, int $page = 1){
+        $url = 'editor/segment?page='.$page.'&start='.$start.'&limit='.$limit;
+        return $this->fetchJson($url, 'GET', [], $jsonFileName, false);
+    }
     
     /***
      * Get the created language resources
