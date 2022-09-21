@@ -372,6 +372,16 @@ class ZfExtended_Test_ApiHelper {
     }
 
     /**
+     * Sends a DELETE request
+     * @param string $url
+     * @param array $parameters
+     * @return bool|mixed
+     */
+    public function delete(string $url, array $parameters = []) {
+        return $this->fetchJson($url, 'DELETE', $parameters, null, false);
+    }
+
+    /**
      * Sends a GET request to the application API to fetch unencoded data
      * @param string $url
      * @param array $parameters
