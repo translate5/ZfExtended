@@ -345,12 +345,13 @@ class ZfExtended_Test_ApiHelper {
     /**
      * Sends a PUT request to the application API to fetch JSON data
      * @param string $url
-     * @param array $parameters
-     * @param string $jsonFileName
+     * @param array $parameters: will be sent json-encoded as "data"-param if no files added
+     * @param string|null $jsonFileName
+     * @param bool $encodeParamsAsData
      * @return mixed|boolean
      */
-    public function putJson(string $url, array $parameters = [], string $jsonFileName = NULL) {
-        if(empty($this->filesToAdd)){
+    public function putJson(string $url, array $parameters = [], string $jsonFileName = NULL, bool $encodeParamsAsData = true) {
+        if(empty($this->filesToAdd) && $encodeParamsAsData){
             $parameters = array('data' => json_encode($parameters));
         }
         return $this->fetchJson($url, 'PUT', $parameters, $jsonFileName, false);
@@ -358,12 +359,13 @@ class ZfExtended_Test_ApiHelper {
     /**
      * Sends a POST request to the application API to fetch JSON data
      * @param string $url
-     * @param array $parameters
+     * @param array $parameters: will be sent json-encoded as "data"-param if no files added
      * @param string $jsonFileName
+     * @param bool $encodeParamsAsData
      * @return mixed|boolean
      */
-    public function postJson(string $url, array $parameters = [], string $jsonFileName = NULL) {
-        if(empty($this->filesToAdd)){
+    public function postJson(string $url, array $parameters = [], string $jsonFileName = NULL, bool $encodeParamsAsData = true) {
+        if(empty($this->filesToAdd) && $encodeParamsAsData){
             $parameters = array('data' => json_encode($parameters));
         }
         return $this->fetchJson($url, 'POST', $parameters, $jsonFileName, false);
@@ -450,7 +452,7 @@ class ZfExtended_Test_ApiHelper {
      * @param Zend_Http_Response $resp
      * @return mixed|boolean
      */
-    public function decodeJsonResponse(Zend_Http_Response $resp, bool $isTreeData=false) {
+    private function decodeJsonResponse(Zend_Http_Response $resp, bool $isTreeData=false) {
         $status = $resp->getStatus();
         if(200 <= $status && $status < 300) {
             $body = $resp->getBody();
@@ -488,7 +490,7 @@ class ZfExtended_Test_ApiHelper {
      * @param Zend_Http_Response $resp
      * @return stdClass
      */
-    public function decodeRawResponse(Zend_Http_Response $resp){
+    private function decodeRawResponse(Zend_Http_Response $resp){
         $result = json_decode($resp->getBody());
         if(!$result){
             $result = new stdClass();
