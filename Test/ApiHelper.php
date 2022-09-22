@@ -1318,39 +1318,63 @@ class ZfExtended_Test_ApiHelper {
     }
 
     /**
-     * Sets the current task to open
+     * Sets the passed or current task to open
+     * @param int $taskId: if given, this task is taken, otherwise the current task
      */
-    public function setTaskToOpen() {
-        if($this->task){
-            $this->putJson('editor/task/'.$this->task->id, array('userState' => 'open', 'id' => $this->task->id));
+    public function setTaskToOpen(int $taskId = -1) {
+        $this->setTaskState($taskId, 'open');
+    }
+
+    /**
+     * Sets the passed or current task to edit
+     * @param int $taskId: if given, this task is taken, otherwise the current task
+     */
+    public function setTaskToEdit(int $taskId = -1) {
+        $this->setTaskState($taskId, 'edit');
+    }
+
+    /**
+     * Sets the passed or current task to finished
+     * @param int $taskId: if given, this task is taken, otherwise the current task
+     */
+    public function setTaskToFinished(int $taskId = -1) {
+        $this->setTaskState($taskId, 'finished');
+    }
+
+    /**
+     * @param int $taskId: if given, this task is taken, otherwise the current task
+     * @param string $userState
+     */
+    private function setTaskState(int $taskId, string $userState){
+        if($taskId < 1 && $this->task){
+            $taskId = $this->task->id;
+        }
+        if($taskId > 0){
+            $this->putJson('editor/task/'.$taskId, array('userState' => $userState, 'id' => $taskId));
         }
     }
 
     /**
-     * Sets the current task to edit
+     * Removes the passed or current Task
+     * @param int $taskId: if given, this task is taken, otherwise the current task
+     * @param string|null $loginName: if given, a login with this user is done before opening/deleting the task
+     * @param string|null $loginName: only in conjunction with $loginName. If given, a login with this user is done before to open the task, deletion is done with the latter
      */
-    public function setTaskToEdit() {
-        if($this->task){
-            $this->putJson('editor/task/'.$this->task->id, array('userState' => 'edit', 'id' => $this->task->id));
+    public function deleteTask(int $taskId = -1, string $loginName = null, string $loginNameToOpen = null) {
+        if($taskId < 1 && $this->task){
+            $taskId = $this->task->id;
         }
-    }
-
-    /**
-     * Sets the current task to finished
-     */
-    public function setTaskToFinished() {
-        if($this->task){
-            $this->putJson('editor/task/'.$this->task->id, array('userState' => 'finished', 'id' => $this->task->id));
-        }
-    }
-
-    /**
-     * Removes the current loaded Task
-     * @return stdClass
-     */
-    public function deleteTask() {
-        if($this->task){
-            $this->delete('editor/task/' . $this->task->id);
+        if($taskId > 0){
+            if(!empty($loginName) && !empty($loginNameToOpen)){
+                $this->login($loginNameToOpen);
+            } else if(!empty($loginName)){
+                $this->login($loginName);
+            }
+            $this->setTaskToOpen($taskId);
+            if(!empty($loginName) && !empty($loginNameToOpen)){
+                $this->login($loginName);
+            }
+            $this->delete('editor/task/'.$taskId);
         }
     }
 
