@@ -394,4 +394,22 @@ class ZfExtended_Utils {
     {
         return pathinfo($fileName,PATHINFO_EXTENSION);
     }
+
+    /***
+     * Replace the co and c1 controll characters with empty space.
+     */
+    public static function replaceC0C1ControlCharacters(string $term)
+    {
+        foreach (mb_str_split($term, 1, 'utf-8') as $ch) {
+            $ord = mb_ord($ch);
+            if ($ord === false || // Conversion failed
+                (0 <= $ord && $ord <= 31) || // C0 control characters
+                (128 <= $ord && $ord <= 159) || // C1 control characters
+                $ord == 0x2028 || $ord == 0x2029 // Unicode newlines
+            ) {
+                $term =  str_replace($ch,'',$term);
+            }
+        }
+        return $term;
+    }
 }
