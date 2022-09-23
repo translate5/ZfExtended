@@ -24,6 +24,7 @@ END LICENSE AND COPYRIGHT
 
 /**
  * Database Controller provides simple actions to do basic database updating
+ * @deprecated
  */
 class DatabaseController extends ZfExtended_Controllers_Action {
     public function importAction() {

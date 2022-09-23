@@ -22,6 +22,27 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
+?>
+<style type="text/css">
+    h1.dep {
+        font-weight: bold;
+        color: red;
+    }
+    .blinking{
+        animation:blink 2s infinite;
+    }
+    @keyframes blink{
+        0%{     color: #ff0000;    }
+        49%{    color: #ff0000; }
+        60%{    color: transparent; }
+        99%{    color: transparent;  }
+        100%{   color: #ff0000;    }
+    }
+
+</style>
+<h1 class="dep"><span class="blinking">DEPRECATED</span>: use the <a style="text-decoration: underline;" href="https://confluence.translate5.net/pages/viewpage.action?pageId=186974220">CLI tools</a> instead! </h1>
+<?php
+
 if($this->importStarted) {
     echo '<h2>Chosen SQL Files were imported!</h2>';
     if(!empty($this->errors)) {

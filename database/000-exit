@@ -29,4 +29,4 @@
 
 -- needed for credentials test, also needed without SQL suffix!
 
-exit
+select "this is a test statement";

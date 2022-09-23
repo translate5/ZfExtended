@@ -111,7 +111,6 @@ class ZfExtended_Authentication {
     /**
      * Creates a secure password out of a plain one
      * @param string $plainPassword
-     * @param string $secretFallback optional, normally from config
      * @return string
      * @throws Zend_Exception
      */
