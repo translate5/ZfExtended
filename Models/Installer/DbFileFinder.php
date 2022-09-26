@@ -49,10 +49,11 @@ class ZfExtended_Models_Installer_DbFileFinder {
     /**
      * returns all available SQL files, already in the order to be imported
      */
-    public function getSqlFilesOrdered(): array
+    public function getSqlFilesOrdered(array $additionalPaths): array
     {
         $this->addCoreSqlFiles();
         $this->addPluginsSearchPathList();
+        $this->addAdditionalSqlFiles($additionalPaths);
         $this->mergeReplacements();
         //@todo implement here the additionaly resort by dependencies, which are read out from meta file!
         return $this->flatten();
@@ -65,15 +66,32 @@ class ZfExtended_Models_Installer_DbFileFinder {
     protected function addCoreSqlFiles() {
         $searchPaths = $this->getSearchPathList();
         foreach($searchPaths as $path) {
-            $meta = $this->loadMetaInformation($path);
-            $name = $this->getSqlPackageName($meta);
-        
-            $this->iterateThroughDirectory($path, $name);
-            //sort the loaded files by name, this is the initial natural order
-            ksort($this->toImport[$name]);
+            $this->addFilesFromPath($path);
         }
     }
-    
+
+    /**
+     * Adds the path to the alter files needed for tests to the path
+     * @param array $paths
+     * @return void
+     */
+    protected function addAdditionalSqlFiles(array $paths): void
+    {
+        foreach($paths as $path) {
+            $this->addFilesFromPath($path);
+        }
+    }
+
+    private function addFilesFromPath(string $path): void
+    {
+        $meta = $this->loadMetaInformation($path);
+        $name = $this->getSqlPackageName($meta);
+
+        $this->iterateThroughDirectory($path, $name);
+        //sort the loaded files by name, this is the initial natural order
+        ksort($this->toImport[$name]);
+    }
+
     /**
      * merges the arrays in toImport together to one array
      */
