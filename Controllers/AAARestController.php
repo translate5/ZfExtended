@@ -22,6 +22,10 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
+/**
+ *
+ * @method ZfExtended_Sanitized_HttpRequest getRequest() getRequest()
+ */
 abstract class ZfExtended_RestController extends Zend_Rest_Controller
 {
     use ZfExtended_Controllers_MaintenanceTrait;
@@ -56,7 +60,7 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller
     /**
      * @var array - request parameters and reults of request processing
      */
-    protected $data = array();
+    protected $data = [];
     /**
      * maps cols which should be sorted to other cols in the table,
      * which then are used for the sorting process
@@ -66,19 +70,18 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller
      * was introduced for MSSQL which cant sort textblobs
      * @var array
      */
-    protected $_sortColMap = array();
+    protected $_sortColMap = [];
     /**
-     * mappt einen eingehenden Filtertyp auf einen anderen Filtertyp für ein bestimmtes
-     * Feld.
+     * maps an incoming filter type to another filter for a certain type
      * @var array array($field => array(origType => newType))
      */
-    protected $_filterTypeMap = array();
+    protected $_filterTypeMap = [];
 
     /**
      * POST Blacklist
      * Blacklisted fields for POST Requests (to ignore autoincrement values)
      */
-    protected $postBlacklist = array();
+    protected $postBlacklist = [];
 
     /**
      * @var ZfExtended_EventManager
@@ -118,6 +121,12 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller
      * @var bool
      */
     protected bool $decodePutAssociative = false;
+    /**
+     * a map to define special sanitizers for certain fields/keys of the sent data
+     * the structure must be key => type whereas type is one of the constants of ZfExtended_Sanitizer
+     * @var array
+     */
+    protected array $dataSanitizationMap = [];
 
     /**
      * View object
@@ -486,12 +495,12 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller
         }
     }
 
-    /***
+    /**
      * @return void
      */
     protected function decodePutData()
     {
-        $this->data = json_decode($this->_getParam('data'), $this->decodePutAssociative);
+        $this->data = $this->getRequest()->getData($this->decodePutAssociative, $this->dataSanitizationMap);
     }
 
     /**

@@ -105,7 +105,7 @@ class ZfExtended_Resource_DbConfig extends Zend_Application_Resource_ResourceAbs
         $type = $entry['type'] ?? false;
         $key = array_shift($path);
 
-        $configType = $this->typeManager->getType($entry['typeClass']);
+        $configType = $this->typeManager->getType($entry['typeClass'] ?? null);
 
         if(empty($configType)) {
             //FIXME logger loaded? collect all errors and log them after the config is processed

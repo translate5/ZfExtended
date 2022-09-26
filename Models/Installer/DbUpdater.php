@@ -27,62 +27,58 @@ END LICENSE AND COPYRIGHT
  * @version 2.0
  */
 class ZfExtended_Models_Installer_DbUpdater {
-    /**
-     * default executable of the mysql command, can be overwritten by config
-     * @var string
-     */
-    const MYSQL_BIN = '/usr/bin/mysql';
-    
+
+    const DB_INIT = APPLICATION_PATH.'/database/DbInit.sql';
+
     /**
      * contains errors on importing to DB
      * @var array
      */
-    protected $errors = array();
+    protected array $errors = [];
+
+    protected array $warnings = [];
     
     /**
      * The sql files which are new and can be imported
      * @var array
      */
-    protected $sqlFilesNew = array();
+    protected array $sqlFilesNew = [];
     
     /**
      * The sql files which have been changed
      * @var array
      */
-    protected $sqlFilesChanged = array();
+    protected array $sqlFilesChanged = [];
     
     /**
      * This flag is mentioned to be set from within PHP alter files to false for testing.
      * If setting this to false the file will not be marked as updated.
      * @var boolean
      */
-    protected $doNotSavePhpForDebugging = true;
+    protected bool $doNotSavePhpForDebugging = true;
     
     /**
      * @var ZfExtended_Logger
      */
-    protected $log;
-    
+    protected ZfExtended_Logger $log;
+
+    /**
+     * Set that flag to the path(s) of the test sql data
+     */
+    protected array $additionalPaths = [];
+
     /**
      * DB credentials, exec and base path must be given as parameter in usage of a non Zend Environment
-     * @param stdClass $db optional
-     * @param string $exec optional
-     * @param string $path optional
+     * @throws Zend_Db_Exception
+     * @throws Zend_Exception
      */
-    public function __construct(stdClass $db = null, $exec = null, $path = null) {
-        if(is_null($db) && is_null($exec) && is_null($path)) {
-            $config = Zend_Registry::get('config');
-            /* @var $config Zend_Config */
-            $db = (object) $config->resources->db->params->toArray();
-            $exec = $this->getDbExec();
-            $path = APPLICATION_PATH.'/..';
+    public function __construct() {
+        if(Zend_Registry::isRegistered('logger')) {
             $this->log = Zend_Registry::get('logger')->cloneMe('core.database.update');
-        }
-        if(!empty($db)) {
-            $this->checkCredentials($db, $exec, $path);
+            $this->checkCredentials();
         }
     }
-    
+
     /**
      * Forcing all available SQL files to be set as imported in the DB, regardless if the contents were really applied or not.
      * For setting up dbversioning on instances where all SQL files are already installed.
@@ -158,8 +154,8 @@ class ZfExtended_Models_Installer_DbUpdater {
     {
         $filefinder = ZfExtended_Factory::get('ZfExtended_Models_Installer_DbFileFinder');
         /* @var $filefinder ZfExtended_Models_Installer_DbFileFinder */
-        $usedPaths = $filefinder->getSearchPathList();
-        return $filefinder->getSqlFilesOrdered();
+        $usedPaths = array_merge($filefinder->getSearchPathList(), $this->additionalPaths);
+        return $filefinder->getSqlFilesOrdered($this->additionalPaths);
     }
     
     /**
@@ -285,13 +281,9 @@ class ZfExtended_Models_Installer_DbUpdater {
      * @return boolean
      */
     protected function handleSqlFile($file) {
-        $config = Zend_Registry::get('config');
-        $db = $config->resources->db->params;
-        $exec = $this->getDbExec();
-        
-        if(! $this->executeSqlFile($exec, $db, $file['absolutePath'], $output)) {
-            $msg = 'Error on Importing a SQL file. Called command: '.$exec;
-            $msg .= '; called file: '.$file['absolutePath'].".\n".'Result of Command: '.print_r($output,1);
+        if(! $this->executeSqlFile($file['absolutePath'])) {
+            $msg = 'Error on Importing a SQL file.';
+            $msg .= '; called file: '.$file['absolutePath'];
             $this->errors[] = $msg;
             return false;
         }
@@ -334,86 +326,110 @@ class ZfExtended_Models_Installer_DbUpdater {
      * Logs collected errors on importing / updating if any
      */
     protected function logErrors() {
-        if(empty($this->errors)){
-            return;
+        if(! empty($this->errors)){
+            $this->log->error('E1294','Errors on calling database update - see details for more information.', $this->errors);
         }
-        $this->log->error('E1294','Errors on calling database update - see details for more information.', $this->errors);
+        if(! empty($this->warnings)){
+            $this->log->warn('E1294','Warnings on calling database update - see details for more information.', $this->warnings);
+        }
     }
-    
+
     /**
-     * returns the mysql import command for exec()
-     * @throws ZfExtended_Exception
-     * @return string
-     */
-    protected function getDbExec() {
-        $config = Zend_Registry::get('config');
-        $exec = $config->resources->db->executable;
-        if(!isset($exec)) {
-            $exec = self::MYSQL_BIN;
-        }
-        if(!file_exists($exec) || !is_executable($exec)) {
-            throw new ZfExtended_Exception("Cant find or execute mysql excecutable ".$exec);
-        }
-        return $exec;
-    }
-    
-    /**
-     * creates a shell exec command
-     * @param string $mysqlExecutable
-     * @param mixed $credentials
-     * @param bool $addFileParam optional, default true. If false the file to import is omitted
-     * @return string
-     */
-    protected function makeSqlCmd($mysqlExecutable, $credentials, $addFileParam = true) {
-        $cmd = array(escapeshellarg($mysqlExecutable));
-        $cmd[] = '-h';
-        $cmd[] = escapeshellarg($credentials->host);
-        $cmd[] = '-u';
-        $cmd[] = escapeshellarg($credentials->username);
-        if(!empty($credentials->password)) {
-            //escaping % in the password since the string is used as printf string
-            $cmd[] = '-p'.escapeshellarg(str_replace('%', '%%', $credentials->password));
-        }
-        $cmd[] = '--default-character-set=utf8mb4';
-        $cmd[] = escapeshellarg($credentials->dbname);
-        if($addFileParam) {
-            $cmd[] = '< %s';
-        }
-        $cmd[] = '2>&1';
-        return join(' ', $cmd);
-    }
-    
-    /**
-     * executes the given SQL file with the given mysdql binary and given credentials
-     * returns false if mysql cmd exit code not was 0
-     * @param string $mysqlExecutable
-     * @param mixed $credentials
+     * executes the given SQL file
+     *
      * @param string $file
      * @param array $output reference where mysql result is stored as array
      * @return boolean
+     * @throws Zend_Db_Exception
+     * @throws Zend_Exception
      */
-    public function executeSqlFile($mysqlExecutable, $credentials, $file, &$output) {
+    protected function executeSqlFile(string $file): bool {
         //WARNING: runs in installer once before application context,
         // so no advanced functionality (logging for example) can be used here!
-        $call = sprintf($this->makeSqlCmd($mysqlExecutable, $credentials), escapeshellarg($file));
-        exec($call, $output, $result);
-        return $result === 0;
+
+        $config = Zend_Registry::get('config');
+        $db = Zend_Db::factory($config->resources->db->adapter, $config->resources->db->params->toArray());
+        $sql = file_get_contents($file);
+
+        //remove DELIMITER statements and replace back the ;; delimiter to ;
+        // reason is that it is not needed and not usable for PHP import
+        $sql = preg_replace_callback('/^DELIMITER ;;$(.*?)^DELIMITER ;$/ms', function ($matches){
+            return preg_replace('#;;$#', ';', $matches[1]);
+        }, $sql);
+
+        //prevent DEFINER=root`@`localhost` from TRIGGERs and VIEWs to be executed
+        if(str_contains($sql, 'DEFINER=')) {
+            $this->errors[] = 'The file '.$file.' contains DEFINER= statements, they must be removed manually before!';
+            return false;
+        }
+        //prevent DELIMITER statements in the code (https://stackoverflow.com/a/5314879/1749200):
+        if(str_contains($sql, 'DELIMITER')) {
+            $this->errors[] = 'The file '.$file.' contains DELIMITER statements, they must be removed since not needed and not usable by PHP based import!';
+            return false;
+        }
+
+        try {
+            $stmt = $db->prepare($sql);
+            if($stmt->execute()) {
+                $stmt->closeCursor();
+                $warnings = $db->query('SHOW WARNINGS');
+                foreach($warnings->fetchAll() as $warning) {
+                    $this->warnings[] = join(', ', $warning).' in file '.$file;
+                }
+                return true;
+            }
+        }
+        catch (Throwable $e) {
+            $this->errors[] = $e->getMessage();
+        }
+        return false;
+    }
+
+    /**
+     * @throws Zend_Exception
+     * @throws Zend_Db_Exception
+     */
+    public function initDb(): bool
+    {
+        return $this->executeSqlFile(self::DB_INIT);
     }
     
     /**
      * returns errors collected on updateModified and applyNew
      */
-    public function getErrors() {
+    public function getErrors(): array {
         return $this->errors;
     }
-    
+
+    /**
+     * returns SQL warnings occurred on usage
+     */
+    public function getWarnings(): array {
+        return $this->warnings;
+    }
+
+    /**
+     * returns errors collected on updateModified and applyNew
+     */
+    public function hasErrors(): bool {
+        return !empty($this->errors);
+    }
+
+    /**
+     * returns SQL warnings occurred on usage
+     */
+    public function hasWarnings(): bool {
+        return !empty($this->warnings);
+    }
+
     /**
      * Applies all found changed / added DB statement files. Returns some statistics.
      * @return array
      */
-    public function importAll() {
+    public function importAll(): array
+    {
         if(!empty($this->errors)) {
-            return;
+            return [];
         }
         $this->calculateChanges();
 
@@ -427,42 +443,45 @@ class ZfExtended_Models_Installer_DbUpdater {
             $toProcess[$file['entryHash']] = 1;
         }
         
-        $this->applyNew($toProcess);
+        $newDone = $this->applyNew($toProcess);
         $this->updateModified($toProcess);
-        return array('new' => count($new), 'modified' => count($mod));
+        if($newDone < $new) {
+            $this->errors[] = 'There are remaining DB files to be processed!';
+        }
+
+        return [
+            'new' => count($new),
+            'modified' => count($mod),
+            'newProcessed' => $newDone,
+        ];
     }
-    
+
     /**
      * Not all environments can deal with all characters in the DB credentials.
      * This is checked here.
      *
-     * @param stdClass $credentials
-     * @param string $exec
-     * @param string $path
+     * @throws Zend_Db_Exception
+     * @throws Zend_Exception
      */
-    protected function checkCredentials(stdClass $credentials, $exec, $path) {
-        $exitFile = $path."/library/ZfExtended/database/000-exit";
-        if($this->executeSqlFile($exec, $credentials, $exitFile, $output)) {
+    protected function checkCredentials(): void
+    {
+        $exitFile = APPLICATION_ROOT."/library/ZfExtended/database/000-exit";
+        if($this->executeSqlFile($exitFile)) {
             return;
         }
-        $msg = 'No connection to MySQL server through commandline. Called command: '.$exec.".\n";
-        if(stripos(join("\n", $output), 'Access denied for user') === false) {
-            $msg .= 'Result of Command: '.print_r($output,1);
+        $msg = 'No connection to MySQL server through commandline.';
+        if(stripos(join("\n", $this->getErrors()), 'Access denied for user') === false) {
             $this->errors[] = $msg;
             return;
         }
         $msg .= 'You could not be authenticated at the MySQL Server.';
-        
-        $tocheck = array(
-            'host' => $credentials->host,
-            'username' => $credentials->username,
-            'password' => $credentials->password,
-            'dbname' => $credentials->dbname,
-        );
-        
+
+        $config = Zend_Registry::get('config');
+        $params = $config->resources->db->params->toArray();
+
         $hasSpecialCharacters = false;
-        foreach($tocheck as $key => $value) {
-            if (!empty($value) && !preg_match('/^[A-Z0-9]+$/i', $value)) {
+        foreach($params as $key => $value) {
+            if (!empty($value) && is_string($value) && !preg_match('/^[A-Z0-9]+$/i', $value)) {
                 $msg .= "\n".'  Your DB '.$key.' contains the following special characters: '.preg_replace('/[A-Z0-9]/i', '', $value);
                 $hasSpecialCharacters = true;
             }
@@ -481,8 +500,19 @@ class ZfExtended_Models_Installer_DbUpdater {
      * function for generating output when using PHP alter scripts
      * @param string $msg
      */
-    public function output(string $msg) {
+    public function output(string $msg): void
+    {
         echo $msg."\n";
         error_log($msg);
+    }
+
+    /**
+     * Sets additional SQL paths, executes after all configured (core) and plugin paths
+     * @param array $array
+     * @return void
+     */
+    public function setAdditonalSqlPaths(array $array): void
+    {
+        $this->additionalPaths = $array;
     }
 }
