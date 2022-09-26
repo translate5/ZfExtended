@@ -63,9 +63,13 @@ class ZfExtended_Models_Installer_DbUpdater {
     protected ZfExtended_Logger $log;
 
     /**
+     * Set that flag to the path(s) of the test sql data
+     */
+    protected array $additionalPaths = [];
+
+    /**
      * DB credentials, exec and base path must be given as parameter in usage of a non Zend Environment
-     * @param array|null $config DB configuration, optional if omitted, loaded from existing ini
-     * @param string|null $path optional
+     * @throws Zend_Db_Exception
      * @throws Zend_Exception
      */
     public function __construct() {
@@ -150,8 +154,8 @@ class ZfExtended_Models_Installer_DbUpdater {
     {
         $filefinder = ZfExtended_Factory::get('ZfExtended_Models_Installer_DbFileFinder');
         /* @var $filefinder ZfExtended_Models_Installer_DbFileFinder */
-        $usedPaths = $filefinder->getSearchPathList();
-        return $filefinder->getSqlFilesOrdered();
+        $usedPaths = array_merge($filefinder->getSearchPathList(), $this->additionalPaths);
+        return $filefinder->getSqlFilesOrdered($this->additionalPaths);
     }
     
     /**
@@ -367,11 +371,10 @@ class ZfExtended_Models_Installer_DbUpdater {
         try {
             $stmt = $db->prepare($sql);
             if($stmt->execute()) {
-                //FIXME closeCursor is needed, but that looses the warnings! test with the 999 file
                 $stmt->closeCursor();
                 $warnings = $db->query('SHOW WARNINGS');
                 foreach($warnings->fetchAll() as $warning) {
-                    $this->warnings[] = join(', ', $warning);
+                    $this->warnings[] = join(', ', $warning).' in file '.$file;
                 }
                 return true;
             }
@@ -388,9 +391,6 @@ class ZfExtended_Models_Installer_DbUpdater {
      */
     public function initDb(): bool
     {
-        if(!empty($this->errors)) {
-            return false;
-        }
         return $this->executeSqlFile(self::DB_INIT);
     }
     
@@ -407,7 +407,21 @@ class ZfExtended_Models_Installer_DbUpdater {
     public function getWarnings(): array {
         return $this->warnings;
     }
-    
+
+    /**
+     * returns errors collected on updateModified and applyNew
+     */
+    public function hasErrors(): bool {
+        return !empty($this->errors);
+    }
+
+    /**
+     * returns SQL warnings occurred on usage
+     */
+    public function hasWarnings(): bool {
+        return !empty($this->warnings);
+    }
+
     /**
      * Applies all found changed / added DB statement files. Returns some statistics.
      * @return array
@@ -429,9 +443,17 @@ class ZfExtended_Models_Installer_DbUpdater {
             $toProcess[$file['entryHash']] = 1;
         }
         
-        $this->applyNew($toProcess);
+        $newDone = $this->applyNew($toProcess);
         $this->updateModified($toProcess);
-        return ['new' => count($new), 'modified' => count($mod)];
+        if($newDone < $new) {
+            $this->errors[] = 'There are remaining DB files to be processed!';
+        }
+
+        return [
+            'new' => count($new),
+            'modified' => count($mod),
+            'newProcessed' => $newDone,
+        ];
     }
 
     /**
@@ -482,5 +504,15 @@ class ZfExtended_Models_Installer_DbUpdater {
     {
         echo $msg."\n";
         error_log($msg);
+    }
+
+    /**
+     * Sets additional SQL paths, executes after all configured (core) and plugin paths
+     * @param array $array
+     * @return void
+     */
+    public function setAdditonalSqlPaths(array $array): void
+    {
+        $this->additionalPaths = $array;
     }
 }
