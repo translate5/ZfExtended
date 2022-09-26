@@ -267,7 +267,8 @@ class ZfExtended_Plugin_Manager {
      * @param string $class
      * @return array
      */
-    protected function classExplode($class) {
+    protected function classExplode($class): array
+    {
         return explode('_', $class);
     }
     
@@ -275,7 +276,8 @@ class ZfExtended_Plugin_Manager {
      * Return plugin config prefix for all inactive plugins
      * @return array
      */
-    public function getInactivePluginsConfigPrefix() {
+    public function getInactivePluginsConfigPrefix(): array
+    {
         $allNames = $this->getAllPluginNames();
         $active = $this->getActive();
         $filtered = array_map(function($item)use($active){
@@ -287,5 +289,22 @@ class ZfExtended_Plugin_Manager {
             return '';
         }, $allNames);
         return array_filter($filtered);
+    }
+
+    /**
+     * Activates only the plug-ins as defined for the tests
+     * @return void
+     */
+    public function activateTestRelevantOnly(): void
+    {
+        $plugins = $this->getAvailable();
+        $active = [];
+        foreach($plugins as $plugin => $cls) {
+            if($cls::isNeededForTests()) {
+                $active[] = $cls;
+            }
+        }
+        $config = ZfExtended_Factory::get(editor_Models_Config::class);
+        $config->update('runtimeOptions.plugins.active', json_encode($active));
     }
 }

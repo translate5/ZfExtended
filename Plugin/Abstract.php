@@ -95,10 +95,16 @@ abstract class ZfExtended_Plugin_Abstract {
     protected static $type = self::TYPE_PUBLIC;
     
     /**
-     * A human readable description of the plug-in
+     * A human-readable description of the plug-in
      * @var string
      */
-    protected static $description = 'Please overwrite me in the plug-in init';
+    protected static string $description = 'Please overwrite me in the plug-in init';
+
+    /**
+     * Set to true in the concrete plug-in, if it should be activated when running tests
+     * @var bool
+     */
+    protected static bool $activateForTests = false;
     
     public function __construct($pluginName) {
         $this->pluginName = $pluginName;
@@ -331,5 +337,13 @@ abstract class ZfExtended_Plugin_Abstract {
      */
     public static function getDescription(): string {
         return static::$description;
+    }
+
+    /**
+     * Return if the plug-in is needed for the test-suite
+     * @return string
+     */
+    public static function isNeededForTests(): string {
+        return static::$activateForTests;
     }
 }

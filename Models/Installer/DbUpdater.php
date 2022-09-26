@@ -445,8 +445,8 @@ class ZfExtended_Models_Installer_DbUpdater {
         
         $newDone = $this->applyNew($toProcess);
         $this->updateModified($toProcess);
-        if($newDone < $new) {
-            $this->errors[] = 'There are remaining DB files to be processed!';
+        if($newDone < count($new)) {
+            $this->errors[] = 'There are remaining DB files to be processed!'. $newDone.' # '.count($new);
         }
 
         return [
