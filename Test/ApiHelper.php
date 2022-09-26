@@ -23,7 +23,8 @@ END LICENSE AND COPYRIGHT
 */
 
 class ZfExtended_Test_ApiHelper {
-    
+
+    const PASSWORD = 'asdfasdf';
 
     const AUTH_COOKIE_KEY = 'zfExtended';
 
@@ -45,6 +46,19 @@ class ZfExtended_Test_ApiHelper {
         'LEGACY_DATA' => false,
         'LEGACY_JSON' => false,
     ];
+
+    /**
+     * Holds the currently authenticated user login
+     * This prop will be tracked over the whole testsuite avoiding needless logins/logouts
+     * @var string|null
+     */
+    private static ?string $authLogin = null;
+
+    /**
+     * Holds the currently authenticated user cookie
+     * @var string|null
+     */
+    private static ?string $authCookie = null;
 
     /**
      * Sets the Test API up. This needs to be set in the test bootstrapper
@@ -76,6 +90,28 @@ class ZfExtended_Test_ApiHelper {
     public static function isLegacyData() : bool {
         return static::$CONFIG['LEGACY_DATA'];
     }
+
+    /**
+     * @return string|null
+     */
+    public static function getAuthLogin() : string {
+        return static::$authLogin;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getAuthCookie() : string {
+        return static::$authCookie;
+    }
+
+    /***
+     *
+     * @param string $cookie
+     */
+    public static function setAuthCookie(string $cookie) {
+        static::$authCookie = $cookie;
+    }
     
     /**
      * enable xdebug debugger in IDE
@@ -89,18 +125,6 @@ class ZfExtended_Test_ApiHelper {
      */
     protected bool $cleanup = true;
 
-    /**
-     * Authentication / session cookie
-     * @var string|null
-     */
-    protected ?string $authCookie;
-
-    /**
-     * Authenticated login
-     * @var string|null
-     */
-    protected ?string $authLogin;
-    
     /**
      * list of files to be added to the next request
      * @var array
@@ -132,28 +156,6 @@ class ZfExtended_Test_ApiHelper {
         $this->testRoot = dirname($reflector->getFileName());
         $this->xdebug = static::$CONFIG['XDEBUG_ENABLE'];
         $this->cleanup = !static::$CONFIG['KEEP_DATA'];
-    }
-    
-    /**
-     * @return string
-     */
-    public function getLogin() : string {
-        return $this->authLogin;
-    }
-    
-    /**
-     * @return string
-     */
-    public function getAuthCookie() : string {
-        return $this->authCookie;
-    }
-    
-    /***
-     * 
-     * @param string $cookie
-     */
-    public function setAuthCookie(string $cookie) {
-        $this->authCookie = $cookie;
     }
 
     /**
@@ -266,8 +268,8 @@ class ZfExtended_Test_ApiHelper {
         $http = new Zend_Http_Client();
         $http->setUri(static::$CONFIG['API_URL'].ltrim($url, '/'));
         $http->setHeaders('Accept', 'application/json');
-        if(!empty($this->authCookie)) {
-            $http->setCookie(static::AUTH_COOKIE_KEY, $this->authCookie);
+        if(static::$authCookie !== null) {
+            $http->setCookie(static::AUTH_COOKIE_KEY, static::$authCookie);
         }
         $http->setRawData($content, 'application/octet-stream');
         $http->setHeaders(Zend_Http_Client::CONTENT_TYPE, 'application/octet-stream');
@@ -544,14 +546,11 @@ class ZfExtended_Test_ApiHelper {
      * @param string $login
      * @param string $password
      */
-    public function login(string $login, string $password = 'asdfasdf') {
-        if(isset($this->authLogin)){
-            if($this->authLogin == $login) {
-                return;
-            }
-            else {
-                $this->logout();
-            }
+    public function login(string $login, string $password = self::PASSWORD) : bool {
+        if(static::$authLogin === $login && static::$authCookie !== null){
+            return false;
+        } else if(static::$authLogin !== null){
+            $this->logout();
         }
         $response = $this->postJson('editor/session', [
             'login' => $login,
@@ -563,8 +562,9 @@ class ZfExtended_Test_ApiHelper {
         $t::assertEquals(200, $plainResponse->getStatus(), 'Server did not respond HTTP 200');
         $t::assertNotFalse($response, 'JSON Login request was not successfull!');
         $t::assertMatchesRegularExpression('/[a-zA-Z0-9]{26}/', $response->sessionId, 'Login call does not return a valid sessionId!');
-        $this->authCookie = $response->sessionId;
-        $this->authLogin = $login;
+        static::$authCookie = $response->sessionId;
+        static::$authLogin = $login;
+        return true;
     }
 
     /**
@@ -572,7 +572,8 @@ class ZfExtended_Test_ApiHelper {
      */
     public function logout() {
         $this->request(static::$CONFIG['LOGOUT_PATH']);
-        $this->authLogin = null;
+        static::$authCookie = null;
+        static::$authLogin = null;
     }
 
     /**
@@ -604,8 +605,8 @@ class ZfExtended_Test_ApiHelper {
             $http->setConfig(array('timeout'      => 30));
         }
 
-        if(!empty($this->authCookie)) {
-            $http->setCookie(static::AUTH_COOKIE_KEY, $this->authCookie);
+        if(static::$authCookie !== null) {
+            $http->setCookie(static::AUTH_COOKIE_KEY, static::$authCookie);
         }
 
         if(!empty($this->filesToAdd) && ($method == 'POST' || $method == 'PUT')) {
