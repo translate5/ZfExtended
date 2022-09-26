@@ -23,13 +23,51 @@ END LICENSE AND COPYRIGHT
 */
 
 /**
- * Contains the config handler for core types
+ * Contains the config handler for core config types
+ * These are (see table definition): string | integer | boolean | list | map | absolutepath | float | markup | json | regex | regexlist
  */
 class ZfExtended_DbConfig_Type_CoreTypes extends ZfExtended_DbConfig_Type_Abstract {
+
+    const TYPE_STRING = 'string';
+
+    const TYPE_INTEGER = 'integer';
+
+    const TYPE_FLOAT = 'float';
+
+    const TYPE_BOOLEAN = 'boolean';
+
     const TYPE_MAP = 'map';
+
     const TYPE_LIST = 'list';
+
     const TYPE_ABSPATH = 'absolutepath';
 
+    const TYPE_MARKUP = 'markup';
+
+    const TYPE_JSON = 'json';
+
+    const TYPE_REGEX = 'regex';
+
+    const TYPE_REGEXLIST = 'regexlist';
+
+    /**
+     * Retrieves the sanititzation-type for a config-type
+     * Note, that the application therefore is responsible to sanitize REGEX & REGEXLIST types (what for Config-values is achieved with the validation via ::validateValue)
+     * @param string $configType
+     * @return string
+     */
+    public static function getSanitizationType(string $configType) : string {
+        switch($configType){
+
+            case self::TYPE_REGEX:
+            case self::TYPE_REGEXLIST:
+                return ZfExtended_Sanitizer::UNSANITIZED;
+
+            case self::TYPE_MARKUP:
+                return ZfExtended_Sanitizer::MARKUP;
+        }
+        return ZfExtended_Sanitizer::STRING;
+    }
 
     /**
      * validates and converts the given config value (basic type check and conversion ("true"|"on" to valid bool true and so on)
@@ -57,13 +95,13 @@ class ZfExtended_DbConfig_Type_CoreTypes extends ZfExtended_DbConfig_Type_Abstra
                 }
                 break;
 
-            case 'boolean':
+            case self::TYPE_BOOLEAN:
                 $res = parse_ini_string('value = '.$value, false, INI_SCANNER_TYPED);
                 $value = boolval($res['value'] ?? false) ? '1' : '0'; //ensure bool, then from bool we make 0 or 1 as string
                 return true; // no error is possible here
 
-            case 'integer':
-            case 'float':
+            case self::TYPE_INTEGER:
+            case self::TYPE_FLOAT:
                 //must be is_numeric otherwise error
                 if(!is_numeric($value)) {
                     $errorStr = "not a valid $type '$value'";
@@ -72,8 +110,30 @@ class ZfExtended_DbConfig_Type_CoreTypes extends ZfExtended_DbConfig_Type_Abstra
                 $value = strval($type == 'float' ? doubleval($value) : intval($value)); //cast the value to the desired number then back to string
                 break;
 
-            case 'string':
-            case self::TYPE_ABSPATH:
+            case self::TYPE_REGEX:
+                if(preg_match($value, '') === false){
+                    $errorStr = "not a valid $type '$value'";
+                    return false;
+                }
+                return true;
+
+            case self::TYPE_REGEXLIST:
+                $valueDecoded = $this->jsonDecode($value, $errorStr);
+                foreach($valueDecoded as $regex){
+                    if(preg_match($regex, '') === false){
+                        $errorStr = "not a valid $type '$value'";
+                        return false;
+                    }
+                }
+                return true;
+
+            case self::TYPE_JSON:
+                if(json_decode($value) === null){
+                    $errorStr = "not a valid $type '$value'";
+                    return false;
+                }
+                return true;
+
             default:
                 return true; // no error is possible here, its always a string
         }
@@ -90,7 +150,7 @@ class ZfExtended_DbConfig_Type_CoreTypes extends ZfExtended_DbConfig_Type_Abstra
         }
         $defaults = explode(',', $defaults);
         //since list is a core type, we can include the check here
-        if($config->getType() == self::TYPE_LIST) {
+        if($config->getType() == self::TYPE_LIST || $config->getType() == self::TYPE_REGEXLIST) {
             $value = json_decode($value);
             $diff = array_diff($value, $defaults);
             return empty($diff);
@@ -119,6 +179,7 @@ class ZfExtended_DbConfig_Type_CoreTypes extends ZfExtended_DbConfig_Type_Abstra
         $error = '';
         switch ($type) {
             case self::TYPE_LIST:
+            case self::TYPE_REGEXLIST:
             case self::TYPE_MAP:
                 return $this->jsonDecode($value, $error);
             case self::TYPE_ABSPATH:
@@ -146,10 +207,16 @@ class ZfExtended_DbConfig_Type_CoreTypes extends ZfExtended_DbConfig_Type_Abstra
      */
     public function getPhpType(string $type): string {
         switch ($type) {
+
             case self::TYPE_LIST:
             case self::TYPE_MAP:
+            case self::TYPE_REGEXLIST:
                 return 'array';
+
             case self::TYPE_ABSPATH:
+            case self::TYPE_JSON:
+            case self::TYPE_MARKUP:
+            case self::TYPE_REGEX:
                 return 'string';
         }
         return $type;
