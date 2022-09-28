@@ -372,7 +372,7 @@ class ZfExtended_Test_ApiHelper {
         $resp = $this->request($url, $method, $parameters);
         $result = $this->decodeJsonResponse($resp, $isTreeData);
         if($result === false) {
-            error_log('apiTest '.$method.' on '.$url.' returned '.$resp->__toString());
+            $this->testClass::fail('apiTest '.$method.' on '.$url.' returned '.$resp->__toString());
         } else if($this->isCapturing() && !empty($jsonFileName)){
             // in capturing mode we save the requested data as the data to test against
             $this->captureData($jsonFileName, $this->encodeTestData($result));
@@ -658,7 +658,7 @@ class ZfExtended_Test_ApiHelper {
             }
             if($taskResult->state == 'error') {
                 if($failOnError) {
-                    $test::fail('Task Import stopped. Task has state error.');
+                    $test::fail('Task Import stopped. Task has state error and last errors: '."\n  ".join("\n  ", array_column($taskResult->lastErrors ?? [], 'message')));
                 }
                 return false;
             }
@@ -666,7 +666,7 @@ class ZfExtended_Test_ApiHelper {
             //break after RELOAD_TASK_LIMIT reloads
             if($counter==self::RELOAD_TASK_LIMIT){
                 if($failOnError) {
-                    $test::fail('Task Import stopped. Task doees not have state open after '.self::RELOAD_TASK_LIMIT.' task checks.');
+                    $test::fail('Task Import stopped. Task is not open after '.self::RELOAD_TASK_LIMIT.' task checks, but has state: '.$taskResult->state);
                 }
                 return false;
             }
@@ -1110,6 +1110,9 @@ class ZfExtended_Test_ApiHelper {
      * @return stdClass
      */
     public function reloadTask(int $id = null) {
+        if(is_null($this->task)) {
+            throw new Exception('Can not reload task internally since no one is stored.');
+        }
         return $this->task = $this->getJson('editor/task/'.($id ?? $this->task->id));
     }
     
