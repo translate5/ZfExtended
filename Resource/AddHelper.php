@@ -60,9 +60,6 @@ class ZfExtended_Resource_AddHelper extends Zend_Application_Resource_ResourceAb
             $modulePrefix = ucfirst(APPLICATION_MODULE).'_';
         }
 
-        $agency = ucfirst(APPLICATION_AGENCY);
-        $fowBase = APPLICATION_PATH .'/factoryOverwrites/'.APPLICATION_AGENCY;
-        $fowMod = $fowBase.'/modules/'.APPLICATION_MODULE;
         $modulesBase = APPLICATION_PATH .'/modules/'.APPLICATION_MODULE;
         $c_h = 'Controller_Helper_';
         $c_h_path = '/Controllers/helpers';
@@ -70,23 +67,18 @@ class ZfExtended_Resource_AddHelper extends Zend_Application_Resource_ResourceAb
         $v_h_path = '/views/helpers';
 
         //Kunden Module Controller Helper
-        $paths[$agency.'_'.$modulePrefix.$c_h] = $fowMod.$c_h_path;
         //Module Controller Helper
         $paths[$modulePrefix.$c_h] = $modulesBase.$c_h_path;
         //Kunden Module View Helper
-        $paths[$agency.'_'.$modulePrefix.$v_h] = $fowMod.$v_h_path;
         //Module View Helper
         $paths[$modulePrefix.$v_h] = $modulesBase.$v_h_path;
 
         //Es folgen die Controller und View Helper Pfade der einzelnen Libs,
-        // ebenfalls in Abhängigkeit des Kunden (Agency)
         $config = Zend_Registry::get('config');
         $libs = array_reverse($config->runtimeOptions->libraries->order->toArray());
         foreach ($libs as $lib) {
             $libPrefix = ucfirst($lib).'_';
-            $paths[$agency.'_'.$libPrefix.$c_h] = $fowBase.'/library/'.$lib.$c_h_path;
             $paths[$libPrefix.$c_h] = APPLICATION_PATH .'/../library/'.$lib.$c_h_path;
-            $paths[$agency.'_'.$libPrefix.$v_h] = $fowBase.'/library/'.$lib.$v_h_path;
             $paths[$libPrefix.$v_h] = APPLICATION_PATH .'/../library/'.$lib.$v_h_path;
         }
         

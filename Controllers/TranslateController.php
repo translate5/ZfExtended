@@ -140,7 +140,7 @@ class TranslateController extends ZfExtended_Controllers_Action
         $this->_helper->viewRenderer->setNoRender(true);
         $index = ZfExtended_BaseIndex::getInstance();
         /* @var $index ZfExtended_BaseIndex */
-        $dirs = $index->getModuleDirs();
+        $dirs = APPLICATION_MODULES;
         $allXliffs = array();
         foreach ($dirs as &$dir) {
             $dir = APPLICATION_PATH.DIRECTORY_SEPARATOR.'modules'.DIRECTORY_SEPARATOR.$dir.DIRECTORY_SEPARATOR.'locales';

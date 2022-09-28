@@ -22,12 +22,6 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
-/**#@+
- * @author Marc Mittag
- * @package ZfExtended
- * @version 2.0
- *
- */
 /**
  * Eigener Errorhandler
  *
@@ -64,16 +58,13 @@ class ZfExtended_Resource_ErrorHandler extends Zend_Application_Resource_Resourc
     
     public function init()
     {
-        $bootstrap = $this->getBootstrap();
-        $bootstrap->bootstrap('ZfExtended_Resource_InitRegistry');
-        $config = Zend_Registry::get('config');
-        register_shutdown_function(array($this, 'handleFatalError'), $config);
+        register_shutdown_function(array($this, 'handleFatalError'));
     }
-    
+
     /**
-     * @param Zend_Config $config
+     * @throws Zend_Exception
      */
-    public function handleFatalError(Zend_Config $config) {
+    public function handleFatalError() {
         $error = error_get_last();
         if(empty($error)) {
             return;
@@ -89,12 +80,15 @@ class ZfExtended_Resource_ErrorHandler extends Zend_Application_Resource_Resourc
         $label = $this->errorCodes[$type][0];
         $level = $this->errorCodes[$type][1];
         $msg = 'PHP '.$label.': ';
-        
-        $codes = ['fatal' => 'E1027', 'warn' => 'E1029', 'info' => 'E1030', 'debug' => 'E1030'];
-        $logger = Zend_Registry::get('logger');
-        /* @var $logger ZfExtended_Logger */
-        $logger->finalError($codes[$level], $msg, $level, $error);
-        
+
+        //in early bootstrapping logger is maybe not defined yet
+        if(Zend_Registry::isRegistered('logger')) {
+            $codes = ['fatal' => 'E1027', 'warn' => 'E1029', 'info' => 'E1030', 'debug' => 'E1030'];
+            $logger = Zend_Registry::get('logger');
+            /* @var $logger ZfExtended_Logger */
+            $logger->finalError($codes[$level], $msg, $level, $error);
+        }
+
         //on fatal errors we assume that there is no usable out put, so we overwrite it
         if($level != 'fatal') {
             return;
@@ -102,13 +96,12 @@ class ZfExtended_Resource_ErrorHandler extends Zend_Application_Resource_Resourc
         if(!headers_sent()) {
             header('HTTP/1.1 500 Internal Server Error');
         }
-        if(!empty($config->runtimeOptions->showErrorsInBrowser)) {
-            $out = ob_get_clean();
+        if(PHP_SAPI === 'cli') {
+            echo ob_get_clean();
+            return;
         }
-        else {
-            $out = '';
-            ob_get_length() && ob_clean(); //show only a white page
-        }
+        $out = '';
+        ob_get_length() && ob_clean(); //show only a white page
         echo '<h1>Internal Server Error</h1>'."\n".$out;
     }
     
