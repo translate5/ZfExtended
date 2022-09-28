@@ -22,43 +22,27 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
-/**#@+
- * @author Marc Mittag
- * @package portal
- * @version 2.0
- *
- */
-
 /**
  * This fatal errors should be handled in our custom shutdown functions
- * @var Integer
  */
-define('FATAL_ERRORS_TO_HANDLE', E_ERROR | E_PARSE | E_CORE_ERROR | E_COMPILE_ERROR);
+const FATAL_ERRORS_TO_HANDLE = E_ERROR | E_PARSE | E_CORE_ERROR | E_COMPILE_ERROR;
 
 /**
  * Standard Inhalt der index.php gekapselt
  */
 class ZfExtended_BaseIndex{
-    protected $moduleDirs;
-    protected $currentModule;
-    public $application_path;
+    protected string $currentModule = 'default';
+
     /**
-     * Singleton Instanzen
-     *
-     * @var array _instances enthalten ACL Objekte
+     * singleton instance
      */
-    protected static $_instance = null;
-    /**
-     *
-     * @var array
-     */
-    public $applicationInis = array();
+    protected static ?ZfExtended_BaseIndex $_instance = null;
 
     /**
      * If set to true load additional maintenance.ini config file
      * @var boolean
      */
-    public static $addMaintenanceConfig = false;
+    public static bool $addMaintenanceConfig = false;
     
     /**
      * Konstruktor enthält alles, was normaler Weise die index.php enthält
@@ -76,7 +60,7 @@ class ZfExtended_BaseIndex{
         if (version_compare(PHP_VERSION, '8.0', '<')) {
             $msg = array('Please use PHP version ~ 8.0!');
             if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
-                $msg[] = 'Please update your xampp package manually or reinstall Translate5 with the latest windows installer from http://www.translate5.net';
+                $msg[] = 'Please update your xampp package manually or reinstall Translate5 with the latest windows installer from https://www.translate5.net';
                 $msg[] = 'Warning: Reinstallation can lead to data loss! Please contact support@translate5.net when you need assistance in data conversion!';
             }
             die(join("<br>\n", $msg));
@@ -90,16 +74,16 @@ class ZfExtended_BaseIndex{
         if(!defined('APPLICATION_ROOT')) {
             define('APPLICATION_ROOT', realpath(dirname($indexpath) . DIRECTORY_SEPARATOR.'..'));
         }
-        $this->application_path = APPLICATION_ROOT . DIRECTORY_SEPARATOR.'application';
-        defined('APPLICATION_PATH')   || define('APPLICATION_PATH', $this->application_path);
+        defined('APPLICATION_PATH')   || define('APPLICATION_PATH', APPLICATION_ROOT . DIRECTORY_SEPARATOR.'application');
         // Define application environment
         defined('APPLICATION_ENV')    || define('APPLICATION_ENV',    ( getenv('APPLICATION_ENV')    ?: 'application'));
-        defined('APPLICATION_AGENCY') || define('APPLICATION_AGENCY', ( getenv('APPLICATION_AGENCY') ?: $this->getAgency()));
         defined('APPLICATION_RUNDIR') || define('APPLICATION_RUNDIR', ( getenv('APPLICATION_RUNDIR') ?: ''));
-        $this->applicationInis = $this->getApplicationInis();
+        $this->currentModule = $this->getCurrentModule();
     }
+
     /**
      * @return ZfExtended_BaseIndex
+     * @throws Exception
      */
     public static function getInstance(): ZfExtended_BaseIndex {
         if (null === self::$_instance) {
@@ -107,22 +91,16 @@ class ZfExtended_BaseIndex{
         }
         return self::$_instance;
     }
-    /**
-     * Singleton Instanz auf NULL setzen, um sie neu initialiseren zu können
-     *
-     * @return void
-     */
-    public static function reset() {
-        self::$_instance = NULL;
-    }
+
     /**
      * (re-)initializes important registry values
      *
-     * @param Zend_Application_Bootstrap_Bootstrap bootstrap
+     * @param Zend_Application_Bootstrap_Bootstrap $bootstrap
      * @return void
+     * @throws Zend_Application_Bootstrap_Exception
      */
-    public function initRegistry(Zend_Application_Bootstrap_Bootstrap $bootstrap) {
-        
+    public function initRegistry(Zend_Application_Bootstrap_Bootstrap $bootstrap): void
+    {
         Zend_Registry::set('bootstrap', $bootstrap);
         $bootstrap->bootstrap('frontController');
         
@@ -142,46 +120,27 @@ class ZfExtended_BaseIndex{
     }
 
     /**
-     * Singleton Instanz auf NULL setzen, um sie neu initialiseren zu können
-     *
+     * start the application
      * @return void
+     * @throws Zend_Application_Exception
      */
-    public function startApplication() {
+    public function startApplication(): void
+    {
         try {
-            $this->initApplication()->bootstrap()->run();
+            $app = $this->initApplication();
+            $app->bootstrap()->run();
         }
         catch(Zend_Db_Adapter_Exception $e) {
-            error_log($e);
-            if(strpos($e->getMessage(), 'SQLSTATE[HY000] [2002] No such file or directory') !== false) {
-                error_log('Fatal: Could not connect to the database! Database down?');
-            }elseif(strpos($e->getMessage(), 'SQLSTATE[HY000] [1045] Access denied for user') !== false) {
-                error_log('Fatal: Could not connect to the database! Wrong credentials?');
-            }elseif(strpos($e->getMessage(), 'SQLSTATE[HY000] [1044] Access denied for user') !== false) {
-                error_log('Fatal: Could not connect to the database! Wrong DB given?');
-            }elseif(strpos($e->getMessage(), 'SQLSTATE[HY000] [2002] php_network_getaddresses: getaddrinfo failed') !== false) {
-                error_log('Fatal: Could not connect to the database! Wrong host given?');
-            }else {
-                error_log('Fatal: Could not connect to the database!');
-            }
-            header('HTTP/1.1 500 Internal Server Error');
-            $headers = apache_request_headers();
-            if($headers) {
-                $headers = array_change_key_case($headers, CASE_LOWER);
-                if(empty($headers['accept']) || stripos($headers['accept'], 'json') === false) {
-                    error_log(print_r($headers,1));
-                    include('layouts/dbdown.phtml');
-                    return;
-                }
-            }
-            die('{"success": false, "httpStatus": 500, "errorMessage": "<b>Fatal: Could not connect to the database!</b> <br>If you get this message in the Browser: try to reload the application. <br>See error log for details."}');
+            $this->handleDatabaseDown($e);
         }
     }
 
     /**
-     * @throws Zend_Exception
-     * @return Zend_Application
+     * @return Zend_Application|ZfExtended_Application
+     * @throws Zend_Application_Exception
      */
-    public function initApplication() {
+    public function initApplication(): Zend_Application|ZfExtended_Application
+    {
         //include optional composer vendor autoloader
         if(file_exists(APPLICATION_ROOT.'/vendor/autoload.php')) {
             require_once APPLICATION_ROOT.'/vendor/autoload.php';
@@ -190,13 +149,22 @@ class ZfExtended_BaseIndex{
         require_once 'Zend/Loader/Autoloader.php';
         Zend_Loader_Autoloader::getInstance()->setFallbackAutoloader(true);
         /** Zend_Application */
-        require_once dirname(__FILE__).'/Application.php';
-        $application=new ZfExtended_Application( APPLICATION_ENV,[ 'config' => $this->applicationInis]);
+        require_once __DIR__.'/Application.php';
+        ZfExtended_Application::setConfigParserOptions([
+            'scannerMode' => INI_SCANNER_TYPED
+        ]);
+        $application = new ZfExtended_Application( APPLICATION_ENV,[
+            'config' => $this->getApplicationInis()
+        ]);
         $this->initAdditionalConstants();
 
+        // set the available modules
+        define('APPLICATION_MODULES', array_filter($application->getOption('modules')['order'], function($module){
+            return is_dir(APPLICATION_PATH .'/modules/'.$module);
+        }));
 
-        // for each module, call the module specific function. This will register the module as applet
-        foreach ($this->getModules() as $module){
+        // for each available module, call the module specific function. This will register the module as applet
+        foreach (APPLICATION_MODULES as $module){
             require_once $module.'/Bootstrap.php';
             $class = ucfirst($module).'_Bootstrap';
             if(method_exists($class,'initModuleSpecific')){
@@ -207,41 +175,26 @@ class ZfExtended_BaseIndex{
     }
 
     /**
-     * Fallback Methode wenn keine Agency per ENV gesetzt ist,
-     * dann wird die Rückgabe dieser Methode verwendet. Sollte in Nicht-Translate5-
-     * Anwendungen überschrieben werden.
-     * @return string
-     */
-    public function getAgency(){
-        $sName = explode('.', $_SERVER['SERVER_NAME']);
-        $tld = array_pop($sName);
-        $domain = array_pop($sName);
-        $sub = array_pop($sName);
-        $isLive = ($domain === 'translate5' && $tld === 'net');
-        $isMainT5 = (empty($sub) || $sub === 'www');
-        if($isLive && !$isMainT5) {
-            return $sub;
-        }
-        return 'translate5';
-    }
-    /**
      * gets paths to all libs. Later ones should overwrite previous ones  (therefore reverse order than in application.ini)
+     * @deprecated
      * @return array
      */
-    public function getModulePaths() {
-        $modules = $this->getModules();
-        $paths = array();
-        foreach ($modules as $module) {
-            $paths[] = realpath(APPLICATION_PATH .DIRECTORY_SEPARATOR.'modules'.
-                    DIRECTORY_SEPARATOR.$module);
+    public function getModulePaths(): array
+    {
+        $paths = [];
+        foreach (APPLICATION_MODULES as $module) {
+            $paths[] = realpath(APPLICATION_PATH .DIRECTORY_SEPARATOR.'modules'.DIRECTORY_SEPARATOR.$module);
         }
         return $paths;
     }
+
     /**
      * gets paths to all libs. Later ones should overwrite previous ones  (therefore reverse order than in application.ini)
      * @return array
+     * @throws Zend_Exception
      */
-    public function getLibPaths() {
+    public function getLibPaths(): array
+    {
         $config = Zend_Registry::get('config');
         $paths = array();
         $libs = array_reverse($config->runtimeOptions->libraries->order->toArray());
@@ -251,7 +204,7 @@ class ZfExtended_BaseIndex{
         }
         return $paths;
     }
-    
+
     /**
      * Changes the module of the ZF-Application, and returns the old module which was set before
      *
@@ -263,11 +216,13 @@ class ZfExtended_BaseIndex{
      *   the new one
      *
      *
-     * @param string module
+     * @param string $module
      * @param bool $withAcl default true, enables resetting the ACLs, false to prevent this
      * @return string the old module
+     * @throws Zend_Exception
      */
-    public function setModule($module, $withAcl = true){
+    public function setModule(string $module, bool $withAcl = true): string
+    {
         if(!is_dir(APPLICATION_PATH.'/modules/'.  $module)){
             throw new Zend_Exception('The module-directory '.APPLICATION_PATH.
                     '/modules/'.  $module.' does not exist.');
@@ -277,24 +232,27 @@ class ZfExtended_BaseIndex{
         }
         $oldModule = $this->currentModule;
         $this->currentModule = $module;
-        $this->applicationInis = $this->getApplicationInis();
         $bootstrap = Zend_Registry::get('bootstrap');
-        $bootstrap->getApplication()->setOptions(array('config'=> $this->applicationInis));
+        $bootstrap->getApplication()->setOptions([
+            'config'=> $this->getApplicationInis()
+        ]);
         $bootstrap->setOptions($bootstrap->getApplication()->getOptions());
         $this->initRegistry($bootstrap);
         //update the loaded ACLs:
         $withAcl && ZfExtended_Acl::getInstance(true);
         return $oldModule;
     }
+
     /**
      * adds the options of the passed module-name
-     *
      * - options already set stay as they are and do not get overridden
      *
-     *
-     * @param string module
+     * @param string $module
+     * @throws Zend_Application_Bootstrap_Exception
+     * @throws Zend_Exception
      */
-    public function addModuleOptions($module){
+    public function addModuleOptions(string $module): void
+    {
         $bootstrap = Zend_Registry::get('bootstrap');
         $oldOptions = $bootstrap->getApplication()->getOptions();
         $this->setModule($module, false);
@@ -304,16 +262,17 @@ class ZfExtended_BaseIndex{
         $bootstrap->setOptions($bootstrap->getApplication()->getOptions());
         $this->initRegistry($bootstrap);
     }
+
     /**
-     * Definiert APPLICATION_MODULE und gibt aktuelles Modul zurück
-     *
-     * @return string module
+     * defines the current module
+     * @return string
      */
-    private function getCurrentModule(){
+    private function getCurrentModule(): string {
         $module = 'default';
-        if(is_null($this->moduleDirs)){
-            $this->moduleDirs = $this->getModuleDirs();
-        }
+        $path = APPLICATION_PATH.'/modules/';
+        $allModules = array_filter(scandir($path), function($module) use ($path) {
+            return !str_starts_with($module, '.') && is_dir($path.$module);
+        });
         $runDirParts = explode('/', APPLICATION_RUNDIR);
         $uriParts = explode('/', $_SERVER['REQUEST_URI']);
         
@@ -322,7 +281,7 @@ class ZfExtended_BaseIndex{
             $runDirPart = array_shift($runDirParts);
         } while($uriPart === $runDirPart);
         
-        if(in_array($uriPart, $this->moduleDirs)){
+        if(in_array($uriPart, $allModules)){
             $module = $uriPart;
         }
         
@@ -331,60 +290,24 @@ class ZfExtended_BaseIndex{
     }
 
     /**
-     * @return array moduleDirs
+     * initializes all inis to be parsed
      */
-    public function getModules(){
-        $modules = scandir(APPLICATION_PATH.'/modules');
-        foreach ($modules as $key => &$module) {
-            if(str_starts_with($module, '.') || !is_dir(APPLICATION_PATH .'/modules/'.$module)){
-                unset($modules[$key]);
-            }
-        }
-        return $modules;
-    }
-    /**
-     * alias of getModules
-     */
-    public function getModuleDirs() {
-        return $this->getModules();
-    }
+    private function getApplicationInis(): array
+    {
+        $applicationInis = [
+            //the main configuration file:
+            APPLICATION_PATH.'/config/application.ini',
+            //the main configuration file of a module, provided by the module:
+            APPLICATION_PATH.'/modules/'.$this->currentModule.'/configs/module.ini',
+            //the application configuration file of a module, provided by the application, can overwrite module settings:
+            APPLICATION_PATH.'/config/'.$this->currentModule.'.ini',
+        ];
 
-    /**
-     * @return array $applicationInis array mit den Pfaden zu allen einzubindenden application.inis
-     */
-    private function getApplicationInis(){
-        if(is_null($this->currentModule)){
-          $this->currentModule = $this->getCurrentModule();
-        }
-
-        $applicationInis = $this->getIniList();
-        $result = array();
-        foreach($applicationInis as $ini) {
-            if(!file_exists($ini)){
-                continue;
-            }
-            $result[] = $ini;
-        }
-        return $result;
-    }
-
-    /**
-     * gibt die default Liste mit zu inkludierenden ini's zurück. Unabhängig davon ob es die Datei wirklich gibt.
-     */
-    protected function getIniList() {
-        $applicationInis = array();
-        //the main configuration file:
-        $applicationInis[] = APPLICATION_PATH.'/config/application.ini';
-        //the main configuration file of a module, provided by the module:
-        $applicationInis[] = APPLICATION_PATH.'/modules/'.$this->currentModule.'/configs/module.ini';
-        //the application configuration file of a module, provided by the application, can overwrite module settings:
-        $applicationInis[] = APPLICATION_PATH.'/config/'.$this->currentModule.'.ini';
-        
         if(self::$addMaintenanceConfig) {
             //this additional config file is loaded when running the CLI configuration / maintenance scripts.
             $applicationInis[] = APPLICATION_PATH.'/config/maintenance.ini';
         }
-        
+
         //a customized configuration file for the local installation:
         $applicationInis[] = APPLICATION_PATH.'/config/installation.ini';
         //for installations with read only/shared code base only the data directory is usable for the instance, so we have to load optionally the installation.ini from there
@@ -392,16 +315,49 @@ class ZfExtended_BaseIndex{
         //a customized configuration file for the local installation, called only for a specific module:
         // this feature is currently not documented!
         $applicationInis[] = APPLICATION_PATH.'/config/installation-'.$this->currentModule.'.ini';
-        
-        return $applicationInis;
+
+        return array_filter($applicationInis, function ($iniFile) {
+            return file_exists($iniFile);
+        });
     }
-    
-    
+
     /***
-     * Define additional transalte5 constants. This will be initialized after the application ini is loaded
+     * Define additional translate5 constants. This will be initialized after the application ini is loaded
      */
-    protected function initAdditionalConstants(){
+    protected function initAdditionalConstants(): void
+    {
         defined('ACL_ROLE_PM') || define('ACL_ROLE_PM', 'pm');
         defined('NOW_ISO') || define('NOW_ISO', date('Y-m-d H:i:s', $_SERVER['REQUEST_TIME']));
+    }
+
+    /**
+     * @param Exception|Zend_Db_Adapter_Exception $e
+     * @return void
+     */
+    private function handleDatabaseDown(Exception|Zend_Db_Adapter_Exception $e): void
+    {
+        error_log($e);
+        if (str_contains($e->getMessage(), 'SQLSTATE[HY000] [2002] No such file or directory')) {
+            error_log('Fatal: Could not connect to the database! Database down?');
+        } elseif (str_contains($e->getMessage(), 'SQLSTATE[HY000] [1045] Access denied for user')) {
+            error_log('Fatal: Could not connect to the database! Wrong credentials?');
+        } elseif (str_contains($e->getMessage(), 'SQLSTATE[HY000] [1044] Access denied for user')) {
+            error_log('Fatal: Could not connect to the database! Wrong DB given?');
+        } elseif (str_contains($e->getMessage(), 'SQLSTATE[HY000] [2002] php_network_getaddresses: getaddrinfo failed')) {
+            error_log('Fatal: Could not connect to the database! Wrong host given?');
+        } else {
+            error_log('Fatal: Could not connect to the database!');
+        }
+        header('HTTP/1.1 500 Internal Server Error');
+        $headers = apache_request_headers();
+        if ($headers) {
+            $headers = array_change_key_case($headers, CASE_LOWER);
+            if (empty($headers['accept']) || stripos($headers['accept'], 'json') === false) {
+                error_log(print_r($headers, 1));
+                include('layouts/dbdown.phtml');
+                return;
+            }
+        }
+        die('{"success": false, "httpStatus": 500, "errorMessage": "<b>Fatal: Could not connect to the database!</b> <br>If you get this message in the Browser: try to reload the application. <br>See error log for details."}');
     }
 }

@@ -40,10 +40,12 @@ END LICENSE AND COPYRIGHT
  * - cache
  */
 class ZfExtended_Resource_InitRegistry extends Zend_Application_Resource_ResourceAbstract {
+    /**
+     * @throws Zend_Application_Bootstrap_Exception
+     */
     public function init()
     {
         $index = ZfExtended_BaseIndex::getInstance();
-        /* @var $index ZfExtended_BaseIndex */
         $index->initRegistry($this->getBootstrap());
     }
 }
