@@ -163,7 +163,7 @@ class ZfExtended_Sanitized_HttpRequest extends REST_Controller_Request_Http {
     private function sanitizeRequestValue($requestValue){
         if(is_array($requestValue)){
             foreach($requestValue as $key => $value){
-                $value[$key] = $this->sanitizeRequestValue($value);
+                $requestValue[$key] = $this->sanitizeRequestValue($value);
             }
             return $requestValue;
         }
