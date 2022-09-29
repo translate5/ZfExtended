@@ -351,6 +351,9 @@ class ZfExtended_Models_Installer_DbUpdater {
         $db = Zend_Db::factory($config->resources->db->adapter, $config->resources->db->params->toArray());
         $sql = file_get_contents($file);
 
+        // Replace CRLF line endings with LF, as otherwise below preg replace won't work
+        $sql = preg_replace('~\r\n~', "\n", $sql);
+
         //remove DELIMITER statements and replace back the ;; delimiter to ;
         // reason is that it is not needed and not usable for PHP import
         $sql = preg_replace_callback('/^DELIMITER ;;$(.*?)^DELIMITER ;$/ms', function ($matches){
