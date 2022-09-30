@@ -33,15 +33,15 @@ END LICENSE AND COPYRIGHT
  */
 class ZfExtended_Factory {
     public static $overwrites = null;
-    
+
     /**
      * returns a $className instance, currently only for models
      * ControllerHelper are loaded automagicly by ZfExtended_Zendoverwrites_Controller_Action_HelperBroker
      *
      * @param string $className
      * @param array $params optional; parameters for class constructor
-     * @param array $executeContructor optional; if false no constructor is called
-     * @return mixed
+     * @param bool $executeContructor optional; if false no constructor is called
+     * @return object
      */
     public static function get(string $className, array $params = array(), bool $executeContructor = true){
         self::initOverwrites();

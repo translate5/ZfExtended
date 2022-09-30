@@ -63,9 +63,9 @@ class ZfExtended_Models_Installer_DbUpdater {
     protected ZfExtended_Logger $log;
 
     /**
-     * Set that flag to the path(s) of the test sql data
+     * Holds additional pathes to search for sql/php files
      */
-    protected array $additionalPaths = [];
+    protected array $additionalPathes = [];
 
     /**
      * DB credentials, exec and base path must be given as parameter in usage of a non Zend Environment
@@ -132,8 +132,8 @@ class ZfExtended_Models_Installer_DbUpdater {
         foreach($installed as $row) {
             $installHashed[$this->getEntryHash($row->origin, $row->filename)] = $row->md5;
         }
-        
-        foreach($this->getFoundFiles($foundFiles) as $file) {
+        $usedPathes = null;
+        foreach($this->getFoundFiles($usedPathes) as $file) {
             $entryHash = $this->getEntryHash($file['origin'], $file['relativeToOrigin']);
             $file['entryHash'] = md5($entryHash);
             if(empty($installHashed[$entryHash])){
@@ -144,18 +144,22 @@ class ZfExtended_Models_Installer_DbUpdater {
                 $this->sqlFilesChanged[] = $file;
             }
         }
-        return $foundFiles;
+        return $usedPathes;
     }
-    
+
     /**
-     * returns all found SQL files
+     * @param array|null $usedPathes: reference that can be used to retrieve the used pathes
+     * @return array
+     * @throws Zend_Exception
+     * @throws ZfExtended_Exception
+     * @throws ZfExtended_NoAccessException
      */
-    protected function getFoundFiles(array &$usedPaths = null): array
+    protected function getFoundFiles(array &$usedPathes = null): array
     {
         $filefinder = ZfExtended_Factory::get('ZfExtended_Models_Installer_DbFileFinder');
         /* @var $filefinder ZfExtended_Models_Installer_DbFileFinder */
-        $usedPaths = array_merge($filefinder->getSearchPathList(), $this->additionalPaths);
-        return $filefinder->getSqlFilesOrdered($this->additionalPaths);
+        $usedPathes = array_merge($filefinder->getSearchPathList(), $this->additionalPathes);
+        return $filefinder->getSqlFilesOrdered($this->additionalPathes);
     }
     
     /**
@@ -351,6 +355,9 @@ class ZfExtended_Models_Installer_DbUpdater {
         $db = Zend_Db::factory($config->resources->db->adapter, $config->resources->db->params->toArray());
         $sql = file_get_contents($file);
 
+        // Replace CRLF line endings with LF, as otherwise below preg replace won't work
+        $sql = preg_replace('~\r\n~', "\n", $sql);
+
         //remove DELIMITER statements and replace back the ;; delimiter to ;
         // reason is that it is not needed and not usable for PHP import
         $sql = preg_replace_callback('/^DELIMITER ;;$(.*?)^DELIMITER ;$/ms', function ($matches){
@@ -507,12 +514,10 @@ class ZfExtended_Models_Installer_DbUpdater {
     }
 
     /**
-     * Sets additional SQL paths, executes after all configured (core) and plugin paths
-     * @param array $array
-     * @return void
+     * @param string $path
      */
-    public function setAdditonalSqlPaths(array $array): void
+    public function addAdditonalSqlPath(string $path): void
     {
-        $this->additionalPaths = $array;
+        $this->additionalPathes[] = $path;
     }
 }

@@ -35,10 +35,11 @@ class ZfExtended_Plugin_Manager {
     
     protected $allLocalePaths = array();
     protected $allFrontendControllers = array();
-    
+
     /**
      * returns a list of active plugins according to the config
      * @return array
+     * @throws Zend_Exception
      */
     public function getActive(): array {
         $config = Zend_Registry::get('config');
@@ -52,6 +53,7 @@ class ZfExtended_Plugin_Manager {
      * returns true if a given plugin name is active
      * @param string $plugin
      * @return bool
+     * @throws Zend_Exception
      */
     public function isActive(string $plugin): bool {
         return in_array($this->getAvailable()[$plugin] ?? '', $this->getActive());
@@ -62,6 +64,9 @@ class ZfExtended_Plugin_Manager {
      * @param string $plugin
      * @param bool $activate true to activate, false to deactivate
      * @return bool
+     * @throws Zend_Db_Statement_Exception
+     * @throws ZfExtended_Models_Entity_Exceptions_IntegrityConstraint
+     * @throws ZfExtended_Models_Entity_Exceptions_IntegrityDuplicateKey
      */
     public function setActive(string $plugin, bool $activate = true): bool {
         $plugin = strtolower($plugin);
@@ -93,8 +98,12 @@ class ZfExtended_Plugin_Manager {
         $config->save();
         return true;
     }
-    
-    public function bootstrap() {
+
+    /**
+     * @throws Zend_Exception
+     */
+    public function bootstrap(): void
+    {
         $pluginClasses = $this->getActive();
         if (empty($pluginClasses)) {
             return;
@@ -138,7 +147,8 @@ class ZfExtended_Plugin_Manager {
      * return frontend controllers for all active plugins
      * @return array
      */
-    public function getActiveFrontendControllers() {
+    public function getActiveFrontendControllers(): array
+    {
         return $this->allFrontendControllers;
     }
     
@@ -146,19 +156,22 @@ class ZfExtended_Plugin_Manager {
      * return absolute path to locale directories for all active plugins
      * @return array
      */
-    public function getActiveLocalePaths() {
+    public function getActiveLocalePaths(): array
+    {
         return $this->allLocalePaths;
     }
-    
+
     /**
      * Intelligent Method to return the stored plugin instance by
      *   the direct plugin name,
      *   the plugin classname
      *   or either the classname of a class belonging to the plugin (for example a worker belonging to the plugin)
-     *   @param string $key the plugin key/class to look for
-     *   @return ZfExtended_Plugin_Abstract|null
+     * @param string $key the plugin key/class to look for
+     * @return ZfExtended_Plugin_Abstract|null
+     * @throws ZfExtended_Plugin_Exception
      */
-    public function get($key){
+    public function get($key): ?ZfExtended_Plugin_Abstract
+    {
         if(isset($this->pluginInstances[$key])) {
             return $this->pluginInstances[$key];
         }
@@ -181,15 +194,18 @@ class ZfExtended_Plugin_Manager {
      * returns a list of loaded plugins for the current module
      * @return array
      */
-    public function getLoaded() {
+    public function getLoaded(): array
+    {
         return array_keys($this->pluginInstances);
     }
-    
-    /***
+
+    /**
      * Get all plugin names for the current module.
-     * @return array|array
+     * @return array
+     * @throws Zend_Exception
      */
-    public function getAllPluginNames() {
+    public function getAllPluginNames(): array
+    {
         $module = Zend_Registry::get('module');
         $path = APPLICATION_PATH.'/modules/'.$module.'/Plugins';
         if(!is_dir($path)){
@@ -210,19 +226,19 @@ class ZfExtended_Plugin_Manager {
         }, $glob);
         return array_filter($result);
     }
-    
+
     /**
      * returns a list of installed plug-ins
-     * @return ['PluginName'=>'Plugin_Init_Class',...]
+     * @return array ['PluginName'=>'Plugin_Init_Class',...]
      */
-    
-    public function getAvailable() {
+    public function getAvailable(): array
+    {
         $result = [];
         $moduleDirs = new FilesystemIterator(APPLICATION_PATH.'/modules/');
         foreach ($moduleDirs as $moduleDirInfo) {
             //get plugins of this module
             $pluginDirPath = $moduleDirInfo->getPathname().'/Plugins';
-            if(!\is_dir($pluginDirPath)){
+            if(!\is_dir($pluginDirPath) || !in_array($moduleDirInfo->getBaseName(), APPLICATION_MODULES)){
                 continue;
             }
             $pluginDirs = new FilesystemIterator($pluginDirPath);
