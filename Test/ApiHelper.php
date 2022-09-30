@@ -68,6 +68,7 @@ class ZfExtended_Test_ApiHelper {
         'KEEP_DATA' => false,
         'LEGACY_DATA' => false,
         'LEGACY_JSON' => false,
+        'ENVIRONMENT' => 'application'
     ];
 
     /**
@@ -81,6 +82,7 @@ class ZfExtended_Test_ApiHelper {
      *  'KEEP_DATA' => if true, defines if test should be kept after test run, must be implemented in the test, false by default
      *  'LEGACY_DATA' => if true, defines to use the "old" data field sort order (to reduce diff clutter on capturing)
      *  'LEGACY_JSON' => if true, defines to use the "old" json encoding config (to reduce diff clutter on capturing)
+     *  'ENVIRONMENT' => 'test' hints, that the tests run in the test environment ant the origin-header must be set to "test"
      * @param array $config
      */
     public static function setup(array $config){
@@ -91,6 +93,13 @@ class ZfExtended_Test_ApiHelper {
         foreach(['API_URL', 'DATA_DIR'] as $key) {
             static::$CONFIG[$key] = rtrim(static::$CONFIG[$key], '/').'/';
         }
+    }
+
+    /**
+     * @return bool
+     */
+    protected static function isTestEnvironment() : bool {
+        return static::$CONFIG['ENVIRONMENT'] === 'test';
     }
     
     /**
@@ -216,6 +225,9 @@ class ZfExtended_Test_ApiHelper {
         $http = new Zend_Http_Client();
         $http->setUri(static::$CONFIG['API_URL'].ltrim($url, '/'));
         $http->setHeaders('Accept', 'application/json');
+        if(static::isTestEnvironment()){
+            $http->setHeaders('Origin', 't5test');
+        }
         if(!empty($this->authCookie)) {
             $http->setCookie(self::AUTH_COOKIE_KEY, $this->authCookie);
         }
@@ -425,14 +437,17 @@ class ZfExtended_Test_ApiHelper {
 
         $http->setUri(static::$CONFIG['API_URL'].$url);
         $http->setHeaders('Accept', 'application/json');
+        if(static::isTestEnvironment()){
+            $http->setHeaders('Origin', 't5test');
+        }
 
         //enable xdebug debugger in eclipse
         if($this->xdebug) {
             $http->setCookie('XDEBUG_SESSION','ECLIPSE');
-            $http->setConfig(array('timeout'      => 3600));
+            $http->setConfig(array('timeout' => 3600));
         }
         else {
-            $http->setConfig(array('timeout'      => 30));
+            $http->setConfig(array('timeout' => 30));
         }
 
         if(!empty($this->authCookie)) {
@@ -683,7 +698,7 @@ class ZfExtended_Test_ApiHelper {
      */
     public function checkProjectTasksStateLoop(bool $failOnError = true): bool {
         $test = $this->testClass;
-        $counter=0;
+        $counter = 0;
         while(true){
             
             //reload the project
