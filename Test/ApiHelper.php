@@ -1394,7 +1394,7 @@ class ZfExtended_Test_ApiHelper {
     /**
      * Sets the passed or current task to open
      * @param int $taskId: if given, this task is taken, otherwise the current task
-     * @return array|bool|stdClass
+     * @return array|stdClass
      */
     public function setTaskToOpen(int $taskId = -1) {
         return $this->setTaskState($taskId, 'open');
@@ -1403,7 +1403,7 @@ class ZfExtended_Test_ApiHelper {
     /**
      * Sets the passed or current task to edit
      * @param int $taskId: if given, this task is taken, otherwise the current task
-     * @return array|bool|stdClass
+     * @return array|stdClass
      */
     public function setTaskToEdit(int $taskId = -1) {
         return $this->setTaskState($taskId, 'edit');
@@ -1412,7 +1412,7 @@ class ZfExtended_Test_ApiHelper {
     /**
      * Sets the passed or current task to finished
      * @param int $taskId: if given, this task is taken, otherwise the current task
-     * @return array|bool|stdClass
+     * @return array|stdClass
      */
     public function setTaskToFinished(int $taskId = -1) {
         return $this->setTaskState($taskId, 'finished');
