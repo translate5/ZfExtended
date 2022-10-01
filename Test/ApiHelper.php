@@ -212,7 +212,7 @@ class ZfExtended_Test_ApiHelper {
      * @return bool|mixed|stdClass|null
      * @throws Zend_Http_Client_Exception
      */
-    public function postRaw(string $url, string $content, array $parameters=[]) {
+    public function postRaw(string $url, string $content, array $parameters=[]) : stdClass {
         $http = new Zend_Http_Client();
         $http->setUri(static::$CONFIG['API_URL'].ltrim($url, '/'));
         $http->setHeaders('Accept', 'application/json');
@@ -234,51 +234,60 @@ class ZfExtended_Test_ApiHelper {
      * Sends a GET request to the application API to fetch JSON data
      * @param string $url
      * @param array $parameters
-     * @param string $jsonFileName
-     * @return mixed|boolean
+     * @param string|null $jsonFileName
+     * @param bool $expectedToFail
+     * @return stdClass|array
+     * @throws Zend_Http_Client_Exception
      */
-    public function getJson(string $url, array $parameters = [], string $jsonFileName = NULL) {
-        return $this->fetchJson($url, 'GET', $parameters, $jsonFileName, false);
+    public function getJson(string $url, array $parameters = [], string $jsonFileName = null, bool $expectedToFail = false) {
+        return $this->fetchJson($url, 'GET', $parameters, $jsonFileName, false, $expectedToFail);
     }
 
     /**
      * Sends a GET request to the application API to get a ExtJS type JSON tree
      * @param string $url
      * @param array $parameters
-     * @return mixed a array/object structure (parsed from json) on HTTP Status 2XX, false otherwise
+     * @param string|null $jsonFileName
+     * @param bool $expectedToFail
+     * @return stdClass|array
+     * @throws Zend_Http_Client_Exception
      */
-    public function getJsonTree(string $url, array $parameters = [], string $jsonFileName = NULL) {
-        return $this->fetchJson($url, 'GET', $parameters, $jsonFileName, true);
+    public function getJsonTree(string $url, array $parameters = [], string $jsonFileName = null, bool $expectedToFail = false) {
+        return $this->fetchJson($url, 'GET', $parameters, $jsonFileName, true, $expectedToFail);
     }
 
     /**
      * Sends a PUT request to the application API to fetch JSON data
      * @param string $url
-     * @param array $parameters: will be sent json-encoded as "data"-param if no files added
+     * @param array $parameters
      * @param string|null $jsonFileName
      * @param bool $encodeParamsAsData
-     * @return mixed|boolean
+     * @param bool $expectedToFail
+     * @return stdClass|array
+     * @throws Zend_Http_Client_Exception
      */
-    public function putJson(string $url, array $parameters = [], string $jsonFileName = NULL, bool $encodeParamsAsData = true) {
+    public function putJson(string $url, array $parameters = [], string $jsonFileName = NULL, bool $encodeParamsAsData = true, bool $expectedToFail = false) {
         if(empty($this->filesToAdd) && $encodeParamsAsData){
             $parameters = array('data' => json_encode($parameters));
         }
-        return $this->fetchJson($url, 'PUT', $parameters, $jsonFileName, false);
+        return $this->fetchJson($url, 'PUT', $parameters, $jsonFileName, false, $expectedToFail);
     }
 
     /**
      * Sends a POST request to the application API to fetch JSON data
      * @param string $url
-     * @param array $parameters: will be sent json-encoded as "data"-param if no files added
-     * @param string $jsonFileName
+     * @param array $parameters
+     * @param string|null $jsonFileName
      * @param bool $encodeParamsAsData
-     * @return mixed|boolean
+     * @param bool $expectedToFail
+     * @return stdClass|array
+     * @throws Zend_Http_Client_Exception
      */
-    public function postJson(string $url, array $parameters = [], string $jsonFileName = NULL, bool $encodeParamsAsData = true) {
+    public function postJson(string $url, array $parameters = [], string $jsonFileName = null, bool $encodeParamsAsData = true, bool $expectedToFail = false) {
         if(empty($this->filesToAdd) && $encodeParamsAsData){
             $parameters = array('data' => json_encode($parameters));
         }
-        return $this->fetchJson($url, 'POST', $parameters, $jsonFileName, false);
+        return $this->fetchJson($url, 'POST', $parameters, $jsonFileName, false, $expectedToFail);
     }
 
     /**
@@ -318,7 +327,7 @@ class ZfExtended_Test_ApiHelper {
      * Sends a DELETE request
      * @param string $url
      * @param array $parameters
-     * @return bool|mixed
+     * @return bool|stdClass|array
      */
     public function delete(string $url, array $parameters = []) {
         if($this->cleanup){
@@ -329,21 +338,20 @@ class ZfExtended_Test_ApiHelper {
 
     /**
      * Sends a GET request to the application API to fetch unencoded data
+     * Retorns an object with 3 props: success, status, data (which is the raw response body)
      * @param string $url
      * @param array $parameters
-     * @param string|null $fileName
-     * @return string|boolean
+     * @param string|null $fileName: if set, the raw response body will be captured
+     * @return stdClass
      * @throws Zend_Http_Client_Exception
      */
-    public function getRaw(string $url, array $parameters = [], string $fileName = NULL): string|bool {
+    public function getRaw(string $url, array $parameters = [], string $fileName = NULL): stdClass {
         $response = $this->request($url, 'GET', $parameters);
-        $status = $response->getStatus();
-        if(200 <= $status && $status < 300) {
-            $rawData = $response->getBody();
-            $this->captureData($fileName, $rawData);
-            return $rawData;
+        $result = $this->createResponseResult($response);
+        if($result->success) {
+            $this->captureData($fileName, $result->data);
         }
-        return false;
+        return $result;
     }
 
     /**
@@ -354,7 +362,7 @@ class ZfExtended_Test_ApiHelper {
      * @return stdClass
      * @throws Zend_Http_Client_Exception
      */
-    public function getJsonRaw(string $url, string $method = 'GET', array $parameters=[]) {
+    public function getJsonRaw(string $url, string $method = 'GET', array $parameters=[]) : stdClass {
         $resp = $this->request($url, $method, $parameters);
         return $this->decodeRawResponse($resp);
     }
@@ -364,15 +372,17 @@ class ZfExtended_Test_ApiHelper {
      * @param string $url
      * @param string $method
      * @param array $parameters
-     * @param string|null $jsonFileName the filename to be used for capturing the data
+     * @param string|null $jsonFileName
      * @param bool $isTreeData
-     * @return mixed|boolean
+     * @param bool $expectedToFail
+     * @return stdClass|array
+     * @throws Zend_Http_Client_Exception
      */
-    private function fetchJson(string $url, string $method = 'GET', array $parameters = [], ?string $jsonFileName, bool $isTreeData) {
-        $resp = $this->request($url, $method, $parameters);
-        $result = $this->decodeJsonResponse($resp, $isTreeData);
-        if($result === false) {
-            $this->testClass::fail('apiTest '.$method.' on '.$url.' returned '.$resp->__toString());
+    private function fetchJson(string $url, string $method = 'GET', array $parameters = [], ?string $jsonFileName, bool $isTreeData, bool $expectedToFail = false) {
+        $response = $this->request($url, $method, $parameters);
+        $result = $this->decodeJsonResponse($response, $isTreeData);
+        if(!$expectedToFail && !$this->isStatusSuccess($response->getStatus())) {
+            $this->testClass::fail('apiTest '.$method.' on '.$url.' returned '.$response->__toString());
         } else if($this->isCapturing() && !empty($jsonFileName)){
             // in capturing mode we save the requested data as the data to test against
             $this->captureData($jsonFileName, $this->encodeTestData($result));
@@ -479,30 +489,28 @@ class ZfExtended_Test_ApiHelper {
     /**
      * Decodes a returned JSON answer from Translate5 REST API
      * @param Zend_Http_Response $resp
-     * @return mixed|boolean
+     * @return stdClass|array
      */
     private function decodeJsonResponse(Zend_Http_Response $resp, bool $isTreeData=false) {
         $status = $resp->getStatus();
-        if(200 <= $status && $status < 300) {
+        if($this->isStatusSuccess($status)) {
             $body = $resp->getBody();
             if(empty($body)) {
-                return null;
+                return $this->createResponseResult($resp);
             }
             $json = json_decode($resp->getBody());
             $t = $this->testClass;
-            //error_log('#'.json_last_error_msg().'#');
-            //error_log('#'.$resp->getBody().'#');
             $t::assertEquals('No error', json_last_error_msg(), 'Server did not response valid JSON: '.$resp->getBody());
-            if(isset($json->success)) {
+            if(property_exists($json, 'success')) {
                 $t::assertEquals(true, $json->success);
             }            
             if($isTreeData){
                 if(property_exists($json, 'children') && count($json->children) > 0){
                     return $json->children[0];
                 } else {
-                    $json = new stdClass();
-                    $json->error = 'The fetched data had no children in the root object';
-                    return $json;
+                    $result = $this->createResponseResult($resp);
+                    $result->error = 'The fetched data had no children in the root object';
+                    return $result;
                 }
             } else if(property_exists($json, 'rows')){
                 return $json->rows;
@@ -510,7 +518,66 @@ class ZfExtended_Test_ApiHelper {
                 return $json;
             }
         }
-        return false;
+        return $this->createResponseResult($resp);
+    }
+
+    /**
+     * Create unified result object for failing requests or if we need to mock a result
+     * @param int $status
+     * @param mixed $data
+     * @return stdClass
+     */
+    private function createResponseResult(?Zend_Http_Response $response, string $error=null) : stdClass {
+        $status = ($response) ? $response->getStatus() : 0;
+        $result = new stdClass();
+        $result->status = $status;
+        $result->data = ($response) ? $response->getBody() : null;
+        if(!$this->isStatusSuccess($status)){
+            if($error){
+                $result->error = $error;
+                return $result;
+            }
+            if($response){
+                try {
+                    $json = json_decode($response->getBody());
+                    if(is_object($json) && property_exists($json, 'error')){
+                        $result->error = $json->error;
+                        return $result;
+                    }
+                    if(is_object($json) && property_exists($json, 'errors') && count($json->errors) > 0){
+                        $result->error = '';
+                        foreach($result->errors as $error){
+                            if(property_exists($error, 'msg')){
+                                $result->error .= ($result->error === '') ? $error->msg : "\n".$error->msg;
+                            }
+                        }
+                        if(!empty($result->error)){
+                            return $result;
+                        }
+                    }
+                } catch(Throwable){
+                }
+            }
+            $result->error = 'Request failed with status '.$status;
+        }
+        return $result;
+    }
+
+    /**
+     * Generally evaluates our accepted status codes
+     * @param int $status
+     * @return bool
+     */
+    private function isStatusSuccess(int $status) : bool {
+        return (200 <= $status && $status < 300);
+    }
+
+    /**
+     * @param Zend_Http_Response $response
+     * @param string $requestType
+     */
+    private function assertResponseStatus(Zend_Http_Response $response, string $requestType){
+        $this->testClass::assertTrue($this->isStatusSuccess($response->getStatus()), $requestType.' Request does not respond HTTP 200-299! Body was: '.$response->getBody());
     }
 
     /**
@@ -519,14 +586,17 @@ class ZfExtended_Test_ApiHelper {
      * @param Zend_Http_Response $resp
      * @return stdClass
      */
-    private function decodeRawResponse(Zend_Http_Response $resp){
+    private function decodeRawResponse(Zend_Http_Response $resp) : stdClass {
         $result = json_decode($resp->getBody());
+        $status = $resp->getStatus();
         if(!$result){
             $result = new stdClass();
         }
         if(!property_exists($result, 'success')){
-            $status = $resp->getStatus();
-            $result->success = (200 <= $status && $status < 300);
+            $result->success = $this->isStatusSuccess($status);
+        }
+        if(!property_exists($result, 'status')){
+            $result->status = $status;
         }
         return $result;
     }
@@ -580,8 +650,8 @@ class ZfExtended_Test_ApiHelper {
         
         $t = $this->testClass;
         /* @var $t \ZfExtended_Test_ApiTestcase */
-        $t::assertEquals(200, $plainResponse->getStatus(), 'Server did not respond HTTP 200');
-        $t::assertNotFalse($response, 'JSON Login request was not successfull!');
+        $this->assertResponseStatus($plainResponse, 'Login');
+        $t::assertTrue((property_exists($response, 'sessionId') && property_exists($response, 'sessionToken')), 'JSON Login request was not successfull!');
         $t::assertMatchesRegularExpression('/[a-zA-Z0-9]{26}/', $response->sessionId, 'Login call does not return a valid sessionId!');
 
         $this->authCookie = $response->sessionId;
@@ -626,8 +696,8 @@ class ZfExtended_Test_ApiHelper {
         $this->task->originalSourceLang = $task['sourceLang'];
         $this->task->originalTargetLang = $task['targetLang'];
         $resp = $this->getLastResponse();
-        $test::assertEquals(200, $resp->getStatus(), 'Import Request does not respond HTTP 200! Body was: '.$resp->getBody());
-        
+        $this->assertResponseStatus($resp, 'Import');
+
         if(!$waitForImport){
             return true;
         }
@@ -732,16 +802,16 @@ class ZfExtended_Test_ApiHelper {
      * Add task specific config. The config must be added after the task is created and before the import is triggered.
      * @param string $configName
      * @param string $configValue
-     * @return mixed|boolean
+     * @return stdClass|array
      */
-    public function addTaskImportConfig(string $taskGuid, string $configName, string $configValue){
+    public function addTaskImportConfig(string $taskGuid, string $configName, string $configValue) {
         $this->putJson('editor/config', [
             'name' => $configName,
             'value' => $configValue,
             'taskGuid'=> $taskGuid
         ]);
         $resp = $this->getLastResponse();
-        $this->testClass::assertEquals(200, $resp->getStatus(), 'Import Request does not respond HTTP 200! Body was: '.$resp->getBody());
+        $this->assertResponseStatus($resp, 'Config');
         return $this->decodeJsonResponse($resp);
     }
     
@@ -758,15 +828,16 @@ class ZfExtended_Test_ApiHelper {
         $test::assertNotEmpty($customerData,"Unable to load test customer.No test customer was found for number:123456789");
         $this->customer = $customerData[0];
         $resp = $this->getLastResponse();
-        $test::assertEquals(200, $resp->getStatus(), 'Load test customer Request does not respond HTTP 200! Body was: '.$resp->getBody());
+        $this->assertResponseStatus($resp, 'Customer');
     }
     
     /***
      * Get all available langues from lek_languages table
+     * @return stdClass|array
      */
     public function getLanguages() {
         $resp = $this->get('editor/language');
-        $this->testClass::assertEquals(200, $resp->getStatus(), 'Import Request does not respond HTTP 200! Body was: '.$resp->getBody());
+        $this->assertResponseStatus($resp, 'Language');
         return $this->decodeJsonResponse($resp);
     }
     
@@ -816,7 +887,7 @@ class ZfExtended_Test_ApiHelper {
         $p = array_merge($p, $params);
         $json = $this->postJson('editor/taskuserassoc', $p);
         $resp = $this->getLastResponse();
-        $test::assertEquals(200, $resp->getStatus(), 'User "'.$username.'" could not be added to test task '.$this->task->taskGuid.'! Body was: '.$resp->getBody());
+        $this->assertResponseStatus($resp, 'User');
         return $json;
     }
     
@@ -838,42 +909,42 @@ class ZfExtended_Test_ApiHelper {
         if($fileName){
             $this->addFile('tmUpload', $this->getFile($fileName,$testDir), "application/xml");
             $resource = $this->postJson('editor/languageresourceinstance', $params);
-        }else{
+        } else {
             //request because the requestJson will encode the params with "data" as parent
             $response = $this->request('editor/languageresourceinstance', 'POST',$params);
+            $this->assertResponseStatus($response, 'Language resource');
             $resource = $this->decodeJsonResponse($response);
         }
-        $test::assertTrue(is_object($resource), 'Unable to create the language resource:'.$params['name']);
         $test::assertEquals($params['name'], $resource->name);
         
         //collect the created resource
-        self::$resources[]=$resource;
+        self::$resources[] = $resource;
         
         error_log("Language resources created. ".$resource->name);
-        
-        $resp = $this->getJson('editor/languageresourceinstance/'.$resource->id);
+
+        $result = $this->getJson('editor/languageresourceinstance/'.$resource->id);
         
         if(!$waitForImport){
-            return $resp;
+            return $result;
         }
-        error_log('Languageresources status check:'.$resp->status);
-        $counter=0;
-        while ($resp->status!='available'){
-            if($resp->status=='error'){
+        error_log('Languageresources status check:'.$result->status);
+        $counter = 0;
+        while ($result->status != 'available'){
+            if($result->status == 'error'){
                 break;
             }
             //break after RELOAD_RESOURCE_LIMIT trys
-            if($counter==self::RELOAD_RESOURCE_LIMIT){
+            if($counter == self::RELOAD_RESOURCE_LIMIT){
                 break;
             }
             sleep(2);
-            $resp = $this->getJson('editor/languageresourceinstance/'.$resp->id);
-            error_log('Languageresources status check '.$counter.'/'.self::RELOAD_RESOURCE_LIMIT.' state: '.$resp->status);
+            $result = $this->getJson('editor/languageresourceinstance/'.$result->id);
+            error_log('Languageresources status check '.$counter.'/'.self::RELOAD_RESOURCE_LIMIT.' state: '.$result->status);
             $counter++;
         }
         
-        $test::assertEquals('available',$resp->status,'Resource import stoped. Resource state is:'.$resp->status);
-        return $resp;
+        $test::assertEquals('available', $result->status, 'Resource import stoped. Resource state is:'.$result->status);
+        return $result;
     }
 
     /**
@@ -894,7 +965,7 @@ class ZfExtended_Test_ApiHelper {
             'name' => $name ?? $this->testClass,
         ];
         //create the resource 1 and import the file
-        $this->addResource($params,$fileName,true);
+        $this->addResource($params, $fileName,true);
     }
     
     /***
@@ -1261,9 +1332,9 @@ class ZfExtended_Test_ApiHelper {
      * @param int $limit
      * @param int $start
      * @param int $page
-     * @return bool|mixed|stdClass|null
+     * @return stdClass|array
      */
-    public function getSegments(string $jsonFileName = null, int $limit = 200, int $start = 0, int $page = 1){
+    public function getSegments(string $jsonFileName = null, int $limit = 200, int $start = 0, int $page = 1) {
         $url = 'editor/segment?page='.$page.'&start='.$start.'&limit='.$limit;
         return $this->fetchJson($url, 'GET', [], $jsonFileName, false);
     }
@@ -1323,38 +1394,43 @@ class ZfExtended_Test_ApiHelper {
     /**
      * Sets the passed or current task to open
      * @param int $taskId: if given, this task is taken, otherwise the current task
+     * @return array|bool|stdClass
      */
     public function setTaskToOpen(int $taskId = -1) {
-        $this->setTaskState($taskId, 'open');
+        return $this->setTaskState($taskId, 'open');
     }
 
     /**
      * Sets the passed or current task to edit
      * @param int $taskId: if given, this task is taken, otherwise the current task
+     * @return array|bool|stdClass
      */
     public function setTaskToEdit(int $taskId = -1) {
-        $this->setTaskState($taskId, 'edit');
+        return $this->setTaskState($taskId, 'edit');
     }
 
     /**
      * Sets the passed or current task to finished
      * @param int $taskId: if given, this task is taken, otherwise the current task
+     * @return array|bool|stdClass
      */
     public function setTaskToFinished(int $taskId = -1) {
-        $this->setTaskState($taskId, 'finished');
+        return $this->setTaskState($taskId, 'finished');
     }
 
     /**
      * @param int $taskId: if given, this task is taken, otherwise the current task
      * @param string $userState
+     * @return array|stdClass
      */
     private function setTaskState(int $taskId, string $userState){
         if($taskId < 1 && $this->task){
             $taskId = $this->task->id;
         }
         if($taskId > 0){
-            $this->putJson('editor/task/'.$taskId, array('userState' => $userState, 'id' => $taskId));
+            return $this->putJson('editor/task/'.$taskId, array('userState' => $userState, 'id' => $taskId));
         }
+        return $this->createResponseResult(null, 'No Task to set state for');
     }
 
     /**
