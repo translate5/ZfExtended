@@ -71,7 +71,7 @@ class ZfExtended_Worker_TriggerByHttp {
      *
      * @return boolean true if everything is OK
      */
-    protected function triggerUrl(string $url, $postParameters = array(), $method = 'GET') {
+    protected function triggerUrl(string $url, array $postParameters = [], string $method = 'GET') {
         $isCli = PHP_SAPI === 'cli';
         if($isCli) {
             $postParameters['serverId'] = self::WORKER_CHECK_IGNORE;
@@ -94,7 +94,7 @@ class ZfExtended_Worker_TriggerByHttp {
             return false;
         }
         
-        $out = $this->createHeader($postParameters);
+        $out = $this->createHeader();
         fwrite($fsock, $out);
         
         stream_set_timeout($fsock, 1); // max readtime = 1 sec., thats ok to get start up errors
@@ -264,6 +264,10 @@ class ZfExtended_Worker_TriggerByHttp {
         }
         if(!empty($debug)){
             $out .= 'Cookie: XDEBUG_SESSION='.$debug."\r\n";
+        }
+        // needed to trigger correct environment for worker in API tests
+        if(APPLICATION_ENV === 'test'){
+            $out .= 'Origin: t5test'."\r\n";
         }
         
         if ($this->method == 'GET') {
