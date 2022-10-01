@@ -351,6 +351,16 @@ class ZfExtended_Test_ApiHelper {
     }
 
     /**
+     * Checks, whether the result of a getJson / putJson / postJson request represents an error
+     * corresponds what is done in createResponseResult
+     * @param stdClass $result
+     * @return bool
+     */
+    public function isJsonResultError(stdClass $result) : bool {
+        return (property_exists($result, 'error') && !empty($result->error));
+    }
+
+    /**
      * Adds a file to be uploaded on the next request.
      * @param string $name
      * @param string $path
