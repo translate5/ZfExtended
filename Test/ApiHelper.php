@@ -209,10 +209,12 @@ class ZfExtended_Test_ApiHelper {
      * @param string $url
      * @param array $parameters
      * @param string|null $jsonFileName
-     * @return mixed|boolean
+     * @param bool $expectedToFail
+     * @return stdClass|array
+     * @throws Zend_Http_Client_Exception
      */
-    public function getJson(string $url, array $parameters = [], string $jsonFileName = NULL) {
-        return $this->fetchJson($url, 'GET', $parameters, $jsonFileName, false);
+    public function getJson(string $url, array $parameters = [], string $jsonFileName = null, bool $expectedToFail = false) {
+        return $this->fetchJson($url, 'GET', $parameters, $jsonFileName, false, $expectedToFail);
     }
 
     /**
@@ -220,40 +222,46 @@ class ZfExtended_Test_ApiHelper {
      * @param string $url
      * @param array $parameters
      * @param string|null $jsonFileName
-     * @return mixed|bool
+     * @param bool $expectedToFail
+     * @return stdClass|array
+     * @throws Zend_Http_Client_Exception
      */
-    public function getJsonTree(string $url, array $parameters = [], string $jsonFileName = NULL) {
-        return $this->fetchJson($url, 'GET', $parameters, $jsonFileName, true);
+    public function getJsonTree(string $url, array $parameters = [], string $jsonFileName = null, bool $expectedToFail = false) {
+        return $this->fetchJson($url, 'GET', $parameters, $jsonFileName, true, $expectedToFail);
     }
 
     /**
      * Sends a PUT request to the application API to fetch JSON data
      * @param string $url
-     * @param array $parameters: will be sent json-encoded as "data"-param if no files added
+     * @param array $parameters
      * @param string|null $jsonFileName
      * @param bool $encodeParamsAsData
-     * @return mixed|boolean
+     * @param bool $expectedToFail
+     * @return stdClass|array
+     * @throws Zend_Http_Client_Exception
      */
-    public function putJson(string $url, array $parameters = [], string $jsonFileName = NULL, bool $encodeParamsAsData = true) {
+    public function putJson(string $url, array $parameters = [], string $jsonFileName = NULL, bool $encodeParamsAsData = true, bool $expectedToFail = false) {
         if(empty($this->filesToAdd) && $encodeParamsAsData){
             $parameters = array('data' => json_encode($parameters));
         }
-        return $this->fetchJson($url, 'PUT', $parameters, $jsonFileName, false);
+        return $this->fetchJson($url, 'PUT', $parameters, $jsonFileName, false, $expectedToFail);
     }
 
     /**
      * Sends a POST request to the application API to fetch JSON data
      * @param string $url
-     * @param array $parameters: will be sent json-encoded as "data"-param if no files added
+     * @param array $parameters
      * @param string|null $jsonFileName
      * @param bool $encodeParamsAsData
-     * @return mixed|boolean
+     * @param bool $expectedToFail
+     * @return stdClass|array
+     * @throws Zend_Http_Client_Exception
      */
-    public function postJson(string $url, array $parameters = [], string $jsonFileName = NULL, bool $encodeParamsAsData = true) {
+    public function postJson(string $url, array $parameters = [], string $jsonFileName = null, bool $encodeParamsAsData = true, bool $expectedToFail = false) {
         if(empty($this->filesToAdd) && $encodeParamsAsData){
             $parameters = array('data' => json_encode($parameters));
         }
-        return $this->fetchJson($url, 'POST', $parameters, $jsonFileName, false);
+        return $this->fetchJson($url, 'POST', $parameters, $jsonFileName, false, $expectedToFail);
     }
 
     /**
@@ -261,15 +269,15 @@ class ZfExtended_Test_ApiHelper {
      * @param string $url
      * @param string $content
      * @param array $parameters
-     * @return stdClass
+     * @return bool|mixed|stdClass|null
      * @throws Zend_Http_Client_Exception
      */
-    public function postRaw(string $url, string $content, array $parameters=[]) {
+    public function postRaw(string $url, string $content, array $parameters=[]) : stdClass {
         $http = new Zend_Http_Client();
         $http->setUri(static::$CONFIG['API_URL'].ltrim($url, '/'));
         $http->setHeaders('Accept', 'application/json');
-        if(static::$authCookie !== null) {
-            $http->setCookie(static::AUTH_COOKIE_KEY, static::$authCookie);
+        if(!empty($this->authCookie)) {
+            $http->setCookie(self::AUTH_COOKIE_KEY, $this->authCookie);
         }
         $http->setRawData($content, 'application/octet-stream');
         $http->setHeaders(Zend_Http_Client::CONTENT_TYPE, 'application/octet-stream');
@@ -284,21 +292,20 @@ class ZfExtended_Test_ApiHelper {
 
     /**
      * Sends a GET request to the application API to fetch unencoded data
+     * Retorns an object with 3 props: success, status, data (which is the raw response body)
      * @param string $url
      * @param array $parameters
-     * @param string|null $fileName
-     * @return string|boolean
+     * @param string|null $fileName: if set, the raw response body will be captured
+     * @return stdClass
      * @throws Zend_Http_Client_Exception
      */
-    public function getRaw(string $url, array $parameters = [], string $fileName = NULL): string|bool {
+    public function getRaw(string $url, array $parameters = [], string $fileName = NULL): stdClass {
         $response = $this->request($url, 'GET', $parameters);
-        $status = $response->getStatus();
-        if(200 <= $status && $status < 300) {
-            $rawData = $response->getBody();
-            $this->captureData($fileName, $rawData);
-            return $rawData;
+        $result = $this->createResponseResult($response);
+        if($result->success) {
+            $this->captureData($fileName, $result->data);
         }
-        return false;
+        return $result;
     }
 
     /**
@@ -309,7 +316,7 @@ class ZfExtended_Test_ApiHelper {
      * @return stdClass
      * @throws Zend_Http_Client_Exception
      */
-    public function getJsonRaw(string $url, string $method = 'GET', array $parameters=[]) {
+    public function getJsonRaw(string $url, string $method = 'GET', array $parameters=[]) : stdClass {
         $resp = $this->request($url, $method, $parameters);
         return $this->decodeRawResponse($resp);
     }
@@ -559,8 +566,8 @@ class ZfExtended_Test_ApiHelper {
         $plainResponse = $this->getLastResponse();
         $t = $this->testClass;
         /* @var $t \PHPUnit\Framework\TestCase */
-        $t::assertEquals(200, $plainResponse->getStatus(), 'Server did not respond HTTP 200');
-        $t::assertNotFalse($response, 'JSON Login request was not successfull!');
+        $this->assertResponseStatus($plainResponse, 'Login');
+        $t::assertTrue((property_exists($response, 'sessionId') && property_exists($response, 'sessionToken')), 'JSON Login request was not successfull!');
         $t::assertMatchesRegularExpression('/[a-zA-Z0-9]{26}/', $response->sessionId, 'Login call does not return a valid sessionId!');
         static::$authCookie = $response->sessionId;
         static::$authLogin = $login;
@@ -648,15 +655,17 @@ class ZfExtended_Test_ApiHelper {
      * @param string $url
      * @param string $method
      * @param array $parameters
-     * @param string|null $jsonFileName the filename to be used for capturing the data
+     * @param string|null $jsonFileName
      * @param bool $isTreeData
-     * @return mixed|boolean
+     * @param bool $expectedToFail
+     * @return stdClass|array
+     * @throws Zend_Http_Client_Exception
      */
-    protected function fetchJson(string $url, string $method = 'GET', array $parameters = [], ?string $jsonFileName, bool $isTreeData) {
+    private function fetchJson(string $url, string $method = 'GET', array $parameters = [], ?string $jsonFileName, bool $isTreeData, bool $expectedToFail = false) {
         $response = $this->request($url, $method, $parameters);
         $result = $this->decodeJsonResponse($response, $isTreeData);
-        if($result === false) {
-            $this->testClass::fail('apiTest '.$method.' on '.$url.' returned: '."\n\n".$response->__toString());
+        if(!$expectedToFail && !$this->isStatusSuccess($response->getStatus())) {
+            $this->testClass::fail('apiTest '.$method.' on '.$url.' returned '.$response->__toString());
         } else if($this->isCapturing() && !empty($jsonFileName)){
             // in capturing mode we save the requested data as the data to test against
             $this->captureData($jsonFileName, $this->encodeTestData($result));
@@ -667,30 +676,28 @@ class ZfExtended_Test_ApiHelper {
     /**
      * Decodes a returned JSON answer from Translate5 REST API
      * @param Zend_Http_Response $resp
-     * @return mixed|boolean
+     * @return stdClass|array
      */
     protected function decodeJsonResponse(Zend_Http_Response $resp, bool $isTreeData=false) {
         $status = $resp->getStatus();
-        if(200 <= $status && $status < 300) {
+        if($this->isStatusSuccess($status)) {
             $body = $resp->getBody();
             if(empty($body)) {
-                return null;
+                return $this->createResponseResult($resp);
             }
             $json = json_decode($resp->getBody());
             $t = $this->testClass;
-            //error_log('#'.json_last_error_msg().'#');
-            //error_log('#'.$resp->getBody().'#');
             $t::assertEquals('No error', json_last_error_msg(), 'Server did not response valid JSON: '.$resp->getBody());
-            if(isset($json->success)) {
+            if(property_exists($json, 'success')) {
                 $t::assertEquals(true, $json->success);
-            }            
+            }
             if($isTreeData){
                 if(property_exists($json, 'children') && count($json->children) > 0){
                     return $json->children[0];
                 } else {
-                    $json = new stdClass();
-                    $json->error = 'The fetched data had no children in the root object';
-                    return $json;
+                    $result = $this->createResponseResult($resp);
+                    $result->error = 'The fetched data had no children in the root object';
+                    return $result;
                 }
             } else if(property_exists($json, 'rows')){
                 return $json->rows;
@@ -698,7 +705,7 @@ class ZfExtended_Test_ApiHelper {
                 return $json;
             }
         }
-        return false;
+        return $this->createResponseResult($resp);
     }
 
     /**
@@ -707,16 +714,78 @@ class ZfExtended_Test_ApiHelper {
      * @param Zend_Http_Response $resp
      * @return stdClass
      */
-    protected function decodeRawResponse(Zend_Http_Response $resp){
+    protected function decodeRawResponse(Zend_Http_Response $resp) : stdClass {
         $result = json_decode($resp->getBody());
+        $status = $resp->getStatus();
         if(!$result){
             $result = new stdClass();
         }
         if(!property_exists($result, 'success')){
-            $status = $resp->getStatus();
-            $result->success = (200 <= $status && $status < 300);
+            $result->success = $this->isStatusSuccess($status);
+        }
+        if(!property_exists($result, 'status')){
+            $result->status = $status;
         }
         return $result;
+    }
+
+    /**
+     * Create unified result object for failing requests or if we need to mock a result
+     * @param int $status
+     * @param mixed $data
+     * @return stdClass
+     */
+    protected function createResponseResult(?Zend_Http_Response $response, string $error=null) : stdClass {
+        $status = ($response) ? $response->getStatus() : 0;
+        $result = new stdClass();
+        $result->status = $status;
+        $result->data = ($response) ? $response->getBody() : null;
+        if(!$this->isStatusSuccess($status)){
+            if($error){
+                $result->error = $error;
+                return $result;
+            }
+            if($response){
+                try {
+                    $json = json_decode($response->getBody());
+                    if(is_object($json) && property_exists($json, 'error')){
+                        $result->error = $json->error;
+                        return $result;
+                    }
+                    if(is_object($json) && property_exists($json, 'errors') && count($json->errors) > 0){
+                        $result->error = '';
+                        foreach($result->errors as $error){
+                            if(property_exists($error, 'msg')){
+                                $result->error .= ($result->error === '') ? $error->msg : "\n".$error->msg;
+                            }
+                        }
+                        if(!empty($result->error)){
+                            return $result;
+                        }
+                    }
+                } catch(Throwable){
+                }
+            }
+            $result->error = 'Request failed with status '.$status;
+        }
+        return $result;
+    }
+
+    /**
+     * Generally evaluates our accepted status codes
+     * @param int $status
+     * @return bool
+     */
+    protected function isStatusSuccess(int $status) : bool {
+        return (200 <= $status && $status < 300);
+    }
+
+    /**
+     * @param Zend_Http_Response $response
+     * @param string $requestType
+     */
+    protected function assertResponseStatus(Zend_Http_Response $response, string $requestType){
+        $this->testClass::assertTrue($this->isStatusSuccess($response->getStatus()), $requestType.' Request does not respond HTTP 200-299! Body was: '.$response->getBody());
     }
 
     /**
