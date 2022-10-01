@@ -661,7 +661,7 @@ class ZfExtended_Test_ApiHelper {
      * @return stdClass|array
      * @throws Zend_Http_Client_Exception
      */
-    private function fetchJson(string $url, string $method = 'GET', array $parameters = [], ?string $jsonFileName, bool $isTreeData, bool $expectedToFail = false) {
+    protected function fetchJson(string $url, string $method = 'GET', array $parameters = [], ?string $jsonFileName, bool $isTreeData, bool $expectedToFail = false) {
         $response = $this->request($url, $method, $parameters);
         $result = $this->decodeJsonResponse($response, $isTreeData);
         if(!$expectedToFail && !$this->isStatusSuccess($response->getStatus())) {
