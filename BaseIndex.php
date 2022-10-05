@@ -159,11 +159,9 @@ class ZfExtended_BaseIndex{
         $this->initAdditionalConstants();
 
         // set the available modules
-        if(!defined('APPLICATION_MODULES')){
-            define('APPLICATION_MODULES', array_filter($application->getOption('modules')['order'], function($module){
-                return is_dir(APPLICATION_PATH .'/modules/'.$module);
-            }));
-        }
+        defined('APPLICATION_MODULES') || define('APPLICATION_MODULES', array_filter($application->getOption('modules')['order'], function($module){
+            return is_dir(APPLICATION_PATH .'/modules/'.$module);
+        }));
 
         // for each available module, call the module specific function. This will register the module as applet
         foreach (APPLICATION_MODULES as $module){
