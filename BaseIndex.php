@@ -75,6 +75,15 @@ class ZfExtended_BaseIndex{
             define('APPLICATION_ROOT', realpath(dirname($indexpath) . DIRECTORY_SEPARATOR.'..'));
         }
         defined('APPLICATION_PATH')   || define('APPLICATION_PATH', APPLICATION_ROOT . DIRECTORY_SEPARATOR.'application');
+
+        // Define application environment from Request-Origin for API-tests: this is only allowed if installation is set-up as test installation. Therefore we have to parse instlation.ini manually
+        if(!defined('APPLICATION_ENV') && array_key_exists('HTTP_ORIGIN', $_SERVER) && $_SERVER['HTTP_ORIGIN'] === 't5test'){
+            // we have to check if the installation is allowed to switch the environment - security!
+            $iniVars = parse_ini_file(APPLICATION_PATH.'/config/installation.ini');
+            if($iniVars !== false && array_key_exists('testSettings.testsAllowed', $iniVars) && $iniVars['testSettings.testsAllowed'] === '1'){
+                define('APPLICATION_ENV', 'test');
+            }
+        }
         // Define application environment
         defined('APPLICATION_ENV')    || define('APPLICATION_ENV',    ( getenv('APPLICATION_ENV')    ?: 'application'));
         defined('APPLICATION_RUNDIR') || define('APPLICATION_RUNDIR', ( getenv('APPLICATION_RUNDIR') ?: ''));
@@ -159,11 +168,9 @@ class ZfExtended_BaseIndex{
         $this->initAdditionalConstants();
 
         // set the available modules
-        if(!defined('APPLICATION_MODULES')){
-            define('APPLICATION_MODULES', array_filter($application->getOption('modules')['order'], function($module){
-                return is_dir(APPLICATION_PATH .'/modules/'.$module);
-            }));
-        }
+        defined('APPLICATION_MODULES') || define('APPLICATION_MODULES', array_filter($application->getOption('modules')['order'], function($module){
+            return is_dir(APPLICATION_PATH .'/modules/'.$module);
+        }));
 
         // for each available module, call the module specific function. This will register the module as applet
         foreach (APPLICATION_MODULES as $module){
