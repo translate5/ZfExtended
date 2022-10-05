@@ -179,7 +179,7 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller
      */
     public function preDispatch()
     {
-        $this->_response->setHeader('x-translate5-version', APPLICATION_VERSION);
+        $this->_response->setHeader('x-translate5-version', APPLICATION_VERSION, true);
         $this->handleLimit();
         $this->prepareFilterAndSort();
         $this->displayMaintenance();
