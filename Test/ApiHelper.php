@@ -953,7 +953,7 @@ class ZfExtended_Test_ApiHelper {
             $counter++;
         }
         
-        $test::assertEquals('available', $result->status, 'Resource import stoped. Resource state is:'.$result->status);
+        $test::assertEquals('available', $result->status, 'Resource import stopped. Resource state is: '.$result->status);
         return $result;
     }
 
