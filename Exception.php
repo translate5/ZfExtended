@@ -68,18 +68,17 @@ class ZfExtended_Exception extends Zend_Exception {
      * @var integer
      */
     protected $defaultCode = 0;
-    
-    
+
+
     /**
      * Construct the exception
      *
-     * @param  string $msg (Message gets translated by ZfExtended_Exception)
-     * @param  int $code
-     * @param  Exception $previous
-     * @param  string $domain optional, defaults to core. Can be the plugin name, or another system identifier
-     * @return void
+     * @param string $msg (Message gets translated by ZfExtended_Exception)
+     * @param int $code
+     * @param Throwable|null $previous
+     * @param null $domain optional, defaults to core. Can be the plugin name, or another system identifier
      */
-    public function __construct($msg = '', $code = 0, Exception $previous = null, $domain = null)
+    public function __construct($msg = '', $code = 0, Throwable $previous = null, $domain = null)
     {
         if((int)$code === 0){
             $code = $this->defaultCode;
