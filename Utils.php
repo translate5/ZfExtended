@@ -171,8 +171,9 @@ class ZfExtended_Utils {
      * Deletes recursivly a directory. Optionally a extension whitelist can be passed that will only delete files with the given extension (and not the directories anymore, even if they are empty then)
      * @param string $directory
      * @param array|null $extensionWhitelist
+     * @param bool $deleteDirectory: option to prevent deletion of the passed directory so it is just cleaned
      */
-    public static function recursiveDelete(string $directory, ?array $extensionWhitelist = null){
+    public static function recursiveDelete(string $directory, ?array $extensionWhitelist = null, bool $doDeleteDirectory=true){
         $iterator = new DirectoryIterator($directory);
         foreach ($iterator as $fileinfo) {
             if ($fileinfo->isDot()) {
@@ -188,7 +189,7 @@ class ZfExtended_Utils {
                 }
             }
         }
-        if($extensionWhitelist === null){
+        if($extensionWhitelist === null && $doDeleteDirectory){
             //FIXME try catch ist nur eine übergangslösung!!!
             try {
                 rmdir($directory);
