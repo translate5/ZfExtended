@@ -304,7 +304,7 @@ class ZfExtended_Test_ApiHelper {
 
     /**
      * Sends a GET request to the application API to fetch unencoded data
-     * Retorns an object with 3 props: success, status, data (which is the raw response body)
+     * Returns an object with 3 props: success, status, data (which is the raw response body)
      * @param string $url
      * @param array $parameters
      * @param string|null $fileName: if set, the raw response body will be captured
@@ -419,6 +419,22 @@ class ZfExtended_Test_ApiHelper {
     }
 
     /**
+     * Creates an absolute path for a filePath relative to the main test folder "editorAPI"
+     * @param string $relativePath
+     * @return string
+     */
+    public function getAbsFilePath(string $relativePath, bool $addTestClassFolder = false){
+        // the file may already is an absolute path
+        if(str_starts_with($relativePath, '/')) {
+            return $relativePath;
+        }
+        if($addTestClassFolder){
+            return $this->testRoot.'/'.$this->testClass.'/'.$relativePath;
+        }
+        return $this->testRoot.'/'.$relativePath;
+    }
+
+    /**
      * Loads the file contents of a file with data to be compared
      * @param string $approvalFile
      * @param string|null $rawDataToCapture
@@ -525,7 +541,7 @@ class ZfExtended_Test_ApiHelper {
 
         $zip = new ZipArchive();
 
-        if ($zip->open($zipFile, ZipArchive::CREATE)!==true) {
+        if ($zip->open($zipFile, ZipArchive::CREATE) !== true) {
             throw new Zend_Exception('Could not create zip.');
         }
         // create recursive directory iterator
@@ -606,6 +622,14 @@ class ZfExtended_Test_ApiHelper {
     }
 
     /**
+     * Retrieves the class of the currently executed test
+     * @return string
+     */
+    public function getTestClass() : string {
+        return $this->testClass;
+    }
+
+    /**
      * requests the REST API, can handle file uploads, add file methods must be called first
      * @param string $url
      * @param string $method GET;POST;PUT;DELETE must be POST or PUT to transfer added files
@@ -647,16 +671,9 @@ class ZfExtended_Test_ApiHelper {
                     $http->setFileUpload($file['filename'], $file['name'], $file['data'], $file['mime']);
                     continue;
                 }
-                //file paths can also be absolute:
-                if(str_starts_with($file['path'], '/')) {
-                    $abs = $file['path'];
-                }
-                else {
-                    $abs = $this->testRoot.'/'.$file['path'];
-                }
-                $t = $this->testClass;
-                $t::assertFileExists($abs);
-                $http->setFileUpload($abs, $file['name'], file_get_contents($abs), $file['mime']);
+                $absolutePath = $this->getAbsFilePath($file['path']);
+                $this->testClass::assertFileExists($absolutePath);
+                $http->setFileUpload($absolutePath, $file['name'], file_get_contents($absolutePath), $file['mime']);
             }
             $this->filesToAdd = [];
         }
@@ -701,7 +718,8 @@ class ZfExtended_Test_ApiHelper {
     /**
      * Decodes a returned JSON answer from Translate5 REST API
      * @param Zend_Http_Response $resp
-     * @return stdClass|array
+     * @param bool $isTreeData
+     * @return mixed|stdClass
      */
     protected function decodeJsonResponse(Zend_Http_Response $resp, bool $isTreeData=false) {
         $status = $resp->getStatus();
@@ -756,8 +774,8 @@ class ZfExtended_Test_ApiHelper {
 
     /**
      * Create unified result object for failing requests or if we need to mock a result
-     * @param int $status
-     * @param mixed $data
+     * @param Zend_Http_Response|null $response
+     * @param string|null $error
      * @return stdClass
      */
     protected function createResponseResult(?Zend_Http_Response $response, string $error=null) : stdClass {
