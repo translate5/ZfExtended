@@ -438,7 +438,7 @@ class ZfExtended_Test_ApiHelper {
      * Loads the file contents of a file with data to be compared
      * @param string $approvalFile
      * @param string|null $rawDataToCapture
-     * @return string
+     * @return stdClass|array|string
      */
     public function getFileContent(string $approvalFile, string $rawDataToCapture = null) {
         $this->captureData($approvalFile, $rawDataToCapture);
