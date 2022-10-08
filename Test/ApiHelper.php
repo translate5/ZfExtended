@@ -288,8 +288,8 @@ class ZfExtended_Test_ApiHelper {
         if(static::isTestEnvironment()){
             $http->setHeaders('Origin', 't5test');
         }
-        if(!empty($this->authCookie)) {
-            $http->setCookie(self::AUTH_COOKIE_KEY, $this->authCookie);
+        if(!empty(static::$authCookie)) {
+            $http->setCookie(self::AUTH_COOKIE_KEY, static::$authCookie);
         }
         $http->setRawData($content, 'application/octet-stream');
         $http->setHeaders(Zend_Http_Client::CONTENT_TYPE, 'application/octet-stream');
