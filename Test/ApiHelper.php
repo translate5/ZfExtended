@@ -1463,6 +1463,7 @@ class ZfExtended_Test_ApiHelper {
      * @param int $taskId: if given, this task is taken, otherwise the current task
      * @param string|null $loginName: if given, a login with this user is done before opening/deleting the task
      * @param string|null $loginName: only in conjunction with $loginName. If given, a login with this user is done before to open the task, deletion is done with the latter
+     * @param bool $isProjectTask
      */
     public function deleteTask(int $taskId = -1, string $loginName = null, string $loginNameToOpen = null, bool $isProjectTask = false) {
         if($taskId < 1 && $this->task){
