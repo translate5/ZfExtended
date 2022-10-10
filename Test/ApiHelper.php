@@ -31,7 +31,7 @@ class ZfExtended_Test_ApiHelper {
     const AUTH_COOKIE_KEY = 'zfExtended';
 
     /**
-     * Development option that triggers all requests to be captured in a file called "TestClassName-TIMESTAMP"
+     * Development option that triggers all requests to be captured in a file called "TestClassName-TIMESTAMP.log"
      */
     const TRACE_REQUESTS = false;
 
