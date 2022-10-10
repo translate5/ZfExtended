@@ -22,11 +22,18 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
+use PHPUnit\Framework\TestCase;
+
 class ZfExtended_Test_ApiHelper {
 
     const PASSWORD = 'asdfasdf';
 
     const AUTH_COOKIE_KEY = 'zfExtended';
+
+    /**
+     * Development option that triggers all requests to be captured in a file called "TestClassName-TIMESTAMP"
+     */
+    const TRACE_REQUESTS = false;
 
     /**
      * Holds internal configuration, as
@@ -86,10 +93,17 @@ class ZfExtended_Test_ApiHelper {
     }
 
     /**
-     * @return bool
+     * Retrieves the origin to set for the API calls
+     * The TEST environment incorporates an own database for testing
+     * The APPTEST enviroment is just the "normal" application DB and just triggers the detection of an API-test
+     * @return string
      */
-    protected static function isTestEnvironment() : bool {
-        return static::$CONFIG['ENVIRONMENT'] === 'test';
+    protected static function createOrigin() : string {
+        if(static::$CONFIG['ENVIRONMENT'] === ZfExtended_BaseIndex::ENVIRONMENT_TEST) {
+            return ZfExtended_BaseIndex::ORIGIN_TEST;
+        } else {
+            return ZfExtended_BaseIndex::ORIGIN_APPTEST;
+        }
     }
 
     /**
@@ -139,12 +153,7 @@ class ZfExtended_Test_ApiHelper {
      * @var array
      */
     protected array $filesToAdd = [];
-    
-    /**
-     * @var string
-     */
-    protected string $testClass;
-    
+
     /**
      * @var Zend_Http_Response
      */
@@ -157,14 +166,58 @@ class ZfExtended_Test_ApiHelper {
     protected string $testRoot;
 
     /**
+     * @var string
+     */
+    protected string $testClass;
+    
+    /**
+     * Test root directory
+     * @var TestCase
+     */
+    protected TestCase $test;
+
+    /**
+     * @var string
+     */
+    private string $requestTrace;
+
+    /**
      * @throws ReflectionException
      */
-    public function __construct($testClass){
+    public function __construct(string $testClass, TestCase $test) {
         $reflector = new ReflectionClass($testClass);
+        $this->test = $test;
         $this->testClass = $testClass;
         $this->testRoot = dirname($reflector->getFileName());
         $this->xdebug = static::$CONFIG['XDEBUG_ENABLE'];
         $this->cleanup = !static::$CONFIG['KEEP_DATA'];
+
+        if(self::TRACE_REQUESTS){
+            $this->requestTrace = 'REQUEST TRACE FOR TEST "'.$testClass.'"'."\n\n";
+        }
+    }
+
+    public function __destruct() {
+        if(self::TRACE_REQUESTS){
+            $filename = $this->testClass.'-'.time().'.log';
+            file_put_contents($filename, $this->requestTrace);
+        }
+    }
+
+    /**
+     * Retrieves the class of the currently executed test
+     * @return string
+     */
+    public function getTestClass() : string {
+        return $this->testClass;
+    }
+
+    /**
+     * Retrieves an instance of the current test (Note, that this is not the executed instance)
+     * @return TestCase
+     */
+    public function getTest() : TestCase {
+        return $this->test;
     }
 
     /**
@@ -281,13 +334,11 @@ class ZfExtended_Test_ApiHelper {
      * @return bool|mixed|stdClass|null
      * @throws Zend_Http_Client_Exception
      */
-    public function postRaw(string $url, string $content, array $parameters=[]) : stdClass {
+    public function postRawData(string $url, string $content, array $parameters=[], string $jsonFileName = null, bool $expectedToFail=false) : stdClass {
         $http = new Zend_Http_Client();
         $http->setUri(static::$CONFIG['API_URL'].ltrim($url, '/'));
         $http->setHeaders('Accept', 'application/json');
-        if(static::isTestEnvironment()){
-            $http->setHeaders('Origin', 't5test');
-        }
+        $http->setHeaders('Origin', static::createOrigin());
         if(!empty(static::$authCookie)) {
             $http->setCookie(self::AUTH_COOKIE_KEY, static::$authCookie);
         }
@@ -298,8 +349,18 @@ class ZfExtended_Test_ApiHelper {
                 $http->setParameterGet($key, $value); // when setting the raw request-body params can only be set as GET params!
             }
         }
+        if(self::TRACE_REQUESTS){
+            $this->traceRequest($http, $parameters, 'POST');
+        }
         $this->lastResponse = $http->request('POST');
-        return $this->decodeRawResponse($this->lastResponse);
+        $result = $this->decodeJsonResponse($this->lastResponse, false);
+        if(!$expectedToFail && !$this->isStatusSuccess($this->lastResponse->getStatus())) {
+            $this->test::fail('apiTest POST RAW DATA on '.$url.' returned '.$this->lastResponse->__toString());
+        } else if($this->isCapturing() && !empty($jsonFileName)){
+            // in capturing mode we save the requested data as the data to test against
+            $this->captureData($jsonFileName, $this->encodeTestData($result));
+        }
+        return $result;
     }
 
     /**
@@ -314,7 +375,7 @@ class ZfExtended_Test_ApiHelper {
     public function getRaw(string $url, array $parameters = [], string $fileName = NULL): stdClass {
         $response = $this->request($url, 'GET', $parameters);
         $result = $this->createResponseResult($response);
-        if($result->success) {
+        if(!$this->isJsonResultError($result)) {
             $this->captureData($fileName, $result->data);
         }
         return $result;
@@ -329,8 +390,8 @@ class ZfExtended_Test_ApiHelper {
      * @throws Zend_Http_Client_Exception
      */
     public function getJsonRaw(string $url, string $method = 'GET', array $parameters=[]) : stdClass {
-        $resp = $this->request($url, $method, $parameters);
-        return $this->decodeRawResponse($resp);
+        $response = $this->request($url, $method, $parameters);
+        return $this->createResponseResult($response);
     }
 
     /**
@@ -400,7 +461,7 @@ class ZfExtended_Test_ApiHelper {
      * @param bool $assert false to skip file existence check
      * @return string
      */
-    public function getFile($approvalFile, $class = null, $assert = true) {
+    public function getFile(string $approvalFile, string $class = null, bool $assert = true) {
         if(empty($class)) {
             $class = $this->testClass;
         }
@@ -412,8 +473,7 @@ class ZfExtended_Test_ApiHelper {
             $path = str_replace('\\', '/', $path);
         }
         if($assert) {
-            $t = $this->testClass;
-            $t::assertFileExists($path);
+            $this->test::assertFileExists($path);
         }
         return $path;
     }
@@ -442,11 +502,10 @@ class ZfExtended_Test_ApiHelper {
      */
     public function getFileContent(string $approvalFile, string $rawDataToCapture = null) {
         $this->captureData($approvalFile, $rawDataToCapture);
-        $t = $this->testClass;
         $data = file_get_contents($this->getFile($approvalFile));
         if(preg_match('/\.json$/i', $approvalFile)){
             $data = json_decode($data);
-            $t::assertEquals('No error', json_last_error_msg(), 'Test file '.$approvalFile.' does not contain valid JSON!');
+            $this->test::assertEquals('No error', json_last_error_msg(), 'Test file '.$approvalFile.' does not contain valid JSON!');
         }
         return $data;
     }
@@ -479,8 +538,7 @@ class ZfExtended_Test_ApiHelper {
         $zip->extractTo($dir);
         $files = glob($dir.$pathToFileInZip, GLOB_NOCHECK);
         $file = reset($files);
-        $t = $this->testClass;
-        $t::assertFileExists($file);
+        $this->test::assertFileExists($file);
         $content = file_get_contents($file);
         $this->rmDir($dir);
         //delete exported file, so that next call can recreate it
@@ -602,11 +660,10 @@ class ZfExtended_Test_ApiHelper {
             'passwd' => $password,
         ]);
         $plainResponse = $this->getLastResponse();
-        $t = $this->testClass;
         /* @var $t \PHPUnit\Framework\TestCase */
         $this->assertResponseStatus($plainResponse, 'Login');
-        $t::assertTrue((property_exists($response, 'sessionId') && property_exists($response, 'sessionToken')), 'JSON Login request was not successfull!');
-        $t::assertMatchesRegularExpression('/[a-zA-Z0-9]{26}/', $response->sessionId, 'Login call does not return a valid sessionId!');
+        $this->test::assertTrue((property_exists($response, 'sessionId') && property_exists($response, 'sessionToken')), 'JSON Login request was not successfull!');
+        $this->test::assertMatchesRegularExpression('/[a-zA-Z0-9]{26}/', $response->sessionId, 'Login call does not return a valid sessionId!');
         static::$authCookie = $response->sessionId;
         static::$authLogin = $login;
         return true;
@@ -619,14 +676,6 @@ class ZfExtended_Test_ApiHelper {
         $this->request(static::$CONFIG['LOGOUT_PATH']);
         static::$authCookie = null;
         static::$authLogin = null;
-    }
-
-    /**
-     * Retrieves the class of the currently executed test
-     * @return string
-     */
-    public function getTestClass() : string {
-        return $this->testClass;
     }
 
     /**
@@ -649,9 +698,7 @@ class ZfExtended_Test_ApiHelper {
         }
         $http->setUri(static::$CONFIG['API_URL'].$url);
         $http->setHeaders('Accept', 'application/json');
-        if(static::isTestEnvironment()){
-            $http->setHeaders('Origin', 't5test');
-        }
+        $http->setHeaders('Origin', static::createOrigin());
 
         //enable xdebug debugger in eclipse
         if($this->xdebug) {
@@ -672,7 +719,7 @@ class ZfExtended_Test_ApiHelper {
                     continue;
                 }
                 $absolutePath = $this->getAbsFilePath($file['path']);
-                $this->testClass::assertFileExists($absolutePath);
+                $this->test::assertFileExists($absolutePath);
                 $http->setFileUpload($absolutePath, $file['name'], file_get_contents($absolutePath), $file['mime']);
             }
             $this->filesToAdd = [];
@@ -687,6 +734,9 @@ class ZfExtended_Test_ApiHelper {
             foreach($parameters as $key => $value) {
                 $http->$addParamsMethod($key, $value);
             }
+        }
+        if(self::TRACE_REQUESTS){
+            $this->traceRequest($http, $parameters, $method);
         }
         $this->lastResponse = $http->request($method);
         return $this->lastResponse;
@@ -707,7 +757,7 @@ class ZfExtended_Test_ApiHelper {
         $response = $this->request($url, $method, $parameters);
         $result = $this->decodeJsonResponse($response, $isTreeData);
         if(!$expectedToFail && !$this->isStatusSuccess($response->getStatus())) {
-            $this->testClass::fail('apiTest '.$method.' on '.$url.' returned '.$response->__toString());
+            $this->test::fail('apiTest '.$method.' on '.$url.' returned '.$response->__toString());
         } else if($this->isCapturing() && !empty($jsonFileName)){
             // in capturing mode we save the requested data as the data to test against
             $this->captureData($jsonFileName, $this->encodeTestData($result));
@@ -729,11 +779,7 @@ class ZfExtended_Test_ApiHelper {
                 return $this->createResponseResult($resp);
             }
             $json = json_decode($resp->getBody());
-            $t = $this->testClass;
-            $t::assertEquals('No error', json_last_error_msg(), 'Server did not response valid JSON: '.$resp->getBody());
-            if(property_exists($json, 'success')) {
-                $t::assertEquals(true, $json->success);
-            }
+            $this->test::assertEquals('No error', json_last_error_msg(), 'Server did not response valid JSON: '.$resp->getBody());
             if($isTreeData){
                 if(property_exists($json, 'children') && count($json->children) > 0){
                     return $json->children[0];
@@ -749,27 +795,6 @@ class ZfExtended_Test_ApiHelper {
             }
         }
         return $this->createResponseResult($resp);
-    }
-
-    /**
-     * Parses a raw result that may represents a server error to be able to retrieve failed requests without forcing a failing test (e.g. if wishing to validate the errors)
-     * The result may already has a success-property, if not, it will be set by status-code
-     * @param Zend_Http_Response $resp
-     * @return stdClass
-     */
-    protected function decodeRawResponse(Zend_Http_Response $resp) : stdClass {
-        $result = json_decode($resp->getBody());
-        $status = $resp->getStatus();
-        if(!$result){
-            $result = new stdClass();
-        }
-        if(!property_exists($result, 'success')){
-            $result->success = $this->isStatusSuccess($status);
-        }
-        if(!property_exists($result, 'status')){
-            $result->status = $status;
-        }
-        return $result;
     }
 
     /**
@@ -791,19 +816,28 @@ class ZfExtended_Test_ApiHelper {
             if($response){
                 try {
                     $json = json_decode($response->getBody());
-                    if(is_object($json) && property_exists($json, 'error')){
-                        $result->error = $json->error;
-                        return $result;
-                    }
-                    if(is_object($json) && property_exists($json, 'errors') && count($json->errors) > 0){
-                        $result->error = '';
-                        foreach($result->errors as $error){
-                            if(property_exists($error, 'msg')){
-                                $result->error .= ($result->error === '') ? $error->msg : "\n".$error->msg;
-                            }
-                        }
-                        if(!empty($result->error)){
+                    if(is_object($json)){
+                        // std exception response
+                        if(property_exists($json, 'errorCode') && property_exists($json, 'errorMessage')) {
+                            $result->error = $json->errorMessage;
+                            $result->errorCode = $json->errorCode;
                             return $result;
+                        }
+                        if(property_exists($json, 'error')){
+                            $result->error = $json->error;
+                            return $result;
+                        }
+                        if(property_exists($json, 'errors') && count($json->errors) > 0){
+                            $errors = '';
+                            foreach($json->errors as $error){
+                                if(property_exists($error, 'msg')){
+                                    $errors .= ($errors === '') ? $error->msg : "\n".$error->msg;
+                                }
+                            }
+                            if(!empty($errors)){
+                                $result->error = $errors;
+                                return $result;
+                            }
                         }
                     }
                 } catch(Throwable){
@@ -828,7 +862,7 @@ class ZfExtended_Test_ApiHelper {
      * @param string $requestType
      */
     protected function assertResponseStatus(Zend_Http_Response $response, string $requestType){
-        $this->testClass::assertTrue($this->isStatusSuccess($response->getStatus()), $requestType.' Request does not respond HTTP 200-299! Body was: '.$response->getBody());
+        $this->test::assertTrue($this->isStatusSuccess($response->getStatus()), $requestType.' Request does not respond HTTP 200-299! Body was: '.$response->getBody());
     }
 
     /**
@@ -844,5 +878,40 @@ class ZfExtended_Test_ApiHelper {
             return json_encode($data, JSON_PRETTY_PRINT);
         }
         return json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    }
+
+    /**
+     * Helper to trace all requests
+     * @param Zend_Http_Client $http
+     * @param array $parameters
+     * @param string $method
+     */
+    private function traceRequest(Zend_Http_Client $http, array $parameters, string $method){
+        $this->requestTrace .= "\n\n".$method.': '.$http->getUri(true);
+        ksort($parameters);
+        foreach($parameters as $key => $value){
+            $this->requestTrace .= "\n  ".$key.': '.$this->traceParam($value);
+        }
+    }
+
+    /**
+     * Helper to trace a single request param
+     * @param $value
+     * @return string
+     */
+    private function traceParam($value){
+        if(is_bool($value)){
+            return $value ? 'true' : 'false';
+        }
+        if(is_numeric($value)){
+            return strval($value);
+        }
+        if(is_object($value) || is_array($value)){
+            return json_encode($value, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        }
+        $value = strval($value);
+        $value = str_replace("\r", '', $value);
+        $value = str_replace("\n", '\\n', $value);
+        return $value;
     }
 }

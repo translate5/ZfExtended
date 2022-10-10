@@ -196,7 +196,7 @@ class ZfExtended_Debug {
      * Add the available resources to the application state
      * @param stdClass $applicationState
      */
-    public static  function addLanguageResources(&$applicationState) {
+    public static function addLanguageResources(&$applicationState) {
         
         $serviceManager = ZfExtended_Factory::get('editor_Services_Manager');
         /* @var $serviceManager editor_Services_Manager */
@@ -215,5 +215,29 @@ class ZfExtended_Debug {
             $obj->url = $resource->getUrl();
             $applicationState->languagesource[] = $obj;
         }
+    }
+
+    /**
+     * Used by API-tests for worker evaluation & cleanup between single test-runs
+     */
+    public static function workerCleanupState(): stdClass
+    {
+        $result = new stdClass();
+        $result->cleanupNeccessary = false;
+        $worker = ZfExtended_Factory::get('ZfExtended_Models_Worker');
+        /* @var $worker ZfExtended_Models_Worker */
+        $summary = $worker->getSummary();
+        $numFaulty =
+            $summary[ZfExtended_Models_Worker::STATE_SCHEDULED]
+            + $summary[ZfExtended_Models_Worker::STATE_WAITING]
+            + $summary[ZfExtended_Models_Worker::STATE_RUNNING]
+            + $summary[ZfExtended_Models_Worker::STATE_DEFUNCT];
+        if($numFaulty > 0){
+            // for the following tests to function properly running or dead workers are unwanted
+            $worker->db->delete('1 = 1');
+            $result->cleanupNeccessary = true;
+        }
+        $result->worker = $summary;
+        return $result;
     }
 }
