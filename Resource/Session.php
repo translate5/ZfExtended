@@ -143,10 +143,10 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
             return;
         }
         
-        if(!$this->isHttpsRequest() && empty($_REQUEST['APItest'])) {
+        if(!$this->isHttpsRequest() && !defined('APPLICATION_APITEST')) {
             //without HTTPS we have to use samesite = LAX which then prevents the proper functionality of this feature,
             // therefore we just disable sessionToken auth in that case
-            throw new ZfExtended_NotAuthenticatedException('Due Cookie restrictions this feature can only be used with HTTPS enabled!');
+            throw new ZfExtended_NotAuthenticatedException('Due to Cookie restrictions this feature can only be used with HTTPS enabled!');
         }
         
         $sessionDb = ZfExtended_Factory::get('ZfExtended_Models_Db_Session');

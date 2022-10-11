@@ -128,12 +128,13 @@ class ZfExtended_Test_ApiHelper {
         return static::$authCookie;
     }
 
-    /***
-     *
+    /**
+     * This method sets the internally managed authentication and is only meant to be used in tests testing the authentication-API
      * @param string $cookie
      */
-    public static function setAuthCookie(string $cookie) {
+    public static function setAuthentication(string $cookie, string $login) {
         static::$authCookie = $cookie;
+        static::$authLogin = $login;
     }
 
     /**
@@ -680,6 +681,7 @@ class ZfExtended_Test_ApiHelper {
 
     /**
      * Makes a request to the configured logout URL
+     * Destroys the internally cached authentication data
      */
     public function logout() {
         $this->request(static::$CONFIG['LOGOUT_PATH']);
@@ -897,6 +899,7 @@ class ZfExtended_Test_ApiHelper {
      */
     private function traceRequest(Zend_Http_Client $http, array $parameters, string $method){
         $this->requestTrace .= "\n\n".$method.': '.$http->getUri(true);
+        if(!empty(static::$authCookie)) $this->requestTrace .= "\n Auth: ".static::$authLogin.", ".static::$authCookie;
         ksort($parameters);
         foreach($parameters as $key => $value){
             $this->requestTrace .= "\n  ".$key.': '.$this->traceParam($value);
