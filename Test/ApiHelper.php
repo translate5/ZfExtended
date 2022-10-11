@@ -135,6 +135,15 @@ class ZfExtended_Test_ApiHelper {
     public static function setAuthCookie(string $cookie) {
         static::$authCookie = $cookie;
     }
+
+    /**
+     * returns the absolute data path to the base directory for task data
+     * @return string
+     */
+    public static function getTaskDataBaseDirectory(): string
+    {
+        return self::$CONFIG['DATA_DIR'];
+    }
     
     /**
      * enable xdebug debugger in IDE
