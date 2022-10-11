@@ -507,11 +507,12 @@ class ZfExtended_Test_ApiHelper {
     /**
      * Loads the file contents of a file with data to be compared
      * @param string $approvalFile
-     * @param string|null $rawDataToCapture
+     * @param string|stdClass|array|null $rawDataToCapture
+     * @param bool $encode: must be true when non-textual data shall be captured
      * @return stdClass|array|string
      */
-    public function getFileContent(string $approvalFile, string $rawDataToCapture = null) {
-        $this->captureData($approvalFile, $rawDataToCapture);
+    public function getFileContent(string $approvalFile, mixed $rawDataToCapture = null, bool $encode = false) {
+        $this->captureData($approvalFile, $rawDataToCapture, $encode);
         $data = file_get_contents($this->getFile($approvalFile));
         if(preg_match('/\.json$/i', $approvalFile)){
             $data = json_decode($data);
