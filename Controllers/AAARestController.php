@@ -370,7 +370,8 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller
      */
     protected function handleValidateException(ZfExtended_ValidateException $e)
     {
-        $this->view->errors = $this->transformErrors($e->getErrors());
+        $this->view->errorsTranslated = $this->view->errors = $this->transformErrors($e->getErrors());
+        $this->view->errorMessage = 'input validation failure';
         $this->handleErrorResponse($e->getCode());
     }
 
