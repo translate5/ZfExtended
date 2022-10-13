@@ -522,18 +522,6 @@ class ZfExtended_Test_ApiHelper {
     }
 
     /**
-     *
-     * @param string $zipfile absolute file system path to zip file
-     * @param string $pathToFileInZip relative path to file inside of zip
-     * @return false|string
-     * @throws Exception
-     */
-    public function getFileContentFromZip(string $zipfile, string $pathToFileInZip) {
-        $pathToZip = $this->getFile($zipfile);
-        return $this->getFileContentFromZipPath($pathToZip, $pathToFileInZip);
-    }
-
-    /**
      * returns the content of the given filename in a given ZIP, in filename * and ? may be used. If it mathces multiple files the first one is returned.
      * @param string $pathToZip absolute file system path to zip file
      * @param string $pathToFileInZip relative path to file inside of zip (uses glob to evaluate * ? etc pp. returns the first file if matched multiple files!)
