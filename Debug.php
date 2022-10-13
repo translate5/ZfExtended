@@ -219,8 +219,10 @@ class ZfExtended_Debug {
 
     /**
      * Used by API-tests for worker evaluation & cleanup between single test-runs
+     * @param bool $forceRemoval
+     * @return stdClass
      */
-    public static function workerCleanupState(): stdClass
+    public static function workerCleanupState(bool $forceRemoval = false): stdClass
     {
         $result = new stdClass();
         $result->cleanupNeccessary = false;
@@ -232,7 +234,7 @@ class ZfExtended_Debug {
             + $summary[ZfExtended_Models_Worker::STATE_WAITING]
             + $summary[ZfExtended_Models_Worker::STATE_RUNNING]
             + $summary[ZfExtended_Models_Worker::STATE_DEFUNCT];
-        if($numFaulty > 0){
+        if($numFaulty > 0 || $forceRemoval){
             // for the following tests to function properly running or dead workers are unwanted
             $worker->db->delete('1 = 1');
             $result->cleanupNeccessary = true;
