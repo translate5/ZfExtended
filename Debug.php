@@ -237,7 +237,7 @@ class ZfExtended_Debug {
         if($numFaulty > 0 || $forceRemoval){
             // for the following tests to function properly running or dead workers are unwanted
             $worker->db->delete('1 = 1');
-            $result->cleanupNeccessary = true;
+            $result->cleanupNeccessary = ($numFaulty > 0);
         }
         $result->worker = $summary;
         return $result;
