@@ -69,6 +69,13 @@ class ZfExtended_Test_ApiHelper {
     private static ?string $authCookie = null;
 
     /**
+     * Holds a list of allowed http status code other then 200-299.
+     * Is cleaned after each request.
+     * @var array
+     */
+    private array $allowHttpStatusOnce = [];
+
+    /**
      * Sets the Test API up. This needs to be set in the test bootstrapper
      * The given config MUST contain:
      *  'API_URL' => the api url as defined in zend config
@@ -762,7 +769,13 @@ class ZfExtended_Test_ApiHelper {
             // in capturing mode we save the requested data as the data to test against
             $this->captureData($jsonFileName, $this->encodeTestData($result));
         }
+        $this->allowHttpStatusOnce = [];
         return $result;
+    }
+
+    public function allowHttpStatusOnce(int $httpStatus): void
+    {
+        $this->allowHttpStatusOnce[] = $httpStatus;
     }
 
     /**
@@ -854,6 +867,9 @@ class ZfExtended_Test_ApiHelper {
      * @return bool
      */
     protected function isStatusSuccess(int $status) : bool {
+        if(in_array($status, $this->allowHttpStatusOnce)) {
+            return true;
+        }
         return (200 <= $status && $status < 300);
     }
 
