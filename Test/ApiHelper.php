@@ -764,7 +764,7 @@ class ZfExtended_Test_ApiHelper {
         $response = $this->request($url, $method, $parameters);
         $result = $this->decodeJsonResponse($response, $isTreeData);
         if(!$expectedToFail && !$this->isStatusSuccess($response->getStatus())) {
-            $this->test::fail('apiTest '.$method.' on '.$url.' returned '.$response->__toString());
+            $this->test::fail('apiTest '.$method.' on '.$url.' returned '.$response->__toString().' with parameters '.print_r($parameters,1));
         } else if($this->isCapturing() && !empty($jsonFileName)){
             // in capturing mode we save the requested data as the data to test against
             $this->captureData($jsonFileName, $this->encodeTestData($result));
