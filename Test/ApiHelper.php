@@ -22,44 +22,28 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
+use PHPUnit\Framework\TestCase;
+
 class ZfExtended_Test_ApiHelper {
-    
-    /***
-     * How many time the task status will be check while the task is importing.
-     * @var integer
-     */
-    const RELOAD_TASK_LIMIT = 100;
-    
-    /***
-     * How many times the language reosurces status will be checked while the resource is importing
-     * @var integer
-     */
-    const RELOAD_RESOURCE_LIMIT = 40;
-    
-    /***
-     * Project taskType
-     * @var string
-     */
-    const INITIAL_TASKTYPE_PROJECT = 'project';
-    
-    /***
-     * Project task type
-     * @var string
-     */
-    const INITIAL_TASKTYPE_PROJECT_TASK = 'projectTask';
-    
+
+    const PASSWORD = 'asdfasdf';
+
     const AUTH_COOKIE_KEY = 'zfExtended';
-    const SEGMENT_DUPL_SAVE_CHECK = '<img src="data:image/gif;base64,R0lGODlhAQABAID/AMDAwAAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==" class="duplicatesavecheck" data-segmentid="%s" data-fieldname="%s">';
-    
+
+    /**
+     * Development option that triggers all requests to be captured in a file called "TestClassName-TIMESTAMP.log"
+     */
+    const TRACE_REQUESTS = false;
+
     /**
      * Holds internal configuration, as
      * - the api url as defined in zend config
      * - the task data dir as defined in zend config
      * - the logout url
      * - if we're in capture mode (only when single tests are called)
-     * @var string
+     * @var array
      */
-    private static array $CONFIG = [
+    protected static array $CONFIG = [
         'API_URL' => null,
         'DATA_DIR' => null,
         'LOGOUT_PATH' => null,
@@ -70,6 +54,19 @@ class ZfExtended_Test_ApiHelper {
         'LEGACY_JSON' => false,
         'ENVIRONMENT' => 'application'
     ];
+
+    /**
+     * Holds the currently authenticated user login
+     * This prop will be tracked over the whole testsuite avoiding needless logins/logouts
+     * @var string|null
+     */
+    private static ?string $authLogin = null;
+
+    /**
+     * Holds the currently authenticated user cookie
+     * @var string|null
+     */
+    private static ?string $authCookie = null;
 
     /**
      * Sets the Test API up. This needs to be set in the test bootstrapper
@@ -96,10 +93,57 @@ class ZfExtended_Test_ApiHelper {
     }
 
     /**
+     * Retrieves the origin to set for the API calls
+     * The TEST environment incorporates an own database for testing
+     * The APPTEST enviroment is just the "normal" application DB and just triggers the detection of an API-test
+     * @return string
+     */
+    protected static function createOrigin() : string {
+        if(static::$CONFIG['ENVIRONMENT'] === ZfExtended_BaseIndex::ENVIRONMENT_TEST) {
+            return ZfExtended_BaseIndex::ORIGIN_TEST;
+        } else {
+            return ZfExtended_BaseIndex::ORIGIN_APPTEST;
+        }
+    }
+
+    /**
+     * Retrieves, if the test is running with legacy-data (data without JSON_UNESCAPED_UNICODE)
      * @return bool
      */
-    protected static function isTestEnvironment() : bool {
-        return static::$CONFIG['ENVIRONMENT'] === 'test';
+    public static function isLegacyData() : bool {
+        return static::$CONFIG['LEGACY_DATA'];
+    }
+
+    /**
+     * @return string|null
+     */
+    public static function getAuthLogin() : string {
+        return static::$authLogin;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getAuthCookie() : string {
+        return static::$authCookie;
+    }
+
+    /**
+     * This method sets the internally managed authentication and is only meant to be used in tests testing the authentication-API
+     * @param string $cookie
+     */
+    public static function setAuthentication(string $cookie, string $login) {
+        static::$authCookie = $cookie;
+        static::$authLogin = $login;
+    }
+
+    /**
+     * returns the absolute data path to the base directory for task data
+     * @return string
+     */
+    public static function getTaskDataBaseDirectory(): string
+    {
+        return self::$CONFIG['DATA_DIR'];
     }
     
     /**
@@ -115,131 +159,121 @@ class ZfExtended_Test_ApiHelper {
     protected bool $cleanup = true;
 
     /**
-     * Authentication / session cookie
-     * @var string
-     */
-    protected $authCookie;
-
-    /**
-     * Authenticated login
-     * @var string
-     */
-    protected $authLogin;
-    
-    /**
      * list of files to be added to the next request
      * @var array
      */
-    protected $filesToAdd = array();
-    
-    /**
-     * @var string
-     */
-    protected $testClass;
-    
+    protected array $filesToAdd = [];
+
     /**
      * @var Zend_Http_Response
      */
-    protected $lastResponse;
-    
-    /**
-     * stdObject with the values of the last imported task
-     * @var stdClass
-     */
-    protected $task;
-    
-    /***
-     *
-     * array of stdObject with the values of the last imported project tasks
-     * @var array
-     */
-    protected $projectTasks;
-    
+    protected Zend_Http_Response $lastResponse;
+
     /**
      * Test root directory
      * @var string
      */
-    protected $testRoot;
-    
-    /***
-     * stdObject with the values of the test customer
-     * @var stdClass
+    protected string $testRoot;
+
+    /**
+     * @var string
      */
-    protected stdClass $customer;
+    protected string $testClass;
     
-    
-    /***
-     * Collection of language resources created from addResources method
-     * @var array
+    /**
+     * Test root directory
+     * @var TestCase
      */
-    protected static $resources = []; //TODO: remove from memory ?
-    
-    protected $testusers = array(
-        'testmanager' => '{00000000-0000-0000-C100-CCDDEE000001}',
-        'testlector' => '{00000000-0000-0000-C100-CCDDEE000002}',
-        'testtranslator' => '{00000000-0000-0000-C100-CCDDEE000003}',
-    );
+    protected TestCase $test;
+
+    /**
+     * @var string
+     */
+    private string $requestTrace;
 
     /**
      * @throws ReflectionException
      */
-    public function __construct($testClass){
-        $reflector = new \ReflectionClass($testClass);
+    public function __construct(string $testClass, TestCase $test) {
+        $reflector = new ReflectionClass($testClass);
+        $this->test = $test;
         $this->testClass = $testClass;
         $this->testRoot = dirname($reflector->getFileName());
         $this->xdebug = static::$CONFIG['XDEBUG_ENABLE'];
         $this->cleanup = !static::$CONFIG['KEEP_DATA'];
+
+        if(self::TRACE_REQUESTS){
+            $this->requestTrace = 'REQUEST TRACE FOR TEST "'.$testClass.'"'."\n\n";
+        }
     }
-    
-    /**
-     * @return string
-     */
-    public function getLogin() {
-        return $this->authLogin;
-    }
-    
-    /**
-     * @return string
-     */
-    public function getAuthCookie() {
-        return $this->authCookie;
-    }
-    
-    /***
-     * 
-     * @param string $cookie
-     */
-    public function setAuthCookie(string $cookie) {
-        $this->authCookie = $cookie;
+
+    public function __destruct() {
+        if(self::TRACE_REQUESTS){
+            $filename = $this->testClass.'-'.time().'.log';
+            file_put_contents($filename, $this->requestTrace);
+        }
     }
 
     /**
-     * Posts raw content (not form-encoded, not as form-data)
+     * Retrieves the class of the currently executed test
+     * @return string
+     */
+    public function getTestClass() : string {
+        return $this->testClass;
+    }
+
+    /**
+     * Retrieves an instance of the current test (Note, that this is not the executed instance)
+     * @return TestCase
+     */
+    public function getTest() : TestCase {
+        return $this->test;
+    }
+
+    /**
+     * Sends a simple GET request
      * @param string $url
-     * @param string $content
      * @param array $parameters
-     * @return bool|mixed|stdClass|null
+     * @return Zend_Http_Response
      * @throws Zend_Http_Client_Exception
      */
-    public function postRaw(string $url, string $content, array $parameters=[]) : stdClass {
-        $http = new Zend_Http_Client();
-        $http->setUri(static::$CONFIG['API_URL'].ltrim($url, '/'));
-        $http->setHeaders('Accept', 'application/json');
-        if(static::isTestEnvironment()){
-            $http->setHeaders('Origin', 't5test');
+    public function get(string $url, array $parameters = []) {
+        return $this->request($url, 'GET', $parameters);
+    }
+
+    /**
+     * Sends a simple PUT request
+     * @param string $url
+     * @param array $parameters
+     * @return Zend_Http_Response
+     * @throws Zend_Http_Client_Exception
+     */
+    public function put(string $url, array $parameters = []) {
+        return $this->request($url, 'PUT', $parameters);
+    }
+
+    /**
+     * Sends a simple POST request
+     * @param string $url
+     * @param array $parameters
+     * @return Zend_Http_Response
+     * @throws Zend_Http_Client_Exception
+     */
+    public function post(string $url, array $parameters = []) {
+        return $this->request($url, 'POST', $parameters);
+    }
+
+    /**
+     * Sends a DELETE request
+     * @param string $url
+     * @param array $parameters
+     * @return bool|mixed
+     */
+    public function delete(string $url, array $parameters = []) {
+        if($this->cleanup){
+            return $this->fetchJson($url, 'DELETE', $parameters, null, false);
         }
-        if(!empty($this->authCookie)) {
-            $http->setCookie(self::AUTH_COOKIE_KEY, $this->authCookie);
-        }
-        $http->setRawData($content, 'application/octet-stream');
-        $http->setHeaders(Zend_Http_Client::CONTENT_TYPE, 'application/octet-stream');
-        if(!empty($parameters)) {
-            foreach($parameters as $key => $value) {
-                $http->setParameterGet($key, $value); // when setting the raw request-body params can only be set as GET params!
-            }
-        }
-        $this->lastResponse = $http->request('POST');
-        return $this->decodeRawResponse($this->lastResponse);
+        return false;
     }
 
     /**
@@ -303,54 +337,45 @@ class ZfExtended_Test_ApiHelper {
     }
 
     /**
-     * Sends a simple GET request
+     * Posts raw content (not form-encoded, not as form-data)
      * @param string $url
+     * @param string $content
      * @param array $parameters
-     * @return Zend_Http_Response
+     * @return bool|mixed|stdClass|null
      * @throws Zend_Http_Client_Exception
      */
-    public function get(string $url, array $parameters = []) {
-        return $this->request($url, 'GET', $parameters);
-    }
-
-    /**
-     * Sends a simple PUT request
-     * @param string $url
-     * @param array $parameters
-     * @return Zend_Http_Response
-     * @throws Zend_Http_Client_Exception
-     */
-    public function put(string $url, array $parameters = []) {
-        return $this->request($url, 'PUT', $parameters);
-    }
-
-    /**
-     * Sends a simple POST request
-     * @param string $url
-     * @param array $parameters
-     * @return Zend_Http_Response
-     * @throws Zend_Http_Client_Exception
-     */
-    public function post(string $url, array $parameters = []) {
-        return $this->request($url, 'POST', $parameters);
-    }
-
-    /**
-     * Sends a DELETE request
-     * @param string $url
-     * @param array $parameters
-     * @return bool|stdClass|array
-     */
-    public function delete(string $url, array $parameters = []) {
-        if($this->cleanup){
-            return $this->fetchJson($url, 'DELETE', $parameters, null, false);
+    public function postRawData(string $url, string $content, array $parameters=[], string $jsonFileName = null, bool $expectedToFail=false) : stdClass {
+        $http = new Zend_Http_Client();
+        $http->setUri(static::$CONFIG['API_URL'].ltrim($url, '/'));
+        $http->setHeaders('Accept', 'application/json');
+        $http->setHeaders('Origin', static::createOrigin());
+        if(!empty(static::$authCookie)) {
+            $http->setCookie(self::AUTH_COOKIE_KEY, static::$authCookie);
         }
-        return false;
+        $http->setRawData($content, 'application/octet-stream');
+        $http->setHeaders(Zend_Http_Client::CONTENT_TYPE, 'application/octet-stream');
+        if(!empty($parameters)) {
+            foreach($parameters as $key => $value) {
+                $http->setParameterGet($key, $value); // when setting the raw request-body params can only be set as GET params!
+            }
+        }
+        if(self::TRACE_REQUESTS){
+            $this->traceRequest($http, $parameters, 'POST');
+        }
+        $this->lastResponse = $http->request('POST');
+        $result = $this->decodeJsonResponse($this->lastResponse, false);
+        if(!$expectedToFail && !$this->isStatusSuccess($this->lastResponse->getStatus())) {
+            $this->test::fail('apiTest POST RAW DATA on '.$url.' returned '.$this->lastResponse->__toString());
+        } else if($this->isCapturing() && !empty($jsonFileName)){
+            // in capturing mode we save the requested data as the data to test against
+            $this->captureData($jsonFileName, $this->encodeTestData($result));
+        }
+        return $result;
     }
 
     /**
      * Sends a GET request to the application API to fetch unencoded data
-     * Retorns an object with 3 props: success, status, data (which is the raw response body)
+     * Returns an object with 3 props: success, status, data (which is the raw response body)
      * @param string $url
      * @param array $parameters
      * @param string|null $fileName: if set, the raw response body will be captured
@@ -360,7 +385,7 @@ class ZfExtended_Test_ApiHelper {
     public function getRaw(string $url, array $parameters = [], string $fileName = NULL): stdClass {
         $response = $this->request($url, 'GET', $parameters);
         $result = $this->createResponseResult($response);
-        if($result->success) {
+        if(!$this->isJsonResultError($result)) {
             $this->captureData($fileName, $result->data);
         }
         return $result;
@@ -375,31 +400,8 @@ class ZfExtended_Test_ApiHelper {
      * @throws Zend_Http_Client_Exception
      */
     public function getJsonRaw(string $url, string $method = 'GET', array $parameters=[]) : stdClass {
-        $resp = $this->request($url, $method, $parameters);
-        return $this->decodeRawResponse($resp);
-    }
-
-    /**
-     * Internal API to fetch JSON Data. Automatically saves the fetched file in capture-mode
-     * @param string $url
-     * @param string $method
-     * @param array $parameters
-     * @param string|null $jsonFileName
-     * @param bool $isTreeData
-     * @param bool $expectedToFail
-     * @return stdClass|array
-     * @throws Zend_Http_Client_Exception
-     */
-    private function fetchJson(string $url, string $method = 'GET', array $parameters = [], ?string $jsonFileName, bool $isTreeData, bool $expectedToFail = false) {
         $response = $this->request($url, $method, $parameters);
-        $result = $this->decodeJsonResponse($response, $isTreeData);
-        if(!$expectedToFail && !$this->isStatusSuccess($response->getStatus())) {
-            $this->testClass::fail('apiTest '.$method.' on '.$url.' returned '.$response->__toString());
-        } else if($this->isCapturing() && !empty($jsonFileName)){
-            // in capturing mode we save the requested data as the data to test against
-            $this->captureData($jsonFileName, $this->encodeTestData($result));
-        }
-        return $result;
+        return $this->createResponseResult($response);
     }
 
     /**
@@ -414,208 +416,15 @@ class ZfExtended_Test_ApiHelper {
         if(!$this->isCapturing() || empty($fileName) || is_null($rawData)) {
             return;
         }
-
         if($encode) {
             $rawData = $this->encodeTestData($rawData);
         } elseif(static::$CONFIG['LEGACY_JSON'] && str_ends_with($fileName, '.json')) {
             //if data is already encoded we have to decode and recode it
             $rawData = $this->encodeTestData(json_decode($rawData));
         }
-
         file_put_contents($this->getFile($fileName, assert: false), $rawData);
     }
 
-    /**
-     * requests the REST API, can handle file uploads, add file methods must be called first
-     * @param string $url
-     * @param string $method GET;POST;PUT;DELETE must be POST or PUT to transfer added files
-     * @param string $url
-     * @return Zend_Http_Response
-     * @throws Zend_Http_Client_Exception
-     */
-    private function request($url, $method = 'GET', $parameters = array()) {
-
-        $http = new Zend_Http_Client();
-        $url = ltrim($url, '/');
-
-        //prepend the taskid to the URL if the test has a task with id.
-        // that each request has then the taskid is no problem, this is handled by .htaccess and finally by the called controller.
-        // If the called controller does not need the taskid it just does nothing there...
-        if(($this->getTask()->id ?? 0) > 0) {
-            $url = preg_replace('#^editor/#', 'editor/taskid/'.$this->getTask()->id.'/', $url);
-        }
-
-        $http->setUri(static::$CONFIG['API_URL'].$url);
-        $http->setHeaders('Accept', 'application/json');
-        if(static::isTestEnvironment()){
-            $http->setHeaders('Origin', 't5test');
-        }
-
-        //enable xdebug debugger in eclipse
-        if($this->xdebug) {
-            $http->setCookie('XDEBUG_SESSION','ECLIPSE');
-            $http->setConfig(array('timeout' => 3600));
-        }
-        else {
-            $http->setConfig(array('timeout' => 30));
-        }
-
-        if(!empty($this->authCookie)) {
-            $http->setCookie(self::AUTH_COOKIE_KEY, $this->authCookie);
-        }
-
-        if(!empty($this->filesToAdd) && ($method == 'POST' || $method == 'PUT')) {
-            foreach($this->filesToAdd as $file) {
-                if(empty($file['path']) && !empty($file['data'])){
-                    $http->setFileUpload($file['filename'], $file['name'], $file['data'], $file['mime']);
-                    continue;
-                }
-                //file paths can also be absolute:
-                if(str_starts_with($file['path'], '/')) {
-                    $abs = $file['path'];
-                }
-                else {
-                    $abs = $this->testRoot.'/'.$file['path'];
-                }
-                $t = $this->testClass;
-                $t::assertFileExists($abs);
-                $http->setFileUpload($abs, $file['name'], file_get_contents($abs), $file['mime']);
-            }
-            $this->filesToAdd = [];
-        }
-
-        if($method == 'POST' || $method == 'PUT') {
-            $addParamsMethod = 'setParameterPost';
-        }
-        else {
-            $addParamsMethod = 'setParameterGet';
-        }
-
-        if(!empty($parameters)) {
-            foreach($parameters as $key => $value) {
-                $http->$addParamsMethod($key, $value);
-            }
-        }
-
-        $this->lastResponse = $http->request($method);
-        return $this->lastResponse;
-    }
-
-    /**
-     * Decodes a returned JSON answer from Translate5 REST API
-     * @param Zend_Http_Response $resp
-     * @return stdClass|array
-     */
-    private function decodeJsonResponse(Zend_Http_Response $resp, bool $isTreeData=false) {
-        $status = $resp->getStatus();
-        if($this->isStatusSuccess($status)) {
-            $body = $resp->getBody();
-            if(empty($body)) {
-                return $this->createResponseResult($resp);
-            }
-            $json = json_decode($resp->getBody());
-            $t = $this->testClass;
-            $t::assertEquals('No error', json_last_error_msg(), 'Server did not response valid JSON: '.$resp->getBody());
-            if(property_exists($json, 'success')) {
-                $t::assertEquals(true, $json->success);
-            }            
-            if($isTreeData){
-                if(property_exists($json, 'children') && count($json->children) > 0){
-                    return $json->children[0];
-                } else {
-                    $result = $this->createResponseResult($resp);
-                    $result->error = 'The fetched data had no children in the root object';
-                    return $result;
-                }
-            } else if(property_exists($json, 'rows')){
-                return $json->rows;
-            } else {
-                return $json;
-            }
-        }
-        return $this->createResponseResult($resp);
-    }
-
-    /**
-     * Create unified result object for failing requests or if we need to mock a result
-     * @param int $status
-     * @param mixed $data
-     * @return stdClass
-     */
-    private function createResponseResult(?Zend_Http_Response $response, string $error=null) : stdClass {
-        $status = ($response) ? $response->getStatus() : 0;
-        $result = new stdClass();
-        $result->status = $status;
-        $result->data = ($response) ? $response->getBody() : null;
-        if(!$this->isStatusSuccess($status)){
-            if($error){
-                $result->error = $error;
-                return $result;
-            }
-            if($response){
-                try {
-                    $json = json_decode($response->getBody());
-                    if(is_object($json) && property_exists($json, 'error')){
-                        $result->error = $json->error;
-                        return $result;
-                    }
-                    if(is_object($json) && property_exists($json, 'errors') && count($json->errors) > 0){
-                        $result->error = '';
-                        foreach($result->errors as $error){
-                            if(property_exists($error, 'msg')){
-                                $result->error .= ($result->error === '') ? $error->msg : "\n".$error->msg;
-                            }
-                        }
-                        if(!empty($result->error)){
-                            return $result;
-                        }
-                    }
-                } catch(Throwable){
-                }
-            }
-            $result->error = 'Request failed with status '.$status;
-        }
-        return $result;
-    }
-
-    /**
-     * Generally evaluates our accepted status codes
-     * @param int $status
-     * @return bool
-     */
-    private function isStatusSuccess(int $status) : bool {
-        return (200 <= $status && $status < 300);
-    }
-
-    /**
-     * @param Zend_Http_Response $response
-     * @param string $requestType
-     */
-    private function assertResponseStatus(Zend_Http_Response $response, string $requestType){
-        $this->testClass::assertTrue($this->isStatusSuccess($response->getStatus()), $requestType.' Request does not respond HTTP 200-299! Body was: '.$response->getBody());
-    }
-
-    /**
-     * Parses a raw result that may represents a server error to be able to retrieve failed requests without forcing a failing test (e.g. if wishing to validate the errors)
-     * The result may already has a success-property, if not, it will be set by status-code
-     * @param Zend_Http_Response $resp
-     * @return stdClass
-     */
-    private function decodeRawResponse(Zend_Http_Response $resp) : stdClass {
-        $result = json_decode($resp->getBody());
-        $status = $resp->getStatus();
-        if(!$result){
-            $result = new stdClass();
-        }
-        if(!property_exists($result, 'success')){
-            $result->success = $this->isStatusSuccess($status);
-        }
-        if(!property_exists($result, 'status')){
-            $result->status = $status;
-        }
-        return $result;
-    }
-    
     /**
      * returns the last requested response
      * @return Zend_Http_Response
@@ -643,7 +452,7 @@ class ZfExtended_Test_ApiHelper {
     public function addFile($name, $path, $mimetype) {
         $this->filesToAdd[] = array('name' => $name, 'path' => $path, 'mime' => $mimetype);
     }
-    
+
     /**
      * Adds a file to be uploaded on the next request.
      * @param string $name
@@ -654,428 +463,6 @@ class ZfExtended_Test_ApiHelper {
     public function addFilePlain($name, $data, $mimetype, $filename) {
         $this->filesToAdd[] = array('name' => $name, 'data' => $data, 'mime' => $mimetype, 'filename' => $filename);
     }
-    
-    public function login($login, $password = 'asdfasdf') {
-        if(isset($this->authLogin)){
-            if($this->authLogin == $login) {
-                return;
-            }
-            else {
-                $this->logout();
-            }
-        }
-        
-        $response = $this->postJson('editor/session', [
-            'login' => $login,
-            'passwd' => $password,
-        ]);
-        
-        
-        $plainResponse = $this->getLastResponse();
-        
-        $t = $this->testClass;
-        /* @var $t \ZfExtended_Test_ApiTestcase */
-        $this->assertResponseStatus($plainResponse, 'Login');
-        $t::assertTrue((property_exists($response, 'sessionId') && property_exists($response, 'sessionToken')), 'JSON Login request was not successfull!');
-        $t::assertMatchesRegularExpression('/[a-zA-Z0-9]{26}/', $response->sessionId, 'Login call does not return a valid sessionId!');
-
-        $this->authCookie = $response->sessionId;
-        $this->authLogin = $login;
-    }
-    
-    /**
-     * Makes a request to the configured logout URL
-     */
-    public function logout() {
-        $this->request(static::$CONFIG['LOGOUT_PATH']);
-        $this->authLogin = null;
-    }
-    
-    /**
-     * Imports the task described in array $task, parameters are the API parameters, at least:
-     *
-        $task = array(
-            'sourceLang' => 'en', // mandatory, source language in rfc5646
-            'targetLang' => 'de', // mandatory, target language in rfc5646
-            'relaisLang' => 'de', // optional, must be given on using relais column
-            'taskName' => 'simple-en-de', //optional, defaults to __CLASS__::__TEST__
-            'orderdate' => date('Y-m-d H:i:s'), //optional, defaults to now
-            'wordCount' => 666, //optional, defaults to heavy metal
-        );
-     *
-     * @param array $task
-     * @param bool $failOnError default true
-     * @param bool $waithForImport default true : if this is set to false, the function will not check the task import state
-     * @return boolean;
-     */
-    public function import(array $task, $failOnError = true, $waitForImport = true): bool {
-        $this->initTaskPostData($task);
-        
-        $test = $this->testClass;
-        $test::assertLogin('testmanager');
-
-        $this->task = $this->postJson('editor/task', $task);
-        if(isset($this->task->projectTasks)){
-            $this->projectTasks = is_array($this->task->projectTasks) ? $this->task->projectTasks : [$this->task->projectTasks];
-        }
-        $this->task->originalSourceLang = $task['sourceLang'];
-        $this->task->originalTargetLang = $task['targetLang'];
-        $resp = $this->getLastResponse();
-        $this->assertResponseStatus($resp, 'Import');
-
-        if(!$waitForImport){
-            return true;
-        }
-        if($this->task->taskType == self::INITIAL_TASKTYPE_PROJECT){
-            return $this->checkProjectTasksStateLoop($failOnError);
-        }
-        return $this->checkTaskStateLoop($failOnError);
-    }
-
-    /**
-     * Check the task state. The test will fail when $failOnError = true and if the task is in state error or after RELOAD_TASK_LIMIT task state checks
-     * @param bool $failOnError
-     * @return boolean
-     */
-    public function checkTaskStateLoop(bool $failOnError = true): bool {
-        $test = $this->testClass;
-        $counter=0;
-        while(true){
-            error_log('Task state check '.$counter.'/'.self::RELOAD_TASK_LIMIT.' state: '.$this->task->state.' ['.$test.']');
-            $taskResult = $this->getJson('editor/task/'.$this->task->id);
-            if($taskResult->state == 'open') {
-                $this->task = $taskResult;
-                return true;
-            }
-            if($taskResult->state == 'unconfirmed') {
-                //with task templates we could implement separate tests for that feature:
-                $test::fail('runtimeOptions.import.initialTaskState = unconfirmed is not supported at the moment!');
-            }
-            if($taskResult->state == 'error') {
-                if($failOnError) {
-                    $test::fail('Task Import stopped. Task has state error and last errors: '."\n  ".join("\n  ", array_column($taskResult->lastErrors ?? [], 'message')));
-                }
-                return false;
-            }
-            
-            //break after RELOAD_TASK_LIMIT reloads
-            if($counter==self::RELOAD_TASK_LIMIT){
-                if($failOnError) {
-                    $test::fail('Task Import stopped. Task is not open after '.self::RELOAD_TASK_LIMIT.' task checks, but has state: '.$taskResult->state);
-                }
-                return false;
-            }
-            $counter++;
-            sleep(3);
-        }
-    }
-    
-    /***
-     * Check the state of all project tasks. The test will fail when $failOnError = true and if one of the project task is in state error or after RELOAD_TASK_LIMIT task state checks
-     * @param bool $failOnError
-     * @throws Exception
-     * @return bool
-     */
-    public function checkProjectTasksStateLoop(bool $failOnError = true): bool {
-        $test = $this->testClass;
-        $counter = 0;
-        while(true){
-            
-            //reload the project
-            $this->reloadProjectTasks();
-            
-            $toCheck = count($this->projectTasks);
-            //foreach project task check the state
-            foreach ($this->projectTasks as $task) {
-                
-                error_log('Project tasks state check '.$counter.'/'.self::RELOAD_TASK_LIMIT.', [ name:'.$task->taskName.'], [state: '.$task->state.'] ['.$test.']');
-                
-                if($task->state == 'open') {
-                    $toCheck--;
-                    continue;
-                }
-                if($task->state == 'unconfirmed') {
-                    //with task templates we could implement separate tests for that feature:
-                    throw new Exception("runtimeOptions.import.initialTaskState = unconfirmed is not supported at the moment!");
-                }
-                
-                if($task->state == 'error') {
-                    if($failOnError) {
-                        $test::fail('Task Import stopped. Task has state error.');
-                    }
-                    return false;
-                }
-            }
-            
-            if($toCheck == 0){
-                return true;
-            }
-            
-            //break after RELOAD_TASK_LIMIT reloads
-            if($counter==self::RELOAD_TASK_LIMIT){
-                if($failOnError) {
-                    $test::fail('Project task import stopped. After '.self::RELOAD_TASK_LIMIT.' task state checks, all of the project task are not in state open.');
-                }
-                return false;
-            }
-            $counter++;
-            sleep(10);
-        }
-    }
-    
-    /***
-     * Add task specific config. The config must be added after the task is created and before the import is triggered.
-     * @param string $configName
-     * @param string $configValue
-     * @return stdClass|array
-     */
-    public function addTaskImportConfig(string $taskGuid, string $configName, string $configValue) {
-        $this->putJson('editor/config', [
-            'name' => $configName,
-            'value' => $configValue,
-            'taskGuid'=> $taskGuid
-        ]);
-        $resp = $this->getLastResponse();
-        $this->assertResponseStatus($resp, 'Config');
-        return $this->decodeJsonResponse($resp);
-    }
-    
-    /***
-     * Load the default customer
-     * @param string $user
-     */
-    public function loadCustomer(){
-        $test = $this->testClass;
-        $filter='[{"operator":"eq","value":"123456789","property":"number"}]';
-        $filter=urlencode($filter);
-        $url='editor/customer?page=1&start=0&limit=20&filter='.$filter;
-        $customerData = $this->getJson($url);
-        $test::assertNotEmpty($customerData,"Unable to load test customer.No test customer was found for number:123456789");
-        $this->customer = $customerData[0];
-        $resp = $this->getLastResponse();
-        $this->assertResponseStatus($resp, 'Customer');
-    }
-    
-    /***
-     * Get all available langues from lek_languages table
-     * @return stdClass|array
-     */
-    public function getLanguages() {
-        $resp = $this->get('editor/language');
-        $this->assertResponseStatus($resp, 'Language');
-        return $this->decodeJsonResponse($resp);
-    }
-    
-    /**
-     * tests the config names and values in the given associated array against the REST accessible application config
-     * If the given value to the config is null, the config value is just checked for existence and if the configured value is not empty
-     * @param array $configsToTest
-     * @param array $filter provide an array with several filtering guids. Key taskGuid or userGuid or customerId, value the according value
-     */
-    public function testConfig(array $configsToTest, array $plainFilter = []) {
-        $test = $this->testClass;
-        foreach($configsToTest as $name => $value) {
-            $filter = array_merge([
-                'filter' => '[{"type":"string","value":"'.$name.'","property":"name","operator":"like"}]',
-            ], $plainFilter);
-            $config = $this->getJson('editor/config', $filter);
-            $test::assertCount(1, $config, 'No Config entry for config "'.$name.'" found in instance config!');
-            if(is_null($value)) {
-                $test::assertNotEmpty($config[0]->value, 'Config '.$name.' in instance is empty but should be set with a value!');
-            }
-            else {
-                $test::assertEquals($value, $config[0]->value, 'Config '.$name.' in instance config is not as expected: ');
-            }
-        }
-    }
-    
-    /**
-     * adds the given user to the actual task
-     * @param string $username one of the predefined users (testmanager, testlector, testtranslator)
-     * @param string $state open, waiting, finished, as available by the workflow
-     * @param string $step reviewing or translation, as available by the workflow
-     * @param array $params add additional taskuserassoc params to the add user call
-     *
-     * @return stdClass taskuserassoc result
-     */
-    public function addUser($username, string $state = 'open', string $step = 'reviewing', array $params = []) {
-        $test = $this->testClass;
-        $test::assertFalse(empty($this->testusers[$username]), 'Given testuser "'.$username.'" does not exist!');
-        $p = array(
-                "id" => 0,
-                "entityVersion" => $this->task->entityVersion,
-                "taskGuid" => $this->task->taskGuid,
-                "userGuid" => $this->testusers[$username],
-                "state" => $state,
-                "workflowStepName" => $step,
-        );
-        $p = array_merge($p, $params);
-        $json = $this->postJson('editor/taskuserassoc', $p);
-        $resp = $this->getLastResponse();
-        $this->assertResponseStatus($resp, 'User');
-        return $json;
-    }
-    
-    /***
-     * Create new language resource
-     *
-     * @param array $params: api params
-     * @param string $fileName: the resource upload file name
-     * @param bool $waitForImport: wait until the resource is imported
-     * @return mixed|boolean
-     */
-    public function addResource(array $params, string $fileName = null, bool $waitForImport=false, string $testDir = ''){
-        
-        if(!empty($this->filesToAdd)) {
-            throw new Exception('There are already some files added as pending request and not sent yet! Send them first to the server before calling addResource!');
-        }
-        $test = $this->testClass;
-        //if filename is provided, set the file upload field
-        if($fileName){
-            $this->addFile('tmUpload', $this->getFile($fileName,$testDir), "application/xml");
-            $resource = $this->postJson('editor/languageresourceinstance', $params);
-        } else {
-            //request because the requestJson will encode the params with "data" as parent
-            $response = $this->request('editor/languageresourceinstance', 'POST',$params);
-            $this->assertResponseStatus($response, 'Language resource');
-            $resource = $this->decodeJsonResponse($response);
-        }
-        $test::assertEquals($params['name'], $resource->name);
-        
-        //collect the created resource
-        self::$resources[] = $resource;
-        
-        error_log("Language resources created. ".$resource->name);
-
-        $result = $this->getJson('editor/languageresourceinstance/'.$resource->id);
-        
-        if(!$waitForImport){
-            return $result;
-        }
-        error_log('Languageresources status check:'.$result->status);
-        $counter = 0;
-        while ($result->status != 'available'){
-            if($result->status == 'error'){
-                break;
-            }
-            //break after RELOAD_RESOURCE_LIMIT trys
-            if($counter == self::RELOAD_RESOURCE_LIMIT){
-                break;
-            }
-            sleep(2);
-            $result = $this->getJson('editor/languageresourceinstance/'.$result->id);
-            error_log('Languageresources status check '.$counter.'/'.self::RELOAD_RESOURCE_LIMIT.' state: '.$result->status);
-            $counter++;
-        }
-        
-        $test::assertEquals('available', $result->status, 'Resource import stopped. Resource state is: '.$result->status);
-        return $result;
-    }
-
-    /**
-     * Add the translation memory resource (type DummyTM)
-     * @param string $fileName
-     * @param string $name
-     */
-    public function addDummyTm(string $fileName, ?string $name = null, ?string $sourceLang = null, ?string $targetLang = null){
-        $params = [
-            'resourceId'    =>  'editor_Services_DummyFileTm',
-            'sourceLang'    => $sourceLang ?? $this->task->originalSourceLang,
-            'targetLang'    => $targetLang ?? $this->task->originalTargetLang,
-            'customerIds' => [$this->getCustomer()->id],
-            'customerUseAsDefaultIds' => [],
-            'customerWriteAsDefaultIds' => [],
-            'serviceType' => 'editor_Services_DummyFileTm',
-            'serviceName'=> 'DummyFile TM',
-            'name' => $name ?? $this->testClass,
-        ];
-        //create the resource 1 and import the file
-        $this->addResource($params, $fileName,true);
-    }
-    
-    /***
-     *
-     * @param array $params
-     * @param string $filename
-     */
-    public function addTermCollection(array $params,string $filename=null) {
-        //create the language resource
-        $collection = $this->addResource($params,$filename);
-        //validate the results
-        $response = $this->postJson('editor/termcollection/export', [ 'collectionId' => $collection->id ]);
-        $this->assertTrue(is_object($response), "Unable to export the terms by term collection");
-        $this->assertNotEmpty($response->filedata, "The exported tbx file by collection is empty");
-        error_log("Termcollection created. ".$collection->name);
-    }
-    
-    
-    /***
-     * Associate all $resources to the current task
-     */
-    public function addTaskAssoc(){
-        $taskGuid = $this->getTask()->taskGuid;
-        $test = $this->testClass;
-        $test::assertNotEmpty($taskGuid,'Unable to associate resources to task. taskGuid empty');
-        
-        foreach ($this->getResources() as $resource){
-            // associate languageresource to task
-            $this->postJson('editor/languageresourcetaskassoc', [
-                'languageResourceId' => $resource->id,
-                'taskGuid' => $taskGuid,
-                'segmentsUpdateable' => 0
-            ]);
-            error_log('Languageresources assoc to task. '.$resource->name.' -> '.$taskGuid);
-        }
-    }
-    /**
-     * @param array $task
-     */
-    protected function initTaskPostData(array &$task) {
-        $now = date('Y-m-d H:i:s');
-        $test = $this->testClass;
-        if(empty($task['taskName'])) {
-            $task['taskName'] = 'API Testing::'.$test.' '.$now;
-        }
-        if(empty($task['orderdate'])) {
-            $task['orderdate'] = $now;
-        }
-        if(!isset($task['wordCount'])) {
-            $task['wordCount'] = 666;
-        }
-        //currently all test tasks are started automatically, no test of the /editor/task/ID/import URL is implemented!
-        if(!isset($task['autoStartImport'])) {
-            $task['autoStartImport'] = 1;
-        }
-        $task['orderer'] = 'unittest';
-    }
-    
-    /**
-     * returns a data structure ready for segment PUT,
-     * if last parameter is an ID creates the data structure, or if a data structure is given,
-     *   add the segment field with its data
-     * @param string $field
-     * @param string $value
-     * @param mixed $idOrArray
-     * @param number $duration optional, defaults to 666
-     * @return array
-     */
-    public function prepareSegmentPut($field, $value, $idOrArray, $duration = 666) {
-        if(is_numeric($idOrArray)) {
-            $result = array(
-                "autoStateId" => 999,
-                "durations" => array(),
-                "id" => $idOrArray,
-            );
-            $id = $idOrArray;
-        }
-        else {
-            $result = $idOrArray;
-            $id = $idOrArray['id'];
-        }
-        $result[$field] = $value.sprintf(self::SEGMENT_DUPL_SAVE_CHECK, $id, $field);
-        $result['durations'][$field] = $duration;
-        return $result;
-    }
 
     /**
      * Returns an absolute file path to a approval file
@@ -1084,7 +471,7 @@ class ZfExtended_Test_ApiHelper {
      * @param bool $assert false to skip file existence check
      * @return string
      */
-    public function getFile($approvalFile, $class = null, $assert = true) {
+    public function getFile(string $approvalFile, string $class = null, bool $assert = true) {
         if(empty($class)) {
             $class = $this->testClass;
         }
@@ -1096,45 +483,52 @@ class ZfExtended_Test_ApiHelper {
             $path = str_replace('\\', '/', $path);
         }
         if($assert) {
-            $t = $this->testClass;
-            $t::assertFileExists($path);
+            $this->test::assertFileExists($path);
         }
         return $path;
     }
-    
+
+    /**
+     * Creates an absolute path for a filePath relative to the main test folder "editorAPI"
+     * @param string $relativePath
+     * @return string
+     */
+    public function getAbsFilePath(string $relativePath, bool $addTestClassFolder = false){
+        // the file may already is an absolute path
+        if(str_starts_with($relativePath, '/')) {
+            return $relativePath;
+        }
+        if($addTestClassFolder){
+            return $this->testRoot.'/'.$this->testClass.'/'.$relativePath;
+        }
+        return $this->testRoot.'/'.$relativePath;
+    }
+
     /**
      * Loads the file contents of a file with data to be compared
      * @param string $approvalFile
-     * @param string|null $rawDataToCapture
-     * @return string
+     * @param string|stdClass|array|null $rawDataToCapture
+     * @param bool $encode: must be true when non-textual data shall be captured
+     * @return stdClass|array|string
      */
-    public function getFileContent(string $approvalFile, string $rawDataToCapture = null) {
-        $this->captureData($approvalFile, $rawDataToCapture);
-        $t = $this->testClass;
+    public function getFileContent(string $approvalFile, mixed $rawDataToCapture = null, bool $encode = false) {
+        $this->captureData($approvalFile, $rawDataToCapture, $encode);
         $data = file_get_contents($this->getFile($approvalFile));
         if(preg_match('/\.json$/i', $approvalFile)){
             $data = json_decode($data);
-            $t::assertEquals('No error', json_last_error_msg(), 'Test file '.$approvalFile.' does not contain valid JSON!');
+            $this->test::assertEquals('No error', json_last_error_msg(), 'Test file '.$approvalFile.' does not contain valid JSON!');
         }
         return $data;
     }
-    
-    /**
-     *
-     * @param string $zipfile absolute file system path to zip file
-     * @param string $pathToFileInZip relative path to file inside of zip
-     */
-    public function getFileContentFromZip($zipfile,$pathToFileInZip) {
-        $pathToZip = $this->getFile($zipfile);
-        return $this->getFileContentFromZipPath($pathToZip, $pathToFileInZip);
-    }
-    
+
     /**
      * returns the content of the given filename in a given ZIP, in filename * and ? may be used. If it mathces multiple files the first one is returned.
      * @param string $pathToZip absolute file system path to zip file
      * @param string $pathToFileInZip relative path to file inside of zip (uses glob to evaluate * ? etc pp. returns the first file if matched multiple files!)
+     * @return false|string
+     * @throws Exception
      */
-    public function getFileContentFromZipPath($pathToZip,$pathToFileInZip) {
+    public function getFileContentFromZipPath(string $pathToZip, string $pathToFileInZip) {
         $zip = new ZipArchive();
         $zip->open($pathToZip);
         $dir = sys_get_temp_dir().DIRECTORY_SEPARATOR.'translate5Test'.DIRECTORY_SEPARATOR;
@@ -1143,8 +537,7 @@ class ZfExtended_Test_ApiHelper {
         $zip->extractTo($dir);
         $files = glob($dir.$pathToFileInZip, GLOB_NOCHECK);
         $file = reset($files);
-        $t = $this->testClass;
-        $t::assertFileExists($file);
+        $this->test::assertFileExists($file);
         $content = file_get_contents($file);
         $this->rmDir($dir);
         //delete exported file, so that next call can recreate it
@@ -1156,7 +549,7 @@ class ZfExtended_Test_ApiHelper {
      * @return boolean false if directory did not exist
      * @throws Exception if directory is a file
      */
-    public function rmDir($directory) {
+    public function rmDir(string $directory) : bool {
         if(!is_dir($directory)){
             if(is_file($directory)){
                 throw new Exception($directory.' is a file.');
@@ -1174,105 +567,20 @@ class ZfExtended_Test_ApiHelper {
             if ($fileinfo->isFile()) {
                 try {
                     unlink($directory . DIRECTORY_SEPARATOR . $fileinfo->getFilename());
-                }
-                catch (Exception $e){
-                       
+                } catch (Exception $e){
+
                 }
             }
         }
         //FIXME try catch ist nur eine übergangslösung!!!
         try {
             rmdir($directory);
-        }
-        catch (Exception $e){
+        } catch (Exception $e){
 
         }
         return true;
     }
-    
-    /**
-     * removes random revIds from the given XML string of changes.xml files
-     * @param string $changesXml
-     * @return string
-     */
-    public function replaceChangesXmlContent($changesXml) {
-        $guid = htmlspecialchars($this->task->taskGuid);
-        $changesXml = str_replace(' translate5:taskguid="'.$guid.'"', ' translate5:taskguid="TASKGUID"', $changesXml);
-        return preg_replace('/sdl:revid="[^"]{36}"/', 'sdl:revid="replaced-for-testing"', $changesXml);
-    }
-    
-    /**
-     * reloads the internal stored task
-     * @return stdClass
-     */
-    public function reloadTask(int $id = null) {
-        if(is_null($this->task)) {
-            throw new Exception('Can not reload task internally since no one is stored.');
-        }
-        return $this->task = $this->getJson('editor/task/'.($id ?? $this->task->id));
-    }
-    
-    /***
-     * Reload the tasks of the current project
-     * @return mixed|boolean
-     */
-    public function reloadProjectTasks() {
-        return $this->projectTasks = $this->getJson('editor/task/', [
-            'filter' => '[{"operator":"eq","value":"'.$this->task->projectId.'","property":"projectId"}]',
-        ]);
-    }
 
-    public function addImportFile($path, $mime = 'application/zip') {
-        $this->addFile('importUpload', $path, $mime);
-    }
-
-    /***
-     * Add multiple work-files for upload.
-     * @param $path
-     * @param $mime
-     * @return void
-     */
-    public function addImportFiles($path, $mime = 'application/zip') {
-        $this->addFile('importUpload[]', $path, $mime);
-    }
-    
-    public function addImportTbx($path, $mime = 'application/xml') {
-        $this->addFile('importTbx', $path, $mime);
-    }
-    
-    /**
-     * Adds directly data to be imported instead of providing a filepath
-     * useful for creating CSV testdata direct in testcase
-     *
-     * @param string $data
-     * @param string $mime
-     */
-    public function addImportPlain($data, $mime = 'application/csv', $filename = 'apiTest.csv') {
-        $this->addFilePlain('importUpload', $data, $mime, $filename);
-    }
-    
-    /**
-     * Receives a two dimensional array and add it as a CSV file to the task
-     * MID col and CSV head line is added automatically
-     *
-     * multiple targets currently not supported!
-     *
-     * @param array $data
-     */
-    public function addImportArray(array $data) {
-        $i = 1;
-        $data = array_map(function($row) use (&$i){
-            $row = array_map(function($cell){
-                //escape " chars
-                return str_replace('"', '""', $cell);
-            },$row);
-            array_unshift($row, $i++); //add mid
-            return '"'.join('","', $row).'"';
-        }, $data);
-        array_unshift($data, '"id", "source", "target"');
-        $this->addImportPlain(join("\n", $data));
-    }
-    
     /**
      * creates zipfile with testfiles in tmpDir and returns the path to it
      * @param string $pathToTestFiles relative to testcases folder
@@ -1280,24 +588,24 @@ class ZfExtended_Test_ApiHelper {
      * @return string path to zipfile
      * @throws Zend_Exception
      */
-    public function zipTestFiles($pathToTestFiles, $nameOfZipFile) {
+    public function zipTestFiles(string $pathToTestFiles, string $nameOfZipFile) : string {
         $dir = $this->getFile($pathToTestFiles);
         $zipFile = $this->getFile($nameOfZipFile, null, false);
-        
+
         if(file_exists($zipFile)) {
             unlink($zipFile);
         }
-        
+
         $zip = new ZipArchive();
 
-        if ($zip->open($zipFile, ZipArchive::CREATE)!==true) {
+        if ($zip->open($zipFile, ZipArchive::CREATE) !== true) {
             throw new Zend_Exception('Could not create zip.');
         }
         // create recursive directory iterator
         $files = new RecursiveIteratorIterator(
-                new RecursiveDirectoryIterator(
-                        $dir, RecursiveDirectoryIterator::SKIP_DOTS
-                ), RecursiveIteratorIterator::LEAVES_ONLY);
+            new RecursiveDirectoryIterator(
+                $dir, RecursiveDirectoryIterator::SKIP_DOTS
+            ), RecursiveIteratorIterator::LEAVES_ONLY);
 
         // let's iterate
         foreach ($files as $name => $file) {
@@ -1308,77 +616,12 @@ class ZfExtended_Test_ApiHelper {
             }
             $zip->addFile($file, str_replace('^'.$dir, '', '^'.$filePath));
         }
-        
+
         $zip->close();
-        
+
         return $zipFile;
     }
-    
-    /***
-     * Remove all resources from the database
-     */
-    public function removeResources() {
-        foreach ($this->getResources() as $resource){
-            $route = 'editor/languageresourceinstance/'.$resource->id;
-            if($resource->serviceName == 'TermCollection'){
-                $route = 'editor/termcollection/'.$resource->id;
-            }
-            $this->delete($route);
-        }
-    }
-    
-    /**
-     * returns the current active task to test
-     * @return stdClass
-     */
-    public function getTask() {
-        return $this->task;
-    }
 
-    /**
-     * returns the absolute data path to the task
-     * @return string
-     */
-    public function getTaskDataDirectory() {
-        return static::$CONFIG['DATA_DIR'].trim($this->task->taskGuid, '{}').'/';
-    }
-
-    /***
-     * return the test customer
-     * @return stdClass
-     */
-    public function getCustomer(){
-        return $this->customer;
-    }
-
-    /**
-     * Retrieves the segments as JSON
-     * @param string|null $jsonFileName
-     * @param int $limit
-     * @param int $start
-     * @param int $page
-     * @return stdClass|array
-     */
-    public function getSegments(string $jsonFileName = null, int $limit = 200, int $start = 0, int $page = 1) {
-        $url = 'editor/segment?page='.$page.'&start='.$start.'&limit='.$limit;
-        return $this->fetchJson($url, 'GET', [], $jsonFileName, false);
-    }
-    
-    /***
-     * Get the created language resources
-     */
-    public function getResources() {
-        return self::$resources;
-    }
-    
-    /***
-     *
-     * @return array|mixed|boolean
-     */
-    public function getProjectTasks() {
-        return $this->projectTasks;
-    }
-    
     /**
      * returns a XML string as formatted XML
      * @param string $xml
@@ -1391,6 +634,7 @@ class ZfExtended_Test_ApiHelper {
         $xmlDoc->loadXML($xml);
         return $xmlDoc->saveXML();
     }
+
     /**
      * Retrieves, if the test is running in capturing mode, e.g. saving the fetched data as static data to compare againts (only for single tests)
      * @return bool
@@ -1400,92 +644,225 @@ class ZfExtended_Test_ApiHelper {
     }
 
     /**
-     * Retrieves, if the test is running in capturing mode, e.g. saving the fetched data as static data to compare againts (only for single tests)
-     * @return bool
+     * Performs a login
+     * @param string $login
+     * @param string $password
      */
-    public static function isLegacyData() : bool {
-        return static::$CONFIG['LEGACY_DATA'];
-    }
-
-    /**
-     * Setter for $this->task
-     *
-     * @param $task
-     */
-    public function setTask($task) {
-        $this->task = $task;
-    }
-
-    /**
-     * Sets the passed or current task to open
-     * @param int $taskId: if given, this task is taken, otherwise the current task
-     * @return array|stdClass
-     */
-    public function setTaskToOpen(int $taskId = -1) {
-        return $this->setTaskState($taskId, 'open');
-    }
-
-    /**
-     * Sets the passed or current task to edit
-     * @param int $taskId: if given, this task is taken, otherwise the current task
-     * @return array|stdClass
-     */
-    public function setTaskToEdit(int $taskId = -1) {
-        return $this->setTaskState($taskId, 'edit');
-    }
-
-    /**
-     * Sets the passed or current task to finished
-     * @param int $taskId: if given, this task is taken, otherwise the current task
-     * @return array|stdClass
-     */
-    public function setTaskToFinished(int $taskId = -1) {
-        return $this->setTaskState($taskId, 'finished');
-    }
-
-    /**
-     * @param int $taskId: if given, this task is taken, otherwise the current task
-     * @param string $userState
-     * @return array|stdClass
-     */
-    private function setTaskState(int $taskId, string $userState){
-        if($taskId < 1 && $this->task){
-            $taskId = $this->task->id;
+    public function login(string $login, string $password = self::PASSWORD) : bool {
+        if(static::$authLogin === $login && static::$authCookie !== null){
+            return false;
+        } else if(static::$authLogin !== null){
+            $this->logout();
         }
-        if($taskId > 0){
-            return $this->putJson('editor/task/'.$taskId, array('userState' => $userState, 'id' => $taskId));
-        }
-        return $this->createResponseResult(null, 'No Task to set state for');
+        $response = $this->postJson('editor/session', [
+            'login' => $login,
+            'passwd' => $password,
+        ]);
+        $plainResponse = $this->getLastResponse();
+        /* @var $t \PHPUnit\Framework\TestCase */
+        $this->assertResponseStatus($plainResponse, 'Login');
+        $this->test::assertTrue((property_exists($response, 'sessionId') && property_exists($response, 'sessionToken')), 'JSON Login request was not successfull!');
+        $this->test::assertMatchesRegularExpression('/[a-zA-Z0-9]{26}/', $response->sessionId, 'Login call does not return a valid sessionId!');
+        static::$authCookie = $response->sessionId;
+        static::$authLogin = $login;
+        return true;
     }
 
     /**
-     * Removes the passed or current Task
-     * @param int $taskId: if given, this task is taken, otherwise the current task
-     * @param string|null $loginName: if given, a login with this user is done before opening/deleting the task
-     * @param string|null $loginName: only in conjunction with $loginName. If given, a login with this user is done before to open the task, deletion is done with the latter
-     * @param bool $isProjectTask
+     * Makes a request to the configured logout URL
+     * Destroys the internally cached authentication data
      */
-    public function deleteTask(int $taskId = -1, string $loginName = null, string $loginNameToOpen = null, bool $isProjectTask = false) {
-        if($taskId < 1 && $this->task){
-            $taskId = $this->task->id;
-            $isProjectTask = ($this->task->taskType == self::INITIAL_TASKTYPE_PROJECT);
+    public function logout() {
+        $this->request(static::$CONFIG['LOGOUT_PATH']);
+        static::$authCookie = null;
+        static::$authLogin = null;
+    }
+
+    /**
+     * requests the REST API, can handle file uploads, add file methods must be called first
+     * @param string $url
+     * @param string $method GET;POST;PUT;DELETE must be POST or PUT to transfer added files
+     * @return Zend_Http_Response
+     * @throws Zend_Http_Client_Exception
+     */
+    protected function request(string $url, string $method = 'GET', array $parameters = array()) {
+
+        $http = new Zend_Http_Client();
+        $url = ltrim($url, '/');
+
+        //prepend the taskid to the URL if the test has a task with id.
+        // that each request has then the taskid is no problem, this is handled by .htaccess and finally by the called controller.
+        // If the called controller does not need the taskid it just does nothing there...
+        if(($this->getTask()->id ?? 0) > 0) {
+            $url = preg_replace('#^editor/#', 'editor/taskid/'.$this->getTask()->id.'/', $url);
         }
-        if($taskId > 0){
-            if($isProjectTask){
-                $this->login($loginName);
-            } else {
-                if(!empty($loginName) && !empty($loginNameToOpen)){
-                    $this->login($loginNameToOpen);
-                } else if(!empty($loginName)){
-                    $this->login($loginName);
+        $http->setUri(static::$CONFIG['API_URL'].$url);
+        $http->setHeaders('Accept', 'application/json');
+        $http->setHeaders('Origin', static::createOrigin());
+
+        //enable xdebug debugger in eclipse
+        if($this->xdebug) {
+            $http->setCookie('XDEBUG_SESSION','ECLIPSE');
+            $http->setConfig(array('timeout' => 3600));
+        } else {
+            $http->setConfig(array('timeout' => 30));
+        }
+
+        if(static::$authCookie !== null) {
+            $http->setCookie(static::AUTH_COOKIE_KEY, static::$authCookie);
+        }
+
+        if(!empty($this->filesToAdd) && ($method == 'POST' || $method == 'PUT')) {
+            foreach($this->filesToAdd as $file) {
+                if(empty($file['path']) && !empty($file['data'])){
+                    $http->setFileUpload($file['filename'], $file['name'], $file['data'], $file['mime']);
+                    continue;
                 }
-                $this->setTaskToOpen($taskId);
-                if(!empty($loginName) && !empty($loginNameToOpen)){
-                    $this->login($loginName);
+                $absolutePath = $this->getAbsFilePath($file['path']);
+                $this->test::assertFileExists($absolutePath);
+                $http->setFileUpload($absolutePath, $file['name'], file_get_contents($absolutePath), $file['mime']);
+            }
+            $this->filesToAdd = [];
+        }
+
+        if($method == 'POST' || $method == 'PUT') {
+            $addParamsMethod = 'setParameterPost';
+        } else {
+            $addParamsMethod = 'setParameterGet';
+        }
+        if(!empty($parameters)) {
+            foreach($parameters as $key => $value) {
+                $http->$addParamsMethod($key, $value);
+            }
+        }
+        if(self::TRACE_REQUESTS){
+            $this->traceRequest($http, $parameters, $method);
+        }
+        $this->lastResponse = $http->request($method);
+        return $this->lastResponse;
+    }
+
+    /**
+     * Internal API to fetch JSON Data. Automatically saves the fetched file in capture-mode
+     * @param string $url
+     * @param string $method
+     * @param array $parameters
+     * @param string|null $jsonFileName
+     * @param bool $isTreeData
+     * @param bool $expectedToFail
+     * @return stdClass|array
+     * @throws Zend_Http_Client_Exception
+     */
+    protected function fetchJson(string $url, string $method = 'GET', array $parameters = [], ?string $jsonFileName, bool $isTreeData, bool $expectedToFail = false) {
+        $response = $this->request($url, $method, $parameters);
+        $result = $this->decodeJsonResponse($response, $isTreeData);
+        if(!$expectedToFail && !$this->isStatusSuccess($response->getStatus())) {
+            $this->test::fail('apiTest '.$method.' on '.$url.' returned '.$response->__toString());
+        } else if($this->isCapturing() && !empty($jsonFileName)){
+            // in capturing mode we save the requested data as the data to test against
+            $this->captureData($jsonFileName, $this->encodeTestData($result));
+        }
+        return $result;
+    }
+
+    /**
+     * Decodes a returned JSON answer from Translate5 REST API
+     * @param Zend_Http_Response $resp
+     * @param bool $isTreeData
+     * @return mixed|stdClass
+     */
+    protected function decodeJsonResponse(Zend_Http_Response $resp, bool $isTreeData=false) {
+        $status = $resp->getStatus();
+        if($this->isStatusSuccess($status)) {
+            $body = $resp->getBody();
+            if(empty($body)) {
+                return $this->createResponseResult($resp);
+            }
+            $json = json_decode($resp->getBody());
+            $this->test::assertEquals('No error', json_last_error_msg(), 'Server did not response valid JSON: '.$resp->getBody());
+            if($isTreeData){
+                if(property_exists($json, 'children') && count($json->children) > 0){
+                    return $json->children[0];
+                } else {
+                    $result = $this->createResponseResult($resp);
+                    $result->error = 'The fetched data had no children in the root object';
+                    return $result;
+                }
+            } else if(property_exists($json, 'rows')){
+                return $json->rows;
+            } else {
+                return $json;
+            }
+        }
+        return $this->createResponseResult($resp);
+    }
+
+    /**
+     * Create unified result object for failing requests or if we need to mock a result
+     * @param Zend_Http_Response|null $response
+     * @param string|null $error
+     * @return stdClass
+     */
+    protected function createResponseResult(?Zend_Http_Response $response, string $error=null) : stdClass {
+        $status = ($response) ? $response->getStatus() : 0;
+        $result = new stdClass();
+        $result->status = $status;
+        $result->data = ($response) ? $response->getBody() : null;
+        if(!$this->isStatusSuccess($status)){
+            if($error){
+                $result->error = $error;
+                return $result;
+            }
+            if($response){
+                try {
+                    $json = json_decode($response->getBody());
+                    if(is_object($json)){
+                        // std exception response
+                        if(property_exists($json, 'errorCode') && property_exists($json, 'errorMessage')) {
+                            $result->error = $json->errorMessage;
+                            $result->errorCode = $json->errorCode;
+                            return $result;
+                        }
+                        if(property_exists($json, 'error')){
+                            $result->error = $json->error;
+                            return $result;
+                        }
+                        if(property_exists($json, 'errors') && count($json->errors) > 0){
+                            $errors = '';
+                            foreach($json->errors as $error){
+                                if(property_exists($error, 'msg')){
+                                    $errors .= ($errors === '') ? $error->msg : "\n".$error->msg;
+                                }
+                            }
+                            if(!empty($errors)){
+                                $result->error = $errors;
+                                return $result;
+                            }
+                        }
+                    }
+                } catch(Throwable){
                 }
             }
-            $this->delete('editor/task/'.$taskId);
+            $result->error = 'Request failed with status '.$status;
         }
+        return $result;
+    }
+
+    /**
+     * Generally evaluates our accepted status codes
+     * @param int $status
+     * @return bool
+     */
+    protected function isStatusSuccess(int $status) : bool {
+        return (200 <= $status && $status < 300);
+    }
+
+    /**
+     * @param Zend_Http_Response $response
+     * @param string $requestType
+     */
+    protected function assertResponseStatus(Zend_Http_Response $response, string $requestType){
+        $this->test::assertTrue($this->isStatusSuccess($response->getStatus()), $requestType.' Request does not respond HTTP 200-299! Body was: '.$response->getBody());
     }
 
     /**
@@ -1493,8 +870,7 @@ class ZfExtended_Test_ApiHelper {
      * @param mixed $data
      * @return string
      */
-    private function encodeTestData(mixed $data): string
-    {
+    protected function encodeTestData(mixed $data): string {
         if(is_null($data)) {
             return '';
         }
@@ -1502,5 +878,41 @@ class ZfExtended_Test_ApiHelper {
             return json_encode($data, JSON_PRETTY_PRINT);
         }
         return json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    }
+
+    /**
+     * Helper to trace all requests
+     * @param Zend_Http_Client $http
+     * @param array $parameters
+     * @param string $method
+     */
+    private function traceRequest(Zend_Http_Client $http, array $parameters, string $method){
+        $this->requestTrace .= "\n\n".$method.': '.$http->getUri(true);
+        if(!empty(static::$authCookie)) $this->requestTrace .= "\n Auth: ".static::$authLogin.", ".static::$authCookie;
+        ksort($parameters);
+        foreach($parameters as $key => $value){
+            $this->requestTrace .= "\n  ".$key.': '.$this->traceParam($value);
+        }
+    }
+
+    /**
+     * Helper to trace a single request param
+     * @param $value
+     * @return string
+     */
+    private function traceParam($value){
+        if(is_bool($value)){
+            return $value ? 'true' : 'false';
+        }
+        if(is_numeric($value)){
+            return strval($value);
+        }
+        if(is_object($value) || is_array($value)){
+            return json_encode($value, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        }
+        $value = strval($value);
+        $value = str_replace("\r", '', $value);
+        $value = str_replace("\n", '\\n', $value);
+        return $value;
     }
 }

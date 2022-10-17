@@ -265,9 +265,10 @@ class ZfExtended_Worker_TriggerByHttp {
         if(!empty($debug)){
             $out .= 'Cookie: XDEBUG_SESSION='.$debug."\r\n";
         }
-        // needed to trigger correct environment for worker in API tests
-        if(APPLICATION_ENV === 'test'){
-            $out .= 'Origin: t5test'."\r\n";
+        // we need to trigger correct environment for worker in API tests
+        if(defined('APPLICATION_APITEST')){
+            $origin = (APPLICATION_ENV === ZfExtended_BaseIndex::ENVIRONMENT_TEST) ? ZfExtended_BaseIndex::ORIGIN_TEST : ZfExtended_BaseIndex::ORIGIN_APPTEST;
+            $out .= 'Origin: '.$origin."\r\n";
         }
         
         if ($this->method == 'GET') {
