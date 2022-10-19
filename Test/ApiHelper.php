@@ -276,7 +276,8 @@ class ZfExtended_Test_ApiHelper {
      * Sends a DELETE request
      * @param string $url
      * @param array $parameters
-     * @return bool|mixed
+     * @return array|false|stdClass
+     * @throws Zend_Http_Client_Exception
      */
     public function delete(string $url, array $parameters = []) {
         if($this->cleanup){
@@ -619,7 +620,7 @@ class ZfExtended_Test_ApiHelper {
         // let's iterate
         foreach ($files as $name => $file) {
             $filePath = $file->getRealPath();
-            if (preg_match('~WIN~', PHP_OS)) {
+            if (PHP_OS_FAMILY == 'Windows') {
                 $filePath = preg_replace('~^[A-Z]+:~', '', $filePath);
                 $filePath = str_replace(DIRECTORY_SEPARATOR, '/', $filePath);
             }
