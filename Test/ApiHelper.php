@@ -52,6 +52,7 @@ class ZfExtended_Test_ApiHelper {
         'KEEP_DATA' => false,
         'LEGACY_DATA' => false,
         'LEGACY_JSON' => false,
+        'IS_SUITE' => true,
         'ENVIRONMENT' => 'application'
     ];
 
@@ -86,6 +87,7 @@ class ZfExtended_Test_ApiHelper {
      *  'KEEP_DATA' => if true, defines if test should be kept after test run, must be implemented in the test, false by default
      *  'LEGACY_DATA' => if true, defines to use the "old" data field sort order (to reduce diff clutter on capturing)
      *  'LEGACY_JSON' => if true, defines to use the "old" json encoding config (to reduce diff clutter on capturing)
+     *  'IS_SUITE' => if true, a multi-test suite is running, otherwise a single test
      *  'ENVIRONMENT' => 'application' or 'test'. 'test' hints, that the tests run in the test environment and the origin-header must be set to "t5test"
      * @param array $config
      */
@@ -648,6 +650,14 @@ class ZfExtended_Test_ApiHelper {
      */
     public function isCapturing() : bool {
         return static::$CONFIG['CAPTURE_MODE'];
+    }
+
+    /**
+     * Retrieves, if the current run is for a multitest-suite or a single testcase
+     * @return bool
+     */
+    public function isSuite() : bool {
+        return static::$CONFIG['IS_SUITE'];
     }
 
     /**

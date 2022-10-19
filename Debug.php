@@ -216,30 +216,4 @@ class ZfExtended_Debug {
             $applicationState->languagesource[] = $obj;
         }
     }
-
-    /**
-     * Used by API-tests for worker evaluation & cleanup between single test-runs
-     * @param bool $forceRemoval
-     * @return stdClass
-     */
-    public static function workerCleanupState(bool $forceRemoval = false): stdClass
-    {
-        $result = new stdClass();
-        $result->cleanupNeccessary = false;
-        $worker = ZfExtended_Factory::get('ZfExtended_Models_Worker');
-        /* @var $worker ZfExtended_Models_Worker */
-        $summary = $worker->getSummary();
-        $numFaulty =
-            $summary[ZfExtended_Models_Worker::STATE_SCHEDULED]
-            + $summary[ZfExtended_Models_Worker::STATE_WAITING]
-            + $summary[ZfExtended_Models_Worker::STATE_RUNNING]
-            + $summary[ZfExtended_Models_Worker::STATE_DEFUNCT];
-        if($numFaulty > 0 || $forceRemoval){
-            // for the following tests to function properly running or dead workers are unwanted
-            $worker->db->delete('1 = 1');
-            $result->cleanupNeccessary = ($numFaulty > 0);
-        }
-        $result->worker = $summary;
-        return $result;
-    }
 }
