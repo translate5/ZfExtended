@@ -69,13 +69,16 @@ class ZfExtended_Models_Installer_DbUpdater {
 
     /**
      * DB credentials, exec and base path must be given as parameter in usage of a non Zend Environment
+     * @param bool $checkCredentials
      * @throws Zend_Db_Exception
      * @throws Zend_Exception
      */
-    public function __construct() {
+    public function __construct(bool $checkCredentials = false) {
         if(Zend_Registry::isRegistered('logger')) {
             $this->log = Zend_Registry::get('logger')->cloneMe('core.database.update');
-            $this->checkCredentials();
+            if($checkCredentials) {
+                $this->checkCredentials();
+            }
         }
     }
 
@@ -519,5 +522,29 @@ class ZfExtended_Models_Installer_DbUpdater {
     public function addAdditonalSqlPath(string $path): void
     {
         $this->additionalPathes[] = $path;
+    }
+
+    /**
+     * Creates an empty database with the configured DB name, drops the same named existing one if requested
+     * @param string $host
+     * @param string $username
+     * @param string $password
+     * @param string $dbname
+     * @param bool $dropIfExists
+     */
+    public function createDatabase(string $host, string $username, string $password, string $dbname, bool $dropIfExists = false): void
+    {
+        // we need to use PDO, Zend works only with databases
+        $pdo = new \PDO('mysql:host=' . $host, $username, $password);
+
+        if ($dropIfExists) {
+            $pdo->query('DROP DATABASE IF EXISTS ' . $dbname . ';');
+        }
+
+        //default character set utf8mb4 collate utf8mb4_unicode_ci
+        $sql = 'CREATE DATABASE %s DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci';
+
+        // now create DB from scratch
+        $pdo->query(sprintf($sql, $dbname));
     }
 }
