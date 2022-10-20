@@ -1,3 +1,0 @@
-[submodule "ThirdParty/REST"]
-	path = ThirdParty/REST
-	url = git@bitbucket.org:mittagqi/restful-zend-framework.git
