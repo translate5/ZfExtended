@@ -657,7 +657,8 @@ class ZfExtended_Test_ApiHelper {
      * Retrieves, if the current run is for a multitest-suite or a single testcase
      * @return bool
      */
-    public function isSuite() : bool {
+    public function isSuite(): bool
+    {
         return static::$CONFIG['IS_SUITE'];
     }
 
