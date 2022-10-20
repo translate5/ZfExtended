@@ -488,7 +488,7 @@ class ZfExtended_Test_ApiHelper {
         $path = join('/', array($this->testRoot, $class, $approvalFile));
 
         // Fix Windows paths problem
-        if (preg_match('~WIN~', PHP_OS)) {
+        if (PHP_OS_FAMILY == 'Windows') {
             $path = preg_replace('~^[A-Z]+:~', '', $path);
             $path = str_replace('\\', '/', $path);
         }
