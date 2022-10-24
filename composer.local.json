@@ -2,7 +2,8 @@
 	"require" : {
 		"phpoffice/phpspreadsheet" : "~1.12",
 		"dream-group/horde-text-diff" : "dev-master",
-		"jumbojett/openid-connect-php" : "~0.9"
+		"jumbojett/openid-connect-php" : "~0.9",
+		"mittagqi/restful-zend-framework": "dev-master"
 	},
 	"name" : "mittagqi/library-zfextended-requirements",
 	"description" : "Meta Package containing the requirements for the ZfExtended library"
