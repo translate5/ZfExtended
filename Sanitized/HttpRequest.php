@@ -108,12 +108,16 @@ class ZfExtended_Sanitized_HttpRequest extends REST_Controller_Request_Http {
         $paramSources = $this->getParamSources();
         if (in_array('_GET', $paramSources) && isset($_GET) && is_array($_GET)){
             foreach($_GET as $key => $val){
-                $return[$key] = ($key === 'data') ? $val : $this->sanitizeRequestValue($val);
+                if(!array_key_exists($key, $return)){
+                    $return[$key] = ($key === 'data') ? $val : $this->sanitizeRequestValue($val);
+                }
             }
         }
         if (in_array('_POST', $paramSources) && isset($_POST) && is_array($_POST)){
             foreach($_POST as $key => $val){
-                $return[$key] = ($key === 'data') ? $val : $this->sanitizeRequestValue($val);
+                if(!array_key_exists($key, $return)){
+                    $return[$key] = ($key === 'data') ? $val : $this->sanitizeRequestValue($val);
+                }
             }
         }
         return $return;
