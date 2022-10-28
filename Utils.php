@@ -147,7 +147,9 @@ class ZfExtended_Utils {
     public static function recursiveCopy(string $sourceDir, string $destinationDir, ?array $extensionBlacklist = null) {
         $dir = opendir($sourceDir);
         if(!file_exists($destinationDir)) {
-            @mkdir($destinationDir);
+            if (!mkdir($destinationDir) && !is_dir($destinationDir)) {
+                throw new \RuntimeException(sprintf('Directory "%s" was not created', $destinationDir));
+            }
         }
         while(false !== ( $file = readdir($dir)) ) {
             if ($file == '.' || $file == '..') {
@@ -158,17 +160,15 @@ class ZfExtended_Utils {
                     $sourceDir.DIRECTORY_SEPARATOR.$file,
                     $destinationDir.DIRECTORY_SEPARATOR.$file,
                     $extensionBlacklist);
-            } else {
-                if($extensionBlacklist === null || !in_array(pathinfo($file, PATHINFO_EXTENSION), $extensionBlacklist)){
-                    copy($sourceDir.DIRECTORY_SEPARATOR.$file, $destinationDir.DIRECTORY_SEPARATOR.$file);
-                }
+            } elseif($extensionBlacklist === null || !in_array(pathinfo($file, PATHINFO_EXTENSION), $extensionBlacklist)){
+                copy($sourceDir.DIRECTORY_SEPARATOR.$file, $destinationDir.DIRECTORY_SEPARATOR.$file);
             }
         }
         closedir($dir);
     }
 
     /**
-     * Deletes recursivly a directory. Optionally a extension whitelist can be passed that will only delete files with the given extension (and not the directories anymore, even if they are empty then)
+     * Deletes recursively a directory. Optionally an extension whitelist can be passed that will only delete files with the given extension (and not the directories anymore, even if they are empty then)
      * @param string $directory
      * @param array|null $extensionWhitelist
      * @param bool $deleteDirectory: option to prevent deletion of the passed directory so it is just cleaned
