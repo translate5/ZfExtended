@@ -663,6 +663,15 @@ class ZfExtended_Test_ApiHelper {
     }
 
     /**
+     * Retrieves, if the current test should be cleaned up
+     * @return bool
+     */
+    public function doCleanup(): bool
+    {
+        return $this->cleanup;
+    }
+
+    /**
      * Performs a login
      * @param string $login
      * @param string $password
