@@ -32,7 +32,34 @@ require_once 'Zend/Application.php';
 /**
  * Standard Inhalt der index.php gekapselt
  */
-class ZfExtended_Application extends Zend_Application {
+class ZfExtended_Application extends Zend_Application
+{
+    /**
+     * Creates an URL with the configured protocol & domain
+     * @param string|null $path
+     * @return string
+     * @throws Zend_Exception
+     */
+    public static function createUrl(string $path = null): string
+    {
+        $config = Zend_Registry::get('config');
+        $url = $config->runtimeOptions->server->protocol . $config->runtimeOptions->server->name;
+        return ($path === null) ? $url : $url . '/' . ltrim($path, '/');
+    }
+
+    /**
+     * Creates an URL to use for workers
+     * @param string|null $path
+     * @return string
+     * @throws Zend_Exception
+     */
+    public static function createWorkerUrl(string $path = null): string
+    {
+        $config = Zend_Registry::get('config');
+        $url = empty($config->runtimeOptions->worker->server) ? $config->runtimeOptions->server->protocol . $config->runtimeOptions->server->name : $config->runtimeOptions->worker->server;
+        return ($path === null) ? $url : $url . '/' . ltrim($path, '/');
+    }
+
     public function setPhpSettings(array $settings, $prefix = '') {
         //remove phpSettings.iconv.internal_encoding = "UTF-8" since this is deprecated in PHP >= 5.6.0
         $is560 = version_compare(PHP_VERSION, '5.6.0', '>=');
