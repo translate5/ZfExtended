@@ -22,19 +22,20 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
+declare(strict_types=1);
+
 /**
  * Contains the config handler for a simple map (key: type string => value: as configured)
  * Intended to be overwritten for more specific.
  */
-class ZfExtended_DbConfig_Type_SimpleMap extends ZfExtended_DbConfig_Type_CoreTypes {
-
-    protected string $valueType = self::TYPE_STRING;
-
+class ZfExtended_DbConfig_Type_SimpleMap extends ZfExtended_DbConfig_Type_CoreTypes
+{
     /**
      * returns the GUI view class to be used or null for default handling
      * @return string|null
      */
-    public function getGuiViewCls(): ?string {
+    public function getGuiViewCls(): ?string
+    {
         return 'Editor.view.admin.config.type.SimpleMap';
     }
 
@@ -43,16 +44,17 @@ class ZfExtended_DbConfig_Type_SimpleMap extends ZfExtended_DbConfig_Type_CoreTy
         $rawType = parent::validateValue($type, $value, $errorStr);
 
         // if the raw type is not correct fail validation
-        if(!$rawType) {
+        if (!$rawType) {
             return false;
         }
 
         $err = '';
-        $confVal = (array) $this->jsonDecode($value, $err); //from parent validate we still get a string
-        ksort($confVal); //sort by the keys, from the lowest to the biggest
 
-        //FIXME here injected Fuzzy code
-        // fuzzy code has key: string, value: integer
+        //from parent validate we still get a string
+        $confVal = (array)$this->jsonDecode($value, $err);
+
+        //sort by the keys, from the lowest to the biggest
+        ksort($confVal);
 
         return true;
     }
