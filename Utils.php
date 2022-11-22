@@ -361,21 +361,6 @@ class ZfExtended_Utils {
     }
 
     /***
-     * Check if given segment(segment content) is empty. This check is tag-safe
-     * @param string|null $segmentText
-     * @return bool
-     */
-    public static function emptySegment(?string $segmentText): bool
-    {
-        if( $segmentText ==='0' || self::emptyString($segmentText)){
-            return true;
-        }
-        /** @var editor_Models_Segment $segment */
-        $segment = ZfExtended_Factory::get('editor_Models_Segment');
-        return empty($segment->stripTags($segmentText));
-    }
-
-    /***
      * Add incremental number to file if the given $filename exist in $path
      * Ex: Filename.xliff -> Filename(1).xliff
      * @param string $filename
