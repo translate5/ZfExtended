@@ -357,7 +357,7 @@ class ZfExtended_Utils {
      * @return bool
      */
     public static function emptyString(?string $mixed): bool {
-        return is_null($mixed) || strlen($mixed) == 0;
+        return is_null($mixed) || $mixed === '';
     }
 
     /***
