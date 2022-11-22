@@ -325,17 +325,85 @@ abstract class ZfExtended_Models_Entity_Abstract {
      */
     public function save()
     {
-        $this->events->trigger("beforeSave", $this, array(
-                'entity' => $this,
-        ));
-        try {
-            return $this->row->save();
+        // Trigger beforeSave-event
+        $this->events->trigger("beforeSave", $this, ['entity' => $this]);
+
+        // Set up $insert flag indicating whether will it be an INSERT of a new record or UPDATE of an existing record
+        $insert = !$this->getId();
+
+        // Setup hooks to be triggered before save attempt
+        $hooks = [$insert ? 'onBeforeInsert' : 'onBeforeUpdate', 'onBeforeSave'];
+
+        // Trigger those
+        foreach ($hooks as $hook) {
+            $this->$hook();
         }
-        catch (Zend_Db_Statement_Exception $e) {
+
+        // Try save
+        try {
+
+            // Do save
+            $pk = $this->row->save();
+
+            // Setup hooks to be triggered after save attempt
+            $hooks = [$insert ? 'onAfterInsert' : 'onAfterUpdate', 'onAfterSave'];
+
+            // Trigger those
+            foreach ($hooks as $hook) {
+                $this->$hook();
+            }
+
+            // Return value, returned by
+            return $pk;
+
+        // Catch exception
+        } catch (Zend_Db_Statement_Exception $e) {
             $this->handleIntegrityConstraintException($e);
         }
     }
-    
+
+    /**
+     * Hook method called before record is inserted
+     */
+    public function onBeforeInsert() {
+
+    }
+
+    /**
+     * Hook method called before record is updated
+     */
+    public function onBeforeUpdate() {
+
+    }
+
+    /**
+     * Hook method called before record is saved
+     */
+    public function onBeforeSave() {
+
+    }
+
+    /**
+     * Hook method called after record is inserted
+     */
+    public function onAfterInsert() {
+
+    }
+
+    /**
+     * Hook method called after record is updated
+     */
+    public function onAfterUpdate() {
+
+    }
+
+    /**
+     * Hook method called after record is saved
+     */
+    public function onAfterSave() {
+
+    }
+
     /**
      * löscht das aktuelle Entity
      */

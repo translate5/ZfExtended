@@ -194,15 +194,9 @@ class ZfExtended_Worker_TriggerByHttp {
      * @return string the host which should be used by fsockopen
      */
     private function triggerInit(string $path, $postParameters = array(), $method = 'GET') {
-        $config = Zend_Registry::get('config');
-        $rop = $config->runtimeOptions;
-        
-        $workerServer = $rop->worker->server;
-        if(empty($workerServer)) {
-            $workerServer = $rop->server->protocol.$rop->server->name;
-        }
-            
-        $urlParts = parse_url($workerServer.$path);
+
+        $url = ZfExtended_Application::createWorkerUrl($path);
+        $urlParts = parse_url($url);
         
         if (!empty($urlParts['host'])) {
             $this->host = $urlParts['host'];
