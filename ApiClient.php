@@ -41,12 +41,8 @@ class ZfExtended_ApiClient extends Zend_Http_Client {
      */
     public function __construct($uri = null, $config = null, string $authorizationCookie = null)
     {
-        $config = Zend_Registry::get('config');
-        $this->translate5ApiUrl = $config->runtimeOptions->worker->server;
-        if(empty($this->translate5ApiUrl)) {
-            $this->translate5ApiUrl = $config->runtimeOptions->server->protocol . $config->runtimeOptions->server->name;
-        }
-        parent::__construct($uri, $config);
+        $this->translate5ApiUrl = self::getServerBaseURL();
+        parent::__construct($uri, Zend_Registry::get('config'));
         // we need to trigger correct environment for request on our own API while API-testing
         // security: APPLICATION_APITEST can only be set, when the instance is set up for testing
         if(defined('APPLICATION_APITEST')){
@@ -100,5 +96,19 @@ class ZfExtended_ApiClient extends Zend_Http_Client {
             return $this->translate5ApiUrl.'/'.implode('/', $parts);
         }
         return $this->translate5ApiUrl.'/'.ltrim($url, '/');
+    }
+
+    /**
+     * returns the server base URL with scheme
+     * @return string
+     * @throws Zend_Exception
+     */
+    public static function getServerBaseURL(): string {
+        $config = Zend_Registry::get('config');
+        $url = $config->runtimeOptions->worker->server;
+        if(empty($url)) {
+            return $config->runtimeOptions->server->protocol . $config->runtimeOptions->server->name;
+        }
+        return $url;
     }
 }
