@@ -147,7 +147,9 @@ class ZfExtended_Utils {
     public static function recursiveCopy(string $sourceDir, string $destinationDir, ?array $extensionBlacklist = null) {
         $dir = opendir($sourceDir);
         if(!file_exists($destinationDir)) {
-            @mkdir($destinationDir);
+            if (!mkdir($destinationDir) && !is_dir($destinationDir)) {
+                throw new \RuntimeException(sprintf('Directory "%s" was not created', $destinationDir));
+            }
         }
         while(false !== ( $file = readdir($dir)) ) {
             if ($file == '.' || $file == '..') {
@@ -158,44 +160,74 @@ class ZfExtended_Utils {
                     $sourceDir.DIRECTORY_SEPARATOR.$file,
                     $destinationDir.DIRECTORY_SEPARATOR.$file,
                     $extensionBlacklist);
-            } else {
-                if($extensionBlacklist === null || !in_array(pathinfo($file, PATHINFO_EXTENSION), $extensionBlacklist)){
-                    copy($sourceDir.DIRECTORY_SEPARATOR.$file, $destinationDir.DIRECTORY_SEPARATOR.$file);
-                }
+            } elseif($extensionBlacklist === null || !in_array(pathinfo($file, PATHINFO_EXTENSION), $extensionBlacklist)){
+                copy($sourceDir.DIRECTORY_SEPARATOR.$file, $destinationDir.DIRECTORY_SEPARATOR.$file);
             }
         }
         closedir($dir);
     }
 
     /**
-     * Deletes recursivly a directory. Optionally a extension whitelist can be passed that will only delete files with the given extension (and not the directories anymore, even if they are empty then)
+     * Deletes recursivly a directory. Optionally a extension whitelist can be passed that will only delete files with the given extension
+     * If a whitelist is given, no directories will be deleted
+     * If a blacklist is given, only empty directories will be deleted
+     * Returns, if the passed directory was deleted
+     * HINT: Symlinks will not be deleted!
      * @param string $directory
-     * @param array|null $extensionWhitelist
-     * @param bool $deleteDirectory: option to prevent deletion of the passed directory so it is just cleaned
+     * @param array|null $extensionWhitelist: if set, only files of the given extensions are deleted. This also prevents deleting any directories including the passed one
+     * @param bool $whitelistIsBlacklist: if set, the extension whitelist will be treated as blacklist leaving out the defined extensions. This prevents the deletion of only those dirs, that are not empty therefore
+     * @param bool $doDeletePassedDirectory: if not set, the passed directory will not be removed, just it's contents
+     * @return bool
      */
-    public static function recursiveDelete(string $directory, ?array $extensionWhitelist = null, bool $doDeleteDirectory=true){
+    public static function recursiveDelete(string $directory, ?array $extensionWhitelist = null, bool $whitelistIsBlacklist = false, bool $doDeletePassedDirectory = true): bool {
         $iterator = new DirectoryIterator($directory);
-        foreach ($iterator as $fileinfo) {
+        $dirIsEmpty = true; // we need to know for deleting $directory
+        foreach ($iterator as $fileinfo) { /* @var DirectoryIterator $fileinfo */
             if ($fileinfo->isDot()) {
                 continue;
             }
             if ($fileinfo->isDir()) {
-                self::recursiveDelete($directory.DIRECTORY_SEPARATOR.$fileinfo->getFilename());
-            } else if($fileinfo->isFile() && ($extensionWhitelist === null || in_array(pathinfo($fileinfo->getFilename(), PATHINFO_EXTENSION), $extensionWhitelist))) {
+                if(!self::recursiveDelete($directory.DIRECTORY_SEPARATOR.$fileinfo->getFilename())){
+                    $dirIsEmpty = false;
+                }
+            } else if($fileinfo->isFile() && static::recursiveDoDeleteExtension($fileinfo->getExtension(), $extensionWhitelist, $whitelistIsBlacklist)) {
                 try {
                     unlink($directory.DIRECTORY_SEPARATOR.$fileinfo->getFilename());
                 } catch (Exception){
                     error_log('ZfExtended_Utils::recursiveDelete: Could not delete file '.$directory.DIRECTORY_SEPARATOR.$fileinfo->getFilename());
+                    $dirIsEmpty = false;
                 }
+            } else {
+                $dirIsEmpty = false;
             }
         }
-        if($extensionWhitelist === null && $doDeleteDirectory){
+        if($extensionWhitelist === null && $dirIsEmpty && $doDeletePassedDirectory){
             //FIXME try catch ist nur eine übergangslösung!!!
             try {
-                rmdir($directory);
+                if(rmdir($directory)){
+                    return true;
+                }
             } catch (Exception){
                 error_log('ZfExtended_Utils::recursiveDelete: Could not delete directory '.$directory);
             }
+        }
+        return false;
+    }
+
+    /**
+     * Helper for ::recursiveDelete to evaluate the black/whitelist param
+     * @param string $extension
+     * @param array|null $extensionWhitelist
+     * @param bool $whitelistIsBlacklist
+     * @return bool
+     */
+    private static function recursiveDoDeleteExtension(string $extension, ?array $extensionWhitelist, bool $whitelistIsBlacklist): bool {
+        if($extensionWhitelist === null){
+            return true;
+        } else if($whitelistIsBlacklist){
+            return !in_array($extension, $extensionWhitelist);
+        } else {
+            return in_array($extension, $extensionWhitelist);
         }
     }
 
@@ -357,7 +389,7 @@ class ZfExtended_Utils {
      * @return bool
      */
     public static function emptyString(?string $mixed): bool {
-        return is_null($mixed) || strlen($mixed) == 0;
+        return is_null($mixed) || $mixed === '';
     }
 
     /***

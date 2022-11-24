@@ -443,6 +443,15 @@ class ZfExtended_Test_ApiHelper {
         return $this->lastResponse;
     }
 
+    /***
+     * returns the last requested response decoded
+     * @return mixed|stdClass
+     */
+    public function getLastResponseDecodeed(): mixed
+    {
+        return $this->decodeJsonResponse($this->lastResponse);
+    }
+    
     /**
      * Checks, whether the result of a getJson / putJson / postJson request represents an error
      * corresponds what is done in createResponseResult
