@@ -147,7 +147,9 @@ class ZfExtended_Utils {
     public static function recursiveCopy(string $sourceDir, string $destinationDir, ?array $extensionBlacklist = null) {
         $dir = opendir($sourceDir);
         if(!file_exists($destinationDir)) {
-            @mkdir($destinationDir);
+            if (!mkdir($destinationDir) && !is_dir($destinationDir)) {
+                throw new \RuntimeException(sprintf('Directory "%s" was not created', $destinationDir));
+            }
         }
         while(false !== ( $file = readdir($dir)) ) {
             if ($file == '.' || $file == '..') {
@@ -158,10 +160,8 @@ class ZfExtended_Utils {
                     $sourceDir.DIRECTORY_SEPARATOR.$file,
                     $destinationDir.DIRECTORY_SEPARATOR.$file,
                     $extensionBlacklist);
-            } else {
-                if($extensionBlacklist === null || !in_array(pathinfo($file, PATHINFO_EXTENSION), $extensionBlacklist)){
-                    copy($sourceDir.DIRECTORY_SEPARATOR.$file, $destinationDir.DIRECTORY_SEPARATOR.$file);
-                }
+            } elseif($extensionBlacklist === null || !in_array(pathinfo($file, PATHINFO_EXTENSION), $extensionBlacklist)){
+                copy($sourceDir.DIRECTORY_SEPARATOR.$file, $destinationDir.DIRECTORY_SEPARATOR.$file);
             }
         }
         closedir($dir);
@@ -389,7 +389,7 @@ class ZfExtended_Utils {
      * @return bool
      */
     public static function emptyString(?string $mixed): bool {
-        return is_null($mixed) || strlen($mixed) == 0;
+        return is_null($mixed) || $mixed === '';
     }
 
     /***
