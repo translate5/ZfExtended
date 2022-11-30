@@ -97,7 +97,17 @@ class ZfExtended_UserController extends ZfExtended_RestController {
      */
     public function putAction() {
         try {
-            parent::putAction();
+
+            $this->entityLoad();
+            $this->decodePutData();
+            $this->processClientReferenceVersion();
+            $this->setDataInEntity();
+            if ($this->validate()) {
+                $this->encryptPassword();
+                $this->entity->save();
+                $this->view->rows = $this->entity->getDataObject();
+            }
+
             $this->handlePasswdMail();
             $this->credentialCleanup();
             if($this->wasValid) {
@@ -117,7 +127,17 @@ class ZfExtended_UserController extends ZfExtended_RestController {
      */
     public function postAction() {
         try {
-            parent::postAction();
+
+            $this->entity->init();
+            $this->decodePutData();
+            $this->processClientReferenceVersion();
+            $this->setDataInEntity($this->postBlacklist);
+            if ($this->validate()) {
+                $this->encryptPassword();
+                $this->entity->save();
+                $this->view->rows = $this->entity->getDataObject();
+            }
+
             $this->handlePasswdMail();
             $this->credentialCleanup();
             if($this->wasValid) {
@@ -310,6 +330,24 @@ class ZfExtended_UserController extends ZfExtended_RestController {
         $this->handleUserSetAclRole();
     }
 
+    /***
+     * Encrypt the password in the data and in the entity
+     * @return void
+     * @throws Zend_Exception
+     */
+    public function encryptPassword(): void
+    {
+        if (isset($this->data->passwd)) {
+            //convention for passwd being reset;
+            if ($this->data->passwd === '' || is_null($this->data->passwd)) {
+                $this->data->passwd = null;
+            } else {
+                $this->data->passwd = ZfExtended_Authentication::getInstance()->createSecurePassword($this->data->passwd);
+            }
+            $this->entity->setPasswd($this->data->passwd);
+        }
+    }
+
     /**
      * overridden to save the user password encrypted and to reset passwd if requested
      * (non-PHPdoc)
@@ -318,16 +356,6 @@ class ZfExtended_UserController extends ZfExtended_RestController {
     protected function setDataInEntity(array $fields = null, $mode = self::SET_DATA_BLACKLIST){
         $this->prepareParentIds();
         parent::setDataInEntity($fields, $mode);
-        if(isset($this->data->passwd)) {
-            //convention for passwd being reset;
-            if($this->data->passwd===''||  is_null($this->data->passwd)) {
-                $this->data->passwd = null;
-            }
-            else {
-                $this->data->passwd = ZfExtended_Authentication::getInstance()->createSecurePassword($this->data->passwd);
-            }
-            $this->entity->setPasswd($this->data->passwd);
-        }
         //if is post add current user as "owner" of the newly created one
         if(!$this->_request->isPost()) {
             //on put we have to check access

@@ -311,11 +311,10 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
             $resetHashElement = $this->_form->getElement('resetHash');
             $resetHashElement->setValue($this->getRequest()->getParam('resetHash'));
 
-            if($this->getRequest()->getParam('passwd',false) &&
-                    $this->_form->isValid($this->_request->getParams())){
+            if($this->isNewPasswordValid()){
 
                 $passwdreset = ZfExtended_Factory::get('ZfExtended_Models_Passwdreset');
-                /* @var $passwdreset ZfExtended_Models_Passwdreset */
+                /* @var ZfExtended_Models_Passwdreset $passwdreset */
                 $passwdreset->deleteOldHashes();
                 
                 if(!$passwdreset->hashMatches($this->_form->getValue('resetHash'))){
@@ -331,7 +330,7 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
                 $user->save();
                 
                 $invalidLogin = ZfExtended_Factory::get('ZfExtended_Models_Invalidlogin',array($user->getLogin()));
-                /* @var $invalidLogin ZfExtended_Models_Invalidlogin */
+                /* @var ZfExtended_Models_Invalidlogin $invalidLogin */
                 $invalidLogin->resetCounter();
                 
                 $this->_form = new ZfExtended_Zendoverwrites_Form('loginIndex.ini');
@@ -382,6 +381,24 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
         $this->_session->locale = $locale;
         // set locale as Zend App default locale
         Zend_Registry::set('Zend_Locale', $Zend_Locale);
+    }
+
+    /**
+     * Check if the new password meets the password requirements
+     * @throws Zend_Form_Exception
+     */
+    private function isNewPasswordValid(): bool
+    {
+        $password = $this->getRequest()->getParam('passwd',false);
+
+        $message = [];
+        $isValid = ZfExtended_PasswordCheck::isValid($password,$message);
+
+        if( !empty($message)){
+            $this->_form->setErrors($message);
+        }
+
+        return $isValid && $this->_form->isValid($this->_request->getParams());
     }
 }
 
