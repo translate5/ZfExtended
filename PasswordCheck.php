@@ -85,7 +85,7 @@ class ZfExtended_PasswordCheck {
         }
 
         if(self::isBlacklisted($password)){
-            $errors[] = $translate->_('Das Passwort enthält ein nicht erlaubtes Wort.');
+            $errors[] = $translate->_('Das Passwort enthält ein Wort aus der schwarzen Liste.');
         }
 
         return empty($errors);
