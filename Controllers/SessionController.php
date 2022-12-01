@@ -111,6 +111,15 @@ class ZfExtended_SessionController extends ZfExtended_RestController {
         if(empty($passwd)) {
              $errors['passwd'] = $t->_('Kein Passwort angegeben.');
         }
+        $instance = Auth::getInstance();
+
+        $appToken = $this->getRequest()->getHeader($instance::APP_TOKEN_HEADER);
+        if( !empty($login) && !empty($appToken) && $instance->isTokenAuth($login,$appToken)){
+            // TODO: authenticate and redirect
+        }
+
+
+
         if(!empty($errors)) {
             $e = new ZfExtended_ValidateException();
             $e->setErrors($errors);
@@ -118,12 +127,12 @@ class ZfExtended_SessionController extends ZfExtended_RestController {
             $this->log('User authentication by API failed with error: '.print_r($errors, 1));
             return false;
         }
-        
+
         $invalidLoginCounter = ZfExtended_Factory::get('ZfExtended_Models_Invalidlogin',array($login));
         /* @var $invalidLoginCounter ZfExtended_Models_Invalidlogin */
 
-        if(Auth::getInstance()->authenticate($login, $passwd)) {
-            $userModel = Auth::getInstance()->getUser();
+        if($instance->authenticate($login, $passwd)) {
+            $userModel = $instance->getUser();
 
             // check for existing valid session for the current user
             $sessionId = ZfExtended_Session::updateSession(true,true);
