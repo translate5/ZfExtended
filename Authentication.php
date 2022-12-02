@@ -175,14 +175,24 @@ class ZfExtended_Authentication {
                 $password = md5($password);
             }
 
-            $secret = Zend_Registry::get('config')->runtimeOptions->authentication->secret;
-            return password_verify($this->addPepper($password, $secret), $passwordHash);
+            return $this->isPasswordEqual($password,$passwordHash);
         });
         if($valid && $isOldPassword) {
             $this->authenticatedUser->setPasswd($this->createSecurePassword($password));
             $this->authenticatedUser->save();
         }
         return $valid;
+    }
+
+    /***
+     * @param string $password
+     * @param string $passwordHash
+     * @return bool
+     * @throws Zend_Exception
+     */
+    public function isPasswordEqual(string $password, string $passwordHash){
+        $secret = Zend_Registry::get('config')->runtimeOptions->authentication->secret;
+        return password_verify($this->addPepper($password, $secret), $passwordHash);
     }
 
     /**

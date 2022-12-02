@@ -113,13 +113,6 @@ class ZfExtended_SessionController extends ZfExtended_RestController {
         }
         $instance = Auth::getInstance();
 
-        $appToken = $this->getRequest()->getHeader($instance::APP_TOKEN_HEADER);
-        if( !empty($login) && !empty($appToken) && $instance->isTokenAuth($login,$appToken)){
-            // TODO: authenticate and redirect
-        }
-
-
-
         if(!empty($errors)) {
             $e = new ZfExtended_ValidateException();
             $e->setErrors($errors);
