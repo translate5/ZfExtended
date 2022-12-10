@@ -28,57 +28,69 @@ END LICENSE AND COPYRIGHT
  * @version 2.0
  *
  */
+class ZfExtended_Models_Validator_User extends ZfExtended_Models_Validator_Abstract
+{
+    /**
+     * Validators for User Entity
+     * Validation will be done on calling entity->validate
+     */
+    protected function defineValidators(): void
+    {
+        $this->addValidator('id', 'int');
+        $this->addValidator('userGuid', 'guid');
+        $this->addValidator('firstName', 'stringLength', array('min' => 1, 'max' => 255));
+        $this->addValidator('surName', 'stringLength', array('min' => 1, 'max' => 255));
+        $this->addValidator('gender', 'inArray', [['f', 'm', 'n']]);
+        $this->addValidator('locale', 'stringLength', array('min' => 2, 'max' => 3));
+        $this->addValidator('roles', 'stringLength', array('min' => 0, 'max' => 255));
+        $this->addValidator('parentIds', 'stringLength', array('min' => 0, 'max' => 255));
+        $this->setLoginValidator();
+        //FIXME make a regex here!
+        $this->setEmailValidator();
+        $this->setPasswdValidator();
+        $this->addValidator('customers', 'stringLength', array('min' => 0, 'max' => 255));
 
-class ZfExtended_Models_Validator_User extends ZfExtended_Models_Validator_Abstract {
-  
-  /**
-   * Validators for User Entity
-   * Validation will be done on calling entity->validate
-   */
-  protected function defineValidators() {
-    $config = Zend_Registry::get('config');
-    
-    $this->addValidator('id', 'int');
-    $this->addValidator('userGuid', 'guid');
-    $this->addValidator('firstName', 'stringLength', array('min' => 1, 'max' => 255));
-    $this->addValidator('surName', 'stringLength', array('min' => 1, 'max' => 255));
-    $this->addValidator('login', 'stringLength', array('min' => 6, 'max' => 255));
-    $this->addValidator('gender', 'inArray', [['f', 'm', 'n']]);
-    $this->addValidator('locale', 'stringLength', array('min' => 2, 'max' => 3));
-    $this->addValidator('roles', 'stringLength', array('min' => 0, 'max' => 255));
-    $this->addValidator('parentIds', 'stringLength', array('min' => 0, 'max' => 255));
-    //FIXME make a regex here!
-    $this->setEmailValidator();
-    $this->setPasswdValidator();
-    $this->addValidator('customers', 'stringLength', array('min' => 0, 'max' => 255));
-    
-    $this->addValidator('openIdIssuer', 'stringLength', array('min' => 0, 'max' => 500));
-    $this->addValidator('openIdSubject', 'stringLength', array('min' => 0, 'max' => 255));
-  }
-  
-  protected function setEmailValidator() {
-      $me = $this;
-      $this->addValidatorCustom('email', function($v) use ($me){
-          $valid = filter_var($v, FILTER_VALIDATE_EMAIL) !== false;
-          if(!$valid){
-              $me->addMessage('email', 'invalidEmail', 'invalidEmail');
-          }
-          return $valid;
-      });
-  }
-  
-  protected function setPasswdValidator() {
-    $string = $this->validatorFactory('stringLength', array('min' => 8, 'max' => 255));
-    $me = $this;
-    $passwdValidator = function($value) use($string, $me) {
-        if(is_null($value))
+        $this->addValidator('openIdIssuer', 'stringLength', array('min' => 0, 'max' => 500));
+        $this->addValidator('openIdSubject', 'stringLength', array('min' => 0, 'max' => 255));
+    }
+
+    protected function setEmailValidator(): void
+    {
+        $me = $this;
+        $this->addValidatorCustom('email', function ($v) use ($me) {
+            $valid = filter_var($v, FILTER_VALIDATE_EMAIL) !== false;
+            if (!$valid) {
+                $me->addMessage('email', 'invalidEmail', 'invalidEmail');
+            }
+            return $valid;
+        });
+    }
+
+    protected function setPasswdValidator(): void
+    {
+        $string = $this->validatorFactory('stringLength', array('min' => 8, 'max' => 255));
+        $me = $this;
+        $passwdValidator = function ($value) use ($string, $me) {
+            if (is_null($value))
+                return true;
+            if (!$string->isValid($value)) {
+                $me->addMessage('passwd', 'invalidPasswd', 'invalidPasswd');
+                return false;
+            }
             return true;
-        if(!$string->isValid($value)) {
-          $me->addMessage('passwd', 'invalidPasswd', 'invalidPasswd');
-          return false;
-        }
-      return true;
-    };
-    $this->addValidatorCustom('passwd', $passwdValidator,true);
-  }
+        };
+        $this->addValidatorCustom('passwd', $passwdValidator, true);
+    }
+
+    private function setLoginValidator(): void
+    {
+        $regexValidator = new Zend_Validate_Regex('/^[\w\-_@.]+$/u');
+        $regexValidator->setMessage('Der Benutzername enthält Zeichen, die nicht verwendet werden dürfen!', Zend_Validate_Regex::NOT_MATCH);
+
+        $chain = new Zend_Validate();
+        $chain->addValidator(new Zend_Validate_StringLength(['min' => 6, 'max' => 255]));
+        $chain->addValidator($regexValidator);
+
+        $this->addValidatorInstance('login', $chain);
+    }
 }
