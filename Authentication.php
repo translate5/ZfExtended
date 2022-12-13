@@ -39,6 +39,8 @@ class ZfExtended_Authentication {
     const AUTH_DENY_NO_SESSION          = 3;
     const AUTH_DENY_USER_NOT_FOUND      = 4;
 
+    CONST APPLICATION_TOKEN_HEADER             = 'ApplicationToken';
+
     //when updating from md5 to newer hash, the hashes containing old md5 hashes are marked with that prefix
     const COMPAT_PREFIX                 = 'md5:';
 
@@ -54,6 +56,9 @@ class ZfExtended_Authentication {
     private static ?self $_instance = null;
 
     private ?User $authenticatedUser = null;
+
+    private bool $isTokenAuth = false;
+
 
     /**
      * @return self
@@ -157,14 +162,24 @@ class ZfExtended_Authentication {
                 $password = md5($password);
             }
 
-            $secret = Zend_Registry::get('config')->runtimeOptions->authentication->secret;
-            return password_verify($this->addPepper($password, $secret), $passwordHash);
+            return $this->isPasswordEqual($password,$passwordHash);
         });
         if($valid && $isOldPassword) {
             $this->authenticatedUser->setPasswd($this->createSecurePassword($password));
             $this->authenticatedUser->save();
         }
         return $valid;
+    }
+
+    /***
+     * @param string $password
+     * @param string $passwordHash
+     * @return bool
+     * @throws Zend_Exception
+     */
+    public function isPasswordEqual(string $password, string $passwordHash){
+        $secret = Zend_Registry::get('config')->runtimeOptions->authentication->secret;
+        return password_verify($this->addPepper($password, $secret), $passwordHash);
     }
 
     /**
@@ -247,6 +262,16 @@ class ZfExtended_Authentication {
                 $value = (int)$value;
             }
         }
+        $userData->isTokenAuth = $this->isTokenAuth;
         $userSession->data = $userData;
+
+    }
+
+    /**
+     * @param bool $isTokenAuth
+     */
+    public function setIsTokenAuth(bool $isTokenAuth): void
+    {
+        $this->isTokenAuth = $isTokenAuth;
     }
 }
