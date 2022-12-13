@@ -85,6 +85,7 @@ class ZfExtended_Auth_Token_Entity extends ZfExtended_Models_Entity_Abstract {
     /***
      * Create authentication token for given login and return the token
      * @param string $login
+     * @param string $description
      * @return string
      * @throws Zend_Db_Statement_Exception
      * @throws Zend_Exception
@@ -92,14 +93,14 @@ class ZfExtended_Auth_Token_Entity extends ZfExtended_Models_Entity_Abstract {
      * @throws ZfExtended_Models_Entity_Exceptions_IntegrityDuplicateKey
      * @throws ZfExtended_Models_Entity_NotFoundException
      */
-    public function create(string $login){
+    public function create(string $login, string $description = self::DEFAULT_TOKE_DESCRIPTION){
         /** @var ZfExtended_Models_User $user */
         $user = ZfExtended_Factory::get('ZfExtended_Models_User');
         $user->loadByLogin($login);
 
         $this->setUserId($user->getId());
         $this->setToken('Initial');
-        $this->setDescription(self::DEFAULT_TOKE_DESCRIPTION);
+        $this->setDescription($description);
         $id = $this->save();
         $token = $this->generateAuthToken($id);
         $this->setToken(ZfExtended_Authentication::getInstance()->createSecurePassword($token));
