@@ -232,7 +232,7 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
         /* @var ZfExtended_Logger $sysLog */
 
         if($auth->isPasswordEqual($param,$entity->getToken()) === false){
-            $sysLog->warn('E1443', 'Authentication Token: The {token} is not valid', [
+            $sysLog->error('E1443', 'Authentication Token: The {token} is not valid', [
                 'token' => $token
             ]);
             $this->reload(); //making exit
