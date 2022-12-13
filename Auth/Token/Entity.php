@@ -46,33 +46,12 @@ class ZfExtended_Auth_Token_Entity extends ZfExtended_Models_Entity_Abstract {
     protected $dbInstanceClass = "ZfExtended_Auth_Token_Db_Entity";
     protected $validatorInstanceClass = "ZfExtended_Auth_Token_Validator_Entity";
 
-    private const DEFAULT_TOKE_DESCRIPTION = 'Default';
+    private const DEFAULT_TOKEN_DESCRIPTION = 'Default';
 
     public const TOKEN_SEPARATOR = ':';
 
     /***
-     * Load row by given user login
-     * @param string $login
-     * @return Zend_Db_Table_Row_Abstract|null
-     * @throws ZfExtended_Models_Entity_NotFoundException
-     */
-    public function loadByLogin(string $login){
-        /** @var ZfExtended_Models_User $user */
-        $user = ZfExtended_Factory::get('ZfExtended_Models_User');
-        $user->loadByLogin($login);
-
-        $s = $this->db->select();
-        $s->where('userId=?',$user->getId());
-        $row=$this->db->fetchRow($s);
-        if(empty($row)){
-            $this->notFound(__CLASS__ . '#login', $login);
-        }
-        $this->row =$row;
-        return $row;
-    }
-
-    /***
-     *
+     * @param string $prefix
      * @return string
      * @throws Exception
      */
@@ -93,7 +72,7 @@ class ZfExtended_Auth_Token_Entity extends ZfExtended_Models_Entity_Abstract {
      * @throws ZfExtended_Models_Entity_Exceptions_IntegrityDuplicateKey
      * @throws ZfExtended_Models_Entity_NotFoundException
      */
-    public function create(string $login, string $description = self::DEFAULT_TOKE_DESCRIPTION){
+    public function create(string $login, string $description = self::DEFAULT_TOKEN_DESCRIPTION){
         /** @var ZfExtended_Models_User $user */
         $user = ZfExtended_Factory::get('ZfExtended_Models_User');
         $user->loadByLogin($login);
