@@ -111,7 +111,7 @@ class ZfExtended_SessionController extends ZfExtended_RestController {
         if(empty($passwd)) {
              $errors['passwd'] = $t->_('Kein Passwort angegeben.');
         }
-        $instance = Auth::getInstance();
+        $authentication = Auth::getInstance();
 
         if(!empty($errors)) {
             $e = new ZfExtended_ValidateException();
@@ -124,8 +124,8 @@ class ZfExtended_SessionController extends ZfExtended_RestController {
         $invalidLoginCounter = ZfExtended_Factory::get('ZfExtended_Models_Invalidlogin',array($login));
         /* @var $invalidLoginCounter ZfExtended_Models_Invalidlogin */
 
-        if($instance->authenticate($login, $passwd)) {
-            $userModel = $instance->getUser();
+        if($authentication->authenticate($login, $passwd)) {
+            $userModel = $authentication->getUser();
 
             // check for existing valid session for the current user
             $sessionId = ZfExtended_Session::updateSession(true,true);

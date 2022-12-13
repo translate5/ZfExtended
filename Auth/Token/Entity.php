@@ -50,6 +50,12 @@ class ZfExtended_Auth_Token_Entity extends ZfExtended_Models_Entity_Abstract {
 
     public const TOKEN_SEPARATOR = ':';
 
+    /***
+     * Load row by given user login
+     * @param string $login
+     * @return Zend_Db_Table_Row_Abstract|null
+     * @throws ZfExtended_Models_Entity_NotFoundException
+     */
     public function loadByLogin(string $login){
         /** @var ZfExtended_Models_User $user */
         $user = ZfExtended_Factory::get('ZfExtended_Models_User');
@@ -76,6 +82,16 @@ class ZfExtended_Auth_Token_Entity extends ZfExtended_Models_Entity_Abstract {
     }
 
 
+    /***
+     * Create authentication token for given login and return the token
+     * @param string $login
+     * @return string
+     * @throws Zend_Db_Statement_Exception
+     * @throws Zend_Exception
+     * @throws ZfExtended_Models_Entity_Exceptions_IntegrityConstraint
+     * @throws ZfExtended_Models_Entity_Exceptions_IntegrityDuplicateKey
+     * @throws ZfExtended_Models_Entity_NotFoundException
+     */
     public function create(string $login){
         /** @var ZfExtended_Models_User $user */
         $user = ZfExtended_Factory::get('ZfExtended_Models_User');

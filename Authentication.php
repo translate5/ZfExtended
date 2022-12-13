@@ -39,7 +39,7 @@ class ZfExtended_Authentication {
     const AUTH_DENY_NO_SESSION          = 3;
     const AUTH_DENY_USER_NOT_FOUND      = 4;
 
-    CONST APP_TOKEN_HEADER             = 'App-token';
+    CONST APPLICATION_TOKEN_HEADER             = 'ApplicationToken';
 
     //when updating from md5 to newer hash, the hashes containing old md5 hashes are marked with that prefix
     const COMPAT_PREFIX                 = 'md5:';
@@ -57,6 +57,9 @@ class ZfExtended_Authentication {
 
     private ?User $authenticatedUser = null;
 
+    private bool $isTokenAuth = false;
+
+
     /**
      * @return self
      */
@@ -66,22 +69,6 @@ class ZfExtended_Authentication {
             self::$_instance->algorithm = defined('PASSWORD_ARGON2ID') ?  PASSWORD_ARGON2ID : PASSWORD_BCRYPT;
         }
         return self::$_instance;
-    }
-
-    /***
-     */
-    public function isTokenAuth( string $login, string $token): bool
-    {
-        try {
-            $userToken = ZfExtended_Factory::get('ZfExtended_Auth_Token_Entity');
-            $userToken->loadByLogin($login);
-        }catch (Throwable $throwable){
-            return false;
-        }
-
-        $secret = Zend_Registry::get('config')->runtimeOptions->authentication->secret;
-        return password_verify($this->addPepper($token, $secret), $userToken->getToken());
-
     }
 
     /**
@@ -275,6 +262,16 @@ class ZfExtended_Authentication {
                 $value = (int)$value;
             }
         }
+        $userData->isTokenAuth = $this->isTokenAuth;
         $userSession->data = $userData;
+
+    }
+
+    /**
+     * @param bool $isTokenAuth
+     */
+    public function setIsTokenAuth(bool $isTokenAuth): void
+    {
+        $this->isTokenAuth = $isTokenAuth;
     }
 }
