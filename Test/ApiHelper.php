@@ -161,6 +161,13 @@ class ZfExtended_Test_ApiHelper {
     }
 
     /**
+     * Invalidates the token set above
+     */
+    public static function unsetApplicationToken(){
+        static::$applicationToken = null;
+    }
+
+    /**
      * returns the absolute data path to the base directory for task data
      * @return string
      */
