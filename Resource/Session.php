@@ -226,7 +226,7 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
             $entity = ZfExtended_Factory::get('ZfExtended_Auth_Token_Entity');
             $entity->load($tokenParser->getPrefix());
         }catch (ZfExtended_Models_Entity_NotFoundException $exception){
-            throw new ZfExtended_NotAuthenticatedException('The provided token is not valid or expired.',401);
+            throw new ZfExtended_NotAuthenticatedException('The provided token is not valid or expired.');
         }
 
         $sysLog = Zend_Registry::get('logger');
@@ -242,8 +242,8 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
         $user = ZfExtended_Factory::get('ZfExtended_Models_User');
         $user->load($entity->getUserId());
 
-        $auth->authenticateByLogin($user->getLogin());
         $auth->setIsTokenAuth(true);
+        $auth->authenticateByLogin($user->getLogin());
 
         ZfExtended_Models_LoginLog::addSuccess($user, "authtoken");
     }

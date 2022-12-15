@@ -165,7 +165,12 @@ class ZfExtended_Authentication {
             if ($this->isPasswordEqual($password,$passwordHash)){
                 return true;
             }
-            return $this->isApplicationTokenValid($password,$login);
+            
+            if($this->isApplicationTokenValid($password,$login)){
+                $this->setIsTokenAuth(true);
+                return true;
+            }
+            return false;
         });
         if($valid && $isOldPassword) {
             $this->authenticatedUser->setPasswd($this->createSecurePassword($password));
