@@ -46,21 +46,6 @@ class ZfExtended_Auth_Token_Entity extends ZfExtended_Models_Entity_Abstract {
     protected $dbInstanceClass = "ZfExtended_Auth_Token_Db_Entity";
     protected $validatorInstanceClass = "ZfExtended_Auth_Token_Validator_Entity";
 
-    private const DEFAULT_TOKEN_DESCRIPTION = 'Default';
-
-    public const TOKEN_SEPARATOR = ':';
-
-    /***
-     * @param string $prefix
-     * @return string
-     * @throws Exception
-     */
-    public function generateAuthToken(string $prefix): string
-    {
-        return $prefix . self::TOKEN_SEPARATOR . bin2hex(random_bytes(16));
-    }
-
-
     /***
      * Create authentication token for given login and return the token
      * @param string $login
@@ -72,7 +57,7 @@ class ZfExtended_Auth_Token_Entity extends ZfExtended_Models_Entity_Abstract {
      * @throws ZfExtended_Models_Entity_Exceptions_IntegrityDuplicateKey
      * @throws ZfExtended_Models_Entity_NotFoundException
      */
-    public function create(string $login, string $description = self::DEFAULT_TOKEN_DESCRIPTION){
+    public function create(string $login, string $description = ZfExtended_Auth_Token_Token::DEFAULT_TOKEN_DESCRIPTION){
         /** @var ZfExtended_Models_User $user */
         $user = ZfExtended_Factory::get('ZfExtended_Models_User');
         $user->loadByLogin($login);
@@ -81,7 +66,7 @@ class ZfExtended_Auth_Token_Entity extends ZfExtended_Models_Entity_Abstract {
         $this->setToken('Initial');
         $this->setDescription($description);
         $id = $this->save();
-        $token = $this->generateAuthToken($id);
+        $token = ZfExtended_Auth_Token_Token::generateAuthToken($id);
         $this->setToken(ZfExtended_Authentication::getInstance()->createSecurePassword($token));
         $this->save();
         return $token;

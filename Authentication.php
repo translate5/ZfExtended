@@ -152,7 +152,7 @@ class ZfExtended_Authentication {
      */
     public function authenticate(string $login, string $password): bool {
         $isOldPassword = false;
-        $valid = $this->loadUserAndValidate($login, function() use ($password, & $isOldPassword) {
+        $valid = $this->loadUserAndValidate($login, function() use ($password, & $isOldPassword, $login) {
             $passwordHash = $this->authenticatedUser->getPasswd();
             $isOldPassword = str_starts_with($passwordHash, self::COMPAT_PREFIX);
             if($isOldPassword) {
@@ -162,7 +162,15 @@ class ZfExtended_Authentication {
                 $password = md5($password);
             }
 
-            return $this->isPasswordEqual($password,$passwordHash);
+            if ($this->isPasswordEqual($password,$passwordHash)){
+                return true;
+            }
+            
+            if($this->isApplicationTokenValid($password,$login)){
+                $this->setIsTokenAuth(true);
+                return true;
+            }
+            return false;
         });
         if($valid && $isOldPassword) {
             $this->authenticatedUser->setPasswd($this->createSecurePassword($password));
@@ -273,5 +281,31 @@ class ZfExtended_Authentication {
     public function setIsTokenAuth(bool $isTokenAuth): void
     {
         $this->isTokenAuth = $isTokenAuth;
+    }
+
+    /***
+     * Check and validate if the application token is provided as password. If it matches the provided user
+     * and it is valid this will be valid authentication
+     */
+    public function isApplicationTokenValid(string $token, string $login){
+        $parsedToken = ZfExtended_Factory::get('ZfExtended_Auth_Token_Token',[$token]);
+        // check if the token is valid
+        if( empty($parsedToken->getToken())){
+            return false;
+        }
+
+        $entity = ZfExtended_Factory::get('ZfExtended_Auth_Token_Entity');
+        $user = ZfExtended_Factory::get('ZfExtended_Models_User');
+        try {
+            $entity->load($parsedToken->getPrefix());
+            $user->loadByLogin($login);
+        }catch (ZfExtended_Models_Entity_NotFoundException $e){
+            return false;
+        }
+
+        if( $user->getId() !== $entity->getUserId()){
+            return false;
+        }
+        return $this->isPasswordEqual($token,$entity->getToken());
     }
 }
