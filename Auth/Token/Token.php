@@ -29,6 +29,7 @@ END LICENSE AND COPYRIGHT
 
 class ZfExtended_Auth_Token_Token
 {
+    const TOKEN_LENGTH = 36;
 
     public const DEFAULT_TOKEN_DESCRIPTION = 'Default';
 
@@ -53,7 +54,7 @@ class ZfExtended_Auth_Token_Token
         }
         $this->token = $tokenParts[1] ?? '';
         // validate the site of the token
-        if(!preg_match('/[a-zA-Z0-9]{32}/', $this->token)){
+        if(!preg_match('/[a-zA-Z0-9]{'.self::TOKEN_LENGTH.'}/', $this->token)){
             $this->token = '';
             $this->prefix = null;
             return;
@@ -68,7 +69,13 @@ class ZfExtended_Auth_Token_Token
      */
     public static function generateAuthToken(string $prefix): string
     {
-        return $prefix . self::TOKEN_SEPARATOR . bin2hex(random_bytes(16));
+        $string = '';
+        while (($len = strlen($string)) < self::TOKEN_LENGTH) {
+            $size = self::TOKEN_LENGTH - $len;
+            $bytes = random_bytes($size);
+            $string .= substr(str_replace(['/', '+', '='], '', base64_encode($bytes)), 0, $size);
+        }
+        return $prefix . self::TOKEN_SEPARATOR . $string;
     }
 
     /**
