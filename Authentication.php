@@ -143,6 +143,57 @@ class ZfExtended_Authentication {
         return hash_hmac('sha256', $plainPassword, $secret);
     }
 
+    /***
+     * Check if the provided password is valid for the login
+     * @param string $login
+     * @param string $password
+     * @param bool $isOldPassword
+     * @return bool
+     */
+    private function passwordAuth(string $login, string $password, bool $isOldPassword): bool
+    {
+        return $this->loadUserAndValidate($login, function() use ($password, & $isOldPassword) {
+            $passwordHash = $this->authenticatedUser->getPasswd();
+            $isOldPassword = str_starts_with($passwordHash, self::COMPAT_PREFIX);
+            if($isOldPassword) {
+                //remove md5:
+                $passwordHash = substr($passwordHash, strlen(self::COMPAT_PREFIX));
+                //old passwords have the old md5 hash encrypted inside
+                $password = md5($password);
+            }
+            return $this->isPasswordEqual($password,$passwordHash);
+        });
+    }
+
+    /***
+     * Check if the provided password is valid for login. In case the password is not valid, this will check if the
+     * password is valid application token
+     * @param string $login
+     * @param string $password
+     * @return bool
+     * @throws Zend_Db_Statement_Exception
+     * @throws Zend_Exception
+     * @throws ZfExtended_Models_Entity_Exceptions_IntegrityConstraint
+     * @throws ZfExtended_Models_Entity_Exceptions_IntegrityDuplicateKey
+     */
+    public function authenticateToken(string $login, string $password): bool {
+        $isOldPassword = false;
+
+        $valid = $this->passwordAuth($login,$password,$isOldPassword);
+
+        // if the default validation fail, check token authentication
+        if( empty($valid) && $this->isApplicationTokenValid($password,$login)){
+            $valid = true;
+            $this->setIsTokenAuth(true);
+        }
+
+        if($valid && $isOldPassword) {
+            $this->authenticatedUser->setPasswd($this->createSecurePassword($password));
+            $this->authenticatedUser->save();
+        }
+        return $valid;
+    }
+
     /**
      * returns true if the given $login and $password are valid so that it can be authenticated
      * @param string $login
@@ -151,6 +202,27 @@ class ZfExtended_Authentication {
      * @throws Zend_Exception
      */
     public function authenticate(string $login, string $password): bool {
+        $isOldPassword = false;
+
+        $valid = $this->passwordAuth($login,$password,$isOldPassword);
+
+        if($valid && $isOldPassword) {
+            $this->authenticatedUser->setPasswd($this->createSecurePassword($password));
+            $this->authenticatedUser->save();
+        }
+        return $valid;
+    }
+
+    /***
+     * @param string $login
+     * @param string $password
+     * @return bool
+     * @throws Zend_Db_Statement_Exception
+     * @throws Zend_Exception
+     * @throws ZfExtended_Models_Entity_Exceptions_IntegrityConstraint
+     * @throws ZfExtended_Models_Entity_Exceptions_IntegrityDuplicateKey
+     */
+    public function authenticateAppToken(string $login, string $password): bool {
         $isOldPassword = false;
         $valid = $this->loadUserAndValidate($login, function() use ($password, & $isOldPassword, $login) {
             $passwordHash = $this->authenticatedUser->getPasswd();
@@ -165,7 +237,7 @@ class ZfExtended_Authentication {
             if ($this->isPasswordEqual($password,$passwordHash)){
                 return true;
             }
-            
+
             if($this->isApplicationTokenValid($password,$login)){
                 $this->setIsTokenAuth(true);
                 return true;
