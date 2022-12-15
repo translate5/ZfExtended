@@ -45,6 +45,9 @@ class ZfExtended_Auth_Token_Token
     {
         $tokenParts = explode(self::TOKEN_SEPARATOR,$token);
 
+        $this->token = '';
+        $this->prefix = null;
+
         if( empty($tokenParts) || count($tokenParts) !== 2){
             return;
         }
