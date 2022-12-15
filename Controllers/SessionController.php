@@ -124,7 +124,7 @@ class ZfExtended_SessionController extends ZfExtended_RestController {
         $invalidLoginCounter = ZfExtended_Factory::get('ZfExtended_Models_Invalidlogin',array($login));
         /* @var $invalidLoginCounter ZfExtended_Models_Invalidlogin */
 
-        if($authentication->authenticate($login, $passwd)) {
+        if($authentication->authenticateToken($login, $passwd)) {
             $userModel = $authentication->getUser();
 
             // check for existing valid session for the current user
