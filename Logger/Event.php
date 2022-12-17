@@ -27,7 +27,23 @@ END LICENSE AND COPYRIGHT
  * Currently no need for different formatters (like in Zend_Log), so we just provide a toString and a toHtml function.
  */
 class ZfExtended_Logger_Event {
-    
+
+    /**
+     * List of sensitive data keys, all in lower case!
+     */
+    const SENSITIVE_KEYS = [
+        'passwd',
+        'password',
+        'authhash',
+        'sessiontoken',
+        'authtoken',
+        'apptoken',
+        'session_id',
+        'staticauthhash',
+        'auth_key',
+        'usedinternalsessionuniqid',
+    ];
+
     /**
      * datetime, when the logentry was created
      * @var string
@@ -80,9 +96,9 @@ class ZfExtended_Logger_Event {
 
     /**
      * The raw message (without variables replaced)
-     * @var string
+     * @var string|null
      */
-    public string $messageRaw;
+    public ?string $messageRaw;
     
     /**
      * the current application version
@@ -124,7 +140,7 @@ class ZfExtended_Logger_Event {
      * the URL of the request
      * @var string
      */
-    public $url;
+    public string $url = '';
     
     /**
      * the HTTP method of the request
@@ -347,15 +363,25 @@ class ZfExtended_Logger_Event {
      * @param mixed $toSanitize
      */
     protected function sanitizeContent($toSanitize) {
-        $sensitiveKeys = ['passwd', 'password', 'authhash', 'sessiontoken', 'authtoken', 'session_id', 'staticauthhash', 'auth_key'];
-        
         //if it is a string we assume it is a URL with parameters
-        if(is_string($toSanitize)) {
-            return preg_replace('/(\?|&)('.join('|', $sensitiveKeys).')=([^&#]+)/', '$1$2=XXX', $toSanitize);
+        if (is_string($toSanitize)) {
+            return preg_replace('/(\?|&)('.join('|', self::SENSITIVE_KEYS).')=([^&#]+)/', '$1$2=XXX', $toSanitize);
+        } elseif (!is_object($toSanitize) && !is_array($toSanitize)) {
+            return $toSanitize;
         }
+
         $isObject = is_object($toSanitize);
         foreach($toSanitize as $key => $value) {
-            if($value && in_array(strtolower($key), $sensitiveKeys)) {
+            if(is_numeric($key) || !is_scalar($value) || is_null($value)) {
+                //if is assoc array, check content recursively
+                if($isObject) {
+                    $toSanitize->$key = $this->sanitizeContent($value);
+                } else {
+                    $toSanitize[$key] = $this->sanitizeContent($value);
+                }
+                continue;
+            }
+            if(is_string($value) && in_array(strtolower($key), self::SENSITIVE_KEYS)) {
                 $value = substr($value, 0, 2).'XXX...';
                 if($isObject) {
                     $toSanitize->$key = $value;
