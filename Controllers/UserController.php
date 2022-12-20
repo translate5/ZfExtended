@@ -117,14 +117,22 @@ class ZfExtended_UserController extends ZfExtended_RestController {
      */
     public function postAction() {
         try {
-            parent::postAction();
-            $this->handlePasswdMail();
-            $this->credentialCleanup();
-            if($this->wasValid) {
-                $this->csvToArray();
+            $this->entity->init();
+            $this->decodePutData();
+            $this->processClientReferenceVersion();
+            $this->setDataInEntity($this->postBlacklist);
+
+            if ($this->validate()) {
+                $this->entity->save();
+                $this->view->rows = $this->entity->getDataObject();
+
+                $this->handlePasswdMail();
+                $this->credentialCleanup();
+                if($this->wasValid) {
+                    $this->csvToArray();
+                }
             }
-        }
-        catch(ZfExtended_Models_Entity_Exceptions_IntegrityDuplicateKey $e) {
+        } catch(ZfExtended_Models_Entity_Exceptions_IntegrityDuplicateKey $e) {
             $this->handleLoginDuplicates($e);
         }
     }
