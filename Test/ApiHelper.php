@@ -69,6 +69,12 @@ class ZfExtended_Test_ApiHelper {
      */
     private static ?string $authCookie = null;
 
+    /***
+     * Token used for authentication with token
+     * @var string|null
+     */
+    private static ?string $applicationToken = null;
+
     /**
      * Holds a list of allowed http status code other then 200-299.
      * Is cleaned after each request.
@@ -144,6 +150,21 @@ class ZfExtended_Test_ApiHelper {
     public static function setAuthentication(string $cookie, string $login) {
         static::$authCookie = $cookie;
         static::$authLogin = $login;
+    }
+
+    /***
+     * @param string $token
+     * @return void
+     */
+    public static function setApplicationToken(string $token){
+        static::$applicationToken = $token;
+    }
+
+    /**
+     * Invalidates the token set above
+     */
+    public static function unsetApplicationToken(){
+        static::$applicationToken = null;
     }
 
     /**
@@ -361,6 +382,9 @@ class ZfExtended_Test_ApiHelper {
         $http->setHeaders('Origin', static::createOrigin());
         if(!empty(static::$authCookie)) {
             $http->setCookie(self::AUTH_COOKIE_KEY, static::$authCookie);
+        }
+        if(!is_null(static::$applicationToken)) {
+            $http->setHeaders(ZfExtended_Authentication::APPLICATION_TOKEN_HEADER, static::$applicationToken);
         }
         $http->setRawData($content, 'application/octet-stream');
         $http->setHeaders(Zend_Http_Client::CONTENT_TYPE, 'application/octet-stream');
@@ -747,6 +771,10 @@ class ZfExtended_Test_ApiHelper {
 
         if(static::$authCookie !== null) {
             $http->setCookie(static::AUTH_COOKIE_KEY, static::$authCookie);
+        }
+
+        if(static::$applicationToken !== null) {
+            $http->setHeaders(ZfExtended_Authentication::APPLICATION_TOKEN_HEADER, static::$applicationToken);
         }
 
         if(!empty($this->filesToAdd) && ($method == 'POST' || $method == 'PUT')) {

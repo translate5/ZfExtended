@@ -127,7 +127,6 @@ class ZfExtended_UserController extends ZfExtended_RestController {
      */
     public function postAction() {
         try {
-
             $this->entity->init();
             $this->decodePutData();
             $this->processClientReferenceVersion();
@@ -143,8 +142,8 @@ class ZfExtended_UserController extends ZfExtended_RestController {
             if($this->wasValid) {
                 $this->csvToArray();
             }
-        }
-        catch(ZfExtended_Models_Entity_Exceptions_IntegrityDuplicateKey $e) {
+            }
+        } catch(ZfExtended_Models_Entity_Exceptions_IntegrityDuplicateKey $e) {
             $this->handleLoginDuplicates($e);
         }
     }

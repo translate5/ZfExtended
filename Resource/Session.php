@@ -22,6 +22,8 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
+use ZfExtended_Authentication as Auth;
+
 /**
  * Startet die Session
  *
@@ -90,7 +92,9 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
         
         Zend_Session::setSaveHandler(new ZfExtended_Session_SaveHandler_DbTable($this->_sessionConfig));
 
-        $this->handleAuthToken(); //makes a redirect if successfull!
+        $this->handleSessionToken(); //makes a redirect if successfull!
+
+        $this->handleAuthToken();
         
         //default handling
         Zend_Session::start();
@@ -136,9 +140,17 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
     
     /**
      * returns the session_id to be used when a valid sessionToken was provided
-     * @return string|NULL
+     *
+     * @return void
+     * @throws Zend_Db_Statement_Exception
+     * @throws Zend_Exception
+     * @throws Zend_Session_Exception
+     * @throws ZfExtended_Models_Entity_Exceptions_IntegrityConstraint
+     * @throws ZfExtended_Models_Entity_Exceptions_IntegrityDuplicateKey
+     * @throws ZfExtended_NotAuthenticatedException
      */
-    private function handleAuthToken() {
+    private function handleSessionToken(): void
+    {
         if(empty($_REQUEST['sessionToken']) || !preg_match('/[a-zA-Z0-9]{32}/', $_REQUEST['sessionToken'])) {
             return;
         }
@@ -188,7 +200,54 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
         //or doing this in access plugin because there are several helpers?
         $this->reload(); //making exit
     }
-    
+
+    /***
+     * Handle authentication via app token
+     * @return void
+     * @throws Zend_Exception
+     */
+    private function handleAuthToken(): void
+    {
+        $auth = ZfExtended_Authentication::getInstance();
+        $tokenParam = $_POST[$auth::APPLICATION_TOKEN_HEADER] ?? getallheaders()[$auth::APPLICATION_TOKEN_HEADER] ?? false;
+        if( empty($tokenParam)){
+            return;
+        }
+
+        /** @var ZfExtended_Auth_Token_Token $tokenParser */
+        $tokenParser = ZfExtended_Factory::get('ZfExtended_Auth_Token_Token',[$tokenParam]);
+
+        if(empty( $tokenParser->getToken()) || is_null($tokenParser->getPrefix())){
+            return;
+        }
+
+        try {
+            /** @var ZfExtended_Auth_Token_Entity $entity */
+            $entity = ZfExtended_Factory::get('ZfExtended_Auth_Token_Entity');
+            $entity->load($tokenParser->getPrefix());
+        }catch (ZfExtended_Models_Entity_NotFoundException $exception){
+            throw new ZfExtended_NotAuthenticatedException('The provided token is not valid or expired.');
+        }
+
+        $sysLog = Zend_Registry::get('logger');
+        /* @var ZfExtended_Logger $sysLog */
+
+        if($auth->isPasswordEqual($tokenParam,$entity->getToken()) === false){
+            $sysLog->error('E1443', 'Authentication Token: The {token} is not valid', [
+                'token' => $tokenParser->getToken()
+            ]);
+            $this->reload(); //making exit
+        }
+
+        $user = ZfExtended_Factory::get('ZfExtended_Models_User');
+        $user->load($entity->getUserId());
+
+        $auth->setIsTokenAuth(true);
+        $auth->authenticateByLogin($user->getLogin());
+
+        ZfExtended_Models_LoginLog::addSuccess($user, "authtoken");
+    }
+
     /**
      * Setzt internalSessionUniqId wie im Klassenkopf beschrieben
      */
