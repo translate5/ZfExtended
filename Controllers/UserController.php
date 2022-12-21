@@ -142,7 +142,6 @@ class ZfExtended_UserController extends ZfExtended_RestController {
             if($this->wasValid) {
                 $this->csvToArray();
             }
-            }
         } catch(ZfExtended_Models_Entity_Exceptions_IntegrityDuplicateKey $e) {
             $this->handleLoginDuplicates($e);
         }
