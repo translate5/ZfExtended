@@ -155,6 +155,11 @@ class ZfExtended_Utils {
             if ($file == '.' || $file == '..') {
                 continue;
             }
+            // SBE:BUGFIX: prevent endless-loop if destinationDir is inside sourceDir
+            if ($sourceDir.DIRECTORY_SEPARATOR.$file == $destinationDir) {
+                continue;
+            }
+            
             if (is_dir($sourceDir.DIRECTORY_SEPARATOR.$file)) {
                 self::recursiveCopy(
                     $sourceDir.DIRECTORY_SEPARATOR.$file,
