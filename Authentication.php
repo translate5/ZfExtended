@@ -39,7 +39,7 @@ class ZfExtended_Authentication {
     const AUTH_DENY_NO_SESSION          = 3;
     const AUTH_DENY_USER_NOT_FOUND      = 4;
 
-    CONST APPLICATION_TOKEN_HEADER             = 'ApplicationToken';
+    CONST APPLICATION_TOKEN_HEADER             = 'Translate5AuthToken';
 
     //when updating from md5 to newer hash, the hashes containing old md5 hashes are marked with that prefix
     const COMPAT_PREFIX                 = 'md5:';
