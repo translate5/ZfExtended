@@ -30,7 +30,7 @@ class ZfExtended_PasswordCheck {
     /***
      * List of most common password used in Germany
      */
-    private const BLACK_LIST = ['translate5','password','qwertz','qwerty','123456','123456789','12345','qwerty',
+    private const BLACK_LIST = ['translate5','asdfasdf','qwertz','qwerty','123456','123456789','12345',
         'password','12345678','111111','123123','1234567890','1234567','qwerty123','000000','1q2w3e','aa12345678',
         'abc123','password1','1234','qwertyuiop','123321','password123','1q2w3e4r5t','iloveyou','654321','666666',
         '987654321','123','123456a','qwe123','1q2w3e4r','7777777','1qaz2wsx','123qwe','zxcvbnm','121212','asdasd',
