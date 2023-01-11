@@ -89,6 +89,8 @@ class ZfExtended_Models_Filter_ExtJs extends ZfExtended_Models_Filter {
         $field = '`'.$filter->table.'`.'.$field;
     }elseif(!empty($this->defaultTable)){
         $field = '`'.$this->defaultTable.'`.'.$field;
+    }else {
+        $field = '`'.$this->getEntityTable().'`.'.$field;
     }
     switch($filter->type){
         case 'orExpression':
