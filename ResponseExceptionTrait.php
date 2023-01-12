@@ -26,19 +26,22 @@ END LICENSE AND COPYRIGHT
  * provides reusable functionality for exceptions, so that they can be used as exceptions transporting a translated response
  */
 trait ZfExtended_ResponseExceptionTrait {
+
     /**
      * Creates this exceptions as a response, that means:
      * its an error that can be recovered by the user, therefore the user should receive information about the error in the Frontend.
      * The exception level is set to debug, the given error messages must be given in german, since they are translated into the GUI language automatically
      * The errorcode is fix to defined value in the exception
      *
-     * @param string $errorCode
-     * @param array $invalidFields associative array of invalid fieldnames and an error string what is wrong with the field
-     * @param Exception $previous 
-     * @param array data
-     * @return ZfExtended_ErrorCodeException
+     * @param $errorCode
+     * @param array $invalidFields
+     * @param array $data
+     * @param Exception|null $previous
+     * @param array $extraData additional data which will not going to be translated
+     * @return static
+     * @throws Zend_Exception
      */
-    public static function createResponse($errorCode, array $invalidFields, array $data = [], Exception $previous = null) {
+    public static function createResponse($errorCode, array $invalidFields, array $data = [], Exception $previous = null, array $extraData = []) {
         $t = ZfExtended_Zendoverwrites_Translate::getInstance();
         /* @var $t ZfExtended_Zendoverwrites_Translate */
         $logger = Zend_Registry::get('logger');
@@ -68,6 +71,9 @@ trait ZfExtended_ResponseExceptionTrait {
         //if there are no untranslated error strings, we don't send them
         if($numericKeysOnly) {
             unset($data['errors']);
+        }
+        if( !empty($extraData)){
+            $data[self::EXTRA_DATA_FIELD] = $extraData;
         }
         $e = new static($errorCode, $data, $previous);
         $e->level = ZfExtended_Logger::LEVEL_DEBUG;
