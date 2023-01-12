@@ -50,7 +50,7 @@ class ZfExtended_Auth_Token_Entity extends ZfExtended_Models_Entity_Abstract {
      * Create authentication token for given login and return the token
      * @param string $login
      * @param string $description
-     * @return string
+     * @return string the token with prefixed ID
      * @throws Zend_Db_Statement_Exception
      * @throws Zend_Exception
      * @throws ZfExtended_Models_Entity_Exceptions_IntegrityConstraint
@@ -65,10 +65,11 @@ class ZfExtended_Auth_Token_Entity extends ZfExtended_Models_Entity_Abstract {
         $this->setUserId($user->getId());
         $this->setToken('Initial');
         $this->setDescription($description);
-        $id = $this->save();
-        $token = ZfExtended_Auth_Token_Token::generateAuthToken($id);
+        //make a token
+        $token = ZfExtended_Auth_Token_Token::generateAuthToken();
+        //encrypt the token
         $this->setToken(ZfExtended_Authentication::getInstance()->createSecurePassword($token));
         $this->save();
-        return $token;
+        return $this->getId().ZfExtended_Auth_Token_Token::TOKEN_SEPARATOR.$token;
     }
 }
