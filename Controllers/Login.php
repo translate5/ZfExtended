@@ -273,8 +273,7 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
         $this->_form = new ZfExtended_Zendoverwrites_Form('loginPasswdreset.ini');
         $this->_form->setTranslator($this->_translate);
         
-        if($this->getRequest()->getParam('login')
-                && $this->_form->isValid($this->_request->getParams())){
+        if($this->getRequest()->getParam('login') && $this->_form->isValid($this->_request->getParams())){
             $passwdreset = ZfExtended_Factory::get('ZfExtended_Models_Passwdreset');
             /* @var $passwdreset ZfExtended_Models_Passwdreset */
             $passwdreset->reset($this->_form->getValue('login'));
@@ -307,9 +306,14 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
                 $this->passwdResetHashNotValid();
                 return;
             }
-            
+
             $resetHashElement = $this->_form->getElement('resetHash');
             $resetHashElement->setValue($this->getRequest()->getParam('resetHash'));
+
+            // trim the whitespaces from the request passwd param
+            $this->getRequest()->setParam('passwd',trim($this->getRequest()->getParam('passwd',false)));
+            // trim the whitespaces from the request passwdCheck param
+            $this->getRequest()->setParam('passwdCheck',trim($this->getRequest()->getParam('passwdCheck',false)));
 
             if($this->isNewPasswordValid()){
 
@@ -324,7 +328,7 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
 
                 $user = ZfExtended_Factory::get(User::class);
                 $user->load($passwdreset->getUserId());
-                $pwd = $this->_form->getValue('passwd');
+                $pwd = trim($this->_form->getValue('passwd'));
                 $pwd = ZfExtended_Authentication::getInstance()->createSecurePassword($pwd);
                 $user->setPasswd($pwd);
                 $user->save();

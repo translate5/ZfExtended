@@ -97,7 +97,6 @@ class ZfExtended_UserController extends ZfExtended_RestController {
      */
     public function putAction() {
         try {
-
             $this->entityLoad();
             $this->decodePutData();
             $this->processClientReferenceVersion();
@@ -227,6 +226,11 @@ class ZfExtended_UserController extends ZfExtended_RestController {
         if(!empty($this->data->customers)){
             $this->data->customers=','.$this->data->customers.',';
         }
+
+        // remove the empty space from the password
+        if( !empty($this->data->passwd)){
+            $this->data->passwd = trim($this->data->passwd);
+        }
     }
 
     /**
@@ -257,7 +261,7 @@ class ZfExtended_UserController extends ZfExtended_RestController {
             'E1421' => 'Old password does not match',
         ]);
 
-        $oldpwd = $this->getParam('oldpasswd');
+        $oldpwd = trim($this->getParam('oldpasswd'));
 
         if(empty($oldpwd)){
             throw ZfExtended_UnprocessableEntity::createResponse('E1420', [
@@ -316,8 +320,7 @@ class ZfExtended_UserController extends ZfExtended_RestController {
         parent::decodePutData();
         $this->warnUserLanguages();
         //openId data may not be manipulated via API
-        unset($this->data->openIdSubject);
-        unset($this->data->openIdIssuer);
+        unset($this->data->openIdSubject, $this->data->openIdIssuer);
         $this->convertDecodedFields();
         if($this->_request->isPost()) {
             unset($this->data->id);

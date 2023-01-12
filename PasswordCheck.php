@@ -80,12 +80,9 @@ class ZfExtended_PasswordCheck {
             $errors[]= $translate->_('Mindestens ein Großbuchstabe');
         }
 
-        if( !preg_match('#\W+#', $password) ) {
-            $errors[]= $translate->_('Mindestens ein Sonderzeichen');
-        }
-
-        if(self::isBlacklisted($password)){
-            $errors[] = $translate->_('Das Passwort enthält ein Wort aus der schwarzen Liste.');
+        $match = '';
+        if(self::isBlacklisted($password,$match)){
+            $errors[] = $translate->_('Das Passwort enthält ein Wort aus der schwarzen Liste.'). ' ('.$match.')' ;
         }
 
         return empty($errors);
@@ -95,10 +92,11 @@ class ZfExtended_PasswordCheck {
      * @param string $password
      * @return bool
      */
-    private static function isBlacklisted(string $password): bool
+    private static function isBlacklisted(string $password, string &$match): bool
     {
         foreach (self::BLACK_LIST as $item) {
             if(str_contains(strtolower($password),strtolower($item))){
+                $match = $item;
                 return true;
             }
         }
