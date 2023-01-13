@@ -90,7 +90,13 @@ class ZfExtended_Models_Filter_ExtJs extends ZfExtended_Models_Filter {
     }elseif(!empty($this->defaultTable)){
         $field = '`'.$this->defaultTable.'`.'.$field;
     }else {
-        $field = '`'.$this->getEntityTable().'`.'.$field;
+        $table = $this->getEntityTable(); $alias = null;
+        foreach ($this->select->getPart('from') as $_alias => $info) {
+            if ($table == $info['tableName']) {
+                $alias = $_alias;
+            }
+        }
+        $field = '`' . ($alias ?? $table) . '`.' . $field;
     }
     switch($filter->type){
         case 'orExpression':
