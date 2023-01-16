@@ -9,8 +9,8 @@ START LICENSE AND COPYRIGHT
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
 
  This file may be used under the terms of the GNU LESSER GENERAL PUBLIC LICENSE version 3
- as published by the Free Software Foundation and appearing in the file lgpl3-license.txt 
- included in the packaging of this file.  Please review the following information 
+ as published by the Free Software Foundation and appearing in the file lgpl3-license.txt
+ included in the packaging of this file.  Please review the following information
  to ensure the GNU LESSER GENERAL PUBLIC LICENSE version 3.0 requirements will be met:
 https://www.gnu.org/licenses/lgpl-3.0.txt
 
@@ -27,19 +27,20 @@ use ZfExtended_Models_User as User;
 /**
  * Handles authentication and password management
  */
-class ZfExtended_Authentication {
-    CONST LOGIN_STATUS_MAINTENANCE      = 'maintenance';
-    CONST LOGIN_STATUS_SUCCESS          = 'success';
-    CONST LOGIN_STATUS_AUTHENTICATED    = 'authenticated';
-    CONST LOGIN_STATUS_REQUIRED         = 'required';
-    CONST LOGIN_STATUS_OPENID           = 'openid';
+class ZfExtended_Authentication
+{
+    const LOGIN_STATUS_MAINTENANCE      = 'maintenance';
+    const LOGIN_STATUS_SUCCESS          = 'success';
+    const LOGIN_STATUS_AUTHENTICATED    = 'authenticated';
+    const LOGIN_STATUS_REQUIRED         = 'required';
+    const LOGIN_STATUS_OPENID           = 'openid';
 
     const AUTH_ALLOWED                  = 1;
     const AUTH_ALLOWED_LOAD             = 2;
     const AUTH_DENY_NO_SESSION          = 3;
     const AUTH_DENY_USER_NOT_FOUND      = 4;
 
-    CONST APPLICATION_TOKEN_HEADER             = 'ApplicationToken';
+    const APPLICATION_TOKEN_HEADER             = 'Translate5AuthToken';
 
     //when updating from md5 to newer hash, the hashes containing old md5 hashes are marked with that prefix
     const COMPAT_PREFIX                 = 'md5:';
@@ -63,8 +64,9 @@ class ZfExtended_Authentication {
     /**
      * @return self
      */
-    public static function getInstance() : self {
-        if(self::$_instance == NULL){
+    public static function getInstance() : self
+    {
+        if (self::$_instance == null) {
             self::$_instance = new self();
             self::$_instance->algorithm = defined('PASSWORD_ARGON2ID') ?  PASSWORD_ARGON2ID : PASSWORD_BCRYPT;
         }
@@ -76,19 +78,20 @@ class ZfExtended_Authentication {
      * @param int $authStatus
      * @return bool
      */
-    public function isAuthenticated(int &$authStatus = 0): bool {
-        if(!is_null($this->authenticatedUser)) {
+    public function isAuthenticated(int &$authStatus = 0): bool
+    {
+        if (!is_null($this->authenticatedUser)) {
             $authStatus = self::AUTH_ALLOWED;
             return true;
         }
         $session = new Zend_Session_Namespace('user');
 
-        if(empty($session->data->login) || empty($session->data->id)) {
+        if (empty($session->data->login) || empty($session->data->id)) {
             $authStatus = self::AUTH_DENY_NO_SESSION;
             return false;
         }
 
-        if($this->authenticateByLogin($session->data->login)) {
+        if ($this->authenticateByLogin($session->data->login)) {
             $authStatus = self::AUTH_ALLOWED_LOAD;
             return true;
         }
@@ -100,17 +103,21 @@ class ZfExtended_Authentication {
     /**
      * logs the user out
      */
-    public function logoutUser() {
+    public function logoutUser(): void
+    {
         $session = new Zend_Session_Namespace();
         $internalSessionUniqId = $session->internalSessionUniqId;
         $sessionId = Zend_Session::getId();
-        $SessionMapInternalUniqIdTable = ZfExtended_Factory::get('ZfExtended_Models_Db_SessionMapInternalUniqId');
-        $SessionMapInternalUniqIdTable->delete("internalSessionUniqId  = '".$internalSessionUniqId."'");
+        $sessionMapDB = ZfExtended_Factory::get(ZfExtended_Models_Db_SessionMapInternalUniqId::class);
+        $sessionMapDB->delete("internalSessionUniqId  = '".$internalSessionUniqId."'");
         $auth = Zend_Auth::getInstance();
         // Delete the information from the session
         $auth->clearIdentity();
         Zend_Session::destroy(true);
-        Zend_Registry::set('logoutDeletedSessionId', ['sessionId' => $sessionId, 'internalSessionUniqId' => $internalSessionUniqId]);
+        Zend_Registry::set('logoutDeletedSessionId', [
+            'sessionId' => $sessionId,
+            'internalSessionUniqId' => $internalSessionUniqId
+        ]);
     }
 
     /**
@@ -119,7 +126,8 @@ class ZfExtended_Authentication {
      * @return string
      * @throws Zend_Exception
      */
-    public function createSecurePassword(string $plainPassword): string {
+    public function createSecurePassword(string $plainPassword): string
+    {
         $secret = Zend_Registry::get('config')->runtimeOptions?->authentication?->secret ?? 'translate5';
         return $this->encryptPassword($plainPassword, $secret);
     }
@@ -130,7 +138,8 @@ class ZfExtended_Authentication {
      * @param string $secret
      * @return string
      */
-    public function encryptPassword(string $plainPassword, string $secret): string {
+    public function encryptPassword(string $plainPassword, string $secret): string
+    {
         return password_hash($this->addPepper($plainPassword, $secret), $this->algorithm);
     }
 
@@ -139,59 +148,39 @@ class ZfExtended_Authentication {
      * @param string $secret
      * @return string
      */
-    private function addPepper(string $plainPassword, string $secret): string {
+    private function addPepper(string $plainPassword, string $secret): string
+    {
         return hash_hmac('sha256', $plainPassword, $secret);
     }
 
-    /***
-     * Check if the provided password is valid for the login
-     * @param string $login
-     * @param string $password
-     * @param bool $isOldPassword
-     * @return bool
-     */
-    private function passwordAuth(string $login, string $password, bool $isOldPassword): bool
-    {
-        return $this->loadUserAndValidate($login, function() use ($password, & $isOldPassword) {
-            $passwordHash = $this->authenticatedUser->getPasswd();
-            $isOldPassword = str_starts_with($passwordHash, self::COMPAT_PREFIX);
-            if($isOldPassword) {
-                //remove md5:
-                $passwordHash = substr($passwordHash, strlen(self::COMPAT_PREFIX));
-                //old passwords have the old md5 hash encrypted inside
-                $password = md5($password);
-            }
-            return $this->isPasswordEqual($password,$passwordHash);
-        });
-    }
-
-    /***
+    /**
      * Check if the provided password is valid for login. In case the password is not valid, this will check if the
-     * password is valid application token
+     * given password is valid application token
      * @param string $login
-     * @param string $password
+     * @param string $passwordOrToken
      * @return bool
      * @throws Zend_Db_Statement_Exception
      * @throws Zend_Exception
      * @throws ZfExtended_Models_Entity_Exceptions_IntegrityConstraint
      * @throws ZfExtended_Models_Entity_Exceptions_IntegrityDuplicateKey
      */
-    public function authenticateToken(string $login, string $password): bool {
-        $isOldPassword = false;
-
-        $valid = $this->passwordAuth($login,$password,$isOldPassword);
-
+    public function authenticatePasswordAndToken(string $login, string $passwordOrToken): bool
+    {
+        //first check if it is a valid password
+        if ($this->authenticate($login, $passwordOrToken)) {
+            return true;
+        }
         // if the default validation fail, check token authentication
-        if( empty($valid) && $this->isApplicationTokenValid($password,$login)){
-            $valid = true;
+        if ($this->authenticateByToken($passwordOrToken)) {
+            if ($login !== $this->authenticatedUser->getLogin()) {
+                $this->authenticatedUser = null;
+                return false;
+            }
             $this->setIsTokenAuth(true);
+            return true;
         }
 
-        if($valid && $isOldPassword) {
-            $this->authenticatedUser->setPasswd($this->createSecurePassword($password));
-            $this->authenticatedUser->save();
-        }
-        return $valid;
+        return false;
     }
 
     /**
@@ -201,50 +190,21 @@ class ZfExtended_Authentication {
      * @return bool false if password invalid or user not found
      * @throws Zend_Exception
      */
-    public function authenticate(string $login, string $password): bool {
+    public function authenticate(string $login, string $password): bool
+    {
         $isOldPassword = false;
-
-        $valid = $this->passwordAuth($login,$password,$isOldPassword);
-
-        if($valid && $isOldPassword) {
-            $this->authenticatedUser->setPasswd($this->createSecurePassword($password));
-            $this->authenticatedUser->save();
-        }
-        return $valid;
-    }
-
-    /***
-     * @param string $login
-     * @param string $password
-     * @return bool
-     * @throws Zend_Db_Statement_Exception
-     * @throws Zend_Exception
-     * @throws ZfExtended_Models_Entity_Exceptions_IntegrityConstraint
-     * @throws ZfExtended_Models_Entity_Exceptions_IntegrityDuplicateKey
-     */
-    public function authenticateAppToken(string $login, string $password): bool {
-        $isOldPassword = false;
-        $valid = $this->loadUserAndValidate($login, function() use ($password, & $isOldPassword, $login) {
+        $valid = $this->loadUserAndValidate($login, function () use ($password, & $isOldPassword) {
             $passwordHash = $this->authenticatedUser->getPasswd();
             $isOldPassword = str_starts_with($passwordHash, self::COMPAT_PREFIX);
-            if($isOldPassword) {
+            if ($isOldPassword) {
                 //remove md5:
                 $passwordHash = substr($passwordHash, strlen(self::COMPAT_PREFIX));
                 //old passwords have the old md5 hash encrypted inside
                 $password = md5($password);
             }
-
-            if ($this->isPasswordEqual($password,$passwordHash)){
-                return true;
-            }
-
-            if($this->isApplicationTokenValid($password,$login)){
-                $this->setIsTokenAuth(true);
-                return true;
-            }
-            return false;
+            return $this->isPasswordEqual($password, $passwordHash);
         });
-        if($valid && $isOldPassword) {
+        if ($valid && $isOldPassword) {
             $this->authenticatedUser->setPasswd($this->createSecurePassword($password));
             $this->authenticatedUser->save();
         }
@@ -257,7 +217,8 @@ class ZfExtended_Authentication {
      * @return bool
      * @throws Zend_Exception
      */
-    public function isPasswordEqual(string $password, string $passwordHash){
+    public function isPasswordEqual(string $password, string $passwordHash): bool
+    {
         $secret = Zend_Registry::get('config')->runtimeOptions->authentication->secret;
         return password_verify($this->addPepper($password, $secret), $passwordHash);
     }
@@ -267,14 +228,21 @@ class ZfExtended_Authentication {
      * @param string $login
      * @return bool false if user could not be found
      */
-    public function authenticateByLogin(string $login): bool {
-        return $this->loadUserAndValidate($login, function() {
+    public function authenticateByLogin(string $login): bool
+    {
+        return $this->loadUserAndValidate($login, function () {
             return true;
         });
     }
 
-    public function authenticateUser(User $user): bool {
-        if($user->getId() > 0 && strlen($user->getLogin()) > 0) {
+    /**
+     * Authenticates the user given by user instance - does not check password!
+     * @param ZfExtended_Models_User $user
+     * @return bool false if user could not be found
+     */
+    public function authenticateUser(User $user): bool
+    {
+        if ($user->getId() > 0 && strlen($user->getLogin()) > 0) {
             $this->authenticatedUser = $user;
             $this->setUserDataInSession();
             return true;
@@ -288,19 +256,19 @@ class ZfExtended_Authentication {
      * @param Closure $loginValidator
      * @return bool
      */
-    private function loadUserAndValidate(string $login, Closure $loginValidator): bool {
+    private function loadUserAndValidate(string $login, Closure $loginValidator): bool
+    {
         $this->authenticatedUser = ZfExtended_Factory::get(User::class);
         try {
             $this->authenticatedUser->loadByLogin($login);
-            if($loginValidator()) {
+            if ($loginValidator()) {
                 $this->setUserDataInSession();
                 editor_User::create($this->authenticatedUser);
                 return true;
             }
             $this->authenticatedUser = null;
             return false;
-        }
-        catch (ZfExtended_Models_Entity_NotFoundException) {
+        } catch (ZfExtended_Models_Entity_NotFoundException) {
             $this->authenticatedUser = null;
             return false;
         }
@@ -318,15 +286,17 @@ class ZfExtended_Authentication {
      * there may be gap in access control between the user and the auth roles due basic and noRights role
      * so this method may return more roles as the user getRoles
      */
-    public function getRoles(): array {
+    public function getRoles(): array
+    {
         $userSession = new Zend_Session_Namespace('user');
-        return $userSession?->data?->roles ?? ['noRights'];
+        return $userSession->data?->roles ?? ['noRights'];
     }
 
     /**
      * sets the current user data into the session
      */
-    protected function setUserDataInSession() {
+    protected function setUserDataInSession(): void
+    {
         $userSession = new Zend_Session_Namespace('user');
         $userData = $this->authenticatedUser->getDataObject();
         $userData->roles = $this->authenticatedUser->getRoles();
@@ -338,7 +308,7 @@ class ZfExtended_Authentication {
         $userData->passwd = '********'; // We don't need and don't want the PW hash in the session
         $userData->openIdIssuer='';
         foreach ($userData as &$value) {
-            if(is_numeric($value)){
+            if (is_numeric($value)) {
                 $value = (int)$value;
             }
         }
@@ -355,29 +325,32 @@ class ZfExtended_Authentication {
         $this->isTokenAuth = $isTokenAuth;
     }
 
-    /***
+    /**
      * Check and validate if the application token is provided as password. If it matches the provided user
      * and it is valid this will be valid authentication
+     * @param string $token
+     * @return bool
      */
-    public function isApplicationTokenValid(string $token, string $login){
-        $parsedToken = ZfExtended_Factory::get('ZfExtended_Auth_Token_Token',[$token]);
-        // check if the token is valid
-        if( empty($parsedToken->getToken())){
+    public function authenticateByToken(string $token): bool
+    {
+        $parsedToken = ZfExtended_Factory::get(ZfExtended_Auth_Token_Token::class, [$token]);
+
+        // check if the token has valid form
+        if (empty($parsedToken->getToken())) {
             return false;
         }
 
-        $entity = ZfExtended_Factory::get('ZfExtended_Auth_Token_Entity');
-        $user = ZfExtended_Factory::get('ZfExtended_Models_User');
+        $tokenModel = ZfExtended_Factory::get(ZfExtended_Auth_Token_Entity::class);
         try {
-            $entity->load($parsedToken->getPrefix());
-            $user->loadByLogin($login);
-        }catch (ZfExtended_Models_Entity_NotFoundException $e){
-            return false;
-        }
+            $user = ZfExtended_Factory::get(User::class);
+            $tokenModel->load($parsedToken->getPrefix());
+            $user->load($tokenModel->getUserId());
+            return $this->loadUserAndValidate($user->getLogin(), function () use ($tokenModel, $parsedToken) {
+                return $this->isPasswordEqual($parsedToken->getToken(), $tokenModel->getToken());
+            });
 
-        if( $user->getId() !== $entity->getUserId()){
+        } catch (ZfExtended_Models_Entity_NotFoundException) {
             return false;
         }
-        return $this->isPasswordEqual($token,$entity->getToken());
     }
 }

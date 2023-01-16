@@ -209,43 +209,27 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
     private function handleAuthToken(): void
     {
         $auth = ZfExtended_Authentication::getInstance();
-        $tokenParam = $_POST[$auth::APPLICATION_TOKEN_HEADER] ?? getallheaders()[$auth::APPLICATION_TOKEN_HEADER] ?? false;
-        if( empty($tokenParam)){
+        $tokenParam = $_POST[$auth::APPLICATION_TOKEN_HEADER]
+            ?? getallheaders()[$auth::APPLICATION_TOKEN_HEADER]
+            ?? false;
+
+        if (empty($tokenParam)) {
             return;
         }
 
-        /** @var ZfExtended_Auth_Token_Token $tokenParser */
-        $tokenParser = ZfExtended_Factory::get('ZfExtended_Auth_Token_Token',[$tokenParam]);
-
-        if(empty( $tokenParser->getToken()) || is_null($tokenParser->getPrefix())){
+        if ($auth->authenticateByToken($tokenParam)) {
+            ZfExtended_Models_LoginLog::addSuccess($auth->getUser(), "authtoken");
             return;
-        }
-
-        try {
-            /** @var ZfExtended_Auth_Token_Entity $entity */
-            $entity = ZfExtended_Factory::get('ZfExtended_Auth_Token_Entity');
-            $entity->load($tokenParser->getPrefix());
-        }catch (ZfExtended_Models_Entity_NotFoundException $exception){
-            throw new ZfExtended_NotAuthenticatedException('The provided token is not valid or expired.');
         }
 
         $sysLog = Zend_Registry::get('logger');
         /* @var ZfExtended_Logger $sysLog */
 
-        if($auth->isPasswordEqual($tokenParam,$entity->getToken()) === false){
-            $sysLog->error('E1443', 'Authentication Token: The {token} is not valid', [
-                'token' => $tokenParser->getToken()
-            ]);
-            $this->reload(); //making exit
-        }
-
-        $user = ZfExtended_Factory::get('ZfExtended_Models_User');
-        $user->load($entity->getUserId());
-
-        $auth->setIsTokenAuth(true);
-        $auth->authenticateByLogin($user->getLogin());
-
-        ZfExtended_Models_LoginLog::addSuccess($user, "authtoken");
+        $sysLog->error('E1443', 'Authentication Token: The token is not valid');
+        //since we are in an early stage of bootstrapping we return the HTTP directly (no response available)
+        header('401 Unauthorized');
+        echo 'Authentication Token: The token is not valid!';
+        exit;
     }
 
     /**

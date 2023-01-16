@@ -62,12 +62,11 @@ class ZfExtended_Auth_Token_Token
         $this->prefix = $tokenParts[0] ?? null;
     }
 
-    /***
-     * @param string $prefix
+    /**
      * @return string
      * @throws Exception
      */
-    public static function generateAuthToken(string $prefix): string
+    public static function generateAuthToken(): string
     {
         $string = '';
         while (($len = strlen($string)) < self::TOKEN_LENGTH) {
@@ -75,7 +74,7 @@ class ZfExtended_Auth_Token_Token
             $bytes = random_bytes($size);
             $string .= substr(str_replace(['/', '+', '='], '', base64_encode($bytes)), 0, $size);
         }
-        return $prefix . self::TOKEN_SEPARATOR . $string;
+        return $string;
     }
 
     /**

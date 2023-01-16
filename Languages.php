@@ -318,6 +318,7 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract {
         $s = $this->db->select();
         $s->where('lower(rfc5646) = ?',$rfc);
         $s->orWhere('lower(rfc5646) LIKE ?',$rfc.'-%');
+        $s->order('length(rfc5646)');
         $retval = $this->db->fetchAll($s)->toArray();
         if(empty($retval)){
             return [];
