@@ -22,6 +22,7 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
+use MittagQI\ZfExtended\Service;
 /**
  * provides basic functionality for plugins
  */
@@ -44,7 +45,64 @@ abstract class ZfExtended_Plugin_Abstract {
      * @var string
      */
     const TYPE_CLIENT_SPECIFIC = 'clientspecific';
-    
+
+    /**
+     * The plug-in type
+     * @var string
+     */
+    protected static $type = self::TYPE_PUBLIC;
+
+    /**
+     * A human-readable description of the plug-in
+     * @var string
+     */
+    protected static string $description = 'Please overwrite me in the plug-in init';
+
+    /**
+     * Set to true in the concrete plug-in, if it should be activated when running tests
+     * @var bool
+     */
+    protected static bool $activateForTests = false;
+
+    /**
+     * Represents the services we have. They must be given in the format name => Service class name
+     * where name usually represents the docker service name, e.g. [ 'someservice' => editor_Plugins_SomePlugin_SomeService::class ]
+     * @var array
+     */
+    protected static array $services = [];
+
+    /**
+     * Return the plug-in description
+     * @return string
+     */
+    public static function getDescription(): string {
+        return static::$description;
+    }
+
+    /**
+     * Return if the plug-in is needed for the test-suite
+     * @return string
+     */
+    public static function isNeededForTests(): string {
+        return static::$activateForTests;
+    }
+
+    /**
+     * Retrieves all services configured for this plugin
+     * @param Zend_Config $config
+     * @return Service[];
+     * @throws ZfExtended_Plugin_Exception
+     */
+    public static function getServices(Zend_Config $config): array
+    {
+        $services = [];
+        $pluginName = ZfExtended_Plugin_Manager::getPluginNameByClass(static::class);
+        foreach(static::$services as $serviceName => $serviceClass){
+            $services[] = ZfExtended_Factory::get($serviceClass, [ $serviceName, $pluginName, $config ]);
+        }
+        return $services;
+    }
+
     /**
      * Contains absolute plugin path
      * @var string
@@ -87,24 +145,6 @@ abstract class ZfExtended_Plugin_Abstract {
     protected $localePath = false;
     
     protected $publicFileTypes = ['js', 'resources'];
-    
-    /**
-     * The plug-in type
-     * @var string
-     */
-    protected static $type = self::TYPE_PUBLIC;
-    
-    /**
-     * A human-readable description of the plug-in
-     * @var string
-     */
-    protected static string $description = 'Please overwrite me in the plug-in init';
-
-    /**
-     * Set to true in the concrete plug-in, if it should be activated when running tests
-     * @var bool
-     */
-    protected static bool $activateForTests = false;
     
     public function __construct($pluginName) {
         $this->pluginName = $pluginName;
@@ -249,7 +289,21 @@ abstract class ZfExtended_Plugin_Abstract {
         }
         return $this->config;
     }
-    
+
+    /**
+     * Retrieves an instance of the named service
+     * @param string $name
+     * @return Service
+     * @throws ZfExtended_Exception
+     */
+    public function getService(string $name): Service
+    {
+        if(!array_key_exists($name, static::$services)){
+            throw new ZfExtended_Exception('Service "'.$name.'" not configured in plugin '.get_class($this));
+        }
+        return ZfExtended_Factory::get(static::$services[$name], [ $name, $this->pluginName, Zend_Registry::get('config') ]);
+    }
+
     /**
      * Adds a sub-folder to the plugins "public" folder to make in publically accessible. Per default these are 'js' and 'css'
      * @param string $newType
@@ -329,21 +383,5 @@ abstract class ZfExtended_Plugin_Abstract {
      */
     public function getModuleName() {
         return current(explode('_', get_class($this)));
-    }
-    
-    /**
-     * Return the plug-in description
-     * @return string
-     */
-    public static function getDescription(): string {
-        return static::$description;
-    }
-
-    /**
-     * Return if the plug-in is needed for the test-suite
-     * @return string
-     */
-    public static function isNeededForTests(): string {
-        return static::$activateForTests;
     }
 }
