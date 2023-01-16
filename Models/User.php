@@ -234,9 +234,7 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract {
      */
     public function getPublicColumns(): array {
         $cols = array_flip($this->db->info($this->db::COLS));
-        unset($cols['passwd']);
-        unset($cols['openIdSubject']);
-        unset($cols['openIdIssuer']);
+        unset($cols['passwd'], $cols['openIdSubject'], $cols['openIdIssuer']);
         return array_flip($cols);
     }
     
