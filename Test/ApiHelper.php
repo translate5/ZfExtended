@@ -763,7 +763,7 @@ class ZfExtended_Test_ApiHelper {
 
         //enable xdebug debugger in eclipse
         if($this->xdebug) {
-            $http->setCookie('XDEBUG_SESSION','ECLIPSE');
+            $http->setCookie('XDEBUG_SESSION','PHPSTORM');
             $http->setConfig(array('timeout' => 3600));
         } else {
             $http->setConfig(array('timeout' => 30));

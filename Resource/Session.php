@@ -226,10 +226,14 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
         /* @var ZfExtended_Logger $sysLog */
 
         $sysLog->error('E1443', 'Authentication Token: The token is not valid');
-        //since we are in an early stage of bootstrapping we return the HTTP directly (no response available)
-        header('401 Unauthorized');
-        echo 'Authentication Token: The token is not valid!';
-        exit;
+        //since we are in an early stage of bootstrapping we must return the HTTP directly (no response available)
+        header('HTTP/1.1 401 Unauthorized');
+        if (ZfExtended_Utils::requestAcceptsJson()) {
+            die('{"success": false, "httpStatus": 401, "errorMessage": "<b>Fatal: Authentication Token: The token is not valid</b>"}');
+        }
+        else {
+            die('Authentication Token: The token is not valid!');
+        }
     }
 
     /**
