@@ -103,13 +103,7 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
     
     private function reload() {
         Zend_Session::writeClose();
-        if($this->isHttpsRequest()){
-            $url = 'https://';
-        }
-        else {
-            $url = 'http://';
-        }
-        $url .= $_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
+        $url = $_SERVER['REQUEST_URI'];
         $url = explode('?', $url);
         $url = rtrim($url[0], '/');
         //preserve a redirect parameter if existing
@@ -129,6 +123,12 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
      */
     public function isHttpsRequest(): bool {
         //from https://stackoverflow.com/a/41591066/1749200
+        // in SSL offloaded environments (SSL handled before our nginx proxy, it may happen that
+        //  no such header is passed to identify the request as SSL request. In that cases we can just sppof such
+        //  a header in our proxy config:
+        //  # Since SSL is offloaded to the surrounding company proxy, we never get the info that SSL is used
+        //  # so we just spoof that header here:
+        //  proxy_set_header X-Forwarded-Proto https;
         return (( ! empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
             || ( ! empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https')
             || ( ! empty($_SERVER['HTTP_X_FORWARDED_SSL']) && $_SERVER['HTTP_X_FORWARDED_SSL'] == 'on')
@@ -154,7 +154,7 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
         if(empty($_REQUEST['sessionToken']) || !preg_match('/[a-zA-Z0-9]{32}/', $_REQUEST['sessionToken'])) {
             return;
         }
-        
+
         if(!$this->isHttpsRequest() && !defined('APPLICATION_APITEST')) {
             //without HTTPS we have to use samesite = LAX which then prevents the proper functionality of this feature,
             // therefore we just disable sessionToken auth in that case
