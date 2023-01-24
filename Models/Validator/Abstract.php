@@ -156,7 +156,7 @@ abstract class ZfExtended_Models_Validator_Abstract {
    * @param bool $allowNull optional allows null as valid value
    */
   public function addValidatorCustom($fieldname, Closure $validationFunction, $allowNull = false){
-    $this->customValidators[$fieldname] = (array)$this->customValidators[$fieldname];
+    settype($this->customValidators[$fieldname], 'array');
     $this->customValidators[$fieldname][] = $validationFunction;
     $this->nullAllowed[$fieldname] = (boolean) $allowNull;
   }

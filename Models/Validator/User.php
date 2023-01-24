@@ -75,18 +75,18 @@ class ZfExtended_Models_Validator_User extends ZfExtended_Models_Validator_Abstr
     protected function setPasswdValidator(): void
     {
         $me = $this;
-        $passwdValidator = function($value) use($me) {
-            if(is_null($value)){
+        $passwdValidator = function ($value) use ($me) {
+            if (ZfExtended_Utils::emptyString($value)) {
                 return true;
             }
             $message = [];
-            if(ZfExtended_PasswordCheck::isValid($value,$message) === false){
+            if (ZfExtended_PasswordCheck::isValid($value, $message) === false) {
                 $me->addMessage('passwd', 'invalidPasswd', $message);
                 return false;
             }
             return true;
         };
-        $this->addValidatorCustom('passwd', $passwdValidator,true);
+        $this->addValidatorCustom('passwd', $passwdValidator, true);
     }
 
     /**
