@@ -661,4 +661,24 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller
             throw new ZfExtended_NoAccessException('Access to ' . $resourceName . ' not permitted');
         }
     }
+
+    /***
+     * Get data field value for given field name
+     * @param string $field
+     * @return mixed|null
+     */
+    protected function getDataField(string $field){
+        if( empty($this->data)){
+            return null;
+        }
+
+        if( is_array($this->data) && isset($this->data[$field])){
+            return $this->data[$field];
+        }
+
+        if( is_object($this->data) && isset($this->data->$field)){
+            return $this->data->$field;
+        }
+        return null;
+    }
 }

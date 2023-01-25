@@ -117,7 +117,13 @@ class ErrorController extends ZfExtended_Controllers_Action
             $this->view->httpStatus = $httpCode;
         //}
         if($this->exception instanceof ZfExtended_Exception){
-            $this->view->errorMessage = $this->logger->formatMessage($this->exception->getMessage(), $this->exception->getErrors());
+            $errors = $this->exception->getErrors();
+            $this->view->errorMessage = $this->logger->formatMessage($this->exception->getMessage(), $errors);
+
+            // in case the extraData field is set, set it as additional field in the json response
+            if(isset($errors[ZfExtended_Exception::EXTRA_DATA_FIELD])){
+                $this->view->{ZfExtended_Exception::EXTRA_DATA_FIELD} = $errors[ZfExtended_Exception::EXTRA_DATA_FIELD];
+            }
         }
         else {
             $this->view->errorMessage = $this->exception->getMessage();

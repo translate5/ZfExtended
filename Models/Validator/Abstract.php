@@ -97,7 +97,7 @@ abstract class ZfExtended_Models_Validator_Abstract {
    * @param string $message translated Message
    */
   public function addMessage($field, $messageKey, $message) {
-    settype($this->messages[$field], 'array');
+    $this->messages[$field] = (array)$this->messages[$field];
     $this->messages[$field][$messageKey] = $message;
   }
 

@@ -100,7 +100,7 @@ class ZfExtended_SessionController extends ZfExtended_RestController {
         settype($this->data->passwd, 'string');
         //enabling passing credentials by plain form requests or given data object
         $login = $this->getParam('login', $this->data->login);
-        $passwd = $this->getParam('passwd', $this->data->passwd);
+        $passwd = trim($this->getParam('passwd', $this->data->passwd));
         $errors = [];
         $t = ZfExtended_Zendoverwrites_Translate::getInstance();
         /* @var $t ZfExtended_Zendoverwrites_Translate */;;

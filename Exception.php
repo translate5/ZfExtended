@@ -23,6 +23,12 @@ END LICENSE AND COPYRIGHT
 */
 
 class ZfExtended_Exception extends Zend_Exception {
+
+    /***
+     * Additional data field which, if set will be returned in the exception json response
+     */
+    public const EXTRA_DATA_FIELD = 'extraData';
+
     /**
      * the error/event level of this exception (how "important" that error is)
      * By default all Exceptions are of level error
