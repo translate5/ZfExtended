@@ -464,4 +464,16 @@ class ZfExtended_Utils {
         $headers = array_change_key_case($headers, CASE_LOWER);
         return !empty($headers['accept']) && stripos($headers['accept'], 'json');
     }
+
+    /***
+     * Check if 2 (single-dimensional) arrays are equal
+     * @param array $a
+     * @param array $b
+     * @return bool
+     */
+    public static function isArrayEqual(array $a,array $b): bool
+    {
+        return ( count( $a ) === count( $b ) && !array_diff( $a, $b ) );
+    }
+
 }
