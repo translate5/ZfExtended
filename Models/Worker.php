@@ -472,6 +472,7 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
             //->columns(array('resource', 'slot')) // this does not work :-((((
             ->from($db->info($db::NAME), array('slot', 'COUNT(*) AS count'))
             ->where('resource = ?', $resourceName)
+            ->where('worker = ?', $this->getWorker())
             ->where('state IN (?)', array(self::STATE_WAITING, self::STATE_RUNNING))
             ->group(array('resource', 'slot'))
             ->order('count ASC');
