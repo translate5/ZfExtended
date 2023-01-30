@@ -548,12 +548,16 @@ class ZfExtended_Models_Installer_DbUpdater {
         $pdo->query(sprintf($sql, $dbname));
     }
 
+    /**
+     * @throws Zend_Db_Statement_Exception
+     * @throws Zend_Exception
+     * @throws Zend_Db_Exception
+     */
     public function isDbEmpty(): bool
     {
         $config = Zend_Registry::get('config');
         $db = Zend_Db::factory($config->resources->db->adapter, $config->resources->db->params->toArray());
         $tables = $db->query('SHOW TABLES');
-        print_r($tables->fetchAll());
-        return true;
+        return count($tables->fetchAll()) === 0;
     }
 }
