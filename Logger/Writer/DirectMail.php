@@ -35,18 +35,13 @@ class ZfExtended_Logger_Writer_DirectMail extends ZfExtended_Logger_Writer_Abstr
      * @see ZfExtended_Logger_Writer_Abstract::write()
      */
     public function write(ZfExtended_Logger_Event $event) {
-        if($this->getDuplicateCount($event) > 0) {
+        if ($this->getDuplicateCount($event) > 0) {
             return;
         }
-        
-        if(!empty($_SERVER['HTTP_HOST'])) {
-            $subject = $_SERVER['HTTP_HOST'].': ';
-        }
-        else {
-            $subject = '';
-        }
+
+        $subject = preg_replace('#^https?://#', '', ($event->httpHost ?? '')).': ';
         $subject .= $event->levelName.' in '.$event->domain.': ';
-        if(!empty($event->eventCode)){
+        if (!empty($event->eventCode)) {
             $subject .= $event->eventCode.' - ';
         }
         $subject .= $event->message;
