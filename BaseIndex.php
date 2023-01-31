@@ -93,6 +93,7 @@ class ZfExtended_BaseIndex {
             define('APPLICATION_ROOT', realpath(dirname($indexpath) . DIRECTORY_SEPARATOR.'..'));
         }
         defined('APPLICATION_PATH') || define('APPLICATION_PATH', APPLICATION_ROOT . DIRECTORY_SEPARATOR.'application');
+        defined('APPLICATION_DATA') || define('APPLICATION_DATA', APPLICATION_ROOT . DIRECTORY_SEPARATOR.'data');
 
         // Define application environment from Request-Origin for API-tests: this is only allowed if installation is set-up as test installation. Therefore we have to parse installation.ini manually
         if(array_key_exists('HTTP_ORIGIN', $_SERVER) && ($_SERVER['HTTP_ORIGIN'] === self::ORIGIN_TEST || $_SERVER['HTTP_ORIGIN'] === self::ORIGIN_APPTEST)){
