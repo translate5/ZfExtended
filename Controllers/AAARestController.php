@@ -180,6 +180,10 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller
     public function preDispatch()
     {
         $this->_response->setHeader('x-translate5-version', APPLICATION_VERSION, true);
+        // add access-control header to allow using the T5 API via JavaScript for app-token authenticated users
+        if(ZfExtended_Authentication::isAppTokenAuthenticated()){
+            $this->_response->setHeader('Access-Control-Allow-Origin', '*', true);
+        }
         $this->handleLimit();
         $this->prepareFilterAndSort();
         $this->displayMaintenance();
