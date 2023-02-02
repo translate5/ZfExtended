@@ -90,7 +90,7 @@ abstract class ZfExtended_Plugin_Abstract {
     /**
      * Retrieves all services configured for this plugin
      * @param Zend_Config $config
-     * @return Service[];
+     * @return Service[]
      * @throws ZfExtended_Plugin_Exception
      */
     public static function getServices(Zend_Config $config): array
@@ -292,16 +292,16 @@ abstract class ZfExtended_Plugin_Abstract {
 
     /**
      * Retrieves an instance of the named service
-     * @param string $name
+     * @param string $serviceName
      * @return Service
      * @throws ZfExtended_Exception
      */
-    public function getService(string $name): Service
+    public function getService(string $serviceName): Service
     {
-        if(!array_key_exists($name, static::$services)){
-            throw new ZfExtended_Exception('Service "'.$name.'" not configured in plugin '.get_class($this));
+        if(!array_key_exists($serviceName, static::$services)){
+            throw new ZfExtended_Exception('Service "'.$serviceName.'" not configured in plugin '.get_class($this));
         }
-        return ZfExtended_Factory::get(static::$services[$name], [ $name, $this->pluginName, Zend_Registry::get('config') ]);
+        return ZfExtended_Factory::get(static::$services[$serviceName], [ $serviceName, $this->pluginName, Zend_Registry::get('config') ]);
     }
 
     /**

@@ -134,7 +134,7 @@ class ZfExtended_Plugin_Manager {
                 $name = static::getPluginNameByClass($pluginClass);
                 $plugin = ZfExtended_Factory::get($pluginClass, array($name));
                 /* @var $plugin ZfExtended_Plugin_Abstract */
-                if($plugin->getModuleName()!==Zend_Registry::get('module')){
+                if($plugin->getModuleName() !== Zend_Registry::get('module')){
                     continue;
                 }
                 $this->pluginNames[$pluginClass] = $name ;
@@ -209,11 +209,20 @@ class ZfExtended_Plugin_Manager {
     
     /**
      * returns a list of loaded plugins for the current module
-     * @return array
+     * @return string[]
      */
     public function getLoaded(): array
     {
         return array_keys($this->pluginInstances);
+    }
+
+    /**
+     * returns the instances of the loaded plugins for this module
+     * @return ZfExtended_Plugin_Abstract[]
+     */
+    public function getInstances(): array
+    {
+        return array_values($this->pluginInstances);
     }
 
     /**
