@@ -426,9 +426,11 @@ abstract class ZfExtended_Models_Entity_Abstract {
             throw $e;
         }
         if(strpos($msg, '1062 Duplicate entry') !== false) {
+            preg_match('/\'Zf_users.(.*)\'/', $msg, $matches, PREG_OFFSET_CAPTURE, 0);
             throw new ZfExtended_Models_Entity_Exceptions_IntegrityDuplicateKey('E1015', [
-                'entity' => get_class($this),
+                'entity' => static::class,
                 'data' => $this->getDataObject(),
+                'field' => current($matches[1]) ?? false
             ], $e);
         }
         
