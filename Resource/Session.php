@@ -209,7 +209,7 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
     private function handleAuthToken(): void
     {
         $auth = ZfExtended_Authentication::getInstance();
-        $tokenParam = $_POST[$auth::APPLICATION_TOKEN_HEADER]
+        $tokenParam = $_REQUEST[$auth::APPLICATION_TOKEN_HEADER]
             ?? getallheaders()[$auth::APPLICATION_TOKEN_HEADER]
             ?? false;
 
