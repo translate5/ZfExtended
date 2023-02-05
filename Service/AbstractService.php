@@ -177,13 +177,12 @@ abstract class AbstractService
      * Usually the port and host of the service are defined in the class (the host equals the http:// + our name)
      * For special situations or for pooled services, these values can be passed as params
      * @param SymfonyStyle $io
-     * @param bool $writeToConfig
      * @param mixed $url
      * @param bool $doSave
      * @param array $config: optional to inject further dependencies
      * @return bool
      */
-    public function locate(SymfonyStyle $io, bool $writeToConfig, mixed $url, bool $doSave = false, array $config = []): bool
+    public function locate(SymfonyStyle $io, mixed $url, bool $doSave = false, array $config = []): bool
     {
         $this->output('TO BE IMPLEMENTED IN ' . get_class($this), $io, 'error');
         return false;
