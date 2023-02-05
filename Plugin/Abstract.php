@@ -22,7 +22,7 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
-use MittagQI\ZfExtended\Service;
+use MittagQI\ZfExtended\Service\AbstractService;
 /**
  * provides basic functionality for plugins
  */
@@ -67,7 +67,7 @@ abstract class ZfExtended_Plugin_Abstract {
     /**
      * Represents the services we have. They must be given in the format name => Service class name
      * where name usually represents the docker service name, e.g. [ 'someservice' => editor_Plugins_SomePlugin_SomeService::class ]
-     * @var array
+     * @var string[]
      */
     protected static array $services = [];
 
@@ -88,19 +88,32 @@ abstract class ZfExtended_Plugin_Abstract {
     }
 
     /**
-     * Retrieves all services configured for this plugin
-     * @param Zend_Config $config
-     * @return Service[]
-     * @throws ZfExtended_Plugin_Exception
+     * Retrieves an instance of the named service
+     * @param string $serviceName
+     * @param Zend_Config|null $config
+     * @return AbstractService
+     * @throws ZfExtended_Exception
      */
-    public static function getServices(Zend_Config $config): array
+    public static function createService(string $serviceName, Zend_Config $config=null): AbstractService
     {
-        $services = [];
         $pluginName = ZfExtended_Plugin_Manager::getPluginNameByClass(static::class);
-        foreach(static::$services as $serviceName => $serviceClass){
-            $services[] = ZfExtended_Factory::get($serviceClass, [ $serviceName, $pluginName, $config ]);
+        if(!array_key_exists($serviceName, static::$services)){
+            throw new ZfExtended_Exception('Service "'.$serviceName.'" not configured in plugin '.$pluginName);
         }
-        return $services;
+        if($config == null){
+            $config = Zend_Registry::get('config');
+        }
+        return ZfExtended_Factory::get(static::$services[$serviceName], [ $serviceName, $pluginName, $config ]);
+    }
+
+    /**
+     * Retrieves if the plugin has a service of the given name
+     * @param string $serviceName
+     * @return bool
+     */
+    public static function hasService(string $serviceName): bool
+    {
+        return array_key_exists($serviceName, static::$services);
     }
 
     /**
@@ -201,7 +214,7 @@ abstract class ZfExtended_Plugin_Abstract {
     
     /**
      * return the plugins absolute locale path
-     * @return array
+     * @return string|false
      */
     public function getLocalePath() {
         if(!$this->localePath) {
@@ -293,15 +306,38 @@ abstract class ZfExtended_Plugin_Abstract {
     /**
      * Retrieves an instance of the named service
      * @param string $serviceName
-     * @return Service
+     * @param Zend_Config|null $config
+     * @return AbstractService
      * @throws ZfExtended_Exception
      */
-    public function getService(string $serviceName): Service
+    public function getService(string $serviceName, Zend_Config $config=null): AbstractService
     {
+        if($config == null){
+            $config = Zend_Registry::get('config');
+        }
         if(!array_key_exists($serviceName, static::$services)){
             throw new ZfExtended_Exception('Service "'.$serviceName.'" not configured in plugin '.get_class($this));
         }
-        return ZfExtended_Factory::get(static::$services[$serviceName], [ $serviceName, $this->pluginName, Zend_Registry::get('config') ]);
+        return ZfExtended_Factory::get(static::$services[$serviceName], [ $serviceName, $this->pluginName, $config ]);
+    }
+
+    /**
+     * Retrieves all services configured for this plugin
+     * Returned will be an assoc array like $serviceName => $service
+     * @param Zend_Config|null $config
+     * @return AbstractService[]
+     * @throws ZfExtended_Plugin_Exception
+     */
+    public function getServices(Zend_Config $config=null): array
+    {
+        if($config == null){
+            $config = Zend_Registry::get('config');
+        }
+        $services = [];
+        foreach(static::$services as $serviceName => $serviceClass){
+            $services[$serviceName] = ZfExtended_Factory::get($serviceClass, [ $serviceName, $this->pluginName, $config ]);
+        }
+        return $services;
     }
 
     /**
