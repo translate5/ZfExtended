@@ -38,7 +38,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  */
 abstract class AbstractService
 {
-    CONST DO_DEBUG = false;
+    const DO_DEBUG = false;
     /**
      * This usually represents a dockerized service. The name is defined as array-key in a plugins $services prop and must be UNIQUE across all plugins and the base services
      * @var string
@@ -86,9 +86,9 @@ abstract class AbstractService
     private bool $isPlugin;
 
     /**
-     * @param string $name: The name of the service, which MUST be unique across the application and all plugins
-     * @param string|null $pluginName: If given, the service is a plugin service for the given plugin
-     * @param Zend_Config|null $config: The global config
+     * @param string $name : The name of the service, which MUST be unique across the application and all plugins
+     * @param string|null $pluginName : If given, the service is a plugin service for the given plugin
+     * @param Zend_Config|null $config : The global config
      * @throws Zend_Exception
      */
     public function __construct(string $name, string $pluginName = null, Zend_Config $config = null)
@@ -131,7 +131,7 @@ abstract class AbstractService
      */
     public function check(): bool
     {
-        $this->errors[] = 'Service "'.$this->getName().'" is not implemented';
+        $this->errors[] = 'Service "' . $this->getName() . '" is not implemented';
         return false;
     }
 
@@ -144,11 +144,11 @@ abstract class AbstractService
         $result = new ZfExtended_Models_SystemRequirement_Result();
         $result->id = $this->name;
         $result->name = $this->getDescription();
-        if(!$this->check()){
+        if (!$this->check()) {
             $result->warning = $this->warnings;
             $result->error = $this->errors;
             $result->badSummary = $this->badSummary;
-        } else if($this->isOptional){
+        } else if ($this->isOptional) {
             $result->warning = $this->warnings;
         }
         return $result;
@@ -160,9 +160,9 @@ abstract class AbstractService
      */
     public function serviceCheck(SymfonyStyle $io)
     {
-        if($this->check()){
+        if ($this->check()) {
             // special: warning for optional services that checked but had warnings
-            if($this->isOptional && count($this->warnings) > 0){
+            if ($this->isOptional && count($this->warnings) > 0) {
                 $this->output($this->getWarning(), $io, 'warning');
             } else {
                 $this->output($this->getSuccess(), $io, 'success');
@@ -175,14 +175,15 @@ abstract class AbstractService
     /**
      * Sets the Service up in the context of an symfony Command
      * Usually the port and host of the service are defined in the class (the host equals the http:// + our name)
-     * For special situations or for multi-instance services, these values can be passed as params
+     * For special situations or for pooled services, these values can be passed as params
      * @param SymfonyStyle $io
      * @param bool $writeToConfig
-     * @param string|array $url
+     * @param mixed $url
      * @param bool $doSave
+     * @param array $config: optional to inject further dependencies
      * @return bool
      */
-    public function locate(SymfonyStyle $io, bool $writeToConfig, mixed $url, bool $doSave=false): bool
+    public function locate(SymfonyStyle $io, bool $writeToConfig, mixed $url, bool $doSave = false, array $config = []): bool
     {
         $this->output('TO BE IMPLEMENTED IN ' . get_class($this), $io, 'error');
         return false;
@@ -194,13 +195,13 @@ abstract class AbstractService
      * @param string $seperator
      * @return string
      */
-    public function getError(string $seperator="\n"): string
+    public function getError(string $seperator = "\n"): string
     {
         return
             $this->getDescription()
-            .' is not properly working:'
-            .$seperator.$seperator
-            .implode($seperator, $this->errors);
+            . ' is not properly working:'
+            . $seperator . $seperator
+            . implode($seperator, $this->errors);
     }
 
     /**
@@ -208,11 +209,11 @@ abstract class AbstractService
      * @param string $seperator
      * @return string
      */
-    public function getWarning(string $seperator="\n"): string
+    public function getWarning(string $seperator = "\n"): string
     {
         return $this->getDescription()
-            .' has warnings: '
-            .implode($seperator, $this->warnings);
+            . ' has warnings: '
+            . implode($seperator, $this->warnings);
     }
 
     /**
@@ -221,7 +222,7 @@ abstract class AbstractService
      */
     public function getSuccess(): string
     {
-        return $this->getDescription().' works as expected.';
+        return $this->getDescription() . ' works as expected.';
     }
 
     /**
@@ -230,21 +231,22 @@ abstract class AbstractService
      */
     public function getDescription(): string
     {
-        $plugin = ($this->isPlugin) ? ', plugin "'.$this->pluginName.'", ' : '';
-        return 'Service "'.$this->getName().'"'.$plugin;
+        $plugin = ($this->isPlugin) ? ', plugin "' . $this->pluginName . '", ' : '';
+        return 'Service "' . $this->getName() . '"' . $plugin;
     }
 
     /**
      * Helper to generate output for commands or debugging
      * @param string $msg
      * @param SymfonyStyle|null $io
-     * @param string $ioMethod: can be 'note' | 'writeln' | 'success' | 'warning' | 'error' | 'caution'
+     * @param string $ioMethod : can be 'note' | 'writeln' | 'success' | 'warning' | 'error' | 'caution'
      */
-    public function output(string $msg, SymfonyStyle $io=null, string $ioMethod='note'){
-        if(self::DO_DEBUG){
-            error_log('SERVICE '.$ioMethod.': '.$msg);
+    public function output(string $msg, SymfonyStyle $io = null, string $ioMethod = 'note')
+    {
+        if (self::DO_DEBUG) {
+            error_log('SERVICE ' . $ioMethod . ': ' . $msg);
         }
-        if($io){
+        if ($io) {
             $io->$ioMethod($msg);
         }
     }
