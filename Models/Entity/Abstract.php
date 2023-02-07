@@ -425,8 +425,8 @@ abstract class ZfExtended_Models_Entity_Abstract {
         if(strpos($msg, 'Integrity constraint violation:') === false) {
             throw $e;
         }
-        if(strpos($msg, '1062 Duplicate entry') !== false) {
-            preg_match('/\'Zf_users.(.*)\'/', $msg, $matches, PREG_OFFSET_CAPTURE, 0);
+        if(str_contains($msg, '1062 Duplicate entry')) {
+            preg_match('/\''.($this->tableName ?? '').'.(.*)\'/', $msg, $matches, PREG_OFFSET_CAPTURE, 0);
             throw new ZfExtended_Models_Entity_Exceptions_IntegrityDuplicateKey('E1015', [
                 'entity' => static::class,
                 'data' => $this->getDataObject(),
