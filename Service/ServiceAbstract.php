@@ -36,7 +36,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  * This should not be mixed with a Languageresource-service, which in this is a special case of this general service (and unfortunately is not coded in a languageresource-specific scope)
  * Currently, this base-class is tailored for administrative purposes
  */
-abstract class AbstractService
+abstract class ServiceAbstract
 {
     const DO_DEBUG = false;
     /**
@@ -74,11 +74,6 @@ abstract class AbstractService
      */
     protected ?string $pluginName = null;
 
-    /**
-     * An optional service is not regarded as error when missing but just creates a warning
-     * @var bool
-     */
-    protected bool $isOptional = false;
     /**
      * Holds the info if this is a plugin or global service
      * @var bool
@@ -136,6 +131,16 @@ abstract class AbstractService
     }
 
     /**
+     * Evaluates, if a service may should be skipped for checks
+     * This can be used to exclude services based on config-dependent decisions
+     * @return bool
+     */
+    public function isCheckSkipped(): bool
+    {
+        return false;
+    }
+
+    /**
      * Creates a result in the system-check style
      * @return ZfExtended_Models_SystemRequirement_Result
      */
@@ -148,8 +153,6 @@ abstract class AbstractService
             $result->warning = $this->warnings;
             $result->error = $this->errors;
             $result->badSummary = $this->badSummary;
-        } else if ($this->isOptional) {
-            $result->warning = $this->warnings;
         }
         return $result;
     }
@@ -160,13 +163,10 @@ abstract class AbstractService
      */
     public function serviceCheck(SymfonyStyle $io)
     {
-        if ($this->check()) {
-            // special: warning for optional services that checked but had warnings
-            if ($this->isOptional && count($this->warnings) > 0) {
-                $this->output($this->getWarning(), $io, 'warning');
-            } else {
-                $this->output($this->getSuccess(), $io, 'success');
-            }
+        if ($this->isCheckSkipped()) {
+            $this->output($this->getIrrelevant(), $io, 'info');
+        } else if ($this->check()) {
+            $this->output($this->getSuccess(), $io, 'success');
         } else {
             $this->output($this->getError(), $io, 'caution');
         }
@@ -179,7 +179,7 @@ abstract class AbstractService
      * @param SymfonyStyle $io
      * @param mixed $url
      * @param bool $doSave
-     * @param array $config: optional to inject further dependencies
+     * @param array $config : optional to inject further dependencies
      * @return bool
      */
     public function locate(SymfonyStyle $io, mixed $url, bool $doSave = false, array $config = []): bool
@@ -222,6 +222,15 @@ abstract class AbstractService
     public function getSuccess(): string
     {
         return $this->getDescription() . ' works as expected.';
+    }
+
+    /**
+     * Administrative message if the service is set up properly
+     * @return string
+     */
+    public function getIrrelevant(): string
+    {
+        return $this->getDescription() . ' is not relevant for the current configuration.';
     }
 
     /**

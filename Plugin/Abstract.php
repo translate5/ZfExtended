@@ -22,7 +22,7 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
-use MittagQI\ZfExtended\Service\AbstractService;
+use MittagQI\ZfExtended\Service\ServiceAbstract;
 /**
  * provides basic functionality for plugins
  */
@@ -91,10 +91,10 @@ abstract class ZfExtended_Plugin_Abstract {
      * Retrieves an instance of the named service
      * @param string $serviceName
      * @param Zend_Config|null $config
-     * @return AbstractService
+     * @return ServiceAbstract
      * @throws ZfExtended_Exception
      */
-    public static function createService(string $serviceName, Zend_Config $config=null): AbstractService
+    public static function createService(string $serviceName, Zend_Config $config=null): ServiceAbstract
     {
         $pluginName = ZfExtended_Plugin_Manager::getPluginNameByClass(static::class);
         if(!array_key_exists($serviceName, static::$services)){
@@ -307,10 +307,10 @@ abstract class ZfExtended_Plugin_Abstract {
      * Retrieves an instance of the named service
      * @param string $serviceName
      * @param Zend_Config|null $config
-     * @return AbstractService
+     * @return ServiceAbstract
      * @throws ZfExtended_Exception
      */
-    public function getService(string $serviceName, Zend_Config $config=null): AbstractService
+    public function getService(string $serviceName, Zend_Config $config=null): ServiceAbstract
     {
         if($config == null){
             $config = Zend_Registry::get('config');
@@ -325,7 +325,7 @@ abstract class ZfExtended_Plugin_Abstract {
      * Retrieves all services configured for this plugin
      * Returned will be an assoc array like $serviceName => $service
      * @param Zend_Config|null $config
-     * @return AbstractService[]
+     * @return ServiceAbstract[]
      * @throws ZfExtended_Plugin_Exception
      */
     public function getServices(Zend_Config $config=null): array
