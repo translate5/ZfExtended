@@ -64,6 +64,13 @@ abstract class ServiceAbstract
     protected array $badSummary = [];
 
     /**
+     * Caches the version of the service when checking it
+     * This may be the version of a docker-container or the version of a locally installed tool or even both (version container + version of tool inside)
+     * @var string|null
+     */
+    protected ?string $version = null;
+
+    /**
      * Represents the the global config
      * @var Zend_Config
      */
@@ -148,12 +155,12 @@ abstract class ServiceAbstract
     {
         $result = new ZfExtended_Models_SystemRequirement_Result();
         $result->id = $this->name;
-        $result->name = $this->getDescription();
         if (!$this->check()) {
             $result->warning = $this->warnings;
             $result->error = $this->errors;
             $result->badSummary = $this->badSummary;
         }
+        $result->name = $this->getDescription();
         return $result;
     }
 
@@ -239,8 +246,9 @@ abstract class ServiceAbstract
      */
     public function getDescription(): string
     {
-        $plugin = ($this->isPlugin) ? ', plugin "' . $this->pluginName . '", ' : '';
-        return 'Service "' . $this->getName() . '"' . $plugin;
+        $plugin = ($this->isPlugin) ? ', plugin "' . $this->pluginName . '"' : '';
+        $version = (empty($this->version)) ? '' : ', version "' . $this->version . '"';
+        return 'Service "' . $this->getName() . '"' . $version . $plugin;
     }
 
     /**
