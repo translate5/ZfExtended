@@ -381,15 +381,9 @@ class ZfExtended_BaseIndex {
             error_log('Fatal: Could not connect to the database!');
         }
         header('HTTP/1.1 500 Internal Server Error');
-        $headers = apache_request_headers();
-        if ($headers) {
-            $headers = array_change_key_case($headers, CASE_LOWER);
-            if (empty($headers['accept']) || stripos($headers['accept'], 'json') === false) {
-                error_log(print_r($headers, 1));
-                include('layouts/dbdown.phtml');
-                return;
-            }
+        if (ZfExtended_Utils::requestAcceptsJson()) {
+            die('{"success": false, "httpStatus": 500, "errorMessage": "<b>Fatal: Could not connect to the database!</b> <br>If you get this message in the Browser: try to reload the application. <br>See error log for details."}');
         }
-        die('{"success": false, "httpStatus": 500, "errorMessage": "<b>Fatal: Could not connect to the database!</b> <br>If you get this message in the Browser: try to reload the application. <br>See error log for details."}');
+        include('layouts/dbdown.phtml');
     }
 }

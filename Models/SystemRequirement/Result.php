@@ -65,4 +65,12 @@ class ZfExtended_Models_SystemRequirement_Result {
     public function hasInfo(): bool {
         return !empty($this->info);
     }
+
+    /**
+     * Returns true if the result has a summary hinting how to fix the problems
+     * @return bool
+     */
+    public function hasBadSummary(): bool {
+        return !empty($this->badSummary);
+    }
 }

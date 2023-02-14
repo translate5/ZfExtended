@@ -54,6 +54,9 @@ class ZfExtended_Models_Validator_User extends ZfExtended_Models_Validator_Abstr
         $this->addValidator('openIdSubject', 'stringLength', array('min' => 0, 'max' => 255));
     }
 
+    /**
+     * @return void
+     */
     protected function setEmailValidator(): void
     {
         $me = $this;
@@ -66,15 +69,19 @@ class ZfExtended_Models_Validator_User extends ZfExtended_Models_Validator_Abstr
         });
     }
 
+    /**
+     * @return void
+     */
     protected function setPasswdValidator(): void
     {
-        $string = $this->validatorFactory('stringLength', array('min' => 8, 'max' => 255));
         $me = $this;
-        $passwdValidator = function ($value) use ($string, $me) {
-            if (is_null($value))
+        $passwdValidator = function ($value) use ($me) {
+            if (ZfExtended_Utils::emptyString($value)) {
                 return true;
-            if (!$string->isValid($value)) {
-                $me->addMessage('passwd', 'invalidPasswd', 'invalidPasswd');
+            }
+            $message = [];
+            if (ZfExtended_PasswordCheck::isValid($value, $message) === false) {
+                $me->addMessage('passwd', 'invalidPasswd', $message);
                 return false;
             }
             return true;
@@ -82,6 +89,11 @@ class ZfExtended_Models_Validator_User extends ZfExtended_Models_Validator_Abstr
         $this->addValidatorCustom('passwd', $passwdValidator, true);
     }
 
+    /**
+     * @return void
+     * @throws Zend_Exception
+     * @throws Zend_Validate_Exception
+     */
     private function setLoginValidator(): void
     {
         $regexValidator = new Zend_Validate_Regex('/^[\w\-_@.]+$/u');

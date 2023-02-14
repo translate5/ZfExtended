@@ -22,6 +22,7 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
+use MittagQI\ZfExtended\Service\ServiceAbstract;
 /**
  * provides basic functionality for plugins
  */
@@ -44,7 +45,77 @@ abstract class ZfExtended_Plugin_Abstract {
      * @var string
      */
     const TYPE_CLIENT_SPECIFIC = 'clientspecific';
-    
+
+    /**
+     * The plug-in type
+     * @var string
+     */
+    protected static $type = self::TYPE_PUBLIC;
+
+    /**
+     * A human-readable description of the plug-in
+     * @var string
+     */
+    protected static string $description = 'Please overwrite me in the plug-in init';
+
+    /**
+     * Set to true in the concrete plug-in, if it should be activated when running tests
+     * @var bool
+     */
+    protected static bool $activateForTests = false;
+
+    /**
+     * Represents the services we have. They must be given in the format name => Service class name
+     * where name usually represents the docker service name, e.g. [ 'someservice' => editor_Plugins_SomePlugin_SomeService::class ]
+     * @var string[]
+     */
+    protected static array $services = [];
+
+    /**
+     * Return the plug-in description
+     * @return string
+     */
+    public static function getDescription(): string {
+        return static::$description;
+    }
+
+    /**
+     * Return if the plug-in is needed for the test-suite
+     * @return string
+     */
+    public static function isNeededForTests(): string {
+        return static::$activateForTests;
+    }
+
+    /**
+     * Retrieves an instance of the named service
+     * @param string $serviceName
+     * @param Zend_Config|null $config
+     * @return ServiceAbstract
+     * @throws ZfExtended_Exception
+     */
+    public static function createService(string $serviceName, Zend_Config $config=null): ServiceAbstract
+    {
+        $pluginName = ZfExtended_Plugin_Manager::getPluginNameByClass(static::class);
+        if(!array_key_exists($serviceName, static::$services)){
+            throw new ZfExtended_Exception('Service "'.$serviceName.'" not configured in plugin '.$pluginName);
+        }
+        if($config == null){
+            $config = Zend_Registry::get('config');
+        }
+        return ZfExtended_Factory::get(static::$services[$serviceName], [ $serviceName, $pluginName, $config ]);
+    }
+
+    /**
+     * Retrieves if the plugin has a service of the given name
+     * @param string $serviceName
+     * @return bool
+     */
+    public static function hasService(string $serviceName): bool
+    {
+        return array_key_exists($serviceName, static::$services);
+    }
+
     /**
      * Contains absolute plugin path
      * @var string
@@ -87,24 +158,6 @@ abstract class ZfExtended_Plugin_Abstract {
     protected $localePath = false;
     
     protected $publicFileTypes = ['js', 'resources'];
-    
-    /**
-     * The plug-in type
-     * @var string
-     */
-    protected static $type = self::TYPE_PUBLIC;
-    
-    /**
-     * A human-readable description of the plug-in
-     * @var string
-     */
-    protected static string $description = 'Please overwrite me in the plug-in init';
-
-    /**
-     * Set to true in the concrete plug-in, if it should be activated when running tests
-     * @var bool
-     */
-    protected static bool $activateForTests = false;
     
     public function __construct($pluginName) {
         $this->pluginName = $pluginName;
@@ -161,7 +214,7 @@ abstract class ZfExtended_Plugin_Abstract {
     
     /**
      * return the plugins absolute locale path
-     * @return array
+     * @return string|false
      */
     public function getLocalePath() {
         if(!$this->localePath) {
@@ -249,7 +302,44 @@ abstract class ZfExtended_Plugin_Abstract {
         }
         return $this->config;
     }
-    
+
+    /**
+     * Retrieves an instance of the named service
+     * @param string $serviceName
+     * @param Zend_Config|null $config
+     * @return ServiceAbstract
+     * @throws ZfExtended_Exception
+     */
+    public function getService(string $serviceName, Zend_Config $config=null): ServiceAbstract
+    {
+        if($config == null){
+            $config = Zend_Registry::get('config');
+        }
+        if(!array_key_exists($serviceName, static::$services)){
+            throw new ZfExtended_Exception('Service "'.$serviceName.'" not configured in plugin '.get_class($this));
+        }
+        return ZfExtended_Factory::get(static::$services[$serviceName], [ $serviceName, $this->pluginName, $config ]);
+    }
+
+    /**
+     * Retrieves all services configured for this plugin
+     * Returned will be an assoc array like $serviceName => $service
+     * @param Zend_Config|null $config
+     * @return ServiceAbstract[]
+     * @throws ZfExtended_Plugin_Exception
+     */
+    public function getServices(Zend_Config $config=null): array
+    {
+        if($config == null){
+            $config = Zend_Registry::get('config');
+        }
+        $services = [];
+        foreach(static::$services as $serviceName => $serviceClass){
+            $services[$serviceName] = ZfExtended_Factory::get($serviceClass, [ $serviceName, $this->pluginName, $config ]);
+        }
+        return $services;
+    }
+
     /**
      * Adds a sub-folder to the plugins "public" folder to make in publically accessible. Per default these are 'js' and 'css'
      * @param string $newType
@@ -329,21 +419,5 @@ abstract class ZfExtended_Plugin_Abstract {
      */
     public function getModuleName() {
         return current(explode('_', get_class($this)));
-    }
-    
-    /**
-     * Return the plug-in description
-     * @return string
-     */
-    public static function getDescription(): string {
-        return static::$description;
-    }
-
-    /**
-     * Return if the plug-in is needed for the test-suite
-     * @return string
-     */
-    public static function isNeededForTests(): string {
-        return static::$activateForTests;
     }
 }

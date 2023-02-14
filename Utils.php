@@ -450,4 +450,30 @@ class ZfExtended_Utils {
         }
         return $term;
     }
+
+    /**
+     * returns true if request is accepting JSON, needed in early bootstrapping where no Zend Methods are usable
+     * @return bool
+     */
+    public static function requestAcceptsJson(): bool
+    {
+        $headers = apache_request_headers();
+        if (! $headers) {
+            return false;
+        }
+        $headers = array_change_key_case($headers, CASE_LOWER);
+        return !empty($headers['accept']) && stripos($headers['accept'], 'json');
+    }
+
+    /***
+     * Check if 2 (single-dimensional) arrays are equal
+     * @param array $a
+     * @param array $b
+     * @return bool
+     */
+    public static function isArrayEqual(array $a,array $b): bool
+    {
+        return ( count( $a ) === count( $b ) && !array_diff( $a, $b ) );
+    }
+
 }
