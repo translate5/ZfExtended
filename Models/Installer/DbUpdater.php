@@ -547,4 +547,17 @@ class ZfExtended_Models_Installer_DbUpdater {
         // now create DB from scratch
         $pdo->query(sprintf($sql, $dbname));
     }
+
+    /**
+     * @throws Zend_Db_Statement_Exception
+     * @throws Zend_Exception
+     * @throws Zend_Db_Exception
+     */
+    public function isDbEmpty(): bool
+    {
+        $config = Zend_Registry::get('config');
+        $db = Zend_Db::factory($config->resources->db->adapter, $config->resources->db->params->toArray());
+        $tables = $db->query('SHOW TABLES');
+        return count($tables->fetchAll()) === 0;
+    }
 }
