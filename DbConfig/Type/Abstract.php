@@ -27,12 +27,12 @@ END LICENSE AND COPYRIGHT
 abstract class ZfExtended_DbConfig_Type_Abstract {
     /**
      * validates the given config value (basic type check)
-     * @param string $type the underlying config type
-     * @param string $value the value to be checked
+     * @param editor_Models_Config $config the underlying config type
+     * @param string $newvalue the value to be checked
      * @param string|null $errorStr OUT the error message of the failed validation
      * @return bool false if not valid
      */
-    abstract public function validateValue(string $type, string &$value, ?string &$errorStr): bool;
+    abstract public function validateValue(editor_Models_Config $config, string &$newvalue, ?string &$errorStr): bool;
 
     /**
      * returns the GUI view class to be used or null for default handling
