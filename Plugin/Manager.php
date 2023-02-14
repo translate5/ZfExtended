@@ -26,6 +26,23 @@ END LICENSE AND COPYRIGHT
  * provides basic functionality for plugins
  */
 class ZfExtended_Plugin_Manager {
+
+    /**
+     * returns the Plugin Name distilled from class name
+     * @param string $className
+     * @return string
+     */
+    public static function getPluginNameByClass(string $className): string
+    {
+        $parts = explode('_', $className);
+        reset($parts);
+        do {
+            if(strtolower(current($parts)) === 'plugins') {
+                return next($parts);
+            }
+        } while(next($parts) !== false);
+        return $className;
+    }
     /**
      * Container for the Plugin Instances
      * @var array
@@ -114,10 +131,10 @@ class ZfExtended_Plugin_Manager {
         /* @var $logger ZfExtended_Logger */
         foreach ($pluginClasses as $pluginClass) {
             try {
-                $name = $this->classToName($pluginClass);
+                $name = static::getPluginNameByClass($pluginClass);
                 $plugin = ZfExtended_Factory::get($pluginClass, array($name));
                 /* @var $plugin ZfExtended_Plugin_Abstract */
-                if($plugin->getModuleName()!==Zend_Registry::get('module')){
+                if($plugin->getModuleName() !== Zend_Registry::get('module')){
                     continue;
                 }
                 $this->pluginNames[$pluginClass] = $name ;
@@ -175,7 +192,7 @@ class ZfExtended_Plugin_Manager {
         if(isset($this->pluginInstances[$key])) {
             return $this->pluginInstances[$key];
         }
-        $name = $this->classToName($key);
+        $name = static::getPluginNameByClass($key);
         $classes = array_keys($this->pluginNames, $name, true);
         $cnt = count($classes);
         if($cnt === 0) {
@@ -192,11 +209,20 @@ class ZfExtended_Plugin_Manager {
     
     /**
      * returns a list of loaded plugins for the current module
-     * @return array
+     * @return string[]
      */
     public function getLoaded(): array
     {
         return array_keys($this->pluginInstances);
+    }
+
+    /**
+     * returns the instances of the loaded plugins for this module
+     * @return ZfExtended_Plugin_Abstract[]
+     */
+    public function getInstances(): array
+    {
+        return array_values($this->pluginInstances);
     }
 
     /**
@@ -261,33 +287,7 @@ class ZfExtended_Plugin_Manager {
         }
         return $result;
     }
-    
-    /**
-     * returns the Plugin Name distilled from class name
-     * @param string $class
-     * @return string
-     */
-    public function classToName($class) {
-        $parts = $this->classExplode($class);
-        reset($parts);
-        do {
-            if(strtolower(current($parts)) === 'plugins') {
-                return next($parts);
-            }
-        }while(next($parts) !== false);
-        return $class;
-    }
-    
-    /**
-     * explodes the given class name
-     * @param string $class
-     * @return array
-     */
-    protected function classExplode($class): array
-    {
-        return explode('_', $class);
-    }
-    
+
     /***
      * Return plugin config prefix for all inactive plugins
      * @return array
