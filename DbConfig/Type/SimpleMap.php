@@ -39,9 +39,9 @@ class ZfExtended_DbConfig_Type_SimpleMap extends ZfExtended_DbConfig_Type_CoreTy
         return 'Editor.view.admin.config.type.SimpleMap';
     }
 
-    public function validateValue(string $type, &$value, ?string &$errorStr): bool
+    public function validateValue(editor_Models_Config $config, &$newvalue, ?string &$errorStr): bool
     {
-        $rawType = parent::validateValue($type, $value, $errorStr);
+        $rawType = parent::validateValue($config, $newvalue, $errorStr);
 
         // if the raw type is not correct fail validation
         if (!$rawType) {
@@ -51,7 +51,7 @@ class ZfExtended_DbConfig_Type_SimpleMap extends ZfExtended_DbConfig_Type_CoreTy
         $err = '';
 
         //from parent validate we still get a string
-        $confVal = (array)$this->jsonDecode($value, $err);
+        $confVal = (array)$this->jsonDecode($newvalue, $err);
 
         //sort by the keys, from the lowest to the biggest
         ksort($confVal);
