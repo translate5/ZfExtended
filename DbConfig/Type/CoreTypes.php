@@ -71,17 +71,18 @@ class ZfExtended_DbConfig_Type_CoreTypes extends ZfExtended_DbConfig_Type_Abstra
 
     /**
      * validates and converts the given config value (basic type check and conversion ("true"|"on" to valid bool true and so on)
-     * @param string $type the underlying config type
-     * @param string $value the value to be checked
+     * @param editor_Models_Config $type the underlying config type
+     * @param string $newvalue the value to be checked
      * @param string|null $errorStr OUT the error message of the failed validation
      * @return bool false if not valid
      */
-    public function validateValue(string $type, string &$value, ?string &$errorStr): bool {
+    public function validateValue(editor_Models_Config $config, string &$newvalue, ?string &$errorStr): bool {
+        $type = $config->getType();
         switch($type) {
             case self::TYPE_LIST:
             case self::TYPE_MAP:
                 $typeForComparsion = $type == self::TYPE_LIST ? 'array' : 'object';
-                $valueDecoded = $this->jsonDecode($value, $errorStr);
+                $valueDecoded = $this->jsonDecode($newvalue, $errorStr);
 
                 if(!empty($errorStr)) {
                     $errorStr = "type $type needs a valid JSON value, error is '".$errorStr."'";
@@ -90,46 +91,46 @@ class ZfExtended_DbConfig_Type_CoreTypes extends ZfExtended_DbConfig_Type_Abstra
 
                 if($typeForComparsion != gettype($valueDecoded)) {
                     //not a valid array or object
-                    $errorStr = "not a valid $typeForComparsion '$value'";
+                    $errorStr = "not a valid $typeForComparsion '$newvalue'";
                     return false;
                 }
                 break;
 
             case self::TYPE_BOOLEAN:
-                $res = parse_ini_string('value = '.$value, false, INI_SCANNER_TYPED);
-                $value = boolval($res['value'] ?? false) ? '1' : '0'; //ensure bool, then from bool we make 0 or 1 as string
+                $res = parse_ini_string('value = '.$newvalue, false, INI_SCANNER_TYPED);
+                $newvalue = boolval($res['value'] ?? false) ? '1' : '0'; //ensure bool, then from bool we make 0 or 1 as string
                 return true; // no error is possible here
 
             case self::TYPE_INTEGER:
             case self::TYPE_FLOAT:
                 //must be is_numeric otherwise error
-                if(!is_numeric($value)) {
-                    $errorStr = "not a valid $type '$value'";
+                if(!is_numeric($newvalue)) {
+                    $errorStr = "not a valid $type '$newvalue'";
                     return false;
                 }
-                $value = strval($type == 'float' ? doubleval($value) : intval($value)); //cast the value to the desired number then back to string
+                $newvalue = strval($type == 'float' ? doubleval($newvalue) : intval($newvalue)); //cast the value to the desired number then back to string
                 break;
 
             case self::TYPE_REGEX:
-                if(preg_match($value, '') === false){
-                    $errorStr = "not a valid $type '$value'";
+                if(preg_match($newvalue, '') === false){
+                    $errorStr = "not a valid $type '$newvalue'";
                     return false;
                 }
                 return true;
 
             case self::TYPE_REGEXLIST:
-                $valueDecoded = $this->jsonDecode($value, $errorStr);
+                $valueDecoded = $this->jsonDecode($newvalue, $errorStr);
                 foreach($valueDecoded as $regex){
                     if(preg_match($regex, '') === false){
-                        $errorStr = "not a valid $type '$value'";
+                        $errorStr = "not a valid $type '$newvalue'";
                         return false;
                     }
                 }
                 return true;
 
             case self::TYPE_JSON:
-                if(json_decode($value) === null){
-                    $errorStr = "not a valid $type '$value'";
+                if(json_decode($newvalue) === null){
+                    $errorStr = "not a valid $type '$newvalue'";
                     return false;
                 }
                 return true;

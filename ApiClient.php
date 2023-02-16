@@ -33,13 +33,15 @@ class ZfExtended_ApiClient extends Zend_Http_Client {
 
     /**
      * Creates a Cleient for requesting the T5 API For an API-request the authorization-cookie needs to be set
-     * @param null $uri
-     * @param null $config
-     * @param string|null $authorizationCookie: Optional, by default, the auth-cookie is taken from $_COOKIE
+     * @param $uri
+     * @param $config
+     * @param string|null $authorizationCookie
+     * @param bool $dontAutoaddAuthCookie
      * @throws Zend_Exception
      * @throws Zend_Http_Client_Exception
+     * @throws ZfExtended_Exception
      */
-    public function __construct($uri = null, $config = null, string $authorizationCookie = null)
+    public function __construct($uri = null, $config = null, string $authorizationCookie = null, bool $dontAutoaddAuthCookie = false)
     {
         $this->translate5ApiUrl = self::getServerBaseURL();
         parent::__construct($uri, Zend_Registry::get('config'));
@@ -50,6 +52,11 @@ class ZfExtended_ApiClient extends Zend_Http_Client {
             $this->setHeaders('Origin', $origin);
         }
         // set the auth-cookie
+        // but only if auto-add AuthCookie is not wanted
+        if ($dontAutoaddAuthCookie) {
+            return;
+        }
+        
         $authCookieName = Zend_Session::getOptions('name');
         if($authorizationCookie === null){
             if(!array_key_exists($authCookieName, $_COOKIE)){

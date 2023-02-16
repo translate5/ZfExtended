@@ -425,11 +425,13 @@ class ZfExtended_UserController extends ZfExtended_RestController {
             'E1095' => 'User can not be saved: the chosen userGuid does already exist.',
         ]);
 
-        if($e->isInMessage("for key 'login'")) {
+        $field = $e->getExtra('field') ?? '';
+
+        if($field === 'login') {
             $errors['login']['duplicateLogin'] = 'Dieser Anmeldename wird bereits verwendet.';
             $ecode = 'E1094';
         }
-        elseif($e->isInMessage("for key 'userGuid'")) {
+        elseif($field === 'userGuid')  {
             $errors['login']['duplicateUserGuid'] = 'Diese UserGuid wird bereits verwendet.';
             $ecode = 'E1095';
         }

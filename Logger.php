@@ -381,32 +381,45 @@ class ZfExtended_Logger {
             }
         }
     }
-    
+
     /**
      * Fills up log data about the request and the current user
      * @param ZfExtended_Logger_Event $event
+     * @throws Zend_Exception
      */
-    protected function fillStaticData(ZfExtended_Logger_Event $event) {
-        if(!empty($_SERVER['HTTP_HOST'])) {
-            $event->httpHost = $_SERVER['HTTP_HOST'];
+    protected function fillStaticData(ZfExtended_Logger_Event $event): void {
+        if (class_exists('Zend_Registry', false) && Zend_Registry::isRegistered('config')) {
+            $event->httpHost = Zend_Registry::get('config')->runtimeOptions->server->protocol;
+            $event->httpHost .= Zend_Registry::get('config')->runtimeOptions->server->name;
+        } else {
+            $event->httpHost = gethostname();
         }
-        if(!empty($_SERVER['REQUEST_URI'])) {
-            $event->url = $_SERVER['REQUEST_URI'];
-        }
-        if(!empty($_SERVER['REQUEST_METHOD'])) {
+
+        if (empty($_SERVER['REQUEST_METHOD'])) {
+            $event->url = 'cli://';
+        } else {
+            if (empty($_SERVER['HTTPS'])) {
+                $event->url = 'http://';
+            } else {
+                $event->url = 'https://';
+            }
             $event->method = $_SERVER['REQUEST_METHOD'];
         }
-        
-        if(defined('APPLICATION_VERSION')) {
-            $event->appVersion = APPLICATION_VERSION;
+        $event->url .= $_SERVER['HTTP_HOST'] ?? '-na-';
+
+        if (!empty($_SERVER['REQUEST_URI'])) {
+            $event->url .= $_SERVER['REQUEST_URI'];
         }
-        else {
+
+        if (defined('APPLICATION_VERSION')) {
+            $event->appVersion = APPLICATION_VERSION;
+        } else {
             $event->appVersion = 'not defined yet';
         }
         
-        if(Zend_Session::isStarted() && !Zend_Session::isDestroyed()) {
+        if (Zend_Session::isStarted() && !Zend_Session::isDestroyed()) {
             $user = new Zend_Session_Namespace('user');
-            if(!empty($user->data->userGuid)){
+            if (!empty($user->data->userGuid)) {
                 $event->userGuid = $user->data->userGuid;
                 $event->userLogin = $user->data->login.' ('.$user->data->firstName.' '.$user->data->surName.')';
             }

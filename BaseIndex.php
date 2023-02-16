@@ -41,7 +41,9 @@ class ZfExtended_BaseIndex {
 
     const ENVIRONMENT_APP = 'application';
 
+    const ENVIRONMENT_DATA = 'data';
     const ENVIRONMENT_TEST = 'test';
+    const ENVIRONMENT_TESTDATA = 'testdata';
 
     const ORIGIN_TEST = 't5test';
 
@@ -92,24 +94,33 @@ class ZfExtended_BaseIndex {
         if(!defined('APPLICATION_ROOT')) {
             define('APPLICATION_ROOT', realpath(dirname($indexpath) . DIRECTORY_SEPARATOR.'..'));
         }
+        $appData = APPLICATION_ROOT . DIRECTORY_SEPARATOR . self::ENVIRONMENT_DATA;
         defined('APPLICATION_PATH') || define('APPLICATION_PATH', APPLICATION_ROOT . DIRECTORY_SEPARATOR.'application');
 
-        // Define application environment from Request-Origin for API-tests: this is only allowed if installation is set-up as test installation. Therefore we have to parse installation.ini manually
-        if(array_key_exists('HTTP_ORIGIN', $_SERVER) && ($_SERVER['HTTP_ORIGIN'] === self::ORIGIN_TEST || $_SERVER['HTTP_ORIGIN'] === self::ORIGIN_APPTEST)){
+        // Define application environment from Request-Origin for API-tests: this is only allowed if installation
+        // is set-up as test installation. Therefore we have to parse installation.ini manually
+        if (array_key_exists('HTTP_ORIGIN', $_SERVER)
+            && ($_SERVER['HTTP_ORIGIN'] === self::ORIGIN_TEST
+                || $_SERVER['HTTP_ORIGIN'] === self::ORIGIN_APPTEST)) {
             // we have to check if the installation is allowed to switch the environment - security!
             $iniVars = parse_ini_file(APPLICATION_PATH.'/config/installation.ini');
-            if($iniVars !== false && array_key_exists('testSettings.testsAllowed', $iniVars) && $iniVars['testSettings.testsAllowed'] === '1'){
+            if ($iniVars !== false
+                && array_key_exists('testSettings.testsAllowed', $iniVars)
+                && $iniVars['testSettings.testsAllowed'] === '1') {
                 // CRUCIAL: this will trigger the "test" section in ini-files
-                if(!defined('APPLICATION_ENV') && $_SERVER['HTTP_ORIGIN'] === self::ORIGIN_TEST){
-                    define('APPLICATION_ENV', self::ENVIRONMENT_TEST);
+                if ($_SERVER['HTTP_ORIGIN'] === self::ORIGIN_TEST) {
+                    defined('APPLICATION_ENV') || define('APPLICATION_ENV', self::ENVIRONMENT_TEST);
+                    $appData = APPLICATION_ROOT . DIRECTORY_SEPARATOR . self::ENVIRONMENT_TESTDATA;
                 }
-                // this defines a marker to detect API-Tests in the code. It's just meant for configurational tasks as special algorithmical behaviour for tests is a no-go
+                // this defines a marker to detect API-Tests in the code. It's just meant for configurational
+                // tasks as special algorithmical behaviour for tests is a no-go
                 defined('APPLICATION_APITEST') || define('APPLICATION_APITEST', true);
             }
         }
         // Define application environment
-        defined('APPLICATION_ENV') || define('APPLICATION_ENV', ( getenv('APPLICATION_ENV') ?: self::ENVIRONMENT_APP));
-        defined('APPLICATION_RUNDIR') || define('APPLICATION_RUNDIR', ( getenv('APPLICATION_RUNDIR') ?: ''));
+        defined('APPLICATION_DATA') || define('APPLICATION_DATA', $appData);
+        defined('APPLICATION_ENV') || define('APPLICATION_ENV', (getenv('APPLICATION_ENV') ?: self::ENVIRONMENT_APP));
+        defined('APPLICATION_RUNDIR') || define('APPLICATION_RUNDIR', (getenv('APPLICATION_RUNDIR') ?: ''));
         $this->currentModule = $this->getCurrentModule();
     }
 
