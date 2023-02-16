@@ -22,11 +22,19 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
+use MittagQI\ZfExtended\Cors;
 /**
  * Base Request Class
  * Sanitizes all parameters but not 'data' which shall be retrieved with ::getData to properly support JSON params
  */
 class ZfExtended_Sanitized_HttpRequest extends REST_Controller_Request_Http {
+
+    public function __construct($action = null, $controller = null, $module = null, array $params = array())
+    {
+        // processing CORS preflight requests
+        Cors::handlePreflight();
+        parent::__construct($action, $controller, $module, $params);
+    }
 
     /**
      * Retrieves all GET/POST params sanitized

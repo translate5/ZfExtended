@@ -22,6 +22,7 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
+use MittagQI\ZfExtended\Cors;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 
@@ -368,6 +369,9 @@ class ZfExtended_Models_Entity_ExcelExport {
         $objWriter = \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($this->spreadsheet, 'Xlsx');
         
         $objWriter->setPreCalculateFormulas($this->getPreCalculateFormulas());
+
+        // CORS header
+        Cors::sendResponseHeader();
 
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         header("Content-Disposition: attachment; filename*=UTF-8''".rawurlencode($fileName));
