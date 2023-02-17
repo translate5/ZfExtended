@@ -48,20 +48,19 @@ use ZfExtended_Authentication;
  */
 final class Cors
 {
-    // max age of a preflight request, 1 day (the longer, the less requests ...)
-    const PREFLIGHT_MAX_AGE = 86400;
-
     /**
      * Handles a preflight (a request to find out, what kind of request is allowed)
-     * This is signalled by the "OPTIONS" header being sent
+     * This should be handled with an apache-config or .htaccess normally and is just a fallback-implementation
+     * A preflight is signalled by the "OPTIONS" header being sent
      */
     public static function handlePreflight()
     {
         if (array_key_exists('REQUEST_METHOD', $_SERVER) && $_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-            header('Access-Control-Allow-Origin: *');
+            header('Access-Control-Max-Age: 86400');
             header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
             header('Access-Control-Allow-Headers: Authorization, Content-Type, Accept, Origin, '.ZfExtended_Authentication::APPLICATION_TOKEN_HEADER);
-            header('Access-Control-Max-Age: '.self::PREFLIGHT_MAX_AGE);
+            header('Access-Control-Allow-Origin: *');
+            error_log('Responding CORS preflight request');
             exit(0);
         }
     }
