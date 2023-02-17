@@ -27,18 +27,9 @@ namespace MittagQI\ZfExtended;
 use Zend_Controller_Response_Abstract;
 use ZfExtended_Authentication;
 
+/*
 
-/**
- * Provides APIs to manage CORS Requests and add CORS headers to requests
- */
-final class Cors
-{
-    // max age of a preflight request, 1 day (the longer the less requests ...)
-    const PREFLIGHT_MAX_AGE = 86400;
-
-    /*
-
-
+        Example Preflight Request Response:
         HTTP/1.1 204 No Content
         Date: Mon, 01 Dec 2008 01:15:39 GMT
         Server: Apache/2
@@ -50,7 +41,15 @@ final class Cors
         Keep-Alive: timeout=2, max=100
         Connection: Keep-Alive
 
-    */
+*/
+
+/**
+ * Provides APIs to manage CORS Requests and add CORS headers to requests
+ */
+final class Cors
+{
+    // max age of a preflight request, 1 day (the longer, the less requests ...)
+    const PREFLIGHT_MAX_AGE = 86400;
 
     /**
      * Handles a preflight (a request to find out, what kind of request is allowed)
@@ -58,7 +57,7 @@ final class Cors
      */
     public static function handlePreflight()
     {
-        if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
+        if (array_key_exists('REQUEST_METHOD', $_SERVER) && $_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
             header('Access-Control-Allow-Origin: *');
             header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
             header('Access-Control-Allow-Headers: Authorization, Content-Type, Accept, Origin, '.ZfExtended_Authentication::APPLICATION_TOKEN_HEADER);
@@ -80,6 +79,4 @@ final class Cors
             header('Access-Control-Allow-Origin: *', true);
         }
     }
-
-
 }
