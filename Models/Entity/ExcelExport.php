@@ -22,7 +22,7 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
-use MittagQI\ZfExtended\Cors;
+use MittagQI\ZfExtended\Controller\Response\Header;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 
@@ -370,22 +370,11 @@ class ZfExtended_Models_Entity_ExcelExport {
         
         $objWriter->setPreCalculateFormulas($this->getPreCalculateFormulas());
 
-        // CORS header
-        Cors::sendResponseHeader();
-
-        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        header("Content-Disposition: attachment; filename*=UTF-8''".rawurlencode($fileName));
-        
-        header('Cache-Control: max-age=0');
-        // If you're serving to IE 9, then the following may be needed
-        header('Cache-Control: max-age=1');
-        
-        // If you're serving to IE over SSL, then the following may be needed
-        header ('Expires: Mon, 26 Jul 1997 05:00:00 GMT'); // Date in the past
-        header ('Last-Modified: '.gmdate('D, d M Y H:i:s').' GMT'); // always modified
-        header ('Cache-Control: cache, must-revalidate'); // HTTP/1.1
-        header ('Pragma: public'); // HTTP/1.0
-        
+        Header::sendDownload(
+            rawurlencode($fileName),
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'max-age=0'
+        );
         $objWriter->save('php://output');
         exit;
     }

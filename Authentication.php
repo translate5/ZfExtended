@@ -203,7 +203,7 @@ class ZfExtended_Authentication
     public function authenticate(string $login, string $password): bool
     {
         $isOldPassword = false;
-        $valid = $this->loadUserAndValidate($login, false, function () use ($password, & $isOldPassword) {
+        $valid = $this->loadUserAndValidate($login, function () use ($password, & $isOldPassword) {
             $passwordHash = $this->authenticatedUser->getPasswd();
             $isOldPassword = str_starts_with($passwordHash, self::COMPAT_PREFIX);
             if ($isOldPassword) {
@@ -240,7 +240,7 @@ class ZfExtended_Authentication
      */
     public function authenticateByLogin(string $login): bool
     {
-        return $this->loadUserAndValidate($login, false, function () {
+        return $this->loadUserAndValidate($login, function () {
             return true;
         });
     }
@@ -264,9 +264,10 @@ class ZfExtended_Authentication
      * try to authenticate the user given by login, validated by given callback which must return bool
      * @param string $login
      * @param Closure $loginValidator
+     * @param bool $isLoginByAppToken
      * @return bool
      */
-    private function loadUserAndValidate(string $login, bool $isLoginByAppToken, Closure $loginValidator): bool
+    private function loadUserAndValidate(string $login, Closure $loginValidator, bool $isLoginByAppToken = false): bool
     {
         $this->isTokenAuth = false;
         $this->authenticatedUser = ZfExtended_Factory::get(User::class);
@@ -351,10 +352,10 @@ class ZfExtended_Authentication
             $user->load($tokenModel->getUserId());
             return $this->loadUserAndValidate(
                 $user->getLogin(),
-                true,
                 function() use ($tokenModel, $parsedToken) {
                     return $this->isPasswordEqual($parsedToken->getToken(), $tokenModel->getToken());
-                }
+                },
+                true
             );
 
         } catch (ZfExtended_Models_Entity_NotFoundException) {
