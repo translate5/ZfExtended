@@ -219,7 +219,8 @@ abstract class ServiceAbstract
     public function getWarning(string $seperator = "\n"): string
     {
         return $this->getDescription()
-            . ' has warnings: '
+            . ' has warnings:'
+            . $seperator . $seperator
             . implode($seperator, $this->warnings);
     }
 
