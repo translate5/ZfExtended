@@ -177,6 +177,7 @@ abstract class ServiceAbstract
         } else {
             $this->output($this->getError(), $io, 'caution');
         }
+        $this->hasWarnings() && $this->output($this->getWarning(), $io, 'warning');
     }
 
     /**
@@ -220,6 +221,10 @@ abstract class ServiceAbstract
         return $this->getDescription()
             . ' has warnings: '
             . implode($seperator, $this->warnings);
+    }
+
+    public function hasWarnings(): bool {
+        return !empty($this->warnings);
     }
 
     /**
