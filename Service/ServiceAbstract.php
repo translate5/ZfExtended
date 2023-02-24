@@ -64,11 +64,16 @@ abstract class ServiceAbstract
     protected array $badSummary = [];
 
     /**
-     * Caches the version of the service when checking it
-     * This may be the version of a docker-container or the version of a locally installed tool or even both (version container + version of tool inside)
-     * @var string|null
+     * Holds the checked URLs
+     * @var string[]
      */
-    protected ?string $version = null;
+    protected array $checkedUrls = [];
+
+    /**
+     * Holds the service-versions of the checked URLs
+     * @var string[]
+     */
+    protected array $checkedVersions = [];
 
     /**
      * Represents the the global config
@@ -160,7 +165,7 @@ abstract class ServiceAbstract
             $result->error = $this->errors;
             $result->badSummary = $this->badSummary;
         }
-        $result->name = $this->getDescription();
+        $result->name = $this->getDescription() . $this->getCheckedDetail(', ', 'version', $this->checkedVersions);
         return $result;
     }
 
@@ -205,10 +210,19 @@ abstract class ServiceAbstract
     public function getError(string $seperator = "\n"): string
     {
         return
-            $this->getDescription()
-            . ' is not properly working:'
+            $this->createServiceMsg('is not properly working:', $seperator)
             . $seperator . $seperator
             . implode($seperator, $this->errors);
+    }
+
+    /**
+     * Administrative message if the service is set up properly
+     * @param string $seperator
+     * @return string
+     */
+    public function getSuccess(string $seperator = "\n"): string
+    {
+        return $this->createServiceMsg('works as expected.', $seperator);
     }
 
     /**
@@ -234,18 +248,24 @@ abstract class ServiceAbstract
      * Administrative message if the service is set up properly
      * @return string
      */
-    public function getSuccess(): string
-    {
-        return $this->getDescription() . ' works as expected.';
-    }
-
-    /**
-     * Administrative message if the service is set up properly
-     * @return string
-     */
     public function getIrrelevant(): string
     {
         return $this->getDescription() . ' is not relevant for the current configuration.';
+    }
+
+    public function createServiceMsg(string $msg, string $seperator, bool $withUrls=true, bool $withVersions=true): string
+    {
+        $text = $this->getDescription();
+        if(!empty($msg)){
+            $text .= ' ' . $msg;
+        }
+        if($withUrls){
+            $text .= $this->getCheckedDetail($seperator, 'Url', $this->checkedUrls);
+        }
+        if($withVersions){
+            $text .= $this->getCheckedDetail($seperator, 'Version', $this->checkedVersions);
+        }
+        return $text;
     }
 
     /**
@@ -254,9 +274,11 @@ abstract class ServiceAbstract
      */
     public function getDescription(): string
     {
-        $plugin = ($this->isPlugin) ? ', plugin "' . $this->pluginName . '"' : '';
-        $version = (empty($this->version)) ? '' : ', version "' . $this->version . '"';
-        return 'Service "' . $this->getName() . '"' . $version . $plugin;
+        $description = 'Service "' . $this->getName() . '"';
+        if($this->isPlugin){
+            $description .= ', plugin "' . $this->pluginName . '"';
+        }
+        return $description;
     }
 
     /**
@@ -273,5 +295,36 @@ abstract class ServiceAbstract
         if ($io) {
             $io->$ioMethod($msg);
         }
+    }
+
+    /**
+     * Helper to add url & version for generating the description
+     * @param string $url
+     * @param string|null $version
+     */
+    protected function addCheckResult(string $url, string $version = null)
+    {
+        if (!in_array($url, $this->checkedUrls)) {
+            $this->checkedUrls[] = $url;
+            $this->checkedVersions[] = empty($version) ? 'unknown' : $version;
+        }
+    }
+
+    /**
+     * Helper to create message-details
+     * @param string $seperator
+     * @param string $title
+     * @param array $items
+     * @return string
+     */
+    protected function getCheckedDetail(string $seperator, string $title, array $items): string
+    {
+        if (count($items) > 1) {
+            return $seperator . ' ' . $title . 's: ' . implode(', ', $items);
+        }
+        if (count($items) === 1) {
+            return $seperator . ' ' . $title . ': ' . $items[0];
+        }
+        return '';
     }
 }
