@@ -41,7 +41,17 @@ END LICENSE AND COPYRIGHT
  * @property array<string> errors
  * @property boolean success
  * @property string publicModulePath
- * @see Editor_IndexController::indexAction:143
+ * @property string pathToIMAGES
+ * @property string userTheme
+ * @property string extJsCss
+ * @property string extJsBasepath
+ * @property int extJsVersion
+ * @property string buildType
+ * @property string locale
+ * @property string appVersion
+ * @property array|mixed validationResults
+ * @property bool enableJsLogger
+ * @see Editor_IndexController::indexAction
  *
  * @method ZfExtended_View_Helper_PluginLocale PluginLocale()
  * @method ZfExtended_View_Helper_Php2JsVars Php2JsVars()
