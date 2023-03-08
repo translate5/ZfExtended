@@ -143,10 +143,12 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
         if($this->hasUserAlreadyASession($login)) {
             return false;
         }
-        if (Auth::getInstance()->authenticate($login, $passwd)) {
+
+        $auth = Auth::getInstance();
+        if ($auth->authenticate($login, $passwd)) {
             $invalidLoginCounter->resetCounter(); // bei erfolgreichem login den counter zurücksetzen
 
-            ZfExtended_Models_LoginLog::addSuccess(Auth::getInstance()->getUser(), "plainlogin");
+            ZfExtended_Models_LoginLog::addSuccess($auth, "plainlogin");
 
             // check for already valid session for the current authenticated user
             ZfExtended_Session::updateSession(true,true);

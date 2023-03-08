@@ -218,7 +218,7 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
         }
 
         if ($auth->authenticateByToken($tokenParam)) {
-            ZfExtended_Models_LoginLog::addSuccess($auth->getUser(), "authtoken");
+            ZfExtended_Models_LoginLog::addSuccess($auth, "authtoken");
             return;
         }
 
