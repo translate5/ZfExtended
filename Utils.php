@@ -471,9 +471,32 @@ class ZfExtended_Utils {
      * @param array $b
      * @return bool
      */
-    public static function isArrayEqual(array $a,array $b): bool
+    public static function isArrayEqual(array $a, array $b): bool
     {
-        return ( count( $a ) === count( $b ) && !array_diff( $a, $b ) );
+        return (count($a) === count($b) && !array_diff($a, $b));
     }
 
+    /**
+     * returns true if the request was made with SSL.
+     *  Our internal config server.protocol can not be used here,
+     *  since the config resource is loaded after the session resource
+     * @return bool
+     */
+    public static function isHttpsRequest(): bool
+    {
+        //from https://stackoverflow.com/a/41591066/1749200
+        // in SSL offloaded environments (SSL handled before our nginx proxy, it may happen that
+        //  no such header is passed to identify the request as SSL request. In that cases we can just sppof such
+        //  a header in our proxy config:
+        //  # Since SSL is offloaded to the surrounding company proxy, we never get the info that SSL is used
+        //  # so we just spoof that header here:
+        //  proxy_set_header X-Forwarded-Proto https;
+        return ((! empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+            || (! empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https')
+            || (! empty($_SERVER['HTTP_X_FORWARDED_SSL']) && $_SERVER['HTTP_X_FORWARDED_SSL'] == 'on')
+            || (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443)
+            || (isset($_SERVER['HTTP_X_FORWARDED_PORT']) && $_SERVER['HTTP_X_FORWARDED_PORT'] == 443)
+            || (isset($_SERVER['REQUEST_SCHEME']) && $_SERVER['REQUEST_SCHEME'] == 'https')
+        );
+    }
 }

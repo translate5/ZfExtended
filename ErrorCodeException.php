@@ -134,6 +134,16 @@ class ZfExtended_ErrorCodeException extends ZfExtended_Exception {
         return $this->httpReturnCode;
     }
     
+    /**
+     * set http return-code for this exception.
+     * useful if you need a special code e.g. 412 formal incorrect
+     * @param int $code
+     * @return void
+     */
+    public function setHttpReturnCode(int $code) : void {
+        $this->httpReturnCode = $code;
+    }
+    
     protected function getErrorMessage($errorCode) {
         if(empty($this->allErrorCodes[$errorCode])) {
             return $errorCode.': Unknown Error!';

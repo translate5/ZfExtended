@@ -9,8 +9,8 @@ START LICENSE AND COPYRIGHT
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
 
  This file may be used under the terms of the GNU LESSER GENERAL PUBLIC LICENSE version 3
- as published by the Free Software Foundation and appearing in the file lgpl3-license.txt 
- included in the packaging of this file.  Please review the following information 
+ as published by the Free Software Foundation and appearing in the file lgpl3-license.txt
+ included in the packaging of this file.  Please review the following information
  to ensure the GNU LESSER GENERAL PUBLIC LICENSE version 3.0 requirements will be met:
 https://www.gnu.org/licenses/lgpl-3.0.txt
 
@@ -37,27 +37,37 @@ use ZfExtended_Authentication as Auth;
  *   session_id (die durch ZfExtended_Controllers_Plugins_SessionRegenerate bei
  *   jedem Aufruf neu gesetzt wird) und der $session->internalSessionUniqId
  */
-class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbstract {
+class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbstract
+{
     /**
      * @var array config Konfiguration der Parameter für die DB-Sessioninitialisierung
      */
-    private $_sessionConfig = array(
+    private array $sessionConfig = [
         'name'              => 'session', //table name as per Zend_Db_Table
-        'primary'           => array(
+        'primary'           => [
             'session_id',   //the sessionID given by PHP
             'name',         //session name
-        ),
-        'primaryAssignment' => array(
+        ],
+        'primaryAssignment' => [
             //you must tell the save handler which columns you
             //are using as the primary key. ORDER IS IMPORTANT
             'sessionId', //first column of the primary key is of the sessionID
             'sessionName', //second column of the primary key is the session name
-        ),
+        ],
         'modifiedColumn'    => 'modified',     //time the session should expire
         'dataColumn'        => 'session_data', //serialized data
         'lifetimeColumn'    => 'lifetime',     //end of life for a specific record
-    );
-    
+    ];
+
+    /**
+     * @throws ZfExtended_Models_Entity_Exceptions_IntegrityDuplicateKey
+     * @throws Zend_Exception
+     * @throws Zend_Session_SaveHandler_Exception
+     * @throws Zend_Session_Exception
+     * @throws ZfExtended_NotAuthenticatedException
+     * @throws Zend_Db_Statement_Exception
+     * @throws ZfExtended_Models_Entity_Exceptions_IntegrityConstraint
+     */
     public function init()
     {
         $bootstrap = $this->getBootstrap();
@@ -69,18 +79,17 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
         $resconf = $config->resources->ZfExtended_Resource_Session->toArray();
         unset($resconf['garbageCollectorLifetime']); //Zend_Session does not know this value!
         
-        if($this->isHttpsRequest()) {
+        if (ZfExtended_Utils::isHttpsRequest()) {
             //None needed so far for Features like OpenID connect and session auth token,
             // but non works only with HTTPS!
             $resconf['cookie_samesite'] = 'None';
             $resconf['cookie_secure'] = 1;
-        }
-        else {
+        } else {
             $resconf['cookie_samesite'] = 'Lax';
         }
         
         //we may set the options only, if unitTests are disabled (used to mask CLI usage)
-        if(!Zend_Session::$_unitTestEnabled) {
+        if (!Zend_Session::$_unitTestEnabled) {
             Zend_Session::setOptions($resconf);
         }
         //im if: wichtiger workaround für swfuploader, welcher in awesomeuploader
@@ -90,7 +99,7 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
             Zend_Session::setId($_POST[$resconf['name']]);
         }
         
-        Zend_Session::setSaveHandler(new ZfExtended_Session_SaveHandler_DbTable($this->_sessionConfig));
+        Zend_Session::setSaveHandler(new ZfExtended_Session_SaveHandler_DbTable($this->sessionConfig));
 
         $this->handleSessionToken(); //makes a redirect if successfull!
 
@@ -101,41 +110,18 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
         $this->setInternalSessionUniqId();
     }
     
-    private function reload() {
+    private function reload(): void
+    {
         Zend_Session::writeClose();
         $url = $_SERVER['REQUEST_URI'];
         $url = explode('?', $url);
         $url = rtrim($url[0], '/');
         //preserve a redirect parameter if existing
-        if(!empty($_REQUEST['redirect'])){
+        if (!empty($_REQUEST['redirect'])) {
             $url .= '?redirect='.$_REQUEST['redirect'];
         }
         header('Location: '.$url);
         exit;
-    }
-    
-    
-    /**
-     * returns true if the request was made with SSL.
-     *  Our internal config server.protocol can not be used here,
-     *  since the config resource is loaded after the session resource
-     * @return bool
-     */
-    public function isHttpsRequest(): bool {
-        //from https://stackoverflow.com/a/41591066/1749200
-        // in SSL offloaded environments (SSL handled before our nginx proxy, it may happen that
-        //  no such header is passed to identify the request as SSL request. In that cases we can just sppof such
-        //  a header in our proxy config:
-        //  # Since SSL is offloaded to the surrounding company proxy, we never get the info that SSL is used
-        //  # so we just spoof that header here:
-        //  proxy_set_header X-Forwarded-Proto https;
-        return (( ! empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
-            || ( ! empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https')
-            || ( ! empty($_SERVER['HTTP_X_FORWARDED_SSL']) && $_SERVER['HTTP_X_FORWARDED_SSL'] == 'on')
-            || (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443)
-            || (isset($_SERVER['HTTP_X_FORWARDED_PORT']) && $_SERVER['HTTP_X_FORWARDED_PORT'] == 443)
-            || (isset($_SERVER['REQUEST_SCHEME']) && $_SERVER['REQUEST_SCHEME'] == 'https')
-            );
     }
     
     /**
@@ -151,24 +137,25 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
      */
     private function handleSessionToken(): void
     {
-        if(empty($_REQUEST['sessionToken']) || !preg_match('/[a-zA-Z0-9]{32}/', $_REQUEST['sessionToken'])) {
+        if (empty($_REQUEST['sessionToken']) || !preg_match('/[a-zA-Z0-9]{32}/', $_REQUEST['sessionToken'])) {
             return;
         }
 
-        if(!$this->isHttpsRequest() && !defined('APPLICATION_APITEST')) {
+        if (!ZfExtended_Utils::isHttpsRequest() && !defined('APPLICATION_APITEST')) {
             //without HTTPS we have to use samesite = LAX which then prevents the proper functionality of this feature,
             // therefore we just disable sessionToken auth in that case
-            throw new ZfExtended_NotAuthenticatedException('Due to Cookie restrictions this feature can only be used with HTTPS enabled!');
+            throw new ZfExtended_NotAuthenticatedException(
+                'Due to Cookie restrictions this feature can only be used with HTTPS enabled!'
+            );
         }
         
-        $sessionDb = ZfExtended_Factory::get('ZfExtended_Models_Db_Session');
-        /* @var $sessionDb ZfExtended_Models_Db_Session */
+        $sessionDb = ZfExtended_Factory::get(ZfExtended_Models_Db_Session::class);
         $row = $sessionDb->fetchRow(['authToken = ?' => $_REQUEST['sessionToken']]);
         
+        /* @var ZfExtended_Logger $sysLog */
         $sysLog = Zend_Registry::get('logger');
-        /* @var $sysLog ZfExtended_Logger */
-        
-        if(empty($row) || empty($row->session_id)) {
+
+        if (empty($row) || empty($row->session_id)) {
             $sysLog->warn('E1332', 'Authentication: No matching sessionToken found in DB: {token}', [
                 'token' => $_REQUEST['sessionToken']
             ]);
@@ -208,7 +195,7 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
      */
     private function handleAuthToken(): void
     {
-        $auth = ZfExtended_Authentication::getInstance();
+        $auth = Auth::getInstance();
         $tokenParam = $_POST[$auth::APPLICATION_TOKEN_HEADER]
             ?? getallheaders()[$auth::APPLICATION_TOKEN_HEADER]
             ?? false;
@@ -230,23 +217,27 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
         header('HTTP/1.1 401 Unauthorized');
         if (ZfExtended_Utils::requestAcceptsJson()) {
             die('{"success": false, "httpStatus": 401, "errorMessage": "<b>Fatal: Authentication Token: The token is not valid</b>"}');
-        }
-        else {
+        } else {
             die('Authentication Token: The token is not valid!');
         }
     }
 
     /**
      * Setzt internalSessionUniqId wie im Klassenkopf beschrieben
+     * @throws Zend_Db_Statement_Exception
+     * @throws ZfExtended_Models_Entity_Exceptions_IntegrityConstraint
+     * @throws ZfExtended_Models_Entity_Exceptions_IntegrityDuplicateKey
      */
-    private function setInternalSessionUniqId(){
+    private function setInternalSessionUniqId(): void
+    {
         $session = new Zend_Session_Namespace();
-        if(!isset($session->internalSessionUniqId)){
+        if (!isset($session->internalSessionUniqId)) {
             $sessionId = Zend_Session::getId();
             $session->internalSessionUniqId =  md5($sessionId . uniqid(__FUNCTION__, true));
-            $row = ZfExtended_Factory::get('ZfExtended_Models_Entity',
-                        array('ZfExtended_Models_Db_SessionMapInternalUniqId',
-                            array()));
+            $row = ZfExtended_Factory::get(ZfExtended_Models_Entity::class, [
+                ZfExtended_Models_Db_SessionMapInternalUniqId::class,
+                []
+            ]);
             $row->setSession_id($sessionId);
             $row->setInternalSessionUniqId($session->internalSessionUniqId);
             $row->setModified(time());
