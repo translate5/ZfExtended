@@ -338,7 +338,9 @@ class ZfExtended_Logger {
         $stepBefore = [];
         $i = 0;
         while($step = array_shift($trace)) {
-            if(empty($step['class']) || $step['class'] !== 'ZfExtended_Logger') {
+            if (empty($step['class'])
+                || ($step['class'] !== ZfExtended_Logger::class
+                    && ! is_subclass_of($step['class'], ZfExtended_Logger::class))) {
                 break;
             }
             $i++;
@@ -398,10 +400,10 @@ class ZfExtended_Logger {
         if (empty($_SERVER['REQUEST_METHOD'])) {
             $event->url = 'cli://';
         } else {
-            if (empty($_SERVER['HTTPS'])) {
-                $event->url = 'http://';
-            } else {
+            if (ZfExtended_Utils::isHttpsRequest()) {
                 $event->url = 'https://';
+            } else {
+                $event->url = 'http://';
             }
             $event->method = $_SERVER['REQUEST_METHOD'];
         }
