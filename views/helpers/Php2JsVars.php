@@ -63,6 +63,18 @@ class ZfExtended_View_Helper_Php2JsVars extends Zend_View_Helper_Abstract{
     }
 
     /**
+     * sets multiple values given as assoc array
+     * @param array $values
+     * @return void
+     */
+    public function setMultiple(array $values): void
+    {
+        foreach ($values as $name => $value) {
+            $this->set($name, $value);
+        }
+    }
+
+    /**
      * akzeptiert als Parameter array(foo, bar) oder 'foo.bar' erzeugt den Objektbaum, und gibt bar zurück
      * @param mixed $name string oder array
      * @throws Zend_Exception

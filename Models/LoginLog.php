@@ -9,8 +9,8 @@ START LICENSE AND COPYRIGHT
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
 
  This file may be used under the terms of the GNU LESSER GENERAL PUBLIC LICENSE version 3
- as published by the Free Software Foundation and appearing in the file lgpl3-license.txt 
- included in the packaging of this file.  Please review the following information 
+ as published by the Free Software Foundation and appearing in the file lgpl3-license.txt
+ included in the packaging of this file.  Please review the following information
  to ensure the GNU LESSER GENERAL PUBLIC LICENSE version 3.0 requirements will be met:
 https://www.gnu.org/licenses/lgpl-3.0.txt
 
@@ -22,12 +22,6 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
-/**#@+
- * @author Marc Mittag
- * @package ZfExtended
- * @version 2.0
- *
- */
 /**
  * @method void setId() setId(int $id)
  * @method integer getId() getId()
@@ -42,7 +36,8 @@ END LICENSE AND COPYRIGHT
  * @method void setWay() setWay(string $way)
  * @method string getWay() getWay()
  */
-class ZfExtended_Models_LoginLog extends ZfExtended_Models_Entity_Abstract {
+class ZfExtended_Models_LoginLog extends ZfExtended_Models_Entity_Abstract
+{
     
     const LOGIN_SUCCESS = 'success';
     const LOGIN_FAILED = 'failed';
@@ -50,12 +45,13 @@ class ZfExtended_Models_LoginLog extends ZfExtended_Models_Entity_Abstract {
     protected $dbInstanceClass = 'ZfExtended_Models_Db_LoginLog';
 
     /**
-     * loads the login log from latest to oldes, amount limited to the limit parameter
+     * loads the login log from latest to oldest, amount limited to the limit parameter
      * @param string $userGuid
      * @param int $limit
      * @return array
      */
-    public function loadByUserGuid(string $userGuid, int $limit): array {
+    public function loadByUserGuid(string $userGuid, int $limit): array
+    {
         $s = $this->db->select()
             ->where('userGuid = ?', $userGuid)
             ->order('id DESC')
@@ -64,26 +60,34 @@ class ZfExtended_Models_LoginLog extends ZfExtended_Models_Entity_Abstract {
     }
 
     /**
-     * @param string $login
-     * @param string $userGuid
-     * @param string $status
+     * @param ZfExtended_Authentication $auth
      * @param string $way
+     * @throws Zend_Db_Statement_Exception
+     * @throws ZfExtended_Models_Entity_Exceptions_IntegrityConstraint
+     * @throws ZfExtended_Models_Entity_Exceptions_IntegrityDuplicateKey
      */
-    public static function addSuccess(ZfExtended_Models_User $user, string $way = 'plainlogin'){
+    public static function addSuccess(ZfExtended_Authentication $auth, string $way):void
+    {
+        $user = $auth->getUser();
+        if ($auth::isAppTokenAuthenticated()) {
+            $way .= ' - APP-TOKEN';
+        }
         $log = self::createLog($way);
         $log->setLogin($user->getLogin());
         $log->setUserGuid($user->getUserGuid());
         $log->setStatus(self::LOGIN_SUCCESS);
         $log->save();
     }
-    
+
     /**
      * @param string $login
-     * @param string $userGuid
-     * @param string $status
      * @param string $way
+     * @throws Zend_Db_Statement_Exception
+     * @throws ZfExtended_Models_Entity_Exceptions_IntegrityConstraint
+     * @throws ZfExtended_Models_Entity_Exceptions_IntegrityDuplicateKey
      */
-    public static function addFailed(string $login, string $way = 'plainlogin'){
+    public static function addFailed(string $login, string $way):void
+    {
         $log = self::createLog($way);
         $log->setLogin($login);
         $log->setStatus(self::LOGIN_FAILED);
@@ -94,7 +98,8 @@ class ZfExtended_Models_LoginLog extends ZfExtended_Models_Entity_Abstract {
      * @param string $way
      * @return ZfExtended_Models_LoginLog
      */
-    public static function createLog(string $way): ZfExtended_Models_LoginLog {
+    public static function createLog(string $way): ZfExtended_Models_LoginLog
+    {
         $log = ZfExtended_Factory::get(__CLASS__);
         /* @var $log ZfExtended_Models_LoginLog */
         $log->setCreated(NOW_ISO);

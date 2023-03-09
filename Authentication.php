@@ -3,7 +3,7 @@
 START LICENSE AND COPYRIGHT
 
  This file is part of ZfExtended library
- 
+
  Copyright (c) 2013 - 2022 Marc Mittag; MittagQI - Quality Informatics;  All rights reserved.
 
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
@@ -71,6 +71,16 @@ class ZfExtended_Authentication
             self::$_instance->algorithm = defined('PASSWORD_ARGON2ID') ?  PASSWORD_ARGON2ID : PASSWORD_BCRYPT;
         }
         return self::$_instance;
+    }
+
+    /**
+     * Checks if the authenticated user was authenticated with an App-Token
+     * @return bool
+     */
+    public static function isAppTokenAuthenticated(): bool
+    {
+        $userSession = new Zend_Session_Namespace('user');
+        return ($userSession?->data?->isTokenAuth === true);
     }
 
     /**
@@ -174,9 +184,9 @@ class ZfExtended_Authentication
         if ($this->authenticateByToken($passwordOrToken)) {
             if ($login !== $this->authenticatedUser->getLogin()) {
                 $this->authenticatedUser = null;
+                $this->isTokenAuth = false;
                 return false;
             }
-            $this->setIsTokenAuth(true);
             return true;
         }
 
@@ -251,17 +261,20 @@ class ZfExtended_Authentication
     }
 
     /**
-     * try to authenticate the user given by login, validated by given callback which should return bool
+     * try to authenticate the user given by login, validated by given callback which must return bool
      * @param string $login
      * @param Closure $loginValidator
+     * @param bool $isLoginByAppToken
      * @return bool
      */
-    private function loadUserAndValidate(string $login, Closure $loginValidator): bool
+    private function loadUserAndValidate(string $login, Closure $loginValidator, bool $isLoginByAppToken = false): bool
     {
+        $this->isTokenAuth = false;
         $this->authenticatedUser = ZfExtended_Factory::get(User::class);
         try {
             $this->authenticatedUser->loadByLogin($login);
             if ($loginValidator()) {
+                $this->isTokenAuth = $isLoginByAppToken;
                 $this->setUserDataInSession();
                 editor_User::create($this->authenticatedUser);
                 return true;
@@ -318,14 +331,6 @@ class ZfExtended_Authentication
     }
 
     /**
-     * @param bool $isTokenAuth
-     */
-    public function setIsTokenAuth(bool $isTokenAuth): void
-    {
-        $this->isTokenAuth = $isTokenAuth;
-    }
-
-    /**
      * Check and validate if the application token is provided as password. If it matches the provided user
      * and it is valid this will be valid authentication
      * @param string $token
@@ -345,9 +350,13 @@ class ZfExtended_Authentication
             $user = ZfExtended_Factory::get(User::class);
             $tokenModel->load($parsedToken->getPrefix());
             $user->load($tokenModel->getUserId());
-            return $this->loadUserAndValidate($user->getLogin(), function () use ($tokenModel, $parsedToken) {
-                return $this->isPasswordEqual($parsedToken->getToken(), $tokenModel->getToken());
-            });
+            return $this->loadUserAndValidate(
+                $user->getLogin(),
+                function() use ($tokenModel, $parsedToken) {
+                    return $this->isPasswordEqual($parsedToken->getToken(), $tokenModel->getToken());
+                },
+                true
+            );
 
         } catch (ZfExtended_Models_Entity_NotFoundException) {
             return false;

@@ -144,22 +144,22 @@ class ZfExtended_Debug {
     public static function applicationState(bool $includeServices = true): stdClass
     {
         $result = new stdClass();
-        $downloader = ZfExtended_Factory::get('ZfExtended_Models_Installer_Downloader', array(APPLICATION_PATH.'/..'));
+        $downloader = ZfExtended_Factory::get('ZfExtended_Models_Installer_Downloader', [APPLICATION_ROOT]);
         /* @var $downloader ZfExtended_Models_Installer_Downloader */
         try {
             $result->isUptodate = -1;
-            if($includeServices) {
+            if ($includeServices) {
                 $result->isUptodate = $downloader->applicationIsUptodate();
             }
         } catch (Exception) {
+            //do nothing here
         }
-        $versionFile = APPLICATION_PATH.'../version';
-        if(file_exists($versionFile)) {
-            $result->version = file_get_contents($versionFile);
-        }
-        else {
+
+        if (ZfExtended_Utils::isDevelopment()) {
             $result->version = ZfExtended_Utils::VERSION_DEVELOPMENT;
-            $result->branch = exec('cd '.APPLICATION_PATH.'; git status -bs | head -1');
+            $result->branch = exec('cd '.APPLICATION_ROOT.'; git status -bs | head -1');
+        } else {
+            $result->version = ZfExtended_Utils::getAppVersion();
         }
 
         $mm = new ZfExtended_Models_Installer_Maintenance();

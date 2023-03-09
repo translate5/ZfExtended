@@ -142,7 +142,7 @@ class ZfExtended_SessionController extends ZfExtended_RestController {
             $userSession->loginByApiAuth = true;
             $this->log('User authentication by API successful for '.$login);
             $invalidLoginCounter->resetCounter();
-            ZfExtended_Models_LoginLog::addSuccess($userModel, "sessionapi");
+            ZfExtended_Models_LoginLog::addSuccess($authentication, 'sessionapi');
             return true;
         }
         ZfExtended_Models_LoginLog::addFailed($login, "sessionapi");
