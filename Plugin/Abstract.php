@@ -94,16 +94,31 @@ abstract class ZfExtended_Plugin_Abstract {
      * @return ServiceAbstract
      * @throws ZfExtended_Exception
      */
-    public static function createService(string $serviceName, Zend_Config $config=null): ServiceAbstract
+    public static function createService(string $serviceName, Zend_Config $config = null): ServiceAbstract
     {
         $pluginName = ZfExtended_Plugin_Manager::getPluginNameByClass(static::class);
-        if(!array_key_exists($serviceName, static::$services)){
-            throw new ZfExtended_Exception('Service "'.$serviceName.'" not configured in plugin '.$pluginName);
+        if (!array_key_exists($serviceName, static::$services)) {
+            throw new ZfExtended_Exception('Service "' . $serviceName . '" not configured in plugin ' . $pluginName);
         }
-        if($config == null){
+        if ($config == null) {
             $config = Zend_Registry::get('config');
         }
-        return ZfExtended_Factory::get(static::$services[$serviceName], [ $serviceName, $pluginName, $config ]);
+        return ZfExtended_Factory::get(static::$services[$serviceName], [$serviceName, $pluginName, $config]);
+    }
+
+    /**
+     * Retrieves all services the plugin uses
+     * @param Zend_Config $config
+     * @return ServiceAbstract[] $name => $service
+     */
+    public static function createAllServices(Zend_Config $config): array
+    {
+        $services = [];
+        $pluginName = ZfExtended_Plugin_Manager::getPluginNameByClass(static::class);
+        foreach (static::$services as $serviceName => $serviceClass) {
+            $services[$serviceName] = ZfExtended_Factory::get($serviceClass, [$serviceName, $pluginName, $config]);
+        }
+        return $services;
     }
 
     /**
