@@ -52,10 +52,10 @@ class Header
             header('Content-Disposition: attachment; filename*=UTF-8\'\'' . $fileName . '; filename=' . $fileName);
         }
         if ($contentType !== null) {
-            header('Content-Type: ' . $cacheControl, true);
+            header('Content-Type: ' . $contentType, true);
         }
         if ($cacheControl !== null) {
-            header('Cache-Control: ' . $contentType);
+            header('Cache-Control: ' . $cacheControl);
         }
         if($contentLength > -1){
             header('Content-Length: '.$contentLength);
