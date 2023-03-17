@@ -33,12 +33,19 @@ END LICENSE AND COPYRIGHT
 class ZfExtended_EventManager extends Zend_EventManager_EventManager
 {
     /**
-     * 
-     * @var boolean 
+     * @var boolean
      */
-    protected $logTrigger = false;
-    
-    
+    protected bool $logTrigger = false;
+
+    /**
+     * @param null $identifiers
+     */
+    public function __construct($identifiers = null)
+    {
+        parent::__construct($identifiers);
+        $this->logTrigger = ZfExtended_Debug::hasLevel('core', 'EventTrigger');
+    }
+
     /**
      * ZfExtended:
      * if $this->logTrigger is set to true, all triggered events are 

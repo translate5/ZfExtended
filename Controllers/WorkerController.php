@@ -97,7 +97,7 @@ class ZfExtended_WorkerController extends ZfExtended_RestController {
             // to prevent unwanted 404s here we just catch that not found messages and do nothing instead
             // to prevent false positives when having multiple translate5 installations (and one has wrong server.name) it can happen,
             // that the worker requests go to the wrong translate5 installation. Since no 404 is logged, we don't find out that easily.
-            // as soplution we send additionally a server id which must match in order to run workers.
+            // as solution we send additionally a server id which must match in order to run workers.
             $this->decodePutData();
             $this->testServerId($this->data->serverId);
             return false;
@@ -106,7 +106,7 @@ class ZfExtended_WorkerController extends ZfExtended_RestController {
         if($this->isMaintenanceLoginLock()) {
             throw new ZfExtended_Models_MaintenanceException();
         }
-        
+
         $oldWorker = clone $this->entity;
         
         // set "default-return" = current workerModel-data from database
@@ -120,13 +120,12 @@ class ZfExtended_WorkerController extends ZfExtended_RestController {
             && $this->entity->getState() == ZfExtended_Models_Worker::STATE_RUNNING) {
             
             $this->entity->setState(ZfExtended_Models_Worker::STATE_WAITING);
-            
+            /* @var ZfExtended_Worker_Abstract $worker */
             $worker = ZfExtended_Worker_Abstract::instanceByModel($this->entity);
             
             if (!$worker) {
                 return false;
             }
-            /* @var $worker ZfExtended_Worker_Abstract */
             if (!$worker->runQueued()) {
                 // TODO what to do if worker can not be runQueued (e.g. because it can not be set to mutex-save)
                 return false;

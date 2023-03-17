@@ -42,7 +42,7 @@ class ZfExtended_Worker_GarbageCleaner extends ZfExtended_Worker_Abstract {
      * (non-PHPdoc)
      * @see ZfExtended_Worker_Abstract::getMaxParallelProcesses()
      */
-    protected function getMaxParallelProcesses() {
+    protected function getMaxParallelProcesses(): int {
         return 1;
     }
     

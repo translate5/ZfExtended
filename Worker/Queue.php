@@ -25,12 +25,10 @@ END LICENSE AND COPYRIGHT
 class ZfExtended_Worker_Queue {
     
     public function process() {
-        $workerModel = ZfExtended_Factory::get('ZfExtended_Models_Worker');
-        /* @var $workerModel ZfExtended_Models_Worker */
+        $workerModel = ZfExtended_Factory::get(ZfExtended_Models_Worker::class);
         $workerListQueued = $workerModel->getListQueued();
         
-        $trigger = ZfExtended_Factory::get('ZfExtended_Worker_TriggerByHttp');
-        /* @var $trigger ZfExtended_Worker_TriggerByHttp */
+        $trigger = ZfExtended_Factory::get(ZfExtended_Worker_TriggerByHttp::class);
         foreach ($workerListQueued as $workerQueue) {
             $trigger->triggerWorker($workerQueue['id'], $workerQueue['hash']);
         }
@@ -40,12 +38,10 @@ class ZfExtended_Worker_Queue {
      * trigger application-wide worker-queue
      */
     public function trigger() {
-        $worker = ZfExtended_Factory::get('ZfExtended_Models_Worker');
-        /* @var $worker ZfExtended_Models_Worker */
-        $worker = $worker->wakeupScheduled();
+        $worker = ZfExtended_Factory::get(ZfExtended_Models_Worker::class);
+        $worker->wakeupScheduled();
         
-        $trigger = ZfExtended_Factory::get('ZfExtended_Worker_TriggerByHttp');
-        /* @var $trigger ZfExtended_Worker_TriggerByHttp */
+        $trigger = ZfExtended_Factory::get(ZfExtended_Worker_TriggerByHttp::class);
         $trigger->triggerQueue();
     }
 }

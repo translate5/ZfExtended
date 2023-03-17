@@ -386,52 +386,51 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
     }
     
     /**
-     * returns a list of queued workers (optional of a given taskguid)
+     * returns a list of waiting workers to trigger (optional of a given taskguid)
      * @param string $taskGuid
      * @return array: list of queued entries in table Zf_worker which are "ready to run"
      */
-    public function getListQueued(string $taskGuid = null) : array{
-        $listQueued = array();
+    public function getListQueued(string $taskGuid = null) : array
+    {
+        // blocking by taskGuid (means only one worker of same type per taskGuid) is not possible here with less effort
+        // so we move this check into the worker startup
+
+        $toQueue = [];
         $db = $this->db;
         $db->getAdapter()->beginTransaction();
-        $listWaiting = $this->getListWaiting($taskGuid);
-        $listRunning = $this->getListRunning($taskGuid);
+        $waiting = $this->getListWaiting($taskGuid);
+        $running = $this->getListRunning($taskGuid);
         $db->getAdapter()->commit();
-        
-        $listRunningResourceSlotSerialized = array();
-        foreach ($listRunning as $running) {
-            // stop if one running worker is of blocking-type 'GLOBAL'
-            if ($running['blockingType'] == ZfExtended_Worker_Abstract::BLOCK_GLOBAL) {
-                return array();
+
+        $blockedSlots = []; // list of blocked slots
+
+        foreach ($running as $worker) {
+            // stop triggering any workers if one running worker is of blocking-type 'GLOBAL'
+            if ($worker['blockingType'] == ZfExtended_Worker_Abstract::BLOCK_GLOBAL) {
+                return [];
             }
-            $listRunningResourceSlotSerialized[] = serialize(array($running['resource'], $running['slot']));
+            // HINT/QUIRK: This might be questionable: If two different workers use the same slot, this will make them unidentical.
+            // Currently this cannot be fixed as we use "default" as the default string. May we switch to "resource" if "slot" is "default" and otherwise "slot" ?
+            $key = $worker['resource'] . '-' . $worker['slot'];
+            if(!array_key_exists($key, $blockedSlots)){
+                $blockedSlots[$key] = 0;
+            }
+            $blockedSlots[$key]++;
         }
-        
-        foreach($listWaiting as $waiting) {
+
+        foreach ($waiting as $worker) {
             // check if blocking-type is 'SLOT' and number of parallel processes for this resource/slot is not reached
-            $tempResourceSlot = array($waiting['resource'], $waiting['slot']);
-            $tempResourceSlotSerialized = serialize($tempResourceSlot);
-            
-            $countedWorkers = array_count_values($listRunningResourceSlotSerialized);
-            $countRunningSlotProcesses = 0;
-            if (array_key_exists($tempResourceSlotSerialized, $countedWorkers)) {
-                $countRunningSlotProcesses = $countedWorkers[$tempResourceSlotSerialized];
+            $key = $worker['resource'] . '-' . $worker['slot'];
+            if(!array_key_exists($key, $blockedSlots)){
+                $blockedSlots[$key] = 0;
             }
-            
-            //blocking by taskGuid (means only one worker of same type per taskGuid) is not possible here with less effort
-            // so we move this check into the worker startup
-            
-            if ($waiting['blockingType'] == ZfExtended_Worker_Abstract::BLOCK_SLOT
-                && $countRunningSlotProcesses >= $waiting['maxParallelProcesses']) {
-                    continue;
-                }
-                
-                $listQueued[] = $waiting;
-                $listRunning[] = $tempResourceSlot;
-                $listRunningResourceSlotSerialized[] = $tempResourceSlotSerialized;
+            if ($worker['blockingType'] !== ZfExtended_Worker_Abstract::BLOCK_SLOT || $worker['maxParallelProcesses'] > $blockedSlots[$key]) {
+                $toQueue[] = $worker;
+                $blockedSlots[$key]++;
+            }
         }
-        //error_log("QUEUED: ".print_r($listQueued,1));
-        return $listQueued;
+        // if(count($toQueue)) { error_log('WORKERS TO QUEUE: '.json_encode(array_combine(array_column($toQueue, 'id'), array_column($toQueue, 'worker')))); }
+        return $toQueue;
     }
     
     private function getListWaiting($taskGuid) {
@@ -443,6 +442,7 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
         
         return $this->db->fetchAll($sql)->toArray();
     }
+
     private function getListRunning($taskGuid) {
         $db = $this->db;
         $sql = $db->select()

@@ -87,6 +87,12 @@ abstract class ServiceAbstract
     protected ?string $pluginName = null;
 
     /**
+     * Defines, if the service can be located
+     * @var bool
+     */
+    protected bool $locatable = true;
+
+    /**
      * Holds the info if this is a plugin or global service
      * @var bool
      */
@@ -120,6 +126,14 @@ abstract class ServiceAbstract
     public function isPluginService(): bool
     {
         return $this->isPlugin;
+    }
+
+    /**
+     * @return bool
+     */
+    public function canBeLocated(): bool
+    {
+        return $this->locatable;
     }
 
     /**

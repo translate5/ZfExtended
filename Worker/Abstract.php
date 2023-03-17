@@ -49,7 +49,7 @@ abstract class ZfExtended_Worker_Abstract {
     protected $workerModel;
     
     /**
-     * @var string taskguid
+     * @var string taskGuid
      */
     protected $taskGuid;
     
@@ -57,15 +57,9 @@ abstract class ZfExtended_Worker_Abstract {
      * @var ZfExtended_Models_Worker
      */
     protected $finishedWorker;
-    
+
     /**
-     * Number of allowed parallel processes for a certain worker
-     * @var integer
-     */
-    protected $maxParallelProcesses = 1;
-    
-    /**
-     * Blocking-typ for this worker
+     * Blocking-type for this worker
      * Default is the Resource-based Blocking
      * @var string blocking-type BLOCK_XYZ
      */
@@ -88,7 +82,7 @@ abstract class ZfExtended_Worker_Abstract {
      * @var string
      */
     protected $isBlocking = false;
-    
+
     /**
      * Per default a "socket blocking like" worker is cancelled after 3600 seconds.
      * @var integer
@@ -106,26 +100,7 @@ abstract class ZfExtended_Worker_Abstract {
      * @var ZfExtended_Logger
      */
     protected ZfExtended_Logger $log;
-    
-     /**
-     * resourcePool for the different Operations
-     * Example from TermTagger: Possible Values: $this->allowdResourcePools = array('default', 'gui', 'import');
-     * @var string
-     */
-    protected $resourcePool = 'default';
-    /**
-     * Allowd values for setting resourcePool
-     * @var array(strings)
-     */
-    protected static $allowedResourcePools = array('default');
-    
-    /**
-     * Praefix for workers resource-name
-     * @var string
-    */
-    protected static $praefixResourceName = 'default_';
-    
-    protected static $resourceName = NULL;
+
     /**
      * Contains the Exception thrown in the worker
      * Since one worker is designed to do one job, there should be only one exception.
@@ -148,29 +123,27 @@ abstract class ZfExtended_Worker_Abstract {
      * @var string
      */
     protected $behaviourClass = 'ZfExtended_Worker_Behaviour_Default';
-    
-    /***
-     * Is worker thread flag
-     *
-     * @var boolean
-     */
-    public $isWorkerThread=true;
-    
+
     public function __construct() {
         $this->log = Zend_Registry::get('logger');
-        $this->maxParallelProcesses = $this->getMaxParallelProcesses();
         $this->events = ZfExtended_Factory::get('ZfExtended_EventManager', array(get_class($this)));
         $this->behaviour = ZfExtended_Factory::get($this->behaviourClass);
     }
-    
-    protected function getMaxParallelProcesses() {
+
+    /**
+     * Retrieves the max workers that may run in parallel (optional config)
+     * @return int
+     * @throws Zend_Exception
+     */
+    protected function getMaxParallelProcesses(): int {
         $config = Zend_Registry::get('config');
         $class = get_class($this);
         $workerConfig = $config->runtimeOptions->worker->$class;
+        // the max parallel config is only optional
         if(empty($workerConfig)) {
-            throw new ZfExtended_Exception('Missing Worker config for class '.$class.'. Please update config!'); //should be seen by developers only
+            return 1;
         }
-        return $workerConfig->maxParallelWorkers;
+        return (int) $workerConfig->maxParallelWorkers;
     }
     
     /**
@@ -181,46 +154,15 @@ abstract class ZfExtended_Worker_Abstract {
      *
      * @return boolean true if worker can be initialized.
      */
-    public function init($taskGuid = NULL, $parameters = array()) {
+    public function init($taskGuid = NULL, $parameters = []) {
         if (!$this->validateParameters($parameters)) {
             return false;
         }
-        
         $this->taskGuid = $taskGuid;
-        
         $this->initWorkerModel($taskGuid, $parameters);
-        
-        if (isset($parameters['resourcePool']) && in_array($parameters['resourcePool'], static::$allowedResourcePools)) {
-            $this->resourcePool = $parameters['resourcePool'];
-        }
-        
-        self::$resourceName = self::$praefixResourceName.$this->resourcePool;
-        
         return true;
     }
-    
-    /**
-     * creates the internal worker model ready for DB storage if it not already exists.
-     * The latter case happens when using instanceByModels
-     *
-     * @param string $taskGuid
-     * @param array $parameters
-     */
-    private function initWorkerModel($taskGuid, $parameters) {
-        if(!empty($this->workerModel)) {
-            return;
-        }
-        $this->workerModel = ZfExtended_Factory::get('ZfExtended_Models_Worker');
-        
-        $this->workerModel->setState(ZfExtended_Models_Worker::STATE_SCHEDULED);
-        $this->workerModel->setWorker(get_class($this));
-        $this->workerModel->setTaskGuid($taskGuid);
-        $this->workerModel->setParameters($parameters);
-        $this->workerModel->setHash(bin2hex(random_bytes(32)));
-        
-        $this->workerModel->setBlockingType($this->blockingType);
-    }
-    
+
     /**
      * Returns the internal worker-model of this worker
      *
@@ -243,7 +185,7 @@ abstract class ZfExtended_Worker_Abstract {
      * Get a worker-instance from a worker-model
      *
      * @param ZfExtended_Models_Worker $model
-     * @return ZfExtended_Worker_Abstract mixed a concrete worker corresponding to the submittied worker-model; false if instance could not be initialized;
+     * @return ZfExtended_Worker_Abstract|false mixed a concrete worker corresponding to the submittied worker-model; false if instance could not be initialized;
      */
     static public function instanceByModel(ZfExtended_Models_Worker $model) {
         $instance = ZfExtended_Factory::get($model->getWorker());
@@ -283,25 +225,16 @@ abstract class ZfExtended_Worker_Abstract {
      */
     public function queue($parentId = 0, $state = NULL, $startNext = true): int {
         $this->checkIsInitCalled();
-        $tempSlot = $this->calculateQueuedSlot();
-        $this->workerModel->setResource($tempSlot['resource']);
-        $this->workerModel->setSlot($tempSlot['slot']);
-        $this->workerModel->setParentId($parentId);
-        $this->workerModel->setMaxParallelProcesses($this->maxParallelProcesses);
-        if(!is_null($state)){
-            $this->workerModel->setState($state);
-        }
-        $this->workerModel->save();
-        $this->logit('queued with state '.$this->workerModel->getState());
-        
+        $slot = $this->calculateSlot();
+        $this->saveWorkerModel($slot['resource'], $slot['slot'], $parentId, $this->getMaxParallelProcesses(), $state);
+
         if($startNext) {
             $this->wakeUpAndStartNextWorkers();
             $this->emulateBlocking();
         }
-        
         return (int) $this->workerModel->getId();
     }
-    
+
     /**
      * Schedules prepared workers of same taskGuid and workergroup as the current
      */
@@ -381,47 +314,12 @@ abstract class ZfExtended_Worker_Abstract {
     /**
      * @return array('resource' => ResurceName, 'slot' => SlotName);
      */
-    protected function calculateDirectSlot() {
-        return $this->calculateQueuedSlot();
-    }
-    /**
-     * @return array('resource' => ResurceName, 'slot' => SlotName);
-     */
-    protected function calculateQueuedSlot() {
+    protected function calculateSlot(): array {
         return array('resource' => $this->workerModel->getWorker(), 'slot' => 'default');
     }
-    
-    
-    /**
-     * Direct run of a worker, if a worker should be runnable directly, define this function public in the in the concrete worker
-     * and call this by parent::run();
-     * direct calls per run are not mutex-save! The run operation queues/starts no other workers and is purely sequential
-     *
-     * @throws Exception
-     * @return boolean true if $this->work() runs without errors
-     */
-    protected function run() {
-        $this->isWorkerThread = false;
-        $this->checkIsInitCalled();
-        Zend_Registry::set('affected_taskGuid', $this->taskGuid); //for TRANSLATE-600 only
-        
-        $tempSlot = $this->calculateDirectSlot();
-        $this->workerModel->setResource($tempSlot['resource']);
-        $this->workerModel->setSlot($tempSlot['slot']);
-        
-        $result = $this->_run();
-        
-        if(!empty($this->workerException)) {
-            throw $this->workerException;
-        }
-        
-        $this->wakeUpAndStartNextWorkers();
-        return $result;
-    }
-    
+
     /**
      * Mutex save worker-run. Before this function can be called, the worker must be queued with $this->queue();
-     *
      * @return boolean true if $this->work() runs without errors
      */
     public function runQueued() {
@@ -443,14 +341,13 @@ abstract class ZfExtended_Worker_Abstract {
         return $result;
     }
     
-    
     /**
-     * inner run function used by run and runQueued
+     * inner run function used by runQueued
      * @return boolean true if $this->work() runs without errors
      */
     private function _run() {
-        //code in the worker can check now if we are in a worker thread or not
-        if(!defined('ZFEXTENDED_IS_WORKER_THREAD') && $this->isWorkerThread){
+        //code in the worker can check if it is running in the context of a worker
+        if(!defined('ZFEXTENDED_IS_WORKER_THREAD')){
             define('ZFEXTENDED_IS_WORKER_THREAD', true);
         }
         $this->behaviour->setWorkerModel($this->workerModel);
@@ -488,11 +385,6 @@ abstract class ZfExtended_Worker_Abstract {
              // do the actual work
             $result = $this->work();
             
-            if($this->isWorkerThread){
-                // plugin method to e.g. chain another worker dynamically after queued work is done
-                // This has to be done, before this worker is set to be "DONE", as otherwise we have a time-slot to start depending workers
-                $this->onRunQueuedFinished($result); 
-            }
             $progressDone = $this->calculateProgressDone();
             $this->workerModel->setState(ZfExtended_Models_Worker::STATE_DONE);
             $this->workerModel->setProgress($progressDone);
@@ -545,13 +437,6 @@ abstract class ZfExtended_Worker_Abstract {
     }
 
     /**
-     * This method can be used in extending classes to add code that is executed after a queued worker has run and before the new worker-state in the model is set
-     * @param bool $success
-     */
-    protected function onRunQueuedFinished($success){
-        
-    }
-    /**
      * Handles the exception occured while working, by default just store it internally
      * @param Throwable $workException
      */
@@ -602,7 +487,53 @@ abstract class ZfExtended_Worker_Abstract {
             throw new ZfExtended_Exception('Please call $worker->init() method before!');
         }
     }
-    
+
+    /**
+     * Saves our worker model on queuing
+     * @param string $resource
+     * @param string $slot
+     * @param int $parentId
+     * @param int $maxParallel
+     * @param string|null $state
+     * @throws Zend_Db_Statement_Exception
+     * @throws ZfExtended_Models_Entity_Exceptions_IntegrityConstraint
+     * @throws ZfExtended_Models_Entity_Exceptions_IntegrityDuplicateKey
+     */
+    private function saveWorkerModel(string $resource, string $slot, int $parentId, int $maxParallel, string $state = null){
+        $this->workerModel->setResource($resource);
+        $this->workerModel->setSlot($slot);
+        $this->workerModel->setParentId($parentId);
+        $this->workerModel->setMaxParallelProcesses($maxParallel);
+        if(!is_null($state)){
+            $this->workerModel->setState($state);
+        }
+        $this->workerModel->save();
+        $this->logit('queued with state '.$this->workerModel->getState());
+    }
+
+    /**
+     * creates the internal worker model ready for DB storage if it not already exists.
+     * The latter case happens when using instanceByModels
+     *
+     * @param string|null $taskGuid
+     * @param array $parameters
+     */
+    private function initWorkerModel(?string $taskGuid, array $parameters) {
+        if(!empty($this->workerModel)) {
+            return;
+        }
+        $this->workerModel = ZfExtended_Factory::get('ZfExtended_Models_Worker');
+        $this->workerModel->setState(ZfExtended_Models_Worker::STATE_SCHEDULED);
+        $this->workerModel->setWorker(get_class($this));
+        $this->workerModel->setTaskGuid($taskGuid);
+        $this->workerModel->setParameters($parameters);
+        $this->workerModel->setHash(bin2hex(random_bytes(32)));
+        $this->workerModel->setBlockingType($this->blockingType);
+    }
+
+    /**
+     * @param $msg
+     */
     protected function logit($msg) {
         if(ZfExtended_Debug::hasLevel('core', 'worker')){
             if(!empty($this->workerModel)){
