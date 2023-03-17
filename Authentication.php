@@ -40,10 +40,10 @@ class ZfExtended_Authentication
     const AUTH_DENY_NO_SESSION          = 3;
     const AUTH_DENY_USER_NOT_FOUND      = 4;
 
-    const APPLICATION_TOKEN_HEADER             = 'Translate5AuthToken';
+    const APPLICATION_TOKEN_HEADER = 'Translate5AuthToken';
 
     //when updating from md5 to newer hash, the hashes containing old md5 hashes are marked with that prefix
-    const COMPAT_PREFIX                 = 'md5:';
+    const COMPAT_PREFIX = 'md5:';
 
     /**
      * The to be used algorithm
@@ -64,11 +64,11 @@ class ZfExtended_Authentication
     /**
      * @return self
      */
-    public static function getInstance() : self
+    public static function getInstance(): self
     {
         if (self::$_instance == null) {
             self::$_instance = new self();
-            self::$_instance->algorithm = defined('PASSWORD_ARGON2ID') ?  PASSWORD_ARGON2ID : PASSWORD_BCRYPT;
+            self::$_instance->algorithm = defined('PASSWORD_ARGON2ID') ? PASSWORD_ARGON2ID : PASSWORD_BCRYPT;
         }
         return self::$_instance;
     }
@@ -119,7 +119,7 @@ class ZfExtended_Authentication
         $internalSessionUniqId = $session->internalSessionUniqId;
         $sessionId = Zend_Session::getId();
         $sessionMapDB = ZfExtended_Factory::get(ZfExtended_Models_Db_SessionMapInternalUniqId::class);
-        $sessionMapDB->delete("internalSessionUniqId  = '".$internalSessionUniqId."'");
+        $sessionMapDB->delete("internalSessionUniqId  = '" . $internalSessionUniqId . "'");
         $auth = Zend_Auth::getInstance();
         // Delete the information from the session
         $auth->clearIdentity();
@@ -317,10 +317,10 @@ class ZfExtended_Authentication
         $userData->roles[] = 'basic';
         $userData->roles[] = 'noRights'; //the user always has this roles
         $userData->roles = array_unique($userData->roles);
-        $userData->userName = $userData->firstName.' '.$userData->surName;
+        $userData->userName = $userData->firstName . ' ' . $userData->surName;
         $userData->loginTimeStamp = $_SERVER['REQUEST_TIME'];
         $userData->passwd = '********'; // We don't need and don't want the PW hash in the session
-        $userData->openIdIssuer='';
+        $userData->openIdIssuer = '';
         foreach ($userData as &$value) {
             if (is_numeric($value)) {
                 $value = (int)$value;
@@ -353,7 +353,7 @@ class ZfExtended_Authentication
             $user->load($tokenModel->getUserId());
             return $this->loadUserAndValidate(
                 $user->getLogin(),
-                function() use ($tokenModel, $parsedToken) {
+                function () use ($tokenModel, $parsedToken) {
                     return $this->isPasswordEqual($parsedToken->getToken(), $tokenModel->getToken());
                 },
                 true

@@ -22,6 +22,8 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
+use MittagQI\ZfExtended\CsrfProtection;
+
 /**
  *
  * @method ZfExtended_Sanitized_HttpRequest getRequest() getRequest()
@@ -76,6 +78,13 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller
      * @var array array($field => array(origType => newType))
      */
     protected $_filterTypeMap = [];
+
+    /**
+     * Here actions can be defined, that shall not be CSRF-protected
+     * Caution: Such actions may cause security-holes!
+     * @var string[]
+     */
+    protected array $_unprotectedActions = [];
 
     /**
      * POST Blacklist
@@ -170,6 +179,10 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller
                 echo json_encode($res);
             }
         });
+        // by default, all actions are protected against CSRF attacks
+        if(!in_array($this->_request->getActionName(), $this->_unprotectedActions)){
+            CsrfProtection::getInstance()->validateRequest($this->_request);
+        }
     }
 
     /**

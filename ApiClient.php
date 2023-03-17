@@ -22,6 +22,7 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
+use MittagQI\ZfExtended\CsrfProtection;
 
 /**
  * Represents an API-Request on the T5 API
@@ -33,9 +34,9 @@ class ZfExtended_ApiClient extends Zend_Http_Client {
 
     /**
      * Creates a Cleient for requesting the T5 API For an API-request the authorization-cookie needs to be set
-     * @param $uri
-     * @param $config
-     * @param string|null $authorizationCookie
+     * @param string|null $uri
+     * @param array|null $config: No relevance, only to fullfill signature
+     * @param string|null $authorizationCookie: Optional, by default, the auth-cookie is taken from $_COOKIE
      * @param bool $dontAutoaddAuthCookie
      * @throws Zend_Exception
      * @throws Zend_Http_Client_Exception
@@ -44,7 +45,8 @@ class ZfExtended_ApiClient extends Zend_Http_Client {
     public function __construct($uri = null, $config = null, string $authorizationCookie = null, bool $dontAutoaddAuthCookie = false)
     {
         $this->translate5ApiUrl = self::getServerBaseURL();
-        parent::__construct($uri, Zend_Registry::get('config'));
+        $config = Zend_Registry::get('config');
+        parent::__construct($uri, $config); // why do we pass "our" config here ?
         // we need to trigger correct environment for request on our own API while API-testing
         // security: APPLICATION_APITEST can only be set, when the instance is set up for testing
         if(defined('APPLICATION_APITEST')){
@@ -65,6 +67,8 @@ class ZfExtended_ApiClient extends Zend_Http_Client {
             $authorizationCookie = $_COOKIE[$authCookieName];
         }
         $this->setCookie($authCookieName, $authorizationCookie);
+        // add CSRF protection
+        CsrfProtection::getInstance()->addRequestHeaders($this, $config);
     }
 
     /**

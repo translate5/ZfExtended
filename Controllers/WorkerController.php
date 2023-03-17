@@ -24,6 +24,7 @@ END LICENSE AND COPYRIGHT
 
 /**
  * Important: putAction and queueAction are deleting their session so that no new session entry is created
+ * Therefore, these actions are not CSRF-protected
  * On futural usage of the postAction (to be used from frontend for direct calls) this indeed should not be the case!
  */
 class ZfExtended_WorkerController extends ZfExtended_RestController {
@@ -34,6 +35,12 @@ class ZfExtended_WorkerController extends ZfExtended_RestController {
      * @var ZfExtended_Models_Worker
      */
     protected $entity;
+
+    /**
+     * Generally the worker-endpoints are CSRF unprotected, a protection is achieved via the worker-hash
+     * @var string[]
+     */
+    protected array $_unprotectedActions = ['put', 'queue'];
     
     
     protected $cleanupSessionAfterRun;

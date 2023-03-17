@@ -23,6 +23,7 @@ END LICENSE AND COPYRIGHT
 */
 
 use PHPUnit\Framework\TestCase;
+use MittagQI\ZfExtended\CsrfProtection;
 
 class ZfExtended_Test_ApiHelper {
 
@@ -32,6 +33,7 @@ class ZfExtended_Test_ApiHelper {
 
     /**
      * Development option that triggers all requests to be captured in a file called "TestClassName-TIMESTAMP.log"
+     * TODO FIXME: this shall better be a command-option
      */
     const TRACE_REQUESTS = false;
 
@@ -48,12 +50,14 @@ class ZfExtended_Test_ApiHelper {
         'DATA_DIR' => null,
         'LOGOUT_PATH' => null,
         'CAPTURE_MODE' => false,
+        'SKIP_PRETESTS' => false,
         'XDEBUG_ENABLE' => false,
         'KEEP_DATA' => false,
         'LEGACY_DATA' => false,
         'LEGACY_JSON' => false,
         'IS_SUITE' => true,
-        'ENVIRONMENT' => 'application'
+        'ENVIRONMENT' => 'application',
+        'CSRF_TOKEN' => ''
     ];
 
     /**
@@ -69,6 +73,12 @@ class ZfExtended_Test_ApiHelper {
      */
     private static ?string $authCookie = null;
 
+    /**
+     * Holds the currently authenticated user session token
+     * @var string|null
+     */
+    private static ?string $authToken = null;
+
     /***
      * Token used for authentication with token
      * @var string|null
@@ -76,11 +86,10 @@ class ZfExtended_Test_ApiHelper {
     private static ?string $applicationToken = null;
 
     /**
-     * Holds a list of allowed http status code other then 200-299.
-     * Is cleaned after each request.
-     * @var array
+     * Steers, if a request shall have an origin set, what is usually neccessary, only in case a RealWorld Request shall be sent this need's to be adjusted
+     * @var bool
      */
-    private array $allowHttpStatusOnce = [];
+    private static bool $useOrigin = true;
 
     /**
      * Sets the Test API up. This needs to be set in the test bootstrapper
@@ -89,6 +98,7 @@ class ZfExtended_Test_ApiHelper {
      *  'DATA_DIR' => the task data dir as defined in zend config
      *  'LOGOUT_PATH' => the logout url
      *  'CAPTURE_MODE' => if true, defines if we're in capture mode (only when single tests are called), false by default
+     *  'SKIP_PRETESTS' => if true, defines if pretests (testing the environment before running the test/suite) shall be reduced to a minimum
      *  'XDEBUG_ENABLE' => if true, defines if we should enable XDEBUG on the called test instance , false by default
      *  'KEEP_DATA' => if true, defines if test should be kept after test run, must be implemented in the test, false by default
      *  'LEGACY_DATA' => if true, defines to use the "old" data field sort order (to reduce diff clutter on capturing)
@@ -144,15 +154,25 @@ class ZfExtended_Test_ApiHelper {
     }
 
     /**
+     * @return string
+     */
+    public static function getAuthToken() : string {
+        return static::$authToken;
+    }
+
+    /**
      * This method sets the internally managed authentication and is only meant to be used in tests testing the authentication-API
      * @param string $cookie
      */
     public static function setAuthentication(string $cookie, string $login) {
         static::$authCookie = $cookie;
         static::$authLogin = $login;
+        static::$authToken = null;
     }
 
     /***
+     * Sets an application-token for the following requests.
+     * Make sure to always unset such tokens after your test
      * @param string $token
      * @return void
      */
@@ -168,6 +188,37 @@ class ZfExtended_Test_ApiHelper {
     }
 
     /**
+     * Retrieves the current CSRF token
+     * @return string
+     */
+    public static function getCsrfToken(): string
+    {
+        return static::$CONFIG['CSRF_TOKEN'];
+    }
+
+    /**
+     * Sets the CSRF token. Generally, Tests run with a Fixed CSRF Token (saved as tmp file)
+     * This API is only for testing the CSRF feature
+     * Always set this token back to the original state when manipulating it for a test
+     * @param string|null $token
+     */
+    public static function setCsrfToken(string $token = null)
+    {
+        static::$CONFIG['CSRF_TOKEN'] = $token;
+    }
+
+    /**
+     * Steers, if the Origin-Header should be set for the requests. Normally, this Header steers the Environment on the Server side
+     * Be Aware, that deactivating this header leads to the "real" CSRF protection to kick in and disables any adjustments for API-tests
+     * And always re-activate this header when manipulating it within a test
+     * @param bool $flag
+     */
+    public static function activateOriginHeader(bool $flag = true)
+    {
+        static::$useOrigin = $flag;
+    }
+
+    /**
      * returns the absolute data path to the base directory for task data
      * @return string
      */
@@ -175,6 +226,13 @@ class ZfExtended_Test_ApiHelper {
     {
         return self::$CONFIG['DATA_DIR'];
     }
+
+    /**
+     * Holds a list of allowed http status code other then 200-299.
+     * Is cleaned after each request.
+     * @var array
+     */
+    private array $allowHttpStatusOnce = [];
     
     /**
      * enable xdebug debugger in IDE
@@ -378,14 +436,9 @@ class ZfExtended_Test_ApiHelper {
     public function postRawData(string $url, string $content, array $parameters=[], string $jsonFileName = null, bool $expectedToFail=false) : stdClass {
         $http = new Zend_Http_Client();
         $http->setUri(static::$CONFIG['API_URL'].ltrim($url, '/'));
+        $this->addClientAuthorization($http);
+        
         $http->setHeaders('Accept', 'application/json');
-        $http->setHeaders('Origin', static::createOrigin());
-        if(!empty(static::$authCookie)) {
-            $http->setCookie(self::AUTH_COOKIE_KEY, static::$authCookie);
-        }
-        if(!is_null(static::$applicationToken)) {
-            $http->setHeaders(ZfExtended_Authentication::APPLICATION_TOKEN_HEADER, static::$applicationToken);
-        }
         $http->setRawData($content, 'application/octet-stream');
         $http->setHeaders(Zend_Http_Client::CONTENT_TYPE, 'application/octet-stream');
         if(!empty($parameters)) {
@@ -423,6 +476,34 @@ class ZfExtended_Test_ApiHelper {
             $this->captureData($fileName, $result->data);
         }
         return $result;
+    }
+
+    /**
+     * Helper to fetch an application page
+     * This will not send an origin-header triggering a test-enviromnment
+     * @param string $url
+     * @param array $parameters
+     * @param string|null $authCookie
+     * @return Zend_Http_Response
+     * @throws Zend_Http_Client_Exception
+     */
+    public function getHtmlPage(string $url, array $parameters = [], string $authCookie = null) {
+        // set a proper user-agent
+        $http = new Zend_Http_Client(static::$CONFIG['API_URL'].ltrim($url, '/'), ['useragent' => 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:108.0) Gecko/20100101 Firefox/108.0']);
+        $http->setHeaders('Accept', 'text/html');
+        // Authorization
+        if(!empty($authCookie)) {
+            $http->setCookie(static::AUTH_COOKIE_KEY, $authCookie);
+        }
+        if(!empty($parameters)) {
+            foreach($parameters as $key => $value) {
+                $http->setParameterGet($key, $value);
+            }
+        }
+        if(self::TRACE_REQUESTS){
+            $this->traceRequest($http, $parameters, 'GET');
+        }
+        return $http->request('GET');
     }
 
     /**
@@ -705,6 +786,15 @@ class ZfExtended_Test_ApiHelper {
     }
 
     /**
+     * Retrieves, if the pre-tests/environment-tests shall be skipped
+     * @return bool
+     */
+    public function doSkipPretests() : bool
+    {
+        return static::$CONFIG['SKIP_PRETESTS'];
+    }
+
+    /**
      * Performs a login
      * @param string $login
      * @param string $password
@@ -725,6 +815,7 @@ class ZfExtended_Test_ApiHelper {
         $this->test::assertTrue((property_exists($response, 'sessionId') && property_exists($response, 'sessionToken')), 'JSON Login request was not successfull!');
         $this->test::assertMatchesRegularExpression('/[a-zA-Z0-9]{26}/', $response->sessionId, 'Login call does not return a valid sessionId!');
         static::$authCookie = $response->sessionId;
+        static::$authToken = $response->sessionToken;
         static::$authLogin = $login;
         return true;
     }
@@ -736,6 +827,7 @@ class ZfExtended_Test_ApiHelper {
     public function logout() {
         $this->request(static::$CONFIG['LOGOUT_PATH']);
         static::$authCookie = null;
+        static::$authToken = null;
         static::$authLogin = null;
     }
 
@@ -746,7 +838,7 @@ class ZfExtended_Test_ApiHelper {
      * @return Zend_Http_Response
      * @throws Zend_Http_Client_Exception
      */
-    protected function request(string $url, string $method = 'GET', array $parameters = array()) {
+    protected function request(string $url, string $method = 'GET', array $parameters = []) {
 
         $http = new Zend_Http_Client();
         $url = ltrim($url, '/');
@@ -758,23 +850,15 @@ class ZfExtended_Test_ApiHelper {
             $url = preg_replace('#^editor/#', 'editor/taskid/'.$this->getTask()->id.'/', $url);
         }
         $http->setUri(static::$CONFIG['API_URL'].$url);
-        $http->setHeaders('Accept', 'application/json');
-        $http->setHeaders('Origin', static::createOrigin());
+        $this->addClientAuthorization($http);
 
+        $http->setHeaders('Accept', 'application/json');
         //enable xdebug debugger in eclipse
         if($this->xdebug) {
             $http->setCookie('XDEBUG_SESSION','PHPSTORM');
             $http->setConfig(array('timeout' => 3600));
         } else {
             $http->setConfig(array('timeout' => 30));
-        }
-
-        if(static::$authCookie !== null) {
-            $http->setCookie(static::AUTH_COOKIE_KEY, static::$authCookie);
-        }
-
-        if(static::$applicationToken !== null) {
-            $http->setHeaders(ZfExtended_Authentication::APPLICATION_TOKEN_HEADER, static::$applicationToken);
         }
 
         if(!empty($this->filesToAdd) && ($method == 'POST' || $method == 'PUT')) {
@@ -955,6 +1039,31 @@ class ZfExtended_Test_ApiHelper {
     }
 
     /**
+     * Sets the appropriate Cookies & Headers for a HTTP client
+     * @param Zend_Http_Client $client
+     * @throws Zend_Http_Client_Exception
+     */
+    private function addClientAuthorization(Zend_Http_Client $client){
+        // set the proper test-origin
+        if(static::$useOrigin){
+            $client->setHeaders('Origin', static::createOrigin());
+        }
+        // App-token as alternative for authentication
+        if(static::$applicationToken !== null) {
+            $client->setHeaders(ZfExtended_Authentication::APPLICATION_TOKEN_HEADER, static::$applicationToken);
+        } else {
+            // Authorization cookie if set
+            if(static::$authCookie !== null) {
+                $client->setCookie(self::AUTH_COOKIE_KEY, static::$authCookie);
+            }
+            // CSRF token if set
+            if(!empty(static::$CONFIG['CSRF_TOKEN'])){
+                $client->setHeaders(CsrfProtection::HEADER_NAME, static::$CONFIG['CSRF_TOKEN']);
+            }
+        }
+    }
+
+    /**
      * Helper to trace all requests
      * @param Zend_Http_Client $http
      * @param array $parameters
@@ -962,7 +1071,17 @@ class ZfExtended_Test_ApiHelper {
      */
     private function traceRequest(Zend_Http_Client $http, array $parameters, string $method){
         $this->requestTrace .= "\n\n".$method.': '.$http->getUri(true);
-        if(!empty(static::$authCookie)) $this->requestTrace .= "\n Auth: ".static::$authLogin.", ".static::$authCookie;
+        // AUTH stuff
+		if(static::$applicationToken !== null) {
+			$this->requestTrace .= "\n ".ZfExtended_Authentication::APPLICATION_TOKEN_HEADER.': '.static::$applicationToken;
+        } else {
+            if(static::$authCookie !== null) {
+                $this->requestTrace .= "\n Auth: ".static::$authLogin.", ".static::$authCookie;
+            }
+            if(!empty(static::$CONFIG['CSRF_TOKEN'])){
+                $this->requestTrace .= "\n ".CsrfProtection::HEADER_NAME.': '.static::$CONFIG['CSRF_TOKEN'];
+            }
+        }
         ksort($parameters);
         foreach($parameters as $key => $value){
             $this->requestTrace .= "\n  ".$key.': '.$this->traceParam($value);

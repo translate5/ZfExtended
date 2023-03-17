@@ -236,14 +236,19 @@ class ZfExtended_Worker_TriggerByHttp {
         //return the hostname dedicated for fsockopen
         return $host;
     }
-    
-    
-    private function createHeader() {
+
+    /**
+     * Creates all headers needed for a worker-call
+     * The worker-endpoints are not CSRF protected
+     * @return string
+     */
+    private function createHeader(): string
+    {
         $out = $this->method.' '.$this->path.$this->getParameters.' HTTP/1.1'."\r\n";
         $out .= 'Host: '.$this->host."\r\n";
         $out .= 'Accept: application/json'."\r\n"; // this is translate5-specific !!!
         $out .= self::WORKER_HEADER.': 1'."\r\n"; // this is translate5-specific !!!
-        
+
         $debug = null;
         //activated debug by browser plugin via cookie
         if(isset($_COOKIE['XDEBUG_SESSION'])){

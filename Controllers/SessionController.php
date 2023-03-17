@@ -24,12 +24,23 @@ END LICENSE AND COPYRIGHT
 
 use ZfExtended_Authentication as Auth;
 
+/**
+ * Session Controller to start/delete authenticated sessions
+ * the POST/DELETE actions are not CSRF-protected to enable an API-driven authentication without App-Token
+ */
 class ZfExtended_SessionController extends ZfExtended_RestController {
     
     const STATE_AUTHENTICATED = 'authenticated';
     const STATE_NOT_AUTHENTICATED = 'not authenticated';
 
     protected array $dataSanitizationMap = ['passwd' => ZfExtended_Sanitizer::UNSANITIZED];
+
+    /**
+     * post & delete shall be csrf unprotected, otherwise one would need a APP-token to register via post
+     * @var string[]
+     */
+    protected array $_unprotectedActions = [ 'post', 'delete' ];
+
     /**
      * inits the internal entity Object, handels given limit, filter and sort parameters
      * @see Zend_Controller_Action::init()
@@ -46,7 +57,7 @@ class ZfExtended_SessionController extends ZfExtended_RestController {
      * HTTP 200 and a JSON Representation of the user if authenticated
      * HTTP 404 (!=200) if not authenticated
      */
-    public function getAction () {
+    public function getAction() {
         $user = new Zend_Session_Namespace('user');
         if(empty($user->data->userGuid)) {
             $this->_response->setHttpResponseCode(404);
