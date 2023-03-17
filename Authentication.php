@@ -204,7 +204,8 @@ class ZfExtended_Authentication
     {
         $isOldPassword = false;
         $valid = $this->loadUserAndValidate($login, function () use ($password, & $isOldPassword) {
-            $passwordHash = $this->authenticatedUser->getPasswd();
+            // default to empty string in case the user does not have password
+            $passwordHash = $this->authenticatedUser->getPasswd() ?? '';
             $isOldPassword = str_starts_with($passwordHash, self::COMPAT_PREFIX);
             if ($isOldPassword) {
                 //remove md5:
