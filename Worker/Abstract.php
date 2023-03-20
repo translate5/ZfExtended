@@ -140,7 +140,7 @@ abstract class ZfExtended_Worker_Abstract {
         $class = get_class($this);
         $workerConfig = $config->runtimeOptions->worker->$class;
         // the max parallel config is only optional
-        if(empty($workerConfig)) {
+        if(empty($workerConfig) || empty($workerConfig->maxParallelWorkers)) {
             return 1;
         }
         return (int) $workerConfig->maxParallelWorkers;
