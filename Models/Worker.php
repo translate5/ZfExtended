@@ -638,6 +638,30 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
         });
         return $isUpdated;
     }
+
+    /**
+     * @return bool
+     */
+    public function isRunning(): bool
+    {
+        return $this->getState() === self::STATE_RUNNING;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isDefunct(): bool
+    {
+        return $this->getState() === self::STATE_DEFUNCT;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isDone(): bool
+    {
+        return $this->getState() === self::STATE_DONE;
+    }
     
     /**
      * Returns this worker as string: Worker, id, state.
