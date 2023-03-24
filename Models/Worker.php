@@ -531,17 +531,37 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
         if(count($groupBy) > 1) {
             return $res;
         }
-        $result = array(
+        $result = [
             self::STATE_SCHEDULED => 0,
             self::STATE_WAITING => 0,
             self::STATE_RUNNING => 0,
             self::STATE_DEFUNCT => 0,
             self::STATE_DONE => 0,
-        );
+        ];
         foreach($res as $row) {
             $result[$row[$groupBy[0]]] = (int) $row['cnt'];
         }
         return $result;
+    }
+
+    /**
+     * Retrieves a unique list of all wirkers not in the state "done"
+     * @return array
+     */
+    public function getRemainingWorkerInfo(): array
+    {
+        $states = [
+            self::STATE_SCHEDULED,
+            self::STATE_WAITING,
+            self::STATE_RUNNING,
+            self::STATE_DEFUNCT
+        ];
+        $select = $this->db->select()->where('state IN (?)', $states);
+        $workers = [];
+        foreach ($this->db->fetchAll($select)->toArray() as $row) {
+            $workers[] = $row['worker'] . ' (' . $row['state'] . ')';
+        }
+        return array_unique($workers);
     }
     
     /**
