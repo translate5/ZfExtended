@@ -155,6 +155,9 @@ final class CsrfProtection
     {
         if($this->isActive()){
             $token = $request->getHeader(self::HEADER_NAME);
+            if(!$token && $request->isPost() && $request->getPost(self::HEADER_NAME) !== null){
+                $token = $request->getPost(self::HEADER_NAME);
+            }
             if(!$token){
                 $this->throwException('Request '.$request->getRequestUri().' had no '.self::HEADER_NAME.' header');
             }
