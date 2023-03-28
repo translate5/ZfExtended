@@ -155,6 +155,10 @@ final class CsrfProtection
     {
         if($this->isActive()){
             $token = $request->getHeader(self::HEADER_NAME);
+            // Non-XHR forms can send the token only as normal param
+            if(!$token && $request->isPost() && $request->getPost(self::HEADER_NAME) !== null){
+                $token = $request->getPost(self::HEADER_NAME);
+            }
             if(!$token){
                 $this->throwException('Request '.$request->getRequestUri().' had no '.self::HEADER_NAME.' header');
             }
