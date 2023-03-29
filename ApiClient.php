@@ -49,7 +49,7 @@ class ZfExtended_ApiClient extends Zend_Http_Client {
         parent::__construct($uri, $config); // why do we pass "our" config here ?
         // we need to trigger correct environment for request on our own API while API-testing
         // security: APPLICATION_APITEST can only be set, when the instance is set up for testing
-        if(defined('APPLICATION_APITEST')){
+        if(constant('APPLICATION_APITEST')){
             $origin = (APPLICATION_ENV === ZfExtended_BaseIndex::ENVIRONMENT_TEST) ? ZfExtended_BaseIndex::ORIGIN_TEST : ZfExtended_BaseIndex::ORIGIN_APPTEST;
             $this->setHeaders('Origin', $origin);
         }
@@ -68,7 +68,7 @@ class ZfExtended_ApiClient extends Zend_Http_Client {
         }
         $this->setCookie($authCookieName, $authorizationCookie);
         // add CSRF protection
-        CsrfProtection::getInstance()->addRequestHeaders($this, $config);
+        CsrfProtection::getInstance()->addRequestHeaders($this);
     }
 
     /**

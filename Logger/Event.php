@@ -42,6 +42,9 @@ class ZfExtended_Logger_Event {
         'staticauthhash',
         'auth_key',
         'usedinternalsessionuniqid',
+        'token',
+        'storedToken',
+        'zfextended',
     ];
 
     /**
