@@ -258,9 +258,8 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
         
         //it may happen that a worker is not set to waiting if the deadlock was ignored, at least at the next worker queue call it is triggered again
         $this->ignoreOnDeadlock(function() use ($sql, $bindings){
-            $this->db->reduceDeadlocks();
             $this->db->getAdapter()->query($sql, $bindings);
-        });
+        }, true);
     }
     
     /**
@@ -283,9 +282,8 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
         }
 
         $this->retryOnDeadlock(function() use ($sql, $bindings){
-            $this->db->reduceDeadlocks();
             return $this->db->getAdapter()->query($sql, $bindings);
-        });
+        }, true);
     }
     
     /**
@@ -306,9 +304,8 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
         $whereStatements[] = 'state = "'.self::STATE_WAITING.'"';
 
         $countRows = $this->retryOnDeadlock(function() use ($data, $whereStatements){
-            $this->db->reduceDeadlocks();
             return $this->db->update($data, $whereStatements);
-        });
+        }, true);
             
         // workerModel can not be set to mutex because no entry with same id and hash can be found in database
         // nothing to log since this can happen often
@@ -364,9 +361,8 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
         $values = [$this->getId()];
         
         $stmt = $this->retryOnDeadlock(function() use ($sql, $values){
-            $this->db->reduceDeadlocks();
             return $this->db->getAdapter()->query($sql, $values);
-        });
+        }, true);
         
         $result = $stmt->rowCount();
         return $result > 0;
@@ -380,9 +376,8 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
         $bindings = [ self::STATE_DONE, $this->getTaskGuid(), $this->getWorker(), $this->getId(), self::STATE_PREPARE, self::STATE_SCHEDULED, self::STATE_WAITING, self::STATE_RUNNING ];
         $sql = 'UPDATE `Zf_worker` SET `state` = ?  WHERE `taskGuid` = ? AND `worker` = ? AND `id` != ? AND `state` IN (?, ?, ?, ?)';
         $this->retryOnDeadlock(function() use ($sql, $bindings){
-            $this->db->reduceDeadlocks();
             return $this->db->getAdapter()->query($sql, $bindings);
-        });
+        }, true);
     }
     
     /**
@@ -496,7 +491,7 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
      * @param array $states
      */
     public function clean(array $states) {
-        $this->db->reduceDeadlocks();
+        $this->reduceDeadlocks();
         $this->db->delete(['state in (?)' => $states]);
     }
 
@@ -505,7 +500,7 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
         $where = array();
         $where[] = $this->db->getAdapter()->quoteInto('state = ?', self::STATE_DONE);
         $where[] = $this->db->getAdapter()->quoteInto('endtime < ?', new Zend_Db_Expr('NOW() - INTERVAL 2 HOUR'));
-        $this->db->reduceDeadlocks();
+        $this->reduceDeadlocks();
         $this->db->delete($where);
         
         // TODO: do something with all crashed worker (maxRuntime expired)
@@ -598,7 +593,7 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
                 //adapter->query can not handle arrays directlym so use plain string concat
                 $workerExclude = $this->db->getAdapter()->quoteInto(' AND worker NOT IN (?)', $exludedWorkers);
             }
-            $this->db->reduceDeadlocks();
+            $this->reduceDeadlocks();
             $affectedStates = [self::STATE_WAITING, self::STATE_SCHEDULED, self::STATE_PREPARE];
             if($includeRunning) {
                 $affectedStates[] = self::STATE_RUNNING;
@@ -648,14 +643,12 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
     public function updateProgress(float $progress = 1): bool {
         $id = $this->getId();
         $isUpdated = $this->retryOnDeadlock(function() use ($progress, $id){
-            $this->db->reduceDeadlocks();
             return $this->db->update([
                 'progress'=>$progress
             ], [
                 'id = ?'=>$id
             ]) > 0;
-            
-        });
+        }, true);
         return $isUpdated;
     }
 
