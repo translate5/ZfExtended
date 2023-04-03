@@ -38,6 +38,11 @@ class ZfExtended_Test_ApiHelper {
     const TRACE_REQUESTS = false;
 
     /**
+     * The filename to zip the test-tasks. This zip will be stored temporarily in the APPLICATION_DATA dir
+     */
+    const TEST_ZIP_FILENAME = 'api-test-tmp.zip';
+
+    /**
      * Holds internal configuration, as
      * - the api url as defined in zend config
      * - the task data dir as defined in zend config
@@ -708,14 +713,15 @@ class ZfExtended_Test_ApiHelper {
     /**
      * creates zipfile with testfiles in tmpDir and returns the path to it
      * @param string $pathToTestFiles relative to testcases folder
-     * @param string $nameOfZipFile which is created
      * @return string path to zipfile
      * @throws Zend_Exception
      */
-    public function zipTestFiles(string $pathToTestFiles, string $nameOfZipFile) : string {
-        $dir = $this->getFile($pathToTestFiles);
-        $zipFile = $this->getFile($nameOfZipFile, null, false);
+    public function zipTestFiles(string $pathToTestFiles) : string {
 
+        $dir = $this->getFile($pathToTestFiles);
+        // we create the zip in the data-dir to not have trouble with rights
+        $zipFile = APPLICATION_DATA . '/' . self::TEST_ZIP_FILENAME;
+        // remniscents of former tests can be cleaned up
         if(file_exists($zipFile)) {
             unlink($zipFile);
         }
