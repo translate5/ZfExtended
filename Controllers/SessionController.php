@@ -36,16 +36,19 @@ class ZfExtended_SessionController extends ZfExtended_RestController {
     protected array $dataSanitizationMap = ['passwd' => ZfExtended_Sanitizer::UNSANITIZED];
 
     /**
-     * post & delete shall be csrf unprotected, otherwise one would need a APP-token to register via post
+     * post & delete shall be csrf unprotected, otherwise one would need an APP-token to register via post
      * @var string[]
      */
-    protected array $_unprotectedActions = [ 'post', 'delete' ];
+    protected array $_unprotectedActions = [ 'post', 'delete', 'get' ];
 
     /**
      * inits the internal entity Object, handels given limit, filter and sort parameters
      * @see Zend_Controller_Action::init()
      */
     public function init() {
+        if (ZfExtended_Utils::isDevelopment()) {
+            $this->_unprotectedActions[] = 'index';
+        }
         $this->acl = ZfExtended_Acl::getInstance();
         $this->initRestControllerSpecific();
     }
