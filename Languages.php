@@ -56,7 +56,16 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract {
         parent::__construct();
         $this->memCache = Zend_Cache::factory('Core', new ZfExtended_Cache_MySQLMemoryBackend(), ['automatic_serialization' => true]);
     }
-    
+
+    /**
+     * Gets the major RFC5646 language (e.g. "en", "ja", ...)
+     * @return string
+     */
+    public function getMajorRfc5646(): string
+    {
+        return $this->getMainlanguageByRfc5646($this->getRfc5646());
+    }
+
     /**
      * Lädt die Sprache anhand dem übergebenen Sprachkürzel (nach RFC5646)
      * @param string $lang
