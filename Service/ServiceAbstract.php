@@ -93,6 +93,15 @@ abstract class ServiceAbstract
     protected bool $locatable = true;
 
     /**
+     * Defines, if a service is mandatory
+     * Mandatory services will create an error in the check-result if the check failes,
+     * a configurable service will not create an error if the configuration is empty
+     * Note that services of non-configured plugins will not be checked of course despite being mandatory
+     * @var bool
+     */
+    protected bool $mandatory = true;
+
+    /**
      * Holds the info if this is a plugin or global service
      * @var bool
      */
