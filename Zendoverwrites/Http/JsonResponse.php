@@ -147,8 +147,7 @@ class JsonResponse
         if ($lastJsonError != JSON_ERROR_NONE) {
             $errorExtra['errorMsg'] = json_last_error_msg();
             $errorExtra['rawanswer'] = $responseBody;
-            //FIXME error code
-            throw new InvalidResponse('E4321', $errorExtra);
+            throw new InvalidResponse('E1510', $errorExtra);
         }
 
         return empty($this->error);
