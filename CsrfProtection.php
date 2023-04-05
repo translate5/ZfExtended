@@ -62,11 +62,11 @@ final class CsrfProtection
     const APITEST_TOKENFILE = 'apitest-csrf.token';
 
     const ERRORS = [
-        'E1505' => 'token was empty',
-        'E1506' => 'the sent test-token "{token}" does not match the stored token {storedToken}',
-        'E1507' => 'sent token "{token}" does not match the session token: "{storedToken}"',
-        'E1508' => 'the test-token-file "{tokenFile}" is missing or not readable',
-        'E1509' => 'Request had no {header} header',
+        'E1505' => 'The CSRF-token was empty',
+        'E1506' => 'The sent CSRF test-token "{token}" does not match the stored token {storedToken}',
+        'E1507' => 'The sent CSRF token "{token}" does not match the session token: "{storedToken}"',
+        'E1508' => 'The CSRF test-token-file "{tokenFile}" is missing or not readable',
+        'E1509' => 'The request had no {header} header',
     ];
 
     private bool $isApiTest;
