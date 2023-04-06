@@ -205,7 +205,7 @@ final class CsrfProtection
             // compare token with the session token or a file-based token in case of unit tests
             if ($session->token !== $token) {
                 // we may be in an API-test, let's check
-                if (constant('APPLICATION_APITEST')) {
+                if ($this->isApiTest) {
                     // when API-testing, the token is stored in a temporary file for the test
                     $storedToken = $this->getApiTestToken();
                     if ($storedToken === $token) {
