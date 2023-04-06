@@ -84,4 +84,16 @@ class ZfExtended_Models_Log extends ZfExtended_Models_Entity_Abstract {
           ->order('name ASC');
         return parent::loadFilterdCustom($s);
     }
+
+    /**
+     * Deletes the log entries older as the given amount of weeks.
+     * @param int $weeks
+     * @return int The number of rows deleted.
+     */
+    public function purgeOlderAs(int $weeks): int
+    {
+        return $this->db->delete([
+            'created < NOW() - INTERVAL ? WEEK' => $weeks
+        ]);
+    }
 }
