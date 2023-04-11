@@ -80,7 +80,7 @@ class ZfExtended_Authentication
     public static function isAppTokenAuthenticated(): bool
     {
         $userSession = new Zend_Session_Namespace('user');
-        return ($userSession?->data?->isTokenAuth === true);
+        return ($userSession->data?->isTokenAuth === true);
     }
 
     /**
@@ -101,7 +101,7 @@ class ZfExtended_Authentication
             return false;
         }
 
-        if ($this->authenticateByLogin($session->data->login)) {
+        if ($this->authenticateBySessionData($session->data)) {
             $authStatus = self::AUTH_ALLOWED_LOAD;
             return true;
         }
@@ -247,6 +247,18 @@ class ZfExtended_Authentication
     }
 
     /**
+     * Authenticates the user given by login - does not check password!
+     * @param stdClass $sessionData
+     * @return bool false if user could not be found
+     */
+    public function authenticateBySessionData(stdClass $sessionData): bool
+    {
+        return $this->loadUserAndValidate($sessionData->login, function () {
+            return true;
+        }, updateUserInSession: false);
+    }
+
+    /**
      * Authenticates the user given by user instance - does not check password!
      * @param ZfExtended_Models_User $user
      * @return bool false if user could not be found
@@ -266,9 +278,15 @@ class ZfExtended_Authentication
      * @param string $login
      * @param Closure $loginValidator
      * @param bool $isLoginByAppToken
+     * @param bool $updateUserInSession
      * @return bool
      */
-    private function loadUserAndValidate(string $login, Closure $loginValidator, bool $isLoginByAppToken = false): bool
+    private function loadUserAndValidate(
+        string $login,
+        Closure $loginValidator,
+        bool $isLoginByAppToken = false,
+        bool $updateUserInSession = true
+    ): bool
     {
         $this->isTokenAuth = false;
         $this->authenticatedUser = ZfExtended_Factory::get(User::class);
@@ -276,7 +294,9 @@ class ZfExtended_Authentication
             $this->authenticatedUser->loadByLogin($login);
             if ($loginValidator()) {
                 $this->isTokenAuth = $isLoginByAppToken;
-                $this->setUserDataInSession();
+                if ($updateUserInSession) {
+                    $this->setUserDataInSession();
+                }
                 editor_User::create($this->authenticatedUser);
                 return true;
             }

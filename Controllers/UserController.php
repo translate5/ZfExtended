@@ -571,7 +571,7 @@ class ZfExtended_UserController extends ZfExtended_RestController {
             return;
         }
         if($userSession->data->id==$this->data->id){
-            ZfExtended_Authentication::getInstance()->authenticateByLogin($userSession->data->login);
+            ZfExtended_Authentication::getInstance()->authenticateBySessionData($userSession->data);
         }
     }
 
