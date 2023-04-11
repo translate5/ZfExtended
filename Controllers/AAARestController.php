@@ -81,7 +81,8 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller
 
     /**
      * Here actions can be defined, that shall not be CSRF-protected
-     * Caution: Such actions may cause security-holes!
+     * operations & batches like editor/:controller/:id/:operation/operation or editor/:controller/:operation/batch will also count as "action"
+     * Caution: Such exceptions may cause security-holes!
      * @var string[]
      */
     protected array $_unprotectedActions = [];
@@ -179,8 +180,16 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller
                 echo json_encode($res);
             }
         });
+
+        $action = $this->_request->getActionName();
+
+        // special handling of operations & batches: we use the operation param then as action so we can easily add CSRF exceptions for it if neccessary
+        if(($action === 'operation' || $action === 'batch') && $this->hasParam('operation')){
+            $action = $this->getParam('operation');
+        }
+
         // by default, all actions are protected against CSRF attacks
-        if(!in_array($this->_request->getActionName(), $this->_unprotectedActions)){
+        if(!in_array($action, $this->_unprotectedActions)){
             CsrfProtection::getInstance()->validateRequest($this->_request);
         }
     }
