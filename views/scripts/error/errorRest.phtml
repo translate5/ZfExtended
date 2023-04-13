@@ -29,5 +29,10 @@ END LICENSE AND COPYRIGHT
  *
  */
 /* @var $this Zend_View */
-echo htmlspecialchars($this->errorMessage);
+echo json_encode([
+    'message' => htmlspecialchars($this->message),
+    'errorMessage' => htmlspecialchars($this->errorMessage),
+    'httpStatus' => $this->httpStatus,
+    'success' => $this->success,
+]);
 unset($this->translate);

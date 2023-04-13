@@ -69,6 +69,10 @@ class ErrorController extends ZfExtended_Controllers_Action
      */
     protected function exceptionInit()
     {
+        if ($this->isRestRoute()) {
+            $this->_response->setHeader('x-translate5-version', APPLICATION_VERSION, true);
+        }
+
         //the error caught by the Zend_Controller_Plugin_ErrorHandler
         $caughtError = $this->_getParam('error_handler');
         
