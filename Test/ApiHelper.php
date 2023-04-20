@@ -665,7 +665,6 @@ class ZfExtended_Test_ApiHelper {
         if (!mkdir($dir) && !is_dir($dir)) {
             throw new \RuntimeException(sprintf('Directory "%s" was not created', $dir));
         }
-        chmod($dir,0777);
         $zip->extractTo($dir);
         $files = glob($dir.$pathToFileInZip, GLOB_NOCHECK);
         $file = reset($files);
