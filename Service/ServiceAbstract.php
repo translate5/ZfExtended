@@ -206,6 +206,9 @@ abstract class ServiceAbstract
             $this->output($this->getError(), $io, 'caution');
         }
         $this->hasWarnings() && $this->output($this->getWarning(), $io, 'warning');
+        if(!empty($this->badSummary)) {
+            $this->output($this->getBadSummary(), $io, 'info');
+        }
     }
 
     /**
@@ -262,9 +265,23 @@ abstract class ServiceAbstract
             . implode($seperator, $this->warnings);
     }
 
+    public function getBadSummary(string $seperator = "\n"): string
+    {
+        return
+            $this->getDescription()
+            . ' advices to fix:'
+            . $seperator . $seperator
+            . implode($seperator, $this->badSummary);
+    }
+
     public function hasWarnings(): bool
     {
         return !empty($this->warnings);
+    }
+
+    public function hasErrors(): bool
+    {
+        return !empty($this->errors);
     }
 
     /**

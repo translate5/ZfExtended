@@ -36,9 +36,9 @@ class ZfExtended_Models_SystemRequirement_Validator {
      * Contains the Validation modules to be used.
      * @var array
      */
-    protected $modules = [];
+    protected static array $modules = [];
     
-    protected $results = [];
+    protected array $results = [];
     
     protected $installationBootstrapOnly;
     
@@ -53,54 +53,66 @@ class ZfExtended_Models_SystemRequirement_Validator {
             $sysPath = APPLICATION_ROOT.'/library/ZfExtended/Models/SystemRequirement/Modules';
             $modPath = APPLICATION_ROOT.'/application/modules/default/Models/SystemRequirement/Modules';
         }
-        $this->addModules($sysPath, 'ZfExtended_Models_SystemRequirement_Modules_');
-        $this->addModules($modPath, 'Models_SystemRequirement_Modules_');
+        $this->addDefaultModules($sysPath, 'ZfExtended_Models_SystemRequirement_Modules_');
+        $this->addDefaultModules($modPath, 'Models_SystemRequirement_Modules_');
         
     }
-    
-    protected function addModules($path, $classPath) {
+
+    public static function addModule(string $name, string $className): void
+    {
+        self::$modules[$name] = $className;
+    }
+
+    protected function addDefaultModules($path, $classPath) {
         $foundModules = scandir($path);
+        $newDefaultMods = [];
         foreach($foundModules as $module) {
-            if($module == '.' || $module == '..' || $module == 'Abstract.php') {
+            if($module == '.' || $module == '..' || str_ends_with($module, 'Abstract.php')) {
                 continue;
             }
             require_once $path.'/'.$module;
             $module = preg_replace('/\.php$/', '', $module);
-            $this->modules[strtolower($module)] = $classPath.$module;
+            $newDefaultMods[strtolower($module)] = $classPath.$module;
         }
+        self::$modules = array_merge($newDefaultMods, self::$modules); //prepend new defaults to the start of the list
     }
-    
+
     /**
      * Runs all or the given validation module
-     * @param string $module
+     * @param string|null $module
+     * @return array
      * @throws Exception
      */
-    public function validate(string $module = null) {
+    public function validate(string $module = null): array
+    {
         $isInstallation = $this->installationBootstrapOnly;
-        if(empty($module)) {
-            $toRun = array_keys($this->modules);
-        }
-        else {
-            if(empty($this->modules[$module])) {
-                throw new Exception('SystemRequirement Module '.$module.' not found. Available modules: '.print_r($this->modules,1));
+        if (empty($module)) {
+            $toRun = array_keys(self::$modules);
+        } else {
+            if (empty(self::$modules[$module])) {
+                throw new Exception('SystemRequirement Module '.$module.' not found. Available modules: '.print_r(self::$modules,1));
             }
             $toRun = [$module];
             //if a module is given, this is forced, also in installation
             $isInstallation = false;
         }
-        foreach($toRun as $module) {
-            $moduleInstance = new $this->modules[$module];
+        foreach ($toRun as $module) {
+            $moduleInstance = new self::$modules[$module];
             /* @var $moduleInstance ZfExtended_Models_SystemRequirement_Modules_Abstract */
-            if($isInstallation && !$moduleInstance->isInstallationBootstrap()) {
+            if ($isInstallation && !$moduleInstance->isInstallationBootstrap()) {
                 continue;
             }
-            $this->results[$module] = $moduleInstance->validate();
+            if ($moduleInstance instanceof ZfExtended_Models_SystemRequirement_Modules_BulkAbstract) {
+                $moduleInstance->validateBulk($this->results);
+            } else {
+                $this->results[$module] = $moduleInstance->validate();
+            }
         }
         
         return $this->results;
     }
     
     public function add($name, $moduleClass) {
-        $this->modules[$name] = $moduleClass;
+        self::$modules[$name] = $moduleClass;
     }
 }
