@@ -26,5 +26,33 @@ class ZfExtended_VersionConflictException extends ZfExtended_Exception {
     protected $defaultCode = 409;
     protected $defaultMessage = 'Die Ausgangsdaten wurden in der Zwischenzeit verändert. Bitte aktualisieren Sie Ihre Ansicht!';
     protected $defaultMessageTranslate = true;
-    protected $loggingEnabled = true;
+    protected $loggingEnabled = false;
+
+    public function __construct(Throwable $previous = null)
+    {
+        parent::__construct(previous: $previous);
+    }
+
+    /**
+     * Consumes a DB exception and converts it to ZfExtended_VersionConflictException if suitable
+     * @throws Zend_Db_Statement_Exception
+     * @throws Zend_Exception
+     * @throws ZfExtended_VersionConflictException
+     */
+    public static function logAndThrow(Zend_Db_Statement_Exception $e)
+    {
+        $m = $e->getMessage();
+        if (stripos($m, 'raise_version_conflict does not exist') !== false) {
+            $newE = new ZfExtended_VersionConflictException($e);
+            //by default this exception is not logged, but still we wanna have an info about that
+            $log = Zend_Registry::get('logger');
+            $log->exception($newE, [
+                'level' => $log::LEVEL_INFO,
+                'previous' => null, //we clean the previous here, since it just doubles the info
+                'trace' => $e->getTraceAsString(), // we provide the original trace, this makes more sense
+            ]);
+            throw $newE;
+        }
+        throw $e;
+    }
 }

@@ -351,11 +351,7 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller
             //this is the only useful place in processing REST request to translate
             //the entityVersion DB exception to an 409 conflict exception
         catch (Zend_Db_Statement_Exception $e) {
-            $m = $e->getMessage();
-            if (stripos($m, 'raise_version_conflict does not exist') !== false) {
-                throw new ZfExtended_VersionConflictException('', 0, $e);
-            }
-            throw $e;
+            ZfExtended_VersionConflictException::logAndThrow($e);
         } catch (ZfExtended_BadGateway $e) {
             $this->handleException($e);
             return;

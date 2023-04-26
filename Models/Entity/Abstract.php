@@ -430,7 +430,7 @@ abstract class ZfExtended_Models_Entity_Abstract {
             throw new ZfExtended_Models_Entity_Exceptions_IntegrityDuplicateKey('E1015', [
                 'entity' => static::class,
                 'data' => $this->getDataObject(),
-                'field' => current($matches[1]) ?? false
+                'field' => is_array($matches[1] ?? null) ? current($matches[1]) : false,
             ], $e);
         }
         
