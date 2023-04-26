@@ -144,6 +144,7 @@ class ErrorController extends ZfExtended_Controllers_Action
     protected function responseCodeAsText($code) {
         $codeMap = Zend_Http_Response::responseCodeAsText();
         $codeMap['422'] = 'Unprocessable Entity';
+        $codeMap['423'] = 'Locked';
         if(empty($codeMap[$code])) {
             return null;
         }

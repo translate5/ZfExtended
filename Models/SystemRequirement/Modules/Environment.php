@@ -40,7 +40,8 @@ class ZfExtended_Models_SystemRequirement_Modules_Environment extends ZfExtended
      * {@inheritDoc}
      * @see ZfExtended_Models_SystemRequirement_Modules_Abstract::validate()
      */
-    function validate(): ZfExtended_Models_SystemRequirement_Result {
+    public function validate(): ZfExtended_Models_SystemRequirement_Result
+    {
         $this->result->id = 'environment';
         $this->result->name = 'System Environment';
         $this->isWin = strtoupper(substr(PHP_OS, 0, 3)) === 'WIN';

@@ -81,7 +81,8 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller
 
     /**
      * Here actions can be defined, that shall not be CSRF-protected
-     * operations & batches like editor/:controller/:id/:operation/operation or editor/:controller/:operation/batch will also count as "action"
+     * operations & batches like editor/:controller/:id/:operation/operation
+     *  or editor/:controller/:operation/batch will also count as "action"
      * Caution: Such exceptions may cause security-holes!
      * @var string[]
      */

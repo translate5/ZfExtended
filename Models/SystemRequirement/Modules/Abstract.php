@@ -59,5 +59,5 @@ abstract class ZfExtended_Models_SystemRequirement_Modules_Abstract {
      * Runs the module validation and returns the results
      * @return ZfExtended_Models_SystemRequirement_Result
      */
-    abstract function validate(): ZfExtended_Models_SystemRequirement_Result;
+    abstract public function validate(): ZfExtended_Models_SystemRequirement_Result;
 }
