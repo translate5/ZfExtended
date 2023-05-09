@@ -10,11 +10,11 @@ $config = Zend_Registry::get('config');
 <div style="clear:both;">
     <p><?=
         str_replace(
+            '{appName}',
+            $config->runtimeOptions->appName,
             $this->translate->_(
                 'Maintenance is in progress. <br/>{appName} will be available again after the maintenance is accomplished.'
-            ),
-            '{appName}',
-            $config->runtimeOptions->appName
+            )
         )
         ?>
     </p>
