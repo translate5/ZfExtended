@@ -18,7 +18,7 @@ $config = Zend_Registry::get('config');
         )
         ?>
     </p>
-    <p><?= $this->translate->_('Translate5 will be back online in a few minutes!'); ?></p>
+    <p><?= $this->translate->_('Application will be back online in a few minutes!'); ?></p>
     <p><?php echo htmlspecialchars($config->runtimeOptions->maintenance->message ?? ''); ?></p>
     <p><?php echo htmlspecialchars($config->runtimeOptions->companyName); ?></p>
     <p id="last-reload" style="color:#cdcdcd;font-size:9px;"></p>
