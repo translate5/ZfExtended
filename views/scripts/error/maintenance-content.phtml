@@ -4,12 +4,30 @@ $config = Zend_Registry::get('config');
 ?>
 
 <div id="header">
-    <img src="<?php echo APPLICATION_RUNDIR;?>/images/translate5.png?v=1" alt="<?php echo 'translate5'; ?>">
+    <img src="<?php echo APPLICATION_RUNDIR; ?>/images/translate5.png?v=1" alt="<?php echo 'translate5'; ?>">
 </div>
-<h1>We&rsquo;ll be back <br>soon!</h1>
+<h1><?= $this->translate->_('Wir sind <br/>bald wieder da!'); ?></h1>
 <div style="clear:both;">
-    <p>Maintenance is in progress. <br><?php echo $config->runtimeOptions->appName; ?> will be available again after the maintenance is accomplished.</p>
-    <p>Translate5 will be back online in a few minutes!</p>
+    <p>
+        <?=
+        str_replace(
+            '{appName}',
+            $config->runtimeOptions->appName,
+            $this->translate->_(
+                'Wartungsarbeiten sind im Gange. <br/>{appName} wird nach Abschluss der Wartungsarbeiten wieder verf&#252;gbar sein.'
+            )
+        );
+        ?>
+    </p>
+    <p>
+        <?=
+        str_replace(
+            '{appName}',
+            $config->runtimeOptions->appName,
+            $this->translate->_('{appName} ist in wenigen Minuten wieder online!')
+        );
+        ?>
+    </p>
     <p><?php echo htmlspecialchars($config->runtimeOptions->maintenance->message ?? ''); ?></p>
     <p><?php echo htmlspecialchars($config->runtimeOptions->companyName); ?></p>
     <p id="last-reload" style="color:#cdcdcd;font-size:9px;"></p>
