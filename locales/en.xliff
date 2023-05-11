@@ -39,6 +39,18 @@ We apologize for the inconvenience.<br />
 You receive this automatically generated e-mail, 
 since you are registered as a admin user.<br />
 {footer}</target></trans-unit>
+            <trans-unit id="V2lyIHNpbmQgPGJyLz5iYWxkIHdpZWRlciBkYSE=">
+              <source>Wir sind <br/>bald wieder da!</source>
+              <target>We'll be back <br/>soon!</target>
+            </trans-unit>
+            <trans-unit id="V2FydHVuZ3NhcmJlaXRlbiBzaW5kIGltIEdhbmdlLiA8YnIvPnthcHBOYW1lfSB3aXJkIG5hY2ggQWJzY2hsdXNzIGRlciBXYXJ0dW5nc2FyYmVpdGVuIHdpZWRlciB2ZXJmJiMyNTI7Z2JhciBzZWluLg==">
+              <source>Wartungsarbeiten sind im Gange. <br/>{appName} wird nach Abschluss der Wartungsarbeiten wieder verf&#252;gbar sein.</source>
+              <target>Maintenance is in progress. <br/>{appName} will be available again after the maintenance is accomplished.</target>
+            </trans-unit>
+            <trans-unit id="e2FwcE5hbWV9IGlzdCBpbiB3ZW5pZ2VuIE1pbnV0ZW4gd2llZGVyIG9ubGluZSE=">
+              <source>{appName} ist in wenigen Minuten wieder online!</source>
+              <target>{appName} will be back online in a few minutes!</target>
+            </trans-unit>
   </body>
  </file>
 </xliff>

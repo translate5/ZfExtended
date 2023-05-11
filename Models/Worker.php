@@ -554,7 +554,7 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
         $select = $this->db->select()->where('state IN (?)', $states);
         $workers = [];
         foreach ($this->db->fetchAll($select)->toArray() as $row) {
-            $workers[] = $row['worker'] . ' (' . $row['state'] . ')';
+            $workers[] = $row['worker'] . ' (' . $row['state'] . ') '.' ('.$row['taskGuid'].')';
         }
         return array_unique($workers);
     }
