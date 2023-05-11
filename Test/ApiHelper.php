@@ -229,7 +229,7 @@ class ZfExtended_Test_ApiHelper {
      */
     public static function getTaskDataBaseDirectory(): string
     {
-        return self::$CONFIG['DATA_DIR'];
+        return static::$CONFIG['DATA_DIR'];
     }
 
     /**
