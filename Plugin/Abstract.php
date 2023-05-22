@@ -23,10 +23,12 @@ END LICENSE AND COPYRIGHT
 */
 
 use MittagQI\ZfExtended\Service\ServiceAbstract;
+
 /**
  * provides basic functionality for plugins
  */
-abstract class ZfExtended_Plugin_Abstract {
+abstract class ZfExtended_Plugin_Abstract
+{
     
     /**
      * A public plug-in is available for everybody
@@ -50,7 +52,9 @@ abstract class ZfExtended_Plugin_Abstract {
      * The plug-in type
      * @var string
      */
-    protected static $type = self::TYPE_PUBLIC;
+    protected static string $type = self::TYPE_PUBLIC;
+
+    protected static bool $enabledByDefault = false;
 
     /**
      * A human-readable description of the plug-in
@@ -77,6 +81,24 @@ abstract class ZfExtended_Plugin_Abstract {
      */
     public static function getDescription(): string {
         return static::$description;
+    }
+
+    /**
+     * Return the plug-in type
+     * @return string
+     */
+    public static function getType(): string
+    {
+        return static::$type;
+    }
+
+    /**
+     * Return if the plug-in should be enabled on installation
+     * @return bool
+     */
+    public static function isEnabledByDefault(): bool
+    {
+        return static::$enabledByDefault;
     }
 
     /**
