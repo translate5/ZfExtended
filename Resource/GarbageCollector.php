@@ -65,8 +65,7 @@ class ZfExtended_Resource_GarbageCollector extends Zend_Application_Resource_Res
         
         //start zfextended stuff to be cleaned
         $this->cleanUpWorker();
-        $this->cleanUpSession();
-        
+
         // cleanup chache (Zf_memcache)
         $this->cleanUpCache();
         
@@ -120,14 +119,6 @@ class ZfExtended_Resource_GarbageCollector extends Zend_Application_Resource_Res
     protected function cleanUpWorker() {
         //still using old clean up invocation for the done workers....
         //FIXME what should be implemented here is a clean up for defunct workers!
-    }
-    
-    protected function cleanUpSession() {
-        $lifetime = $this->config->resources->ZfExtended_Resource_Session->garbageCollectorLifetime;
-        $sessionTable = new ZfExtended_Models_Db_Session();
-        $sessionTable->delete('modified < '.(string)(time()-$lifetime));
-        $SessionMapInternalUniqIdTable = new ZfExtended_Models_Db_SessionMapInternalUniqId();
-        $SessionMapInternalUniqIdTable->delete('modified < '.(string)(time()-$lifetime));
     }
     
     /**

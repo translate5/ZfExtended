@@ -36,5 +36,10 @@ END LICENSE AND COPYRIGHT
 class ZfExtended_Models_Db_SessionMapInternalUniqId extends Zend_Db_Table_Abstract {
     protected $_name    = 'sessionMapInternalUniqId';
     public $_primary = 'id';
+
+    public function name(): string
+    {
+        return $this->_name;
+    }
 }
 
