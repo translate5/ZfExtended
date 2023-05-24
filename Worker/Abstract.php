@@ -390,24 +390,46 @@ abstract class ZfExtended_Worker_Abstract {
             $this->workerModel->setProgress($progressDone);
             $this->workerModel->setEndtime(new Zend_Db_Expr('NOW()'));
             $this->finishedWorker = clone $this->workerModel;
-            $this->retryOnDeadlock(function(){
-                $this->workerModel->save();
-            });
+            if (! $this->saveWorkerDeadlockProof()) {
+                return false;
+            }
             $this->onProgressUpdated($progressDone);
 
-        } catch(Throwable $workException) {
+        } catch (Throwable $workException) {
 
             $this->reconnectDb();
             $result = false;
             $this->workerModel->setState(ZfExtended_Models_Worker::STATE_DEFUNCT);
-            $this->retryOnDeadlock(function(){
-                $this->workerModel->save();
-            });
+            $this->saveWorkerDeadlockProof();
             $this->finishedWorker = clone $this->workerModel;
             $this->handleWorkerException($workException);
         }
         return $result;
     }
+
+    /**
+     * saves the current worker, returns false if it could not be saved due missing worker in DB
+     * @return bool
+     * @throws Zend_Db_Exception
+     * @throws Zend_Exception
+     * @throws ZfExtended_Models_Db_Exceptions_DeadLockHandler
+     */
+    private function saveWorkerDeadlockProof(): bool
+    {
+        try {
+            $this->retryOnDeadlock(function () {
+                $this->workerModel->save();
+            });
+            return true;
+        } catch (Zend_Db_Table_Row_Exception $e) {
+            if (str_contains($e->getMessage(), 'Cannot refresh row as parent is missing')) {
+                return false;
+            }
+            throw $e;
+        }
+    }
+
+
     /**
      * Update the progress for the current worker model with the given value (float between 0 ad 1)
      *

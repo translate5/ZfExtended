@@ -259,7 +259,7 @@ class ZfExtended_Worker_TriggerByHttp {
         }
         //forced debug by config
         if(ZfExtended_Debug::hasLevel('core', 'worker')) {
-            $debug = 'ECLIPSE';
+            $debug = 'PHPSTORM';
         }
         if(!empty($debug)){
             $out .= 'Cookie: XDEBUG_SESSION='.$debug."\r\n";

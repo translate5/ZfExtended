@@ -127,7 +127,7 @@ class  ZfExtended_Zendoverwrites_Http_Client extends Zend_Http_Client {
             'id' => $randKey,
             'code' => $response->getStatus(),
             'headers' => $response->getHeaders(),
-            'rawBody' => $response->getRawBody(),
+            'rawBody' => $response->getBody(),
         ]);
     }
     

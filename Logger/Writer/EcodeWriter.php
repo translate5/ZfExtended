@@ -46,7 +46,7 @@ class ZfExtended_Logger_Writer_EcodeWriter extends ZfExtended_Logger_Writer_Abst
         //sanitize event message (no pipes allowed)
         $event->messageRaw = str_replace('|', '/', $event->messageRaw);
 
-        if(in_array($event->eventCode, self::MULTI_PURPOSE_CODES)) {
+        if (in_array($event->eventCode, self::MULTI_PURPOSE_CODES)) {
             return;
         }
 
@@ -54,30 +54,30 @@ class ZfExtended_Logger_Writer_EcodeWriter extends ZfExtended_Logger_Writer_Abst
 
         $lastEcodeLine = 0;
         $replace = false;
-        foreach($ecodes as $idx => $line) {
+        foreach ($ecodes as $idx => $line) {
             $linkKey = '<a id="'.$event->eventCode.'"></a>'.$event->eventCode;
-            if(str_contains($line, $linkKey)) {
+            if (str_contains($line, $linkKey)) {
                 $replace = true;
                 $lastEcodeLine = $idx;
                 break;
             }
-            if(preg_match('~<a id="(E[\d]{4})"></a>E[\d]{4}~', $line)) {
+            if (preg_match('~<a id="(E[\d]{4})"></a>E[\d]{4}~', $line)) {
                 $lastEcodeLine = $idx;
             }
         }
 
-        if($replace) {
+        if ($replace) {
             $result = $this->getReplaceMessage($event, $ecodes[$lastEcodeLine]);
-            if(!is_null($result)) {
+            if (!is_null($result)) {
                 $ecodes[$lastEcodeLine] = $result;
             }
         }
         //if a new one, or nothing replaced above, then we just insert a new row.
-        if(!$replace || is_null($result)) {
+        if (!$replace || is_null($result)) {
             //insert after last found ecode a new one
             array_splice( $ecodes, $lastEcodeLine + 1, 0, [$this->getNewEcodeLine($event)] );
         }
-        if(!file_put_contents(self::ECODE_FILE, join('', $ecodes))) {
+        if (!file_put_contents(self::ECODE_FILE, join('', $ecodes))) {
             error_log('Could not save '.self::ECODE_FILE);
         }
     }
@@ -89,7 +89,12 @@ class ZfExtended_Logger_Writer_EcodeWriter extends ZfExtended_Logger_Writer_Abst
      */
     private function getNewEcodeLine(ZfExtended_Logger_Event $event): string
     {
-        return sprintf('| <a id="%s"></a>%s  | TODO    | %s | TODO DESCRIPTION / SOLUTION', $event->eventCode, $event->eventCode, $event->messageRaw)."\n";
+        return sprintf(
+            '| <a id="%s"></a>%s  | TODO    | %s | TODO DESCRIPTION / SOLUTION |',
+            $event->eventCode,
+            $event->eventCode,
+            $event->messageRaw
+        )."\n";
     }
 
     /**
@@ -101,8 +106,17 @@ class ZfExtended_Logger_Writer_EcodeWriter extends ZfExtended_Logger_Writer_Abst
     private function getReplaceMessage(ZfExtended_Logger_Event $event, string $line): ?string
     {
         $count = 0;
-        $result = preg_replace('~(\s*\|\s*<a id="E[\d]{4}"></a>E[\d]{4}\s*\|[^|]+\|)([^|]+)(.*$)~','$1 '.$event->messageRaw.' $3', $line, count: $count);
-        if($count > 0) {
+        $result = preg_replace_callback(
+            pattern: '~(\s*\|\s*<a id="E[\d]{4}"></a>E[\d]{4}\s*\|[^|]+\|)([^|]+)(.*$)~',
+            callback: function (array $matches) use ($event) {
+                $finalLength = mb_strlen($matches[2]);
+                return $matches[1].str_pad(' '.$event->messageRaw, $finalLength, ' ').$matches[3];
+            },
+            subject: $line,
+            count: $count
+        );
+
+        if ($count > 0) {
             return $result;
         }
         return null;

@@ -102,9 +102,6 @@ trait ZfExtended_Models_Db_DeadLockHandlerTrait {
                 }
                 return $result;
             }
-            catch(Zend_Db_Table_Row_Exception $e) {
-                $this->throwIfNotParentMissingException($e);
-            }
             catch(Zend_Db_Statement_Exception $e) {
                 //hier schleife
                 $this->throwIfNotDeadLockException($e);
@@ -129,14 +126,5 @@ trait ZfExtended_Models_Db_DeadLockHandlerTrait {
             return;
         }
         throw $e;
-    }
-    
-    /**
-     * Handles DB Exceptions: handles refresh row as parent is missing
-     */
-    protected function throwIfNotParentMissingException(Zend_Db_Exception $e) {
-        if(strpos($e->getMessage(), 'Cannot refresh row as parent is missing') === false) {
-            throw $e;
-        }
     }
 }
