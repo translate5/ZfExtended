@@ -79,9 +79,18 @@ class ZfExtended_Models_SystemRequirement_Modules_Environment extends ZfExtended
      */
     protected function checkLocale() {
         $locale = setlocale(LC_CTYPE, 0);
-        if(!$this->isWin && stripos($locale, 'utf-8') === false && stripos($locale, 'utf8') === false) {
-            $this->result->error[] = 'Your system wide used locale is not UTF-8 capable, it is set to: LC_CTYPE='.$locale;
-            $this->result->error[] = 'Please use a UTF-8 based locale like en_US.UTF-8 to avoid problems with special characters in filenames.';
+        $msg = [
+            'Your system wide used locale is not UTF-8 capable, it is set to: LC_CTYPE='.$locale,
+            'Please use a UTF-8 based locale like en_US.UTF-8 to avoid problems with special characters in filenames.',
+        ];
+        if (!$this->isWin && stripos($locale, 'utf-8') === false && stripos($locale, 'utf8') === false) {
+            if (defined('TRANSLATE5_CLI') && TRANSLATE5_CLI) {
+                array_push($this->result->warning, ...$msg);
+                $this->result->warning[] = 'please re-check online in the UI!';
+            }
+            else {
+                array_push($this->result->error, ...$msg);
+            }
         }
         if ($this->isWin) {
             $this->result->warning[] = 'You are using WINDOWS as server environment. Please ensure that the configuration runtimeOptions.fileSystemEncoding is set correct.';
