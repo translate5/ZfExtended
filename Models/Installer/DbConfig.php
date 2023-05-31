@@ -42,7 +42,7 @@ class ZfExtended_Models_Installer_DbConfig {
      * @param array $params
      * @return $this
      */
-    public function initFromArray(array $params) {
+    public function initFromArray(array $params) : ZfExtended_Models_Installer_DbConfig {
 
         // Setup params
         foreach (['host', 'username', 'password', 'port', 'dbname'] as $param) {
@@ -60,7 +60,7 @@ class ZfExtended_Models_Installer_DbConfig {
      *
      * @see https://www.php.net/manual/en/pdo.construct.php
      */
-    public function toPdoString() {
+    public function toPdoString() : string {
         $pdo = 'mysql:host=' . $this->host;
         if (isset($this->port)) $pdo .= ';port=' . $this->port;
         if (isset($this->dbname)) $pdo .= ';dbname=' . $this->dbname;
