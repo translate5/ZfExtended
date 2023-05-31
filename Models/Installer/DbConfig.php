@@ -62,8 +62,8 @@ class ZfExtended_Models_Installer_DbConfig {
      */
     public function toPdoString() {
         $pdo = 'mysql:host=' . $this->host;
-        if ($this->port) $pdo .= ';port=' . $this->port;
-        if ($this->dbname) $pdo .= ';dbname=' . $this->dbname;
+        if (isset($this->port)) $pdo .= ';port=' . $this->port;
+        if (isset($this->dbname)) $pdo .= ';dbname=' . $this->dbname;
         return $pdo;
     }
 }
