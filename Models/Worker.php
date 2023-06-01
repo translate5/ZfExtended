@@ -609,6 +609,28 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
                 WHERE taskGuid = ? '.$byGroup.$stateInclude.$workerExclude, $params);
         });
     }
+
+    /**
+     * Check if export is running for given task and given export class
+     * @param string $taskGuid
+     * @param string $exportClass
+     * @return bool
+     */
+    public function isExportRunning(string $taskGuid, string $exportClass): bool
+    {
+
+        $s = $this->db->select()
+            ->where('state IN(?)', [
+                self::STATE_RUNNING,
+                self::STATE_WAITING,
+                self::STATE_SCHEDULED,
+                self::STATE_PREPARE,
+            ])
+            ->where('taskGuid = ?', $taskGuid)
+            ->where('worker = ?', $exportClass);
+        $result = $this->db->fetchAll($s)->toArray();
+        return empty($result) === false;
+    }
     
     public function getMaxLifetime() {
         return $this->maxLifetime;
