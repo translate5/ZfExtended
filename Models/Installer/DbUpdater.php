@@ -526,26 +526,24 @@ class ZfExtended_Models_Installer_DbUpdater {
 
     /**
      * Creates an empty database with the configured DB name, drops the same named existing one if requested
-     * @param string $host
-     * @param string $username
-     * @param string $password
-     * @param string $dbname
+     *
+     * @param ZfExtended_Models_Installer_DbConfig $dbConfig
      * @param bool $dropIfExists
      */
-    public function createDatabase(string $host, string $username, string $password, string $dbname, bool $dropIfExists = false): void
+    public function createDatabase(\ZfExtended_Models_Installer_DbConfig $dbConfig, bool $dropIfExists = false): void
     {
         // we need to use PDO, Zend works only with databases
-        $pdo = new \PDO('mysql:host=' . $host, $username, $password);
+        $pdo = new \PDO($dbConfig->toPdoString(), $dbConfig->username, $dbConfig->password);
 
         if ($dropIfExists) {
-            $pdo->query('DROP DATABASE IF EXISTS ' . $dbname . ';');
+            $pdo->query('DROP DATABASE IF EXISTS ' . $dbConfig->dbname . ';');
         }
 
         //default character set utf8mb4 collate utf8mb4_unicode_ci
         $sql = 'CREATE DATABASE %s DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci';
 
         // now create DB from scratch
-        $pdo->query(sprintf($sql, $dbname));
+        $pdo->query(sprintf($sql, $dbConfig->dbname));
     }
 
     /**
