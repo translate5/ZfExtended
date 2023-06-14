@@ -35,17 +35,29 @@ use ZfExtended_Zendoverwrites_Http_Exception_InvalidResponse as InvalidResponse;
  */
 class JsonResponse
 {
+    const VALID_STATES = [200, 201, 204];
+
     /**
      * @var mixed
      */
     protected mixed $data;
 
-    protected ?\stdClass $error = null;
+    protected ?stdClass $error = null;
 
     /**
      * @var Zend_Http_Response
      */
     protected Zend_Http_Response $response;
+
+    /**
+     * @var string
+     */
+    protected string $url;
+
+    /**
+     * @var string
+     */
+    protected string $method;
 
     /**
      * @return bool
@@ -72,6 +84,51 @@ class JsonResponse
     }
 
     /**
+     * Convenience API
+     * @return string|null
+     */
+    public function getResponseBody(): ?string
+    {
+        return $this->response->getBody();
+    }
+
+    /**
+     * Convenience API
+     * @return string|null
+     */
+    public function getRawResponseBody(): ?string
+    {
+        return $this->response->getRawBody();
+    }
+
+    /**
+     * Convenience API
+     * @return int
+     */
+    public function getStatus(): int
+    {
+        return $this->response->getStatus();
+    }
+
+    /**
+     * Convenience API
+     * @return bool
+     */
+    public function isStatusValid(): bool
+    {
+        return in_array($this->response->getStatus(), self::VALID_STATES);
+    }
+
+    /**
+     * Checks wether the result is not Empty. Empty means only an empty response-string was sent
+     * @return bool
+     */
+    public function isEmpty(): bool
+    {
+        return !$this->hasData() || $this->data === '';
+    }
+
+    /**
      * @return mixed
      */
     public function getData(): mixed
@@ -80,49 +137,72 @@ class JsonResponse
     }
 
     /**
+     * Retrieves if data was received
+     * This may not be the case when errors occured
+     * To check for empty result, use isEmpty
+     * @return bool
+     */
+    public function hasData(): bool
+    {
+        return isset($this->data);
+    }
+
+    /**
+     * Retrieves if the retrieved data is an object
+     * @return bool
+     */
+    public function hasDataObject(): bool
+    {
+        return $this->hasData() && is_object($this->data);
+    }
+
+    /**
+     * Retrieves if the retrieved data is an array
+     * @return bool
+     */
+    public function hasDataArray(): bool
+    {
+        return $this->hasData() && is_array($this->data);
+    }
+
+    /**
      * @throws InvalidResponse
      */
-    public function __construct(Zend_Http_Response $response) {
+    public function __construct(Zend_Http_Response $response, string $uri, string $method) {
+        $this->url = $uri;
+        $this->method = $method;
         $this->processResponse($response);
     }
 
     /**
      * parses and processes the response of OpenTM2, and handles the errors
      * @param Zend_Http_Response $response
-     * @return boolean
      * @throws InvalidResponse
      */
-    protected function processResponse(Zend_Http_Response $response): bool {
+    protected function processResponse(Zend_Http_Response $response): void
+    {
         //example how to fake a response
         //$response = new Zend_Http_Response(500, [], '{"ReturnValue":0,"ErrorMsg":"Error: too many open translation memory databases"}');
         $this->error = null;
         $this->response = $response;
-        $validStates = [200, 201, 204];
-
-        //$url = $this->http->getUri(true);
 
         // FIXME check for returned content type
 
         //check for HTTP State (REST errors)
-        if (!in_array($response->getStatus(), $validStates)) {
-            $this->error = new stdClass();
-            $this->error->method = $this->httpMethod;
-            //$this->error->url = $url;
-            $this->error->type = 'HTTP '.$response->getStatus();
-            $this->error->body = $response->getBody();
-            $this->error->error = $response->getStatus(); //is normally overwritten later
+        if (!$this->isStatusValid()) {
+            $this->error = $this->createError();
         }
 
         $responseBody = trim($response->getBody());
-
-        if (empty($responseBody)) {
+        // We cast any empty response to an empty string
+        if ($responseBody === null || $responseBody === '') {
             $this->data = '';
-            return empty($this->error);
+            return;
         }
 
         $errorExtra = [
-            //'method' => $this->httpMethod,
-            //'url' => $url,
+            //'method' => $this->method,
+            //'url' => $this->url,
         ];
         $this->data = json_decode($responseBody);
 
@@ -149,9 +229,21 @@ class JsonResponse
             $errorExtra['rawanswer'] = $responseBody;
             throw new InvalidResponse('E1510', $errorExtra);
         }
-
-        return empty($this->error);
     }
-
-
+    
+    /**
+     * Creates an error for the Response
+     * Caution: Even creates an Error, when the request was successful
+     * @return stdClass
+     */
+    public function createError(): stdClass
+    {
+        $error = new stdClass();
+        $error->url = $this->url;
+        $error->method = $this->method;
+        $error->type = 'HTTP '.$this->response->getStatus();
+        $error->body = $this->response->getBody();
+        $error->error = $this->response->getStatus(); //is normally overwritten later
+        return $error;
+    }
 }
