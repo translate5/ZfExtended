@@ -528,4 +528,79 @@ class ZfExtended_Utils {
         }
         return ($lastIsSlash && $combined !== '' && !str_ends_with($combined, '/')) ? $combined . '/' : $combined;
     }
+
+    /**
+     * Get $desiredLocale arg if it's valid and available locale,
+     * or get from applicationLocale-config,
+     * or from browser,
+     * or from fallbackLocale-config
+     *
+     * @param string|null $desiredLocale
+     * @return string
+     * @throws Zend_Exception
+     */
+    public static function getLocale(?string $desiredLocale = '') : string {
+
+        // Get [localeCode => localeName] pairs for valid locales
+        $available = ZfExtended_Zendoverwrites_Translate
+            ::getInstance()
+            ->getAvailableTranslations();
+
+        // If $desiredLocale is given, and it's valid and available - use it
+        if ($desiredLocale) {
+            if (Zend_Locale::isLocale($desiredLocale)) {
+                if (isset($available[$desiredLocale])) {
+                    return $desiredLocale;
+                }
+            }
+        }
+
+        // Get runtimeOptions and fallback locale from there
+        $rop = Zend_Registry::get('config')->runtimeOptions;
+        $fallback = $rop->translation->fallbackLocale;
+
+        // If fallback is not available - then use first among available
+        if (!isset($available[$fallback])) {
+            $fallback = key($available);
+        }
+
+        // If app locate is set
+        if ($appLocale = $rop->translation->applicationLocale) {
+
+            // If it's valid - use that
+            if (Zend_Locale::isLocale($appLocale) && isset($available[$appLocale])) {
+                return $appLocale;
+
+            // Else - report that and use fallback
+            } else {
+                error_log('Configured runtimeOptions.translation.applicationLocale is no valid locale, using ' . $fallback);
+                return $fallback;
+            }
+        }
+
+        // Else use browser language or fallback
+        return self::getLocaleFromBrowser() ?: $fallback;
+    }
+
+    /**
+     * Moved from ZfExtended_Controllers_Plugins_LocaleSetup
+     *
+     * gets locale from browser
+     * @return string
+     */
+    protected static function getLocaleFromBrowser() {
+        $config = Zend_Registry::get('config');
+        $localeObj = new Zend_Locale();
+        $userPrefLangs = array_keys($localeObj->getBrowser());
+        if(count($userPrefLangs)>0){
+            //Prüfe, ob für jede locale, ob eine xliff-Datei vorhanden ist - wenn nicht fallback
+            foreach($userPrefLangs as $testLocale){
+                $testLocaleObj = new Zend_Locale($testLocale);
+                $testLang = $testLocaleObj->getLanguage();
+                if(file_exists($config->runtimeOptions->dir->locales.DIRECTORY_SEPARATOR.$testLang.'.xliff')){
+                    return $testLang;
+                }
+            }
+        }
+    }
 }
