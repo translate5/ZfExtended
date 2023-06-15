@@ -96,9 +96,14 @@ class ZfExtended_Session_SaveHandler_DbTable
      * {@inheritDoc}
      * @see Zend_Session_SaveHandler_DbTable::gc()
      */
-    public function gc($maxlifetime)
+    public function gc($maxlifetime): bool
     {
         $this->getAdapter()->query('SET TRANSACTION ISOLATION LEVEL READ COMMITTED');
+
+        $lifetime = Zend_Registry::get('config')->resources->ZfExtended_Resource_Session->lifetime;
+        $sessionMapInternalUniqIdTable = new ZfExtended_Models_Db_SessionMapInternalUniqId();
+        $sessionMapInternalUniqIdTable->delete('modified < ' . (time() - $lifetime) . ' or session_id = \'\'');
+
         return parent::gc($maxlifetime);
     }
 }

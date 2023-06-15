@@ -102,6 +102,14 @@ abstract class ServiceAbstract
     protected bool $mandatory = true;
 
     /**
+     * Here configs can be defined that are used to fill the test-DB
+     * Structure is [ 'runtimeOptions.plugins.pluginname.configName' => value ]
+     * If value is NULL, it will be fetched from the application DB, otherwise the defined value is taken
+     * @var array
+     */
+    protected array $testConfigs = [];
+
+    /**
      * Holds the info if this is a plugin or global service
      * @var bool
      */
@@ -151,6 +159,15 @@ abstract class ServiceAbstract
     public function getPluginName(): ?string
     {
         return $this->pluginName;
+    }
+
+    /**
+     * See ::$testConfigs for the structure of the returned array
+     * @return array
+     */
+    public function getTestConfigs(): array
+    {
+        return $this->testConfigs;
     }
 
     /**

@@ -49,6 +49,12 @@ class ZfExtended_Resource_DbConfig extends Zend_Application_Resource_ResourceAbs
      */
     protected ZfExtended_DbConfig_Type_Manager $typeManager;
 
+    /***
+     * List of all configs for there is no type-class found
+     * @var array
+     */
+    protected array $typeClassNotFound = [];
+
     /**
      * (non-PHPdoc)
      * @see Zend_Application_Resource_Resource::init()
@@ -67,20 +73,30 @@ class ZfExtended_Resource_DbConfig extends Zend_Application_Resource_ResourceAbs
         /* @var $dbConfig ZfExtended_Models_Config */
         $entries = $dbConfig->loadAll();
         
-        if(empty($entries)) {
+        if (empty($entries)) {
             return;
         }
-        
-        foreach($entries as $entry) {
+        $this->typeClassNotFound = [];
+
+        foreach ($entries as $entry)
+        {
             $this->addOneEntry($entry);
         }
-        
+
         //update existing stored options
         $options = $app->mergeOptions($this->dbOptionTree, $app->getOptions());
         $bootstrap->setOptions($options);
         
         //update the registered config object
         Zend_Registry::set('config', new Zend_Config($options));
+
+        // log all not found type classes for configs
+        if (!empty($this->typeClassNotFound)) {
+            $log = Zend_Registry::get('logger');
+            $log->warn('E0000', 'Type class not found for config. See details for more info', [
+                'configs' => implode(',', $this->typeClassNotFound)
+            ]);
+        }
     }
     
     public function initDbOptionsTree(array $dbConfigs) {
@@ -105,11 +121,15 @@ class ZfExtended_Resource_DbConfig extends Zend_Application_Resource_ResourceAbs
         $type = $entry['type'] ?? false;
         $key = array_shift($path);
 
-        $configType = $this->typeManager->getType($entry['typeClass'] ?? null);
+        try {
+            $configType = $this->typeManager->getType($entry['typeClass'] ?? null);
+        }catch (Exception $exception){
+            $this->typeClassNotFound[] = $entry['name'] ?? null;
+        }
 
-        if(empty($configType)) {
-            //FIXME logger loaded? collect all errors and log them after the config is processed
-            // here a exception should be thrown, but also after config processing!
+
+        if($configType === null) {
+            // all not loaded type classes will be collected and logged after the config are loaded
             return;
         }
 

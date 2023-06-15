@@ -260,12 +260,12 @@ class ZfExtended_Logger {
         $event->extra = $extraData;
         
         $this->fillStaticData($event);
-        $event->mergeFromArray($eventOverride);
-        $event->levelName = $this->getLevelName($event->level);
         $previous = $exception->getPrevious();
         if(!empty($previous)) {
             $event->previous = $this->exception($previous, [], true);
         }
+        $event->mergeFromArray($eventOverride);
+        $event->levelName = $this->getLevelName($event->level);
         if($returnEvent) {
             return $event;
         }

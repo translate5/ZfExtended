@@ -501,6 +501,35 @@ class ZfExtended_Utils {
     }
 
     /**
+     * Concatenates multiple pathes to one path like some/path/pf/parts taking into account the parts already may start or end with "/"
+     * @param string|null ...$pathes
+     * @return string
+     */
+    public static function combinePathes(?string ...$pathes): string
+    {
+        $combined = '';
+        $lastIsSlash = false;
+        foreach ($pathes as $path) {
+            if (is_string($path) && strlen($path) > 0) {
+                // catch first part is starting with '/'
+                if ($combined === '' && str_starts_with($path, '/')) {
+                    $combined = '/';
+                    $path = substr($path, 1);
+                }
+                // add part
+                $lastIsSlash = str_ends_with($path, '/');
+                if (trim($path, '/') !== '') {
+                    if ($combined !== '' && !str_ends_with($combined, '/')) {
+                        $combined .= '/';
+                    }
+                    $combined .= trim($path, '/');
+                }
+            }
+        }
+        return ($lastIsSlash && $combined !== '' && !str_ends_with($combined, '/')) ? $combined . '/' : $combined;
+    }
+
+    /**
      * Get $desiredLocale arg if it's valid and available locale,
      * or get from applicationLocale-config,
      * or from browser,

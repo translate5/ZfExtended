@@ -26,12 +26,13 @@ namespace MittagQI\ZfExtended\Zendoverwrites\Http;
 
 use Zend_Http_Client;
 use Zend_Http_Client_Exception;
+use ZfExtended_Zendoverwrites_Http_Client;
 use ZfExtended_Zendoverwrites_Http_Exception_InvalidResponse;
 
 /**
  * Overwritten HTTP Client for easy JSON handling
  */
-class JsonClient extends \ZfExtended_Zendoverwrites_Http_Client
+class JsonClient extends ZfExtended_Zendoverwrites_Http_Client
 {
     /**
      * @throws Zend_Http_Client_Exception
@@ -52,8 +53,8 @@ class JsonClient extends \ZfExtended_Zendoverwrites_Http_Client
     public function requestJson(string $method = Zend_Http_Client::GET, mixed $data = null): JsonResponse
     {
         if (!is_null($data)) {
-            $this->setRawData(json_encode($data));
+            $this->setRawData(json_encode($data), 'application/json');
         }
-        return new JsonResponse($this::request($method));
+        return new JsonResponse($this->request($method), $this->getUri(true), $method);
     }
 }

@@ -323,4 +323,22 @@ class ZfExtended_Plugin_Manager {
         $config = ZfExtended_Factory::get(editor_Models_Config::class);
         $config->update('runtimeOptions.plugins.active', json_encode($active));
     }
+
+    /**
+     * Retrieve the plugin configs that need to be copied or added to the test-DB
+     * @return array
+     */
+    public function getTestConfigs(): array
+    {
+        $testConfigs = [];
+        $config = Zend_Registry::get('config');
+        $plugins = $this->getAvailable();
+        /* @var ZfExtended_Plugin_Abstract $cls */
+        foreach($plugins as $plugin => $cls) {
+            if($cls::isNeededForTests()) {
+                $testConfigs = array_merge($testConfigs, $cls::getTestConfigs($config));
+            }
+        }
+        return $testConfigs;
+    }
 }

@@ -38,6 +38,11 @@ class ZfExtended_Models_Db_Session extends Zend_Db_Table_Abstract {
     protected $_name    = 'session';
     public $_primary = 'session_id';
 
+    public function name(): string
+    {
+        return $this->_name;
+    }
+
     /**
      * returns a SQL select to get the valid internalSessionUniqId values
      * @return string

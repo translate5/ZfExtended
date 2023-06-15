@@ -77,8 +77,13 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
         $bootstrap->bootstrap('ZfExtended_Resource_GarbageCollector');
         $config = new Zend_config($bootstrap->getOptions());
         $resconf = $config->resources->ZfExtended_Resource_Session->toArray();
-        unset($resconf['garbageCollectorLifetime']); //Zend_Session does not know this value!
-        
+
+        $resconf['cookie_lifetime'] =
+        $resconf['gc_maxlifetime'] =
+        $resconf['remember_me_seconds'] = $resconf['lifetime'];
+
+        unset($resconf['lifetime']);
+
         if (ZfExtended_Utils::isHttpsRequest()) {
             //None needed so far for Features like OpenID connect and session auth token,
             // but non works only with HTTPS!
