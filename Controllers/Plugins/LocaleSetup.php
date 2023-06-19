@@ -55,13 +55,19 @@ class ZfExtended_Controllers_Plugins_LocaleSetup extends Zend_Controller_Plugin_
      */
     public function routeShutdown(Zend_Controller_Request_Abstract $request)
     {
-        // Initialisiere Sprachschlüssel
+        // Get session
         $session = new Zend_Session_Namespace();
 
-        // Detect and register locale
-        $locale = ZfExtended_Utils::getLocale($request->getParam('locale'));
-        $session->locale = $locale;
-        $this->registerLocale($locale);
+        // Update locale, if need
+        if ($locale = $request->getParam('locale')) {
+            //$session->lock();
+            $locale = ZfExtended_Utils::getLocale($locale);
+            //$session->unlock();
+            $session->locale = $locale;
+        }
+
+        // Register locale
+        $this->registerLocale($session->locale);
     }
 
     /**
