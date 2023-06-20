@@ -22,6 +22,9 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
+use MittagQI\ZfExtended\Worker\Queue;
+use MittagQI\ZfExtended\Worker\Trigger\Http;
+
 /**
  * Important: putAction and queueAction are deleting their session so that no new session entry is created
  * Therefore, these actions are not CSRF-protected
@@ -58,7 +61,7 @@ class ZfExtended_WorkerController extends ZfExtended_RestController {
     
     public function init() {
         parent::init();
-        $this->cleanupSessionAfterRun = (bool) $this->_request->getHeader(ZfExtended_Worker_TriggerByHttp::WORKER_HEADER);
+        $this->cleanupSessionAfterRun = (bool) $this->_request->getHeader(Http::WORKER_HEADER);
     }
     
     /**
@@ -143,7 +146,7 @@ class ZfExtended_WorkerController extends ZfExtended_RestController {
      * @throws ZfExtended_Models_Entity_NotFoundException
      */
     protected function testServerId($givenId) {
-        if($givenId == ZfExtended_Worker_TriggerByHttp::WORKER_CHECK_IGNORE) {
+        if($givenId == Http::WORKER_CHECK_IGNORE) {
             $localId = $givenId;
         }
         else {
@@ -178,8 +181,7 @@ class ZfExtended_WorkerController extends ZfExtended_RestController {
         $this->_response->setHeader(ZfExtended_Models_Worker::WORKER_SERVERID_HEADER, ZfExtended_Utils::installationHash('ZfExtended_Worker_Abstract'));
         $this->_response->sendHeaders();
         $this->_helper->viewRenderer->setNoRender(false);
-        $workerQueue = ZfExtended_Factory::get('ZfExtended_Worker_Queue');
-        /* @var $workerQueue ZfExtended_Worker_Queue */
+        $workerQueue = ZfExtended_Factory::get(Queue::class);
         $workerQueue->process();
         //$this->postDispatch(); needed for TRANSLATE-249
         exit;//since we have no output here, we will exit immediatelly

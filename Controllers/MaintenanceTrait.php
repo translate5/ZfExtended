@@ -107,31 +107,7 @@ trait ZfExtended_Controllers_MaintenanceTrait{
      * @return boolean
      * @throws Zend_Exception
      */
-    protected function isMaintenanceLoginLock(int $timeToMaintenance = null): bool{
-        /* @var $config Zend_Config */
-        $config = Zend_Registry::get('config');
-        $rop = $config->runtimeOptions;
-        if(isset($config->runtimeOptions->maintenance->allowedIPs)){
-            $allowedByIP = in_array($_SERVER['REMOTE_ADDR'], $config->runtimeOptions->maintenance->allowedIPs->toArray() ?? []);
-        }
-        else {
-            $allowedByIP = false;
-        }
-        if(!isset($rop->maintenance) || $allowedByIP){
-            return false;
-        }
-        
-        $maintenanceStartDate=$rop->maintenance->startDate;
-        if(!$maintenanceStartDate || !(strtotime($maintenanceStartDate)<= (time()+ 86400))){//if there is no date and the start date is not in the next 24H
-            return false;
-        }
-    
-        $timeToLoginLock = max(1, $timeToMaintenance ?? (int) $rop->maintenance->timeToLoginLock);
-        
-        $time = strtotime($maintenanceStartDate);
-        $time = $time - ($timeToLoginLock * 60);
-        $date = date("Y-m-d H:i:s", $time);
-    
-        return (new DateTime() >= new DateTime($date));
+    protected function isMaintenanceLoginLock(int $timeToMaintenance = null): bool {
+        return ZfExtended_Models_Installer_Maintenance::isLoginLock($timeToMaintenance);
     }
 }

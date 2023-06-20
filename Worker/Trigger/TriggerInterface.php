@@ -17,38 +17,24 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
  @copyright  Marc Mittag, MittagQI - Quality Informatics
  @author     MittagQI - Quality Informatics
  @license    GNU LESSER GENERAL PUBLIC LICENSE version 3
-			 https://www.gnu.org/licenses/lgpl-3.0.txt
+             https://www.gnu.org/licenses/lgpl-3.0.txt
 
 END LICENSE AND COPYRIGHT
 */
 declare(strict_types=1);
 
-namespace MittagQI\ZfExtended\Worker;
+namespace MittagQI\ZfExtended\Worker\Trigger;
 
-use MittagQI\ZfExtended\Worker\Trigger\Factory as WorkerTriggerFactory;
-
-class Queue
+interface TriggerInterface
 {
-
-    public function process(): void
-    {
-        $workerModel = \ZfExtended_Factory::get(\ZfExtended_Models_Worker::class);
-        $workerListQueued = $workerModel->getListQueued();
-
-        $trigger = WorkerTriggerFactory::create();
-        foreach ($workerListQueued as $workerQueue) {
-            $trigger->triggerWorker($workerQueue['id'], $workerQueue['hash']);
-        }
-    }
-
     /**
-     * trigger application-wide worker-queue
+     * Trigger worker with id = $id.
+     * To run mutex-save, the current hash is needed
+     *
+     * @param string $id numeric id
+     * @param string $hash
      */
-    public function trigger(): void
-    {
-        $worker = \ZfExtended_Factory::get(\ZfExtended_Models_Worker::class);
-        $worker->wakeupScheduled();
+    public function triggerWorker(string $id, string $hash): bool;
 
-        WorkerTriggerFactory::create()->triggerQueue();
-    }
+    public function triggerQueue(): bool;
 }

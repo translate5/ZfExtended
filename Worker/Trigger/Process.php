@@ -21,34 +21,32 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 
 END LICENSE AND COPYRIGHT
 */
+
 declare(strict_types=1);
 
-namespace MittagQI\ZfExtended\Worker;
+namespace MittagQI\ZfExtended\Worker\Trigger;
 
-use MittagQI\ZfExtended\Worker\Trigger\Factory as WorkerTriggerFactory;
-
-class Queue
+class Process implements TriggerInterface
 {
-
-    public function process(): void
+    /**
+     * Trigger worker with id = $id.
+     * To run mutex-save, the current hash is needed
+     *
+     * @param int $id
+     * @param string $hash
+     * @return bool
+     */
+    public function triggerWorker($id, string $hash): bool
     {
-        $workerModel = \ZfExtended_Factory::get(\ZfExtended_Models_Worker::class);
-        $workerListQueued = $workerModel->getListQueued();
-
-        $trigger = WorkerTriggerFactory::create();
-        foreach ($workerListQueued as $workerQueue) {
-            $trigger->triggerWorker($workerQueue['id'], $workerQueue['hash']);
-        }
+        chdir(APPLICATION_ROOT);
+        exec('nohup ./translate5.sh worker:run ' . $id . ' -n --porcelain >/dev/null 2>&1 &');
+        return true; //FIXME check result code of nuhup
     }
 
-    /**
-     * trigger application-wide worker-queue
-     */
-    public function trigger(): void
+    public function triggerQueue(): bool
     {
-        $worker = \ZfExtended_Factory::get(\ZfExtended_Models_Worker::class);
-        $worker->wakeupScheduled();
-
-        WorkerTriggerFactory::create()->triggerQueue();
+        chdir(APPLICATION_ROOT);
+        exec('nohup ./translate5.sh worker:queue -n --porcelain >/dev/null 2>&1 &');
+        return true; //FIXME check result code of nuhup
     }
 }

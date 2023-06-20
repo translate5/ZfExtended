@@ -22,15 +22,12 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
-/**#@+
- * @author Marc Mittag
- * @package portal
- * @version 2.0
- *
- */
+use MittagQI\ZfExtended\Worker\Queue;
+
 /**
  */
-class ZfExtended_Models_Installer_Maintenance {
+class ZfExtended_Models_Installer_Maintenance
+{
     
     /**
      * @var Zend_Config
@@ -47,12 +44,48 @@ class ZfExtended_Models_Installer_Maintenance {
         $this->db = Zend_Db::factory($this->config->resources->db);
         
     }
-    
+
+    /**
+     * @throws Zend_Exception
+     * @throws Exception
+     */
+    public static function isLoginLock(?int $timeToMaintenance = null): bool
+    {
+        /* @var $config Zend_Config */
+        $config = Zend_Registry::get('config');
+        $rop = $config->runtimeOptions;
+        if (isset($config->runtimeOptions->maintenance->allowedIPs)) {
+            $allowedIPs = $config->runtimeOptions->maintenance->allowedIPs->toArray() ?? [];
+            $allowedByIP = in_array($_SERVER['REMOTE_ADDR'] ?? null, $allowedIPs);
+        } else {
+            $allowedByIP = false;
+        }
+        if (!isset($rop->maintenance) || $allowedByIP) {
+            return false;
+        }
+
+        $maintenanceStartDate=$rop->maintenance->startDate;
+        //if there is no date and the start date is not in the next 24H
+        if (!$maintenanceStartDate || (strtotime($maintenanceStartDate) > (time()+ 86400))) {
+            return false;
+        }
+
+        $timeToLoginLock = max(1, $timeToMaintenance ?? (int) $rop->maintenance->timeToLoginLock);
+
+        $time = strtotime($maintenanceStartDate);
+        $time = $time - ($timeToLoginLock * 60);
+        $date = date("Y-m-d H:i:s", $time);
+
+        return (new DateTime() >= new DateTime($date));
+    }
+
     /**
      * returns the configured start date from DB, false if no entry found
-     * @return string|boolean
+     * @return stdClass
+     * @throws Zend_Db_Statement_Exception
      */
-    protected function getConfFromDb() {
+    protected function getConfFromDb(): stdClass
+    {
         $result = new stdClass();
         $result->message = null;
         $result->startDate = null;
@@ -60,34 +93,51 @@ class ZfExtended_Models_Installer_Maintenance {
         $result->timeToLoginLock = null;
         $result->announcementMail = null;
         
-        $res = $this->db->query('SELECT name, value FROM `Zf_configuration` WHERE `name` like "runtimeOptions.maintenance.%"');
+        $res = $this->db->query(
+            'SELECT name, value FROM `Zf_configuration` WHERE `name` like "runtimeOptions.maintenance.%"'
+        );
+
         $conf = $res->fetchAll();
-        foreach($conf as $row) {
+        foreach ($conf as $row) {
             $name = explode('.', $row['name']);
             $name = end($name);
             $result->$name = $row['value'];
         }
         return $result;
     }
-    
+
+    /**
+     * @throws Zend_Db_Statement_Exception
+     */
     public function isInIni(): bool
     {
         return $this->config->runtimeOptions->maintenance->startDate != $this->getConfFromDb()->startDate;
     }
-    
+
+    /**
+     * @throws Zend_Db_Statement_Exception
+     */
     public function status(): stdClass
     {
         return $this->getConfFromDb();
     }
+
+
     
-    
-    public function disable() {
-        $this->db->query("UPDATE `Zf_configuration` SET `value` = null WHERE `name` = 'runtimeOptions.maintenance.startDate'");
-        $this->db->query("UPDATE `Zf_configuration` SET `value` = null WHERE `name` = 'runtimeOptions.maintenance.message'");
+    public function disable(): void
+    {
+        $this->db->query(
+            "UPDATE `Zf_configuration` SET `value` = null WHERE `name` = 'runtimeOptions.maintenance.startDate'"
+        );
+        $this->db->query(
+            "UPDATE `Zf_configuration` SET `value` = null WHERE `name` = 'runtimeOptions.maintenance.message'"
+        );
         //on leaving maintenance mode we clear the allowed IPs to not keep them accidentally for the next maintenance
-        $this->db->query("UPDATE `Zf_configuration` SET `value` = '[]' WHERE `name` = 'runtimeOptions.maintenance.allowedIPs'");
+        $this->db->query(
+            "UPDATE `Zf_configuration` SET `value` = '[]' WHERE `name` = 'runtimeOptions.maintenance.allowedIPs'"
+        );
         //when  we disable the maintenance mode, we trigger the worker queue
-        $wq = new ZfExtended_Worker_Queue();
+        $wq = new Queue();
         $wq->trigger();
     }
     
@@ -100,12 +150,18 @@ class ZfExtended_Models_Installer_Maintenance {
     public function set(string $time, string $msg = ''): bool
     {
         $timeStamp = strtotime($time);
-        if(!$timeStamp) {
+        if (!$timeStamp) {
             return false;
         }
         $timeStamp = date('Y-m-d H:i', $timeStamp);
-        $this->db->query("UPDATE `Zf_configuration` SET `value` = ? WHERE `name` = 'runtimeOptions.maintenance.startDate'", $timeStamp);
-        $this->db->query("UPDATE `Zf_configuration` SET `value` = ? WHERE `name` = 'runtimeOptions.maintenance.message'", $msg);
+        $this->db->query(
+            "UPDATE `Zf_configuration` SET `value` = ? WHERE `name` = 'runtimeOptions.maintenance.startDate'",
+            $timeStamp
+        );
+        $this->db->query(
+            "UPDATE `Zf_configuration` SET `value` = ? WHERE `name` = 'runtimeOptions.maintenance.message'",
+            $msg
+        );
         return true;
     }
     
@@ -113,13 +169,16 @@ class ZfExtended_Models_Installer_Maintenance {
      * sets a GUI message, provide empty string to clear
      * @param string $msg
      */
-    public function message(string $msg)
+    public function message(string $msg): void
     {
-        $this->db->query("UPDATE `Zf_configuration` SET `value` = ? WHERE `name` = 'runtimeOptions.maintenance.message'", $msg);
+        $this->db->query(
+            "UPDATE `Zf_configuration` SET `value` = ? WHERE `name` = 'runtimeOptions.maintenance.message'",
+            $msg
+        );
     }
     
-    public function announce($time, $msg = ''): array {
-        
+    public function announce($time, $msg = ''): array
+    {
         $result = [
             'error' => [],
             'warning' => [],
@@ -127,7 +186,7 @@ class ZfExtended_Models_Installer_Maintenance {
         ];
         
         $startTimeStamp = strtotime($time);
-        if(!$startTimeStamp) {
+        if (!$startTimeStamp) {
             $result['error'][] = 'The given time can not parsed to a valid timestamp!';
             return $result;
         }
@@ -135,15 +194,15 @@ class ZfExtended_Models_Installer_Maintenance {
         $receiver = $this->config->runtimeOptions->maintenance->announcementMail ?? '';
         //fastest way to prevent that we spam our support mailbox TODO better solution
         $preventDuplicates = ['support@translate5.net'];
-        if(empty($receiver)) {
+        if (empty($receiver)) {
             $result['error'][] = 'No receiver groups/users set in runtimeOptions.maintenance.announcementMail, so no email sent!';
             return $result;
         }
         $receiver = explode(',', $receiver);
         $plainUsers = [];
-        $receiverGroups = array_filter($receiver, function($item) use (&$plainUsers) {
+        $receiverGroups = array_filter($receiver, function ($item) use (&$plainUsers) {
             $item = explode(':', $item);
-            if(count($item) == 1) {
+            if (count($item) == 1) {
                 return true;
             }
             $plainUsers[] = end($item);
@@ -167,18 +226,17 @@ class ZfExtended_Models_Installer_Maintenance {
         $receivers = $user->loadAllByRole($receiverGroups);
         
         
-        foreach($plainUsers as $login) {
+        foreach ($plainUsers as $login) {
             try {
                 $receivers[] = $user->loadByLogin($login)->toArray();
-            }
-            catch(ZfExtended_Models_Entity_NotFoundException $e) {
+            } catch (ZfExtended_Models_Entity_NotFoundException) {
                 $result['warning'][] = "There is a non existent user '$login' in the runtimeOptions.maintenance.announcementMail configuration!";
             }
         }
         
-        foreach($receivers as $userData) {
+        foreach ($receivers as $userData) {
             $user->init($userData);
-            if(in_array($user->getEmail(), $preventDuplicates)) {
+            if (in_array($user->getEmail(), $preventDuplicates)) {
                 continue;
             }
             $preventDuplicates[] = $user->getEmail();
