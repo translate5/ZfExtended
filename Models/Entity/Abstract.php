@@ -562,6 +562,14 @@ abstract class ZfExtended_Models_Entity_Abstract {
     }
 
     /**
+     * @return bool
+     */
+    public function hasRow(): bool
+    {
+        return $this->row !== null && empty($this->row->toArray()) === false;
+    }
+
+    /**
      * limits the result set of the loadAll Request
      * @param int $offset
      * @param int $limit
