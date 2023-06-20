@@ -67,51 +67,53 @@ class  ZfExtended_Zendoverwrites_Translate extends Zend_Translate
      * @var Zend_Config
      */
     protected $config;
-    
-    public function __construct($targetLang = null) {
+
+    /**
+     * @throws Zend_Exception
+     * @throws Zend_Log_Exception
+     * @throws Zend_Translate_Exception
+     */
+    public function __construct($targetLang = null)
+    {
         $this->config = Zend_Registry::get('config');
         
-        //this is to have an translation adapter set if an error occurs inside translation
+        //this is to have a translation adapter set if an error occurs inside translation
         //process before translation adapter is set - but errorcontroller needs one
         parent::__construct('Zend_Translate_Adapter_Array', array('' => ''), 'en');
 
         //store translation instance only in registry if no targetLang is given and its therefore the default instance
-        if(empty($targetLang)) {
+        if (empty($targetLang)) {
             Zend_Registry::set('Zend_Translate', $this);
         }
         $this->setSourceLang();
         $this->setTargetLang($targetLang);
         $this->getLogPath();
-        
-        
-        if(!Zend_Registry::isRegistered('translationLog')) {
+
+        $config = [
+            'adapter' => 'ZfExtended_Zendoverwrites_Translate_Adapter_Xliff',
+            'content' => $this->config->runtimeOptions->dir->locales.'/'.$this->sourceLang.'.xliff',
+            'locale'  => $this->sourceLang,
+            'disableNotices' => true,
+            'logUntranslated' => true,
+            'logMessage' => '<trans-unit id=\'%id%\'>'.
+                '<source>%message%</source>'.
+                '<target>%message%</target>'.
+                '</trans-unit>',
+            'useId' => true
+        ];
+
+        if (ZfExtended_Utils::isDevelopment()) {
             $writer = new Zend_Log_Writer_Stream($this->getLogPath());
             $formatter = new Zend_Log_Formatter_Simple('%message%' . PHP_EOL);
             $writer->setFormatter($formatter);
-            $log    = new Zend_Log($writer);
-            Zend_Registry::set('translationLog', $log);
+            $config['log'] = new Zend_Log($writer);
         } else {
-            $log = Zend_Registry::get('translationLog');
+            //cache translations in production
+            $cache = Zend_Registry::get('cache');
+            Zend_Translate::setCache($cache);
         }
 
-        // Lade Übersetzungen und speichere Translate Objekt in der Session
-        //$cache = Zend_Registry::get('cache'); //Caching deaktiviert, da der Aufruf der selben Seite mehrmals innerhalb von Millisekunden bei der Nutzung des Caches für Zend_Translate zu Fatal Error führt
-        //Zend_Translate::setCache($cache);
-        parent::__construct(
-            array(
-                'adapter' => 'ZfExtended_Zendoverwrites_Translate_Adapter_Xliff',
-                'content' => $this->config->runtimeOptions->dir->locales.'/'.$this->sourceLang.'.xliff',
-                'locale'  => $this->sourceLang,
-                'disableNotices' => true,
-                'log'             => $log,
-                'logUntranslated' => true,
-                'logMessage' => '<trans-unit id=\'%id%\'>'.
-                    '<source>%message%</source>'.
-                    '<target>%message%</target>'.
-                    '</trans-unit>',
-                'useId' => true
-            )
-        );
+        parent::__construct($config);
         $this->addTranslations();
     }
     
