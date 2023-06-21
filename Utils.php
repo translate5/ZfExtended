@@ -542,9 +542,10 @@ class ZfExtended_Utils {
     public static function getLocale(?string $desiredLocale = '') : string {
 
         // Get [localeCode => localeName] pairs for valid locales
-        $available = ZfExtended_Zendoverwrites_Translate
+        $available = ['en' => true, 'de' => true];
+        /*$available = ZfExtended_Zendoverwrites_Translate
             ::getInstance()
-            ->getAvailableTranslations();
+            ->getAvailableTranslations();*/
 
         // If $desiredLocale is given, and it's valid and available - use it
         if ($desiredLocale) {
