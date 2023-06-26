@@ -798,4 +798,14 @@ abstract class ZfExtended_Models_Entity_Abstract {
             ->from($this->db, [$key,$value]);
         return $this->db->getAdapter()->query($s)->fetchAll(PDO::FETCH_KEY_PAIR);
     }
+
+    /**
+     * Can be used to set the underlying Zend_Db row to readonly to prevent misuse
+     * @return void
+     */
+    public function lockRow(){
+        if(isset($this->row) && $this->row->isConnected()){
+            $this->row->setReadOnly(true);
+        }
+    }
 }
