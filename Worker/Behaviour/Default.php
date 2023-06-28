@@ -22,6 +22,8 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
+use MittagQI\ZfExtended\Worker\Trigger\Factory as WorkerTriggerFactory;
+
 /**
  *
  */
@@ -113,9 +115,7 @@ class ZfExtended_Worker_Behaviour_Default {
     public function wakeUpAndStartNextWorkers(ZfExtended_Models_Worker $workerModel) {
         //giving worker model as paramater since it is not sure that on all usage places this->workerModel is set already
         $workerModel->wakeupScheduled();
-        $trigger = ZfExtended_Factory::get('ZfExtended_Worker_TriggerByHttp');
-        /* @var $trigger ZfExtended_Worker_TriggerByHttp */
-        $trigger->triggerQueue();
+        WorkerTriggerFactory::create()->triggerQueue();
     }
     
     /**

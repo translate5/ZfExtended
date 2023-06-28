@@ -23,32 +23,22 @@ END LICENSE AND COPYRIGHT
 */
 declare(strict_types=1);
 
-namespace MittagQI\ZfExtended\Worker;
+namespace MittagQI\ZfExtended\Worker\Trigger;
 
-use MittagQI\ZfExtended\Worker\Trigger\Factory as WorkerTriggerFactory;
+use Zend_Exception;
+use Zend_Registry;
 
-class Queue
+class Factory
 {
-
-    public function process(): void
-    {
-        $workerModel = \ZfExtended_Factory::get(\ZfExtended_Models_Worker::class);
-        $workerListQueued = $workerModel->getListQueued();
-
-        $trigger = WorkerTriggerFactory::create();
-        foreach ($workerListQueued as $workerQueue) {
-            $trigger->triggerWorker($workerQueue['id'], $workerQueue['hash']);
-        }
-    }
-
     /**
-     * trigger application-wide worker-queue
+     * @throws Zend_Exception
      */
-    public function trigger(): void
+    public static function create(): TriggerInterface
     {
-        $worker = \ZfExtended_Factory::get(\ZfExtended_Models_Worker::class);
-        $worker->wakeupScheduled();
-
-        WorkerTriggerFactory::create()->triggerQueue();
+        $config = Zend_Registry::get('config');
+        return match ($config->runtimeOptions->worker->triggerType) {
+            'process' => new Process(),
+            default => new Http(),
+        };
     }
 }
