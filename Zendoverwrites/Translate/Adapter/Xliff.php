@@ -67,8 +67,6 @@ class  ZfExtended_Zendoverwrites_Translate_Adapter_Xliff extends Zend_Translate_
             $message = str_replace('%locale%', $locale, $message);
             if ($this->_options['log']) {
                 $this->_options['log']->log($message, $this->_options['logPriority']);
-            } else {
-                trigger_error($message, E_USER_NOTICE);
             }
         }
     }
