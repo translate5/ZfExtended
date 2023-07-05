@@ -404,6 +404,22 @@ abstract class ZfExtended_Worker_Abstract {
             $this->finishedWorker = clone $this->workerModel;
             $this->handleWorkerException($workException);
         }
+        $this->workerModel->load($this->workerModel->getId());
+        $duration = strtotime($this->workerModel->getEndtime()) - strtotime($this->workerModel->getStarttime());
+        $this->log->info(
+            'E1547',
+            'Worker {worker} ({id}) needed {duration}s and is now {state}',
+            [
+                'task' => $this->workerModel->getTaskGuid(),
+                'worker' => $this->workerModel->getWorker(),
+                'id' => $this->workerModel->getId(),
+                'start' => $this->workerModel->getStarttime(),
+                'end' => $this->workerModel->getEndtime(),
+                'duration' => $duration,
+                'state' => $this->workerModel->getState(),
+            ]
+        );
+
         return $result;
     }
 
