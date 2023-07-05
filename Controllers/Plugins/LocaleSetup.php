@@ -58,12 +58,16 @@ class ZfExtended_Controllers_Plugins_LocaleSetup extends Zend_Controller_Plugin_
         // Get session
         $session = new Zend_Session_Namespace();
 
-        // Update locale, if need
+        // Update locale, if explicitly given as param
         if ($locale = $request->getParam('locale')) {
-            //$session->lock();
             $locale = ZfExtended_Utils::getLocale($locale);
-            //$session->unlock();
             $session->locale = $locale;
+
+        // Else if not given, and not set in session so far
+        } else if (!$session->locale) {
+
+            // Get browser-locale or fallback-locale
+            $session->locale = ZfExtended_Utils::getLocale();
         }
 
         // Register locale
