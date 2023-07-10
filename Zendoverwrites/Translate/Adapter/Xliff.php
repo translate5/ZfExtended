@@ -107,8 +107,19 @@ class  ZfExtended_Zendoverwrites_Translate_Adapter_Xliff extends Zend_Translate_
                           xml_error_string(xml_get_error_code($this->_file)),
                           xml_get_current_line_number($this->_file), $filename);
             xml_parser_free($this->_file);
+
+            $e = new Zend_Translate_Exception($ex);
+
+            if(
+                Zend_Registry::isRegistered('logger')
+                && ($log = Zend_Registry::get('logger'))
+                && ($log instanceof ZfExtended_Logger)
+            ) {
+                $log->exception($e);
+            }
+
             require_once 'Zend/Translate/Exception.php';
-            throw new Zend_Translate_Exception($ex);
+            throw $e;
         }
 
         return $this->_data;
