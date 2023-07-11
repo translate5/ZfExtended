@@ -420,10 +420,14 @@ class ZfExtended_Logger {
         }
         
         if (Zend_Session::isStarted() && !Zend_Session::isDestroyed()) {
-            $user = new Zend_Session_Namespace('user');
-            if (!empty($user->data->userGuid)) {
-                $event->userGuid = $user->data->userGuid;
-                $event->userLogin = $user->data->login.' ('.$user->data->firstName.' '.$user->data->surName.')';
+            try {
+                $user = new Zend_Session_Namespace('user');
+                if (!empty($user->data->userGuid)) {
+                    $event->userGuid = $user->data->userGuid;
+                    $event->userLogin = $user->data->login.' ('.$user->data->firstName.' '.$user->data->surName.')';
+                }
+            } catch (Zend_Session_Exception) {
+                //log nothing if no user available
             }
         }
     }
