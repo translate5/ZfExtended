@@ -112,13 +112,15 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract {
         $userSession = new Zend_Session_Namespace('user');
         $userSession->data= null;
     }
-    
+
     /**
      * Loads a user by userGuid
      * @param string $userGuid
      * @return ZfExtended_Models_User
+     * @throws ZfExtended_Models_Entity_NotFoundException
      */
-    public function loadByGuid(string $userGuid) {
+    public function loadByGuid(string $userGuid): static
+    {
         try {
             $s = $this->db->select()->where('userGuid = ?', $userGuid);
             $row = $this->db->fetchRow($s);

@@ -404,6 +404,9 @@ abstract class ZfExtended_Worker_Abstract {
             $this->finishedWorker = clone $this->workerModel;
             $this->handleWorkerException($workException);
         }
+        $this->workerModel->load($this->workerModel->getId());
+        $this->logWorkerUsage();
+
         return $result;
     }
 
@@ -566,5 +569,37 @@ abstract class ZfExtended_Worker_Abstract {
             }
             error_log($msg);
         }
+    }
+
+    /**
+     * @return void
+     */
+    private function logWorkerUsage(): void
+    {
+        $duration = 0;
+        $start = strtotime($this->workerModel->getStarttime());
+        $end = strtotime($this->workerModel->getEndtime());
+
+        if ($end === false) {
+           $end = time();
+        }
+
+        if ($start) {
+            $duration = $end - $start;
+        }
+
+        $this->log->info(
+            'E1547',
+            'Worker {worker} ({id}) needed {duration}s and is now {state}',
+            [
+                'task' => $this->workerModel->getTaskGuid(),
+                'worker' => $this->workerModel->getWorker(),
+                'id' => $this->workerModel->getId(),
+                'start' => $this->workerModel->getStarttime(),
+                'end' => $this->workerModel->getEndtime(),
+                'duration' => $duration,
+                'state' => $this->workerModel->getState(),
+            ]
+        );
     }
 }
