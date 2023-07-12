@@ -54,11 +54,11 @@ class ZfExtended_Cache_MySQLMemoryBackend extends Zend_Cache_Backend implements 
     /**
      * Constructor
      *
-     * @param  array $options Associative array of options
-     * @throws Zend_cache_Exception
-     * @return void
+     * @param array $options Associative array of options
+     * @throws Zend_Exception
      */
-    public function __construct(array $options = array()) {
+    public function __construct(array $options = array())
+    {
         parent::__construct($options);
         $this->db = Zend_Registry::get('db');
     }
