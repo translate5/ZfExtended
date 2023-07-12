@@ -251,13 +251,15 @@ final class ZfExtended_Dom extends DOMDocument {
      * @param bool $verbose enables column and line number
      * @return string
      */
-    public function getErrorMsg(string $glue=', ', bool $verbose = false) : string {
+    public function getErrorMsg(string $glue=', ', bool $verbose = false) : string
+    {
         $errors = [];
-        if(count($this->domErrors) > 0){
-            foreach($this->domErrors as $error){ /* @var $error libXMLError */
-                if($verbose){
+        if (count($this->domErrors) > 0) {
+            foreach ($this->domErrors as $error) {
+                /* @var libXMLError $error */
+                if ($verbose) {
                     $errorName = $this::LIBXML_LEVEL_NAME[$error->level];
-                    $errors[] .= "$errorName@$error->line,$error->column: $error->message";
+                    $errors[] = "$errorName@$error->line,$error->column: $error->message";
                 } else {
                     $errors[] = $this->createLibXmlErrorMsg($error);
                 }
