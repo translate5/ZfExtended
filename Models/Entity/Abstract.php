@@ -303,10 +303,9 @@ abstract class ZfExtended_Models_Entity_Abstract {
       $schema = $this->db->info(Zend_Db_Table_Abstract::SCHEMA);
 
       $from = $s->getPart($s::FROM);
-      if(empty($from[$name])) {
+      if (empty($from[$name]) && !in_array($name, array_column($from, 'tableName'), true)) {
           $s->from($name, array('numrows' => 'count(*)'), $schema);
-      }
-      else {
+      } else {
           $s->reset($s::COLUMNS);
           $s->columns(array('numrows' => 'count(*)'));
       }

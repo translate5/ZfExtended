@@ -370,6 +370,10 @@ class ZfExtended_Authentication
         try {
             $user = ZfExtended_Factory::get(User::class);
             $tokenModel->load($parsedToken->getPrefix());
+            $expires = $tokenModel->getExpires();
+            if (!empty($expires) && NOW_ISO > $expires) {
+                return false;
+            }
             $user->load($tokenModel->getUserId());
             return $this->loadUserAndValidate(
                 $user->getLogin(),
