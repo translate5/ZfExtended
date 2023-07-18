@@ -103,8 +103,8 @@ class ZfExtended_Session {
         $model = ZfExtended_Factory::get('ZfExtended_Models_Db_Session');
         /* @var $model ZfExtended_Models_Db_Session */
         $model->delete([
-            'userId = ?'=>$userId,
-            'session_id != ?'=>session_id()
+            'userId = ?' => $userId,
+            'session_id != ?' => session_id()
         ]);
         $this->events->trigger('afterSessionCleanForUser', $this, []);
     }

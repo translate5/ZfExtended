@@ -264,7 +264,7 @@ abstract class ZfExtended_Plugin_Abstract
             return $result;
         }
         foreach($this->frontendControllers as $right => $controller) {
-            if($acl->isInAllowedRoles($auth->getRoles(), 'frontend', $right)) {
+            if($acl->isInAllowedRoles($auth->getUserRoles(), 'frontend', $right)) {
                 $result[] = $controller;
             }
         }

@@ -22,6 +22,8 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
+use MittagQI\ZfExtended\Access\ClientRestriction;
+
 abstract class ZfExtended_Models_Entity_Abstract {
     /**
      * @var string
@@ -56,16 +58,29 @@ abstract class ZfExtended_Models_Entity_Abstract {
      * @var string
      */
     protected $dbInstanceClass;
+
     /**
      * the Validator Classname
      * @var string
      */
     protected $validatorInstanceClass = 'ZfExtended_Models_Validator_Default';
+
+    /**
+     * This can be used to define, that the entity needs to be filtered for clients because the current user is client-restricted
+     * format usually is like ['field' => 'customerId', 'type' => 'list];
+     * If just an empty or incomplete array is given, a column-name of "customerId" and a type of "list" is assumed
+     * If the filter points to an association, a complete config like ['field' => 'customerIds', 'type' => 'list', 'assoc' => ['table' => 'assocTable', 'foreignKey' => 'entityTableId', 'localKey' => 'id', 'searchField' => 'customerId']] must be given
+     * This config reflects the param-naming of a ZfExtended_Models_Filter_JoinAbstract, see the doc there
+     * @var array
+     */
+    protected ?array $clientAccessRestriction = null;
+
     /**
      * the Validator Instance
      * @var string
      */
     protected $validator;
+
     /**
      * @var integer
      */
@@ -100,6 +115,8 @@ abstract class ZfExtended_Models_Entity_Abstract {
      */
     protected $tableName;
 
+    protected bool $debugFiltering = false;
+
     
     public function __construct() {
         $this->db = ZfExtended_Factory::get($this->dbInstanceClass);
@@ -107,6 +124,7 @@ abstract class ZfExtended_Models_Entity_Abstract {
         $this->init();
         $db = $this->db;
         $this->tableName = $db->info($db::NAME);
+        $this->debugFiltering = ZfExtended_Debug::hasLevel('core', 'EntityFilter');
     }
 
     /**
@@ -265,7 +283,17 @@ abstract class ZfExtended_Models_Entity_Abstract {
      */
     protected function loadFilterdCustom(Zend_Db_Select $s){
         $this->applyFilterAndSort($s);
-        return $this->db->fetchAll($s)->toArray();
+        $result = $this->db->fetchAll($s)->toArray();
+        // the select can only be traced after being assembled
+        if($this->debugFiltering){
+            error_log(
+                "\n----------\n"
+                . "FETCH ENTIITY " . get_class($this) . "\n"
+                . $s->__toString()
+                . "\n==========\n"
+            );
+        }
+        return $result;
     }
     
     /***
@@ -273,13 +301,57 @@ abstract class ZfExtended_Models_Entity_Abstract {
      * @param Zend_Db_Select $s
      */
     protected function applyFilterAndSort(Zend_Db_Select &$s){
-        if(!empty($this->filter)) {
-            $this->filter->applyToSelect($s);
-        }
-        
+
+        $this->applyFilterToSelect($s);
+
         if($this->offset || $this->limit) {
             $s->limit($this->limit, $this->offset);
         }
+    }
+
+    /**
+     * Applies the configured filters to the given select
+     * @param Zend_Db_Select $select
+     * @return void
+     */
+    protected function applyFilterToSelect(Zend_Db_Select &$select): void
+    {
+        // this applies a potential role-dependant client-restriction
+        $filter = $this->createClientRestrictedFlter();
+        if (!empty($filter)) {
+            if ($this->debugFiltering) {
+                error_log(
+                    "\n----------\n"
+                    . "FILTER ENTIITY " . get_class($this) . "\n"
+                    . $filter->debug()
+                    . "\n==========\n"
+                );
+            }
+            $filter->applyToSelect($select);
+        }
+    }
+
+    /**
+     * Adds a potential client-restriction to the configured filter
+     * @return ZfExtended_Models_Filter|null
+     */
+    protected function createClientRestrictedFlter(): ?ZfExtended_Models_Filter
+    {
+        // HINT: This may instantiates the Authentication very early. In case of a ZfExtended_Models_Config entity,
+        // this would be too early as it would be called before the session actually is started leading to exceptions
+        // Therefore a config-entity currently can not have a client-restriction
+        if ($this->clientAccessRestriction !== null && ZfExtended_Authentication::getInstance()->isUserClientRestricted()) {
+            $clientIds = ZfExtended_Authentication::getInstance()->getUser()->getRestrictedClientIds();
+            $restriction = new ClientRestriction($this->clientAccessRestriction);
+            if (empty($this->filter)) {
+                $filter = $restriction->create($this, $clientIds);
+            } else {
+                $filter = clone $this->filter;
+                $restriction->apply($filter, $clientIds);
+            }
+            return $filter;
+        }
+        return isset($this->filter) ? $this->filter : null;
     }
 
     /**
@@ -296,9 +368,9 @@ abstract class ZfExtended_Models_Entity_Abstract {
      * @return integer
      */
     protected function computeTotalCount(Zend_Db_Select $s) : int {
-      if(!empty($this->filter)) {
-        $this->filter->applyToSelect($s, false);
-      }
+
+      $this->applyFilterToSelect($s);
+
       $name = $this->db->info(Zend_Db_Table_Abstract::NAME);
       $schema = $this->db->info(Zend_Db_Table_Abstract::SCHEMA);
 

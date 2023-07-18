@@ -26,8 +26,9 @@ use ZfExtended_Models_User as User;
 
 /**
  * Handles authentication and password management
+ * Main API to access the authenticated user (which has more roles than the underlying user object)
  */
-class ZfExtended_Authentication
+final class ZfExtended_Authentication
 {
     const LOGIN_STATUS_MAINTENANCE      = 'maintenance';
     const LOGIN_STATUS_SUCCESS          = 'success';
@@ -46,20 +47,9 @@ class ZfExtended_Authentication
     const COMPAT_PREFIX = 'md5:';
 
     /**
-     * The to be used algorithm
-     * @var string
-     */
-    protected string $algorithm;
-
-    /**
      * @var self|null
      */
     private static ?self $_instance = null;
-
-    private ?User $authenticatedUser = null;
-
-    private bool $isTokenAuth = false;
-
 
     /**
      * @return self
@@ -68,13 +58,13 @@ class ZfExtended_Authentication
     {
         if (self::$_instance == null) {
             self::$_instance = new self();
-            self::$_instance->algorithm = defined('PASSWORD_ARGON2ID') ? PASSWORD_ARGON2ID : PASSWORD_BCRYPT;
         }
         return self::$_instance;
     }
 
     /**
      * Checks if the authenticated user was authenticated with an App-Token
+     * TODO FIXME: this should be routed to ZfExtended_Authentication::getInstance()->isAuthenticatedByToken. Must be tested ...
      * @return bool
      */
     public static function isAppTokenAuthenticated(): bool
@@ -83,35 +73,73 @@ class ZfExtended_Authentication
         return ($userSession->data?->isTokenAuth === true);
     }
 
+    private ?User $authenticatedUser = null;
+
     /**
-     * Checks in the session if a user is authenticated
-     * @param int $authStatus
-     * @return bool
+     * Temporarily holds the unauthenticated user during the authentication-process
      */
-    public function isAuthenticated(int &$authStatus = 0): bool
+    private User $authenticatingUser;
+
+    /**
+     * The roles of the authenticated user. These roles differ from the underlying user-objects roles
+     * For ACL evaluations, these roles always must be taken
+     * @var string[]
+     */
+    private array $authenticatedRoles;
+
+    /**
+     * If set, the user was authenticated using an app-token
+     * This steers if the CSRF-protection is active
+     */
+    private bool $isTokenAuth = false;
+
+    /**
+     * The to be used algorithm
+     */
+    private string $algorithm;
+
+    /**
+     * The Authorization status representing the way the user authenticated
+     */
+    private int $authStatus;
+
+
+    private function __construct()
     {
-        if (!is_null($this->authenticatedUser)) {
-            $authStatus = self::AUTH_ALLOWED;
-            return true;
-        }
-        $session = new Zend_Session_Namespace('user');
-
-        if (empty($session->data->login) || empty($session->data->id)) {
-            $authStatus = self::AUTH_DENY_NO_SESSION;
-            return false;
-        }
-
-        if ($this->authenticateBySessionData($session->data)) {
-            $authStatus = self::AUTH_ALLOWED_LOAD;
-            return true;
-        }
-
-        $authStatus = self::AUTH_DENY_USER_NOT_FOUND;
-        return false;
+        $this->algorithm = defined('PASSWORD_ARGON2ID') ? PASSWORD_ARGON2ID : PASSWORD_BCRYPT;
+        $this->authenticatedRoles = ['noRights'];
+        $this->authStatus = $this->authenticateBySession();
     }
 
     /**
-     * logs the user out
+     * Checks in the session if a user is authenticated
+     * @return bool
+     */
+    public function isAuthenticated(): bool
+    {
+        return $this->authenticatedUser !== null;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isAuthenticatedByToken(): bool
+    {
+        return $this->isTokenAuth;
+    }
+
+    /**
+     * Returns one of the constants ::AUTH_ALLOWED, ::AUTH_ALLOWED_LOAD, ::AUTH_DENY_NO_SESSION, ::AUTH_DENY_USER_NOT_FOUND
+     * @return int
+     */
+    public function getAuthStatus(): int
+    {
+        return $this->authStatus;
+    }
+
+    /**
+     * Logs the user out
+     * This will not delete the currently set user/data so the request can finish without quirks
      */
     public function logoutUser(): void
     {
@@ -183,8 +211,7 @@ class ZfExtended_Authentication
         // if the default validation fail, check token authentication
         if ($this->authenticateByToken($passwordOrToken)) {
             if ($login !== $this->authenticatedUser->getLogin()) {
-                $this->authenticatedUser = null;
-                $this->isTokenAuth = false;
+                $this->unsetAuthenticatedUser();
                 return false;
             }
             return true;
@@ -205,7 +232,7 @@ class ZfExtended_Authentication
         $isOldPassword = false;
         $valid = $this->loadUserAndValidate($login, function () use ($password, & $isOldPassword) {
             // default to empty string in case the user does not have password
-            $passwordHash = $this->authenticatedUser->getPasswd() ?? '';
+            $passwordHash = $this->authenticatingUser->getPasswd() ?? '';
             $isOldPassword = str_starts_with($passwordHash, self::COMPAT_PREFIX);
             if ($isOldPassword) {
                 //remove md5:
@@ -266,46 +293,10 @@ class ZfExtended_Authentication
     public function authenticateUser(User $user): bool
     {
         if ($user->getId() > 0 && strlen($user->getLogin()) > 0) {
-            $this->authenticatedUser = $user;
-            $this->setUserDataInSession();
+            $this->setAuthenticatedUser($user, true);
             return true;
         }
         return false;
-    }
-
-    /**
-     * try to authenticate the user given by login, validated by given callback which must return bool
-     * @param string $login
-     * @param Closure $loginValidator
-     * @param bool $isLoginByAppToken
-     * @param bool $updateUserInSession
-     * @return bool
-     */
-    private function loadUserAndValidate(
-        string $login,
-        Closure $loginValidator,
-        bool $isLoginByAppToken = false,
-        bool $updateUserInSession = true
-    ): bool
-    {
-        $this->isTokenAuth = false;
-        $this->authenticatedUser = ZfExtended_Factory::get(User::class);
-        try {
-            $this->authenticatedUser->loadByLogin($login);
-            if ($loginValidator()) {
-                $this->isTokenAuth = $isLoginByAppToken;
-                if ($updateUserInSession) {
-                    $this->setUserDataInSession();
-                }
-                editor_User::create($this->authenticatedUser);
-                return true;
-            }
-            $this->authenticatedUser = null;
-            return false;
-        } catch (ZfExtended_Models_Entity_NotFoundException) {
-            $this->authenticatedUser = null;
-            return false;
-        }
     }
 
     /**
@@ -317,38 +308,93 @@ class ZfExtended_Authentication
     }
 
     /**
-     * there may be gap in access control between the user and the auth roles due basic and noRights role
-     * so this method may return more roles as the user getRoles
+     * Shorthand to retrieve the guid of the authenticated user
+     * @return string|null
      */
-    public function getRoles(): array
+    public function getUserGuid(): ?string
     {
-        $userSession = new Zend_Session_Namespace('user');
-        return $userSession->data?->roles ?? ['noRights'];
+        return $this->authenticatedUser?->getUserGuid();
     }
 
     /**
-     * sets the current user data into the session
+     * Shorthand to get the id of the authenticated user
+     * For convenience "0" is returned if not authenticated to not destroy sql statements
+     * @return int
      */
-    protected function setUserDataInSession(): void
+    public function getUserId(): int
     {
-        $userSession = new Zend_Session_Namespace('user');
-        $userData = $this->authenticatedUser->getDataObject();
-        $userData->roles = $this->authenticatedUser->getRoles();
-        $userData->roles[] = 'basic';
-        $userData->roles[] = 'noRights'; //the user always has this roles
-        $userData->roles = array_unique($userData->roles);
-        $userData->userName = $userData->firstName . ' ' . $userData->surName;
-        $userData->loginTimeStamp = $_SERVER['REQUEST_TIME'];
-        $userData->passwd = '********'; // We don't need and don't want the PW hash in the session
-        $userData->openIdIssuer = '';
-        foreach ($userData as &$value) {
+        return ($this->authenticatedUser === null) ? 0 : (int) $this->authenticatedUser->getId();
+    }
+
+    /**
+     * Retrieves the roles of the authenticated user
+     * @return string[]
+     */
+    public function getUserRoles(): array
+    {
+        return $this->authenticatedRoles;
+    }
+
+    /**
+     * The main API to check if the authenticated user is allowed to do stuff
+     * @param string $resource
+     * @param string $right
+     * @return bool
+     */
+    public function isUserAllowed(string $resource, string $right): bool
+    {
+        try {
+            return ZfExtended_Acl::getInstance()->isInAllowedRoles($this->authenticatedRoles, $resource, $right);
+        } catch (Zend_Acl_Exception) {
+            return false;
+        }
+    }
+
+    public function isUserClientRestricted(): bool
+    {
+        return $this->authenticatedUser?->isClientRestricted() ?? false;
+    }
+
+    /**
+     * Checks, if the user has a certain role
+     * HINT: Checking access rights must be done with ACLs and not user roles, see ::isUserAllowed
+     * @param string $role
+     * @return bool
+     */
+    public function hasUserRole(string $role): bool
+    {
+        return in_array($role, $this->authenticatedRoles);
+    }
+
+    /**
+     * Retrieves the anonymized data-object of the authenticated user
+     * Mainly used to fill the session
+     * @return stdClass
+     */
+    public function getUserData(): stdClass
+    {
+        if($this->authenticatedUser === null){
+            return new stdClass();
+        }
+        $data = $this->authenticatedUser->getDataObject();
+        $data->roles = $this->authenticatedRoles;
+        $data->userName = $this->authenticatedUser->getUserName();
+        $data->loginTimeStamp = $_SERVER['REQUEST_TIME'];
+        $data->passwd = '********'; // We don't need and don't want the PW hash in the session
+        $data->isTokenAuth = $this->isTokenAuth;
+        $data->isClientRestricted = $this->authenticatedUser->isClientRestricted();
+        $data->restrictedClientIds = $this->authenticatedUser->getRestrictedClientIds();
+        // unset OAuth stuff
+        unset($data->openIdSubject);
+        unset($data->openIdIssuer);
+
+        // TODO FIXME: why is that done ?
+        foreach ($data as &$value) {
             if (is_numeric($value)) {
                 $value = (int)$value;
             }
         }
-        $userData->isTokenAuth = $this->isTokenAuth;
-        $userSession->data = $userData;
-
+        return $data;
     }
 
     /**
@@ -386,5 +432,87 @@ class ZfExtended_Authentication
         } catch (ZfExtended_Models_Entity_NotFoundException) {
             return false;
         }
+    }
+
+    /**
+     * try to authenticate the user given by login, validated by given callback which must return bool
+     * @param string $login
+     * @param Closure $loginValidator
+     * @param bool $isLoginByAppToken
+     * @param bool $updateUserInSession
+     * @return bool
+     */
+    private function loadUserAndValidate(
+        string $login,
+        Closure $loginValidator,
+        bool $isLoginByAppToken = false,
+        bool $updateUserInSession = true
+    ): bool
+    {
+        $this->isTokenAuth = false;
+        $this->authenticatingUser = ZfExtended_Factory::get(User::class);
+        try {
+            $this->authenticatingUser->loadByLogin($login);
+            if ($loginValidator()) {
+                $this->isTokenAuth = $isLoginByAppToken;
+                $this->setAuthenticatedUser($this->authenticatingUser, $updateUserInSession);
+                unset($this->authenticatingUser);
+                return true;
+            }
+            $this->unsetAuthenticatedUser();
+            return false;
+        } catch (ZfExtended_Models_Entity_NotFoundException) {
+            $this->unsetAuthenticatedUser();
+            return false;
+        }
+    }
+
+    /**
+     * tries to authenticate by user session
+     * @return int
+     */
+    private function authenticateBySession(): int
+    {
+        if (!is_null($this->authenticatedUser)) {
+            return self::AUTH_ALLOWED;
+        }
+
+        $session = new Zend_Session_Namespace('user');
+
+        if (empty($session->data->login) || empty($session->data->id)) {
+            return self::AUTH_DENY_NO_SESSION;
+        }
+
+        if ($this->authenticateBySessionData($session->data)) {
+            return self::AUTH_ALLOWED_LOAD;
+        }
+
+        return self::AUTH_DENY_USER_NOT_FOUND;
+    }
+
+    /**
+     * @param ZfExtended_Models_User $user
+     * @param bool $updateSessionData
+     * @return void
+     */
+    private function setAuthenticatedUser(User $user, bool $updateSessionData): void
+    {
+        $this->authenticatedUser = $user;
+        $this->authenticatedRoles = array_values(array_unique(array_merge($user->getRoles(), ['basic', 'noRights'])));
+        if ($updateSessionData) {
+            $userSession = new Zend_Session_Namespace('user');
+            $userSession->data = $this->getUserData();
+        }
+    }
+
+    /**
+     * @return void
+     */
+    private function unsetAuthenticatedUser(): void
+    {
+        $this->authenticatedUser = null;
+        $this->authenticatedRoles = ['noRights'];
+        $this->isTokenAuth = false;
+        $this->authStatus = 0;
     }
 }
