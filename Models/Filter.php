@@ -473,7 +473,7 @@ abstract class ZfExtended_Models_Filter {
 
     /**
      * Debugs the filter-array
-     * @return array
+     * @return stdClass
      */
     public function debugFilter(): stdClass
     {

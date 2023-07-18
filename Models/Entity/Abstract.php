@@ -351,7 +351,7 @@ abstract class ZfExtended_Models_Entity_Abstract {
             }
             return $filter;
         }
-        return isset($this->filter) ? $this->filter : null;
+        return empty($this->filter) ? null : $this->filter;
     }
 
     /**

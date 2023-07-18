@@ -86,7 +86,7 @@ abstract class ZfExtended_Models_Filter_JoinAbstract {
 
     /**
      * Debugs our data
-     * @return array
+     * @return stdClass
      */
     public function debugFilter(): stdClass
     {
