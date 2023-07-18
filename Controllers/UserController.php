@@ -38,7 +38,7 @@ class ZfExtended_UserController extends ZfExtended_RestController {
     protected $alreadyDecoded = false;
 
     public function init() {
-        //add filter type for languages
+        //add filter type for customers
         $this->_filterTypeMap = [
             'customers' => [
                 'list' => 'listCommaSeparated',
@@ -56,7 +56,7 @@ class ZfExtended_UserController extends ZfExtended_RestController {
      * FIXME Generell werden nur User mit der Rolle "editor" angezeigt, alle anderen haben eh keinen Zugriff auf T5
      */
     public function indexAction() {
-        $isAllowed=$this->isAllowed("backend","seeAllUsers");
+        $isAllowed=$this->isAllowed('backend','seeAllUsers');
         if($isAllowed){
             $rows= $this->entity->loadAll();
             $count= $this->entity->getTotalCount();
@@ -64,8 +64,8 @@ class ZfExtended_UserController extends ZfExtended_RestController {
             $rows= $this->entity->loadAllOfHierarchy();
             $count= $this->entity->getTotalCountHierarchy();
         }
-        $this->view->rows=$rows;
-        $this->view->total=$count;
+        $this->view->rows = $rows;
+        $this->view->total = $count;
         $this->csvToArray();
     }
 
@@ -75,7 +75,7 @@ class ZfExtended_UserController extends ZfExtended_RestController {
     public function pmAction()
     {
         //check if the user is allowed to see all users
-        if($this->isAllowed("backend","seeAllUsers")){
+        if($this->isAllowed('backend','seeAllUsers')){
             $parentId = false;
         }
         else {
@@ -99,6 +99,13 @@ class ZfExtended_UserController extends ZfExtended_RestController {
         try {
             $this->entityLoad();
             $this->decodePutData();
+
+            // UGLY/QUIRK: client-restricted PMs may save Users, that contain customers, the PMs cannot see in the frontend and they have no rights to remove.
+            // we fix that here by re-adding them
+            if(ZfExtended_Authentication::getInstance()->isUserClientRestricted()){
+                $this->transformClientRestrictedCustomerIds();
+            }
+
             $this->processClientReferenceVersion();
             $this->setDataInEntity();
             if ($this->validate()) {
@@ -170,6 +177,13 @@ class ZfExtended_UserController extends ZfExtended_RestController {
         $this->entity->load($this->_getParam('id'));
         $this->checkIsEditable();
         $this->checkUserAccessByParent();
+
+        // Client-restricted users can only delete users, that are associated only to "their" customers
+        // we will throw a no-access exception in case this is attempted
+        if(ZfExtended_Authentication::getInstance()->isUserClientRestricted()){
+            $this->checkClientRestrictedDeletion();
+        }
+
         $this->entity->delete();
     }
 
@@ -586,6 +600,53 @@ class ZfExtended_UserController extends ZfExtended_RestController {
             $logger->warn('E1347','Auto user assignment with defining source and target language for a user is no longer possible. Please use "user assoc default" api endpoint.');
             unset($this->data->sourceLanguage);
             unset($this->data->targetLanguage);
+        }
+    }
+
+    // additional API needed to process client-restricted usage of the controller
+
+    /**
+     * Fixes the current customer associations for client-restricted PMs: They may send assocs that do not contain the currently set assocs for customers they cannot see
+     * @return void
+     */
+    private function transformClientRestrictedCustomerIds(): void
+    {
+        $allowedCustomerIs = ZfExtended_Authentication::getInstance()->getUser()->getRestrictedClientIds();
+        // evaluate the ids the client-restricted user is not allowed to change
+        $notAllowedIds = array_values(array_diff($this->entity->getCustomersArray(), $allowedCustomerIs));
+
+        if(!empty($notAllowedIds)){
+            // if there are clients, the user is not allowed to remove, add them to the sent data
+            $sentIds = ZfExtended_Models_User::customersToCustomerIds($this->getDataField('customers') ?? '');
+            $newIds = implode(',', array_values(array_unique(array_merge($sentIds, $notAllowedIds)))); // the param is a string !
+
+            if(ZfExtended_Debug::hasLevel('core', 'EntityFilter')){
+                error_log(
+                    "\n----------\n"
+                    . "FIX ENTITY UPDATE " . get_class($this->entity) . "\n"
+                    . 'user removed client-ids he is not entitled for: ' . implode(', ', $notAllowedIds)
+                    . "\n==========\n"
+                );
+            }
+
+            if($this->decodePutAssociative){
+                $this->data['customers'] = $newIds;
+            } else {
+                $this->data->customers = $newIds;
+            }
+        }
+    }
+
+    /**
+     * Checks the deletion of language-resources for client-restricted users
+     * @return void
+     * @throws ZfExtended_NoAccessException
+     */
+    private function checkClientRestrictedDeletion(): void
+    {
+        $allowedCustomerIs = ZfExtended_Authentication::getInstance()->getUser()->getRestrictedClientIds();
+        if(!empty(array_diff($this->entity->getCustomersArray(), $allowedCustomerIs))){
+            throw new ZfExtended_NoAccessException('Deletion of User is not allowed due to client-restriction');
         }
     }
 }

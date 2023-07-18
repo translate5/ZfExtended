@@ -22,6 +22,8 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
+use MittagQI\ZfExtended\Access\Roles;
+
 /**
  * @method void setId() setId(int $id)
  * @method void setUserGuid() setUserGuid(string $guid)
@@ -68,11 +70,26 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract {
     const GENDER_NONE = 'n';
     const GENDER_FEMALE = 'f';
     const GENDER_MALE = 'm';
+
+    /**
+     * Turns the 2customers" string of our data-model to a proper array of integers
+     * The data can be like ",1,4,7," or "4" or "," or empty
+     * @param string $customers
+     * @return array
+     */
+    public static function customersToCustomerIds(string $customers): array
+    {
+        return array_map('intval', explode(',', trim($customers, ',')));
+    }
     
-  protected $dbInstanceClass = 'ZfExtended_Models_Db_User';
-  protected $validatorInstanceClass = 'ZfExtended_Models_Validator_User';
-  
-  
+    protected $dbInstanceClass = 'ZfExtended_Models_Db_User';
+    protected $validatorInstanceClass = 'ZfExtended_Models_Validator_User';
+
+    /**
+     * User-lists must be filtered by role-driven restrictions
+     */
+    protected ?array $clientAccessRestriction = ['field' => 'customers', 'type' => 'listCommaSeparated'];
+
       /**
        * Loads user by a given list of userGuids
        * @param array $guids
@@ -90,7 +107,8 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract {
      */
     public function setRoles(array $roles): void {
         //piping the method to __call, declaration is needed for interface
-        $this->__call('setRoles', [join(',',$roles)]);
+        // the filterRoles removes "subroles" when the main role is not set (e.g. for the client-pm)
+        $this->__call('setRoles', [join(',', Roles::filterRoles($roles))]);
     }
     
     /**
@@ -103,14 +121,6 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract {
             return [];
         }
         return explode(',', $roles);
-    }
-    
-    /**
-     * removes the logged in user from the session
-     */
-    public function removeFromSession() {
-        $userSession = new Zend_Session_Namespace('user');
-        $userSession->data= null;
     }
 
     /**
@@ -276,17 +286,6 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract {
         $parentIds = explode(',', trim($parentIds, ' ,'));
         return in_array($parentId, $parentIds);
     }
-    
-    /**
-     * Check if currently logged in user has the given role
-     *
-     * @param string $role
-     * @return boolean
-     */
-    public function hasRole(string $role) {
-        $userSession = new Zend_Session_Namespace('user');
-        return in_array($role, $userSession->data->roles);
-    }
 
     /**
      * merges firstname and surname to username
@@ -302,13 +301,14 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract {
     public function getUsernameLong() {
         return $this->getSurName().', '.$this->getFirstName().' ('.$this->getLogin().')';
     }
-    
+
     /***
      * Return the user customers as array
-     * @return array
+     * @return int[]
      */
-    public function getCustomersArray(): array {
-        return explode(',', trim($this->getCustomers(),","));
+    public function getCustomersArray(): array
+    {
+        return static::customersToCustomerIds($this->getCustomers());
     }
     
     /***
@@ -318,13 +318,13 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract {
      */
     public function loadByIssuerAndSubject($issuer,$subject) {
         $s = $this->db->select();
-        $s->where('openIdIssuer=?',$issuer);
-        $s->where('openIdSubject=?',$subject);
+        $s->where('openIdIssuer = ?', $issuer);
+        $s->where('openIdSubject = ?', $subject);
         $row=$this->db->fetchRow($s);
         if(empty($row)){
             return null;
         }
-        $this->row =$row;
+        $this->row = $row;
         return $row;
     }
     
@@ -337,7 +337,7 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract {
      */
     public function loadByLogin($login) {
         $s = $this->db->select();
-        $s->where('login=?',$login);
+        $s->where('login = ?', $login);
         $row=$this->db->fetchRow($s);
         if(empty($row)){
             $this->notFound(__CLASS__ . '#login', $login);
@@ -410,5 +410,27 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract {
             FROM `Zf_users`
             WHERE ' . $where
         )->fetchAll(PDO::FETCH_KEY_PAIR);
+    }
+
+    /**
+     * If this API returns truie, all views this user accesses have to be client-filtered
+     * @return bool
+     */
+    public function isClientRestricted(): bool
+    {
+        return Roles::isClientRestricted($this->getRoles());
+    }
+
+    /**
+     * Retrieves the client-id's the user is limited to in managing
+     * Just a shorthand and to be able to add future features
+     * @return array
+     */
+    public function getRestrictedClientIds(): array
+    {
+        if($this->isClientRestricted()){
+            return $this->getCustomersArray();
+        }
+        return [];
     }
 }
