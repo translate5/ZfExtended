@@ -27,19 +27,19 @@ START LICENSE AND COPYRIGHT
 END LICENSE AND COPYRIGHT
 */
 
-/***
- * @method void setId() setId(int $id)
- * @method int getId() getId()
- * @method void setUserId() setUserId(int $userId)
- * @method int getUserId() getUserId()
- * @method void setDescription() setDescription(string $description)
- * @method string getDescription() getDescription()
- * @method void setToken() setToken(string $token)
- * @method string getToken() getToken()
- * @method void setCreated() setCreated(string $created)
- * @method string getCreated() getCreated()
- * @method void setExpires() setExpires(string $expires)
- * @method string getExpires() getExpires()
+/**
+ * @method void setId(int $id)
+ * @method int getId()
+ * @method void setUserId(int $userId)
+ * @method int getUserId()
+ * @method void setDescription(string $description)
+ * @method string getDescription()
+ * @method void setToken(string $token)
+ * @method string getToken()
+ * @method void setCreated(string $created)
+ * @method string getCreated()
+ * @method void setExpires(string $expires)
+ * @method string getExpires()
  */
 class ZfExtended_Auth_Token_Entity extends ZfExtended_Models_Entity_Abstract
 {
