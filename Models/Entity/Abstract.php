@@ -156,7 +156,7 @@ abstract class ZfExtended_Models_Entity_Abstract {
 
     /**
      * Deep Cloning of the internal data object
-     * else all cloned objects will only have a reference to the same $this->rows
+     * else all cloned objects will only have a reference to the same $this->row
      */
     public function __clone() {
         $this->row = clone $this->row;
@@ -244,11 +244,20 @@ abstract class ZfExtended_Models_Entity_Abstract {
      * @param string $value
      * @throws ZfExtended_Models_Entity_NotFoundException
      */
-    protected function notFound($key = '', $value = '') {
-        $cls = explode('_', get_class($this));
+    protected function notFound($key = '', $value = '')
+    {
+        throw new ZfExtended_Models_Entity_NotFoundException($this->getDisplayClassName() . ' Entity Not Found: Key: ' . $key . '; Value: ' . $value);
+    }
+
+    /**
+     * Small helper to retrieve our classname for display in error-msg's etc.
+     * @return string
+     */
+    protected function getDisplayClassName(): string
+    {
         // some classes have names like My_Special_Item_Entity and we do not want the message just to be "Entity Entity Not Found"
-        $clsName = (strtolower(end($cls)) === 'entity' && count($cls) > 1) ? $cls[count($cls) - 2].end($cls) : end($cls);
-        throw new ZfExtended_Models_Entity_NotFoundException($clsName.' Entity Not Found: Key: ' . $key . '; Value: ' . $value);
+        $cls = explode('_', get_class($this));
+        return (strtolower(end($cls)) === 'entity' && count($cls) > 1) ? $cls[count($cls) - 2].end($cls) : end($cls);
     }
 
     /**
@@ -317,7 +326,7 @@ abstract class ZfExtended_Models_Entity_Abstract {
     protected function applyFilterToSelect(Zend_Db_Select &$select): void
     {
         // this applies a potential role-dependant client-restriction
-        $filter = $this->createClientRestrictedFlter();
+        $filter = $this->createClientRestrictedFilter();
         if (!empty($filter)) {
             if ($this->debugFiltering) {
                 error_log(
@@ -335,7 +344,7 @@ abstract class ZfExtended_Models_Entity_Abstract {
      * Adds a potential client-restriction to the configured filter
      * @return ZfExtended_Models_Filter|null
      */
-    protected function createClientRestrictedFlter(): ?ZfExtended_Models_Filter
+    protected function createClientRestrictedFilter(): ?ZfExtended_Models_Filter
     {
         // HINT: This may instantiates the Authentication very early. In case of a ZfExtended_Models_Config entity,
         // this would be too early as it would be called before the session actually is started leading to exceptions
@@ -352,6 +361,22 @@ abstract class ZfExtended_Models_Entity_Abstract {
             return $filter;
         }
         return empty($this->filter) ? null : $this->filter;
+    }
+
+    /**
+     * Checks the client-restriction for the current row
+     * If the client-restriction is not fullfilled, a NoAccessException is thrown
+     * @throws ZfExtended_Models_Entity_NotFoundException
+     */
+    public function checkClientRestriction()
+    {
+        if ($this->clientAccessRestriction !== null && ZfExtended_Authentication::getInstance()->isUserClientRestricted()) {
+            $clientIds = ZfExtended_Authentication::getInstance()->getUser()->getRestrictedClientIds();
+            $restriction = new ClientRestriction($this->clientAccessRestriction);
+            if (!$restriction->isAccessible($this, $clientIds)) {
+                throw new ZfExtended_Models_Entity_NoAccessException($this->getDisplayClassName() . ' Entity not accessible due to the users client-restriction');
+            }
+        }
     }
 
     /**

@@ -62,7 +62,7 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract {
      * resource key for the acl level record
      * @var string
      */
-    const APPLICATION_CONFIG_LEVEL='applicationconfigLevel';
+    const APPLICATION_CONFIG_LEVEL = 'applicationconfigLevel';
     
     const SYSTEM_LOGIN = 'system';
     const SYSTEM_GUID = '{00000000-0000-0000-0000-000000000000}';
