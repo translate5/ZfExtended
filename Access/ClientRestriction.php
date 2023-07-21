@@ -89,7 +89,7 @@ final class ClientRestriction
     public function isAccessible(ZfExtended_Models_Entity_Abstract $entity, array $clientIds): bool
     {
         if (array_key_exists('assoc', $this->config)) {
-            // UGLY: convert the OLD filter-setup layout to a query ... and usually there will already have own methods to achieve this
+            // UGLY: convert the OLD filter-setup layout to a query ... and usually there will already be methods to achieve this
             $assoc = $this->config['assoc'];
             $assocClientIds = $entity->db->getAdapter()->fetchAll(
                 'SELECT `' . $assoc['searchField'] . '` FROM `' . $assoc['table'] . '` WHERE `' . $assoc['foreignKey'] . '` = ?',
