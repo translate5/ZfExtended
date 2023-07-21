@@ -168,7 +168,7 @@ final class ClientRestriction
     }
 
     /**
-     * Retrieves the configured constraint type (list, simple, ...)
+     * Retrieves the configured constraint type (normally a list)
      * @return string
      */
     private function getConfiguredType(): string
