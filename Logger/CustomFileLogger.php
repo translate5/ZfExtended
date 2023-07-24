@@ -14,7 +14,7 @@ class CustomFileLogger
 
     public function __construct()
     {
-        $this->logDirPath = APPLICATION_PATH.'/../data/logs/';
+        $this->logDirPath = APPLICATION_DATA.'/logs/';
         $this->logBuffer = [];
         $this->currentLogFile = $this->getLogFilePath();
     }
@@ -49,7 +49,7 @@ class CustomFileLogger
      */
     private function getLogFilePath(): string
     {
-        return $this->logDirPath . 'log_' . date('m.d.Y') . '.log';
+        return $this->logDirPath . 'custom-log_' . date('m.d.Y') . '.log';
     }
 
     /**
