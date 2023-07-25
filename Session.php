@@ -50,9 +50,9 @@ class ZfExtended_Session {
      * @throws Zend_Exception
      */
     public static function updateSession(bool $regenerate = false, bool $findExisting = false) {
-        $db = ZfExtended_Factory::get('ZfExtended_Models_Db_SessionMapInternalUniqId');
-        /* @var $db ZfExtended_Models_Db_SessionMapInternalUniqId */
-        $newSessionId = $oldSessionId = null;
+
+        $db = ZfExtended_Factory::get(ZfExtended_Models_Db_SessionMapInternalUniqId::class);
+         $newSessionId = $oldSessionId = null;
 
         if($findExisting){
             $userSession = new Zend_Session_Namespace('user');
@@ -60,9 +60,9 @@ class ZfExtended_Session {
 
             // if the user session is set, try to find for the current user existing valid session in the database.
             if(!is_null($userId)){
-                $sessionDb = ZfExtended_Factory::get('ZfExtended_Models_Db_Session');
-                /* @var $sessionDb ZfExtended_Models_Db_Session */
-                $userSessionDb = $sessionDb->loadSessionIdForUser($userId,session_id());
+
+                $sessionDb = ZfExtended_Factory::get(ZfExtended_Models_Db_Session::class);
+                $userSessionDb = $sessionDb->loadSessionIdForUser($userId, session_id());
                 $userSessionDb = $userSessionDb['session_id'] ?? null;
                 // the user has valid session in database ?
                 if(!is_null($userSessionDb) && !empty($userSessionDb)){
@@ -78,12 +78,12 @@ class ZfExtended_Session {
         }
         // if no session id exist, generate new
         if(is_null($newSessionId) || empty($newSessionId)){
-            $newSessionId = $oldSessionId = Zend_Session::getId();;
+            $newSessionId = $oldSessionId = Zend_Session::getId();
         }
 
         if($regenerate){
             $config = Zend_Registry::get('config');
-            Zend_Session::rememberMe($config->resources->ZfExtended_Resource_Session->remember_me_seconds);
+            Zend_Session::rememberMe($config->resources->ZfExtended_Resource_Session->lifetime);
             $newSessionId = Zend_Session::getId();
         }
 
@@ -100,8 +100,7 @@ class ZfExtended_Session {
      * @param int $userId
      */
     public function cleanForUser(int $userId){
-        $model = ZfExtended_Factory::get('ZfExtended_Models_Db_Session');
-        /* @var $model ZfExtended_Models_Db_Session */
+        $model = ZfExtended_Factory::get(ZfExtended_Models_Db_Session::class);
         $model->delete([
             'userId = ?' => $userId,
             'session_id != ?' => session_id()

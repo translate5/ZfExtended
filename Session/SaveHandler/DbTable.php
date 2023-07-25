@@ -67,16 +67,31 @@ class ZfExtended_Session_SaveHandler_DbTable
         if($isModified) {
             $sql = 'INSERT INTO `session` (`session_id`, `name`, `modified`, `lifetime`, `session_data`,`userId`) VALUES (?,?,?,?,?,?)
                     ON DUPLICATE KEY UPDATE `modified` = ?, `session_data` = ?, `userId` = ? ';
-            $bindings = array($id,$this->_sessionName,intval($data[$this->_modifiedColumn]),intval($this->_lifetime),$data[$this->_dataColumn],$userId,intval($data[$this->_modifiedColumn]),$data[$this->_dataColumn],$userId);
-        }
-        else {
+            $bindings = [
+                $id,
+                $this->_sessionName,
+                intval($data[$this->_modifiedColumn]),
+                intval($this->_lifetime),
+                $data[$this->_dataColumn],
+                $userId,
+                intval($data[$this->_modifiedColumn]),
+                $data[$this->_dataColumn],
+                $userId
+            ];
+        } else {
             $sql = 'INSERT INTO `session` (`session_id`, `name`, `modified`, `lifetime`) VALUES (?,?,?,?)
                     ON DUPLICATE KEY UPDATE `modified` = ?';
-            $bindings = array($id,$this->_sessionName,intval($data[$this->_modifiedColumn]),intval($this->_lifetime),intval($data[$this->_modifiedColumn]));
+            $bindings = [
+                $id,
+                $this->_sessionName,
+                intval($data[$this->_modifiedColumn]),
+                intval($this->_lifetime),
+                intval($data[$this->_modifiedColumn])
+            ];
         }
         
         $db = Zend_Db_Table_Abstract::getDefaultAdapter();
-//$db->query('SET TRANSACTION ISOLATION LEVEL READ COMMITTED');
+        //$db->query('SET TRANSACTION ISOLATION LEVEL READ COMMITTED');
         $db->query($sql, $bindings);
         
         return true; // session_write_close(): Session callback expects true/false return value
@@ -96,14 +111,19 @@ class ZfExtended_Session_SaveHandler_DbTable
      * {@inheritDoc}
      * @see Zend_Session_SaveHandler_DbTable::gc()
      */
-    public function gc($maxlifetime): bool
+    public function gc($maxlifetime)
     {
         $this->getAdapter()->query('SET TRANSACTION ISOLATION LEVEL READ COMMITTED');
 
         $lifetime = Zend_Registry::get('config')->resources->ZfExtended_Resource_Session->lifetime;
-        $sessionMapInternalUniqIdTable = new ZfExtended_Models_Db_SessionMapInternalUniqId();
-        $sessionMapInternalUniqIdTable->delete('modified < ' . (time() - $lifetime) . ' or session_id = \'\'');
+        $thresh = time() - $lifetime;
+        // delete data from uniqueId mapping table
+        $mappingTable = new ZfExtended_Models_Db_SessionMapInternalUniqId();
+        $mappingTable->delete('modified < ' . $thresh . ' OR session_id = \'\'');
 
-        return parent::gc($maxlifetime);
+        // delete data from session table
+        $this->delete('modified < ' . $thresh . ' OR session_id = \'\'');
+
+        return true;
     }
 }

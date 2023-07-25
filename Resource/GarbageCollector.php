@@ -66,6 +66,9 @@ class ZfExtended_Resource_GarbageCollector extends Zend_Application_Resource_Res
         //start zfextended stuff to be cleaned
         $this->cleanUpWorker();
 
+        // clean outdated session data
+        $this->cleanUpSession();
+
         // cleanup chache (Zf_memcache)
         $this->cleanUpCache();
         
@@ -115,10 +118,21 @@ class ZfExtended_Resource_GarbageCollector extends Zend_Application_Resource_Res
         $config->update('runtimeOptions.garbageCollector.invocation', self::ORIGIN_CRON);
         return true;
     }
-    
+
+    /**
+     * Cleans up worker-stuff ... not yet implemented
+     */
     protected function cleanUpWorker() {
         //still using old clean up invocation for the done workers....
         //FIXME what should be implemented here is a clean up for defunct workers!
+    }
+
+    /**
+     * Cleans up outdated session-data
+     */
+    protected function cleanUpSession() {
+        // the implementation in ZfExtended_Session_SaveHandler_DbTable will not use the argument anyway so no need to bother with the config ...
+        Zend_Session::getSaveHandler()->gc(864000);
     }
     
     /**
