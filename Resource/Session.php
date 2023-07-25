@@ -76,8 +76,8 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
         $bootstrap->bootstrap('ZfExtended_Resource_DbConfig');
         $bootstrap->bootstrap('ZfExtended_Resource_GarbageCollector');
         $config = new Zend_config($bootstrap->getOptions());
-        // the session-name should be configurable by installation.ini, the lifetime via config
         $resconf = $config->resources->ZfExtended_Resource_Session->toArray();
+
         $resconf['cookie_lifetime'] =
         $resconf['gc_maxlifetime'] =
         $resconf['remember_me_seconds'] = $resconf['lifetime'];
@@ -97,13 +97,16 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
         if (!Zend_Session::$_unitTestEnabled) {
             Zend_Session::setOptions($resconf);
         }
+        //im if: wichtiger workaround für swfuploader, welcher in awesomeuploader
+        //verwendet wird. flash überträgt keine session-cookies außerhalb IE korrekt,
+        //daher wird hier die session im post übergeben
+        if (isset($_POST[$resconf['name']])) {
+            Zend_Session::setId($_POST[$resconf['name']]);
+        }
+        
+        Zend_Session::setSaveHandler(new ZfExtended_Session_SaveHandler_DbTable($this->sessionConfig));
 
-        // set the safe-handler
-        $saveHandler = new ZfExtended_Session_SaveHandler_DbTable($this->sessionConfig);
-        Zend_Session::setSaveHandler($saveHandler);
-
-        //makes a redirect if successfull
-        $this->handleSessionToken();
+        $this->handleSessionToken(); //makes a redirect if successfull!
 
         $this->handleAuthToken();
         
