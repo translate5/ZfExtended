@@ -86,6 +86,7 @@ class ZfExtended_Session_SaveHandler_DbTable
                 $this->_sessionName,
                 intval($data[$this->_modifiedColumn]),
                 intval($this->_lifetime),
+                $userId,
                 intval($data[$this->_modifiedColumn]),
                 $userId
             ];
