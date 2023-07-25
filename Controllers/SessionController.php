@@ -142,7 +142,7 @@ class ZfExtended_SessionController extends ZfExtended_RestController {
             $userModel = $authentication->getUser();
 
             // check for existing valid session for the current user
-            $sessionId = ZfExtended_Session::updateSession(true,true);
+            $sessionId = ZfExtended_Session::updateSession(true, true, intval($userModel->getId()));
 
             $session = new Zend_Session_Namespace();
             $this->setLocale($session, $userModel);

@@ -49,30 +49,25 @@ class ZfExtended_Session {
      * @throws Zend_Db_Table_Exception
      * @throws Zend_Exception
      */
-    public static function updateSession(bool $regenerate = false, bool $findExisting = false) {
+    public static function updateSession(bool $regenerate = false, bool $findExisting = false, int $userId = null) {
 
         $newSessionId = $oldSessionId = null;
 
-        if($findExisting){
-            $userSession = new Zend_Session_Namespace('user');
-            $userId = $userSession->data->id ?? null;
+        // if the user session is set, try to find for the current user existing valid session in the database
+        if($findExisting && !is_null($userId)){
 
-            // if the user session is set, try to find for the current user existing valid session in the database.
-            if(!is_null($userId)){
-
-                $sessionDb = new ZfExtended_Models_Db_Session();
-                $userSessionDb = $sessionDb->loadSessionIdForUser($userId, session_id());
-                $userSessionDb = $userSessionDb['session_id'] ?? null;
-                // the user has valid session in database ?
-                if(!is_null($userSessionDb) && !empty($userSessionDb)){
-                    // remove the current temp session, and replace it with the database session.
-                    session_destroy();
-                    $newSessionId = $oldSessionId = $userSessionDb;
-                    session_id($newSessionId);
-                    session_start();
-                    // when replacing the database session, disable the regenerate
-                    $regenerate = false;
-                }
+            $sessionDb = new ZfExtended_Models_Db_Session();
+            $userSessionDb = $sessionDb->loadSessionIdForUser($userId, session_id());
+            $userSessionDb = $userSessionDb['session_id'] ?? null;
+            // the user has valid session in database ?
+            if(!is_null($userSessionDb) && !empty($userSessionDb)){
+                // remove the current temp session, and replace it with the database session.
+                session_destroy();
+                $newSessionId = $oldSessionId = $userSessionDb;
+                session_id($newSessionId);
+                session_start();
+                // when replacing the database session, disable the regenerate
+                $regenerate = false;
             }
         }
         // if no session id exist, generate new
