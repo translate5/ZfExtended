@@ -23,11 +23,12 @@ END LICENSE AND COPYRIGHT
 */
 
 /**
- * Class representing the session storage table
- * TODO FIXME: why is the primary-key combined session_id/name ? Also, this should icorporate a "uniqieId" colun instead of adding the 1:1 related table sessionMapInternalUniqId
+ * Klasse zum Zugriff auf die Tabelle mit Namen des Klassennamens (in lower case)
+ * 
+ * - Eintrag für Portalbetreiber wird mit der GUIE {00000000-0000-0000-0000-000000000000} vorausgesetzt
  */
 class ZfExtended_Models_Db_Session extends Zend_Db_Table_Abstract {
-    const GET_VALID_SESSIONS_SQL = 'SELECT `internalSessionUniqId` FROM `sessionMapInternalUniqId` m, `session` s  WHERE s.modified + s.lifetime >= UNIX_TIMESTAMP() and s.session_id = m.session_id';
+    const GET_VALID_SESSIONS_SQL = 'SELECT internalSessionUniqId FROM sessionMapInternalUniqId m, session s  WHERE s.modified + s.lifetime >= UNIX_TIMESTAMP() and s.session_id = m.session_id';
     protected $_name    = 'session';
     public $_primary = 'session_id';
 
@@ -62,11 +63,11 @@ class ZfExtended_Models_Db_Session extends Zend_Db_Table_Abstract {
      * updates the authToken for the given Session ID in the DB and returns it
      * @return string
      */
-    public function updateAuthToken(string $sessionId, int $userId = null) {
+    public function updateAuthToken($sessionId) {
         $token = bin2hex(random_bytes(16));
-        $sql = 'INSERT INTO `'.$this->_name.'` (authToken, session_id, name, lifetime, userId) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE authToken = VALUES(authToken)';
+        $sql = 'INSERT INTO '.$this->_name.' (authToken, session_id, name, lifetime) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE authToken = VALUES(authToken)';
         $lifetime = Zend_Session::getSaveHandler()->getLifeTime();
-        $this->getAdapter()->query($sql, [$token, $sessionId, Zend_Session::getOptions('name'), $lifetime, $userId]);
+        $this->getAdapter()->query($sql, [$token, $sessionId, Zend_Session::getOptions('name'), $lifetime]);
         return $token;
     }
 

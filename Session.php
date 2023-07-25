@@ -51,7 +51,8 @@ class ZfExtended_Session {
      */
     public static function updateSession(bool $regenerate = false, bool $findExisting = false) {
 
-        $newSessionId = $oldSessionId = null;
+        $db = ZfExtended_Factory::get(ZfExtended_Models_Db_SessionMapInternalUniqId::class);
+         $newSessionId = $oldSessionId = null;
 
         if($findExisting){
             $userSession = new Zend_Session_Namespace('user');
@@ -60,7 +61,7 @@ class ZfExtended_Session {
             // if the user session is set, try to find for the current user existing valid session in the database.
             if(!is_null($userId)){
 
-                $sessionDb = new ZfExtended_Models_Db_Session();
+                $sessionDb = ZfExtended_Factory::get(ZfExtended_Models_Db_Session::class);
                 $userSessionDb = $sessionDb->loadSessionIdForUser($userId, session_id());
                 $userSessionDb = $userSessionDb['session_id'] ?? null;
                 // the user has valid session in database ?
@@ -85,13 +86,11 @@ class ZfExtended_Session {
             Zend_Session::rememberMe($config->resources->ZfExtended_Resource_Session->lifetime);
             $newSessionId = Zend_Session::getId();
         }
-        $sessionMapDb = new ZfExtended_Models_Db_SessionMapInternalUniqId();
-        $sessionMapDb->update([
+
+        $db->update([
             'session_id' => $newSessionId,
-            'modified' => time()
-        ],[
-            'session_id = ?' => $oldSessionId
-        ]);
+            'modified' => time(),
+        ], ['session_id = ?' => $oldSessionId]);
         return $newSessionId;
     }
 
@@ -101,8 +100,8 @@ class ZfExtended_Session {
      * @param int $userId
      */
     public function cleanForUser(int $userId){
-        $sessionDb = new ZfExtended_Models_Db_Session();
-        $sessionDb->delete([
+        $model = ZfExtended_Factory::get(ZfExtended_Models_Db_Session::class);
+        $model->delete([
             'userId = ?' => $userId,
             'session_id != ?' => session_id()
         ]);

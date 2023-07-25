@@ -22,24 +22,15 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
-/**#@+ 
- * @author Marc Mittag
- * @package ZfExtended
- * @version 2.0
- * 
- */
-/**
- * Klasse zum Zugriff auf die Tabelle mit Namen des Klassennamens (in lower case)
- * 
- * - Eintrag für Portalbetreiber wird mit der GUIE {00000000-0000-0000-0000-000000000000} vorausgesetzt
- */
-class ZfExtended_Models_Db_SessionMapInternalUniqId extends Zend_Db_Table_Abstract {
-    protected $_name    = 'sessionMapInternalUniqId';
-    public $_primary = 'id';
-
-    public function name(): string
-    {
-        return $this->_name;
-    }
+class ZfExtended_Models_Entity extends ZfExtended_Models_Entity_Abstract{
+/*
+*
+* @param string dbInstanceClass Klassenname des zu erzeugenden DB-Models
+* @param array mapping  maps the Object Attributes (key) to the Row Field Names (value)
+*/  
+  public function __construct(string $dbInstanceClass, array $mapping){
+    $this->dbInstanceClass = $dbInstanceClass;
+	$this->mapping = $mapping;
+	parent::__construct();
+  }  
 }
-
