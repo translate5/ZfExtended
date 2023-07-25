@@ -171,10 +171,9 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
         Zend_Session::setId($row->session_id);
         Zend_Session::start();
 
-
         $session = new Zend_Session_Namespace();
         $user = new Zend_Session_Namespace('user');
-        $userId = isset($user->data->id) ? intval($user->data->id) : null;
+        $userId = empty($user->data->id) ? null : intval($user->data->id);
         $sessionDb->updateAuthToken($row->session_id, $userId);
         
         //since we have no user instance here, we create the success log by hand
