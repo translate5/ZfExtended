@@ -244,9 +244,8 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
 
             $sessionId = Zend_Session::getId();
             $session->internalSessionUniqId =  md5($sessionId . uniqid(__FUNCTION__, true));
-            // create entry and delete all existing entries for the unique-id
-            $table = new ZfExtended_Models_Db_SessionMapInternalUniqId();
             // try to reuse existing row to not create duplicate entries
+            $table = new ZfExtended_Models_Db_SessionMapInternalUniqId();
             $row = $table->fetchRow(['session_id = ?' => $sessionId]);
             if($row === null){
                 $row = $table->createRow();
