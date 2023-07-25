@@ -41,6 +41,7 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
 {
     /**
      * @var array config Konfiguration der Parameter für die DB-Sessioninitialisierung
+     * TODO FIXME: why a combined primary-key )?? see also ZfExtended_Models_Db_Session
      */
     private array $sessionConfig = [
         'name'              => 'session', //table name as per Zend_Db_Table
@@ -76,8 +77,8 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
         $bootstrap->bootstrap('ZfExtended_Resource_DbConfig');
         $bootstrap->bootstrap('ZfExtended_Resource_GarbageCollector');
         $config = new Zend_config($bootstrap->getOptions());
+        // the session-name should be configurable by installation.ini, the lifetime via config
         $resconf = $config->resources->ZfExtended_Resource_Session->toArray();
-
         $resconf['cookie_lifetime'] =
         $resconf['gc_maxlifetime'] =
         $resconf['remember_me_seconds'] = $resconf['lifetime'];
@@ -97,16 +98,13 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
         if (!Zend_Session::$_unitTestEnabled) {
             Zend_Session::setOptions($resconf);
         }
-        //im if: wichtiger workaround für swfuploader, welcher in awesomeuploader
-        //verwendet wird. flash überträgt keine session-cookies außerhalb IE korrekt,
-        //daher wird hier die session im post übergeben
-        if (isset($_POST[$resconf['name']])) {
-            Zend_Session::setId($_POST[$resconf['name']]);
-        }
-        
-        Zend_Session::setSaveHandler(new ZfExtended_Session_SaveHandler_DbTable($this->sessionConfig));
 
-        $this->handleSessionToken(); //makes a redirect if successfull!
+        // set the safe-handler
+        $saveHandler = new ZfExtended_Session_SaveHandler_DbTable($this->sessionConfig);
+        Zend_Session::setSaveHandler($saveHandler);
+
+        //makes a redirect if successfull
+        $this->handleSessionToken();
 
         $this->handleAuthToken();
         
@@ -154,13 +152,17 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
             );
         }
         
-        $sessionDb = ZfExtended_Factory::get(ZfExtended_Models_Db_Session::class);
+        $sessionDb = new ZfExtended_Models_Db_Session();
         $row = $sessionDb->fetchRow(['authToken = ?' => $_REQUEST['sessionToken']]);
         
         /* @var ZfExtended_Logger $sysLog */
         $sysLog = Zend_Registry::get('logger');
 
         if (empty($row) || empty($row->session_id)) {
+            // delete invalid row
+            if(!empty($row)){
+                $row->delete();
+            }
             $sysLog->warn('E1332', 'Authentication: No matching sessionToken found in DB: {token}', [
                 'token' => $_REQUEST['sessionToken']
             ]);
@@ -168,9 +170,12 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
         }
         Zend_Session::setId($row->session_id);
         Zend_Session::start();
-        $sessionDb->updateAuthToken($row->session_id);
+
+
         $session = new Zend_Session_Namespace();
         $user = new Zend_Session_Namespace('user');
+        $userId = isset($user->data->id) ? intval($user->data->id) : null;
+        $sessionDb->updateAuthToken($row->session_id, $userId);
         
         //since we have no user instance here, we create the success log by hand
         $loginLog = ZfExtended_Models_LoginLog::createLog("sessionToken");
@@ -184,7 +189,7 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
             'login' => $user->data->login,
             'userGuid' => $user->data->userGuid,
         ]);
-        
+
         //since we changed the sessionId, we have to reset the internalSessionUniqId too
         unset($session->internalSessionUniqId);
         $this->setInternalSessionUniqId();
@@ -227,10 +232,7 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
     }
 
     /**
-     * Setzt internalSessionUniqId wie im Klassenkopf beschrieben
-     * @throws Zend_Db_Statement_Exception
-     * @throws ZfExtended_Models_Entity_Exceptions_IntegrityConstraint
-     * @throws ZfExtended_Models_Entity_Exceptions_IntegrityDuplicateKey
+     * @return void
      */
     private function setInternalSessionUniqId(): void
     {
@@ -238,13 +240,15 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
         if (!isset($session->internalSessionUniqId)) {
             $sessionId = Zend_Session::getId();
             $session->internalSessionUniqId =  md5($sessionId . uniqid(__FUNCTION__, true));
-            $row = ZfExtended_Factory::get(ZfExtended_Models_Entity::class, [
-                ZfExtended_Models_Db_SessionMapInternalUniqId::class,
-                []
-            ]);
-            $row->setSession_id($sessionId);
-            $row->setInternalSessionUniqId($session->internalSessionUniqId);
-            $row->setModified(time());
+            // create entry and delete all existing entries for the unique-id
+            $table = new ZfExtended_Models_Db_SessionMapInternalUniqId();
+            // delete all existing rows to avoid multiple rows for the same session - what happened in the past
+            $table->delete(['session_id' => $sessionId]);
+            // create new entry
+            $row = $table->createRow();
+            $row->session_id = $sessionId;
+            $row->internalSessionUniqId = $session->internalSessionUniqId;
+            $row->modified = time();
             $row->save();
         }
     }
