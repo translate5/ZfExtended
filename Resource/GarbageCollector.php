@@ -132,7 +132,10 @@ class ZfExtended_Resource_GarbageCollector extends Zend_Application_Resource_Res
      */
     protected function cleanUpSession() {
         // the implementation in ZfExtended_Session_SaveHandler_DbTable will not use the argument anyway so no need to bother with the config ...
-        Zend_Session::getSaveHandler()->gc(864000);
+        $saveHandler = Zend_Session::getSaveHandler();
+        if($saveHandler !== null){
+            Zend_Session::getSaveHandler()->gc(864000);
+        }
     }
     
     /**
