@@ -135,7 +135,7 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
         if($passwd == '') {
             return false;
         }
-        $invalidLoginCounter = ZfExtended_Factory::get('ZfExtended_Models_Invalidlogin',array($login));
+        $invalidLoginCounter = ZfExtended_Factory::get('ZfExtended_Models_Invalidlogin', array($login));
         /* @var $invalidLoginCounter ZfExtended_Models_Invalidlogin */
         if($this->hasMaximumInvalidations($invalidLoginCounter)){
             return false;

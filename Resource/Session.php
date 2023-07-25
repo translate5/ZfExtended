@@ -232,21 +232,26 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
     }
 
     /**
+     * Stores the the internalSessionUniqId in a seperate table
+     * TODO FIXME: this is a completely superflous DB-operation (which happens on every request!)
+     * as the internalSessionUniqId could easily be saved in the session-table as well
      * @return void
      */
     private function setInternalSessionUniqId(): void
     {
         $session = new Zend_Session_Namespace();
         if (!isset($session->internalSessionUniqId)) {
+
             $sessionId = Zend_Session::getId();
             $session->internalSessionUniqId =  md5($sessionId . uniqid(__FUNCTION__, true));
             // create entry and delete all existing entries for the unique-id
             $table = new ZfExtended_Models_Db_SessionMapInternalUniqId();
-            // delete all existing rows to avoid multiple rows for the same session - what happened in the past
-            $table->delete(['session_id' => $sessionId]);
-            // create new entry
-            $row = $table->createRow();
-            $row->session_id = $sessionId;
+            // try to reuse existing row to not create duplicate entries
+            $row = $table->fetchRow(['session_id = ?' => $sessionId]);
+            if($row === null){
+                $row = $table->createRow();
+                $row->session_id = $sessionId;
+            }
             $row->internalSessionUniqId = $session->internalSessionUniqId;
             $row->modified = time();
             $row->save();
