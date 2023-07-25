@@ -22,19 +22,13 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
-/**#@+ 
- * @author Marc Mittag
- * @package ZfExtended
- * @version 2.0
- * 
- */
+
 /**
- * Klasse zum Zugriff auf die Tabelle mit Namen des Klassennamens (in lower case)
- * 
- * - Eintrag für Portalbetreiber wird mit der GUIE {00000000-0000-0000-0000-000000000000} vorausgesetzt
+ * Manages the internalSessionUniqId of a session in a seperate entity
+ * This is a quite stupid architecture as a public unique alias for the session could be saved much more easily as a seperate column in the session-table instead of a seperate table
  */
 class ZfExtended_Models_Db_SessionMapInternalUniqId extends Zend_Db_Table_Abstract {
-    protected $_name    = 'sessionMapInternalUniqId';
+    protected $_name = 'sessionMapInternalUniqId';
     public $_primary = 'id';
 
     public function name(): string

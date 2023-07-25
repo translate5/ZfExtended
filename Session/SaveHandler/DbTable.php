@@ -61,7 +61,7 @@ class ZfExtended_Session_SaveHandler_DbTable
             $this->_dataColumn     => (string) $data
         ];
         $userSession = new Zend_Session_Namespace('user');
-        $userId = $userSession->data->id ?? null;
+        $userId = empty($userSession?->data?->id) ? null : intval($userSession->data->id);
 
         // check if the session user namespace exist
         if($isModified) {
@@ -79,14 +79,15 @@ class ZfExtended_Session_SaveHandler_DbTable
                 $userId
             ];
         } else {
-            $sql = 'INSERT INTO `session` (`session_id`, `name`, `modified`, `lifetime`) VALUES (?,?,?,?)
-                    ON DUPLICATE KEY UPDATE `modified` = ?';
+            $sql = 'INSERT INTO `session` (`session_id`, `name`, `modified`, `lifetime`, `userId`) VALUES (?,?,?,?,?)
+                    ON DUPLICATE KEY UPDATE `modified` = ?, `userId` = ? ';
             $bindings = [
                 $id,
                 $this->_sessionName,
                 intval($data[$this->_modifiedColumn]),
                 intval($this->_lifetime),
-                intval($data[$this->_modifiedColumn])
+                intval($data[$this->_modifiedColumn]),
+                $userId
             ];
         }
         
