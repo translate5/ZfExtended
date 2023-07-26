@@ -335,7 +335,7 @@ class ZfExtended_Plugin_Manager {
         $plugins = $this->getAvailable();
         /* @var ZfExtended_Plugin_Abstract $cls */
         foreach($plugins as $plugin => $cls) {
-            if($cls::isNeededForTests()) {
+            if($cls::hasConfigsForTests()) {
                 $testConfigs = array_merge($testConfigs, $cls::getTestConfigs($config));
             }
         }
