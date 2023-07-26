@@ -142,14 +142,14 @@ class ZfExtended_SessionController extends ZfExtended_RestController {
             $userModel = $authentication->getUser();
 
             // check for existing valid session for the current user
-            $sessionId = ZfExtended_Session::updateSession(true,true);
+            $sessionId = ZfExtended_Session::updateSession(true, true, intval($userModel->getId()));
 
             $session = new Zend_Session_Namespace();
             $this->setLocale($session, $userModel);
             $this->view->sessionId = $sessionId;
             
-            $sessionDb = ZfExtended_Factory::get('ZfExtended_Models_Db_Session');
-            $this->view->sessionToken = $sessionDb->updateAuthToken($this->view->sessionId);
+            $sessionDb = new ZfExtended_Models_Db_Session();
+            $this->view->sessionToken = $sessionDb->updateAuthToken($this->view->sessionId, $userModel->getId());
             
             $userSession = new Zend_Session_Namespace('user');
             //set a flag to identify that this session was started by API
@@ -159,7 +159,7 @@ class ZfExtended_SessionController extends ZfExtended_RestController {
             ZfExtended_Models_LoginLog::addSuccess($authentication, 'sessionapi');
             return true;
         }
-        ZfExtended_Models_LoginLog::addFailed($login, "sessionapi");
+        ZfExtended_Models_LoginLog::addFailed($login, 'sessionapi');
         $invalidLoginCounter->increment();
         //throwing a 403 on the authentication request means:
         //  hey guy you could not be authenticated with the given credentials!
@@ -184,16 +184,16 @@ class ZfExtended_SessionController extends ZfExtended_RestController {
      */
     public function deleteAction() {
         $sessionId = $this->_getParam('id');
-        
-        $sessionTable = ZfExtended_Factory::get('ZfExtended_Models_Db_Session');
-        /* @var $sessionTable ZfExtended_Models_Db_Session */
-        $SessionMapInternalUniqIdTable = ZfExtended_Factory::get('ZfExtended_Models_Db_SessionMapInternalUniqId');
-        /* @var $SessionMapInternalUniqIdTable ZfExtended_Models_Db_SessionMapInternalUniqId */
-        
+
+        $sessionTable = new ZfExtended_Models_Db_Session();
+        $SessionMapInternalUniqIdTable = new ZfExtended_Models_Db_SessionMapInternalUniqId();
+
         //longer as 30 (32) means that it is the sessionMapInternalUniqId, so we have to fetch the real session_id before
         $this->acl = ZfExtended_Acl::getInstance();
         if($this->isAllowed('backend', 'sessionDeleteByInternalId') && strlen($sessionId) > 30) {
-            $result = $SessionMapInternalUniqIdTable->fetchRow(['internalSessionUniqId = ?' => $sessionId]);
+            $result = $SessionMapInternalUniqIdTable->fetchRow([
+                'internalSessionUniqId = ?' => $sessionId
+            ]);
             if(!$result) {
                 //we dont throw any information about the success here due security reasons, we just do nothing
                 return;
@@ -201,8 +201,13 @@ class ZfExtended_SessionController extends ZfExtended_RestController {
             $sessionId = $result->session_id;
         }
         
-        $sessionTable->delete(["session_id = ?" => $sessionId]);
-        $SessionMapInternalUniqIdTable->delete(["session_id = ?" => $sessionId]);
+        $sessionTable->delete([
+            'session_id = ?' => $sessionId
+        ]);
+
+        $SessionMapInternalUniqIdTable->delete([
+            'session_id = ?' => $sessionId
+        ]);
     }
     
     protected function log($msg) {
