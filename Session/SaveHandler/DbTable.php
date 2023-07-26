@@ -25,8 +25,7 @@ END LICENSE AND COPYRIGHT
 /**
  *
  */
-class ZfExtended_Session_SaveHandler_DbTable
-    extends Zend_Session_SaveHandler_DbTable
+class ZfExtended_Session_SaveHandler_DbTable extends Zend_Session_SaveHandler_DbTable
 {
 
     /**
@@ -55,48 +54,14 @@ class ZfExtended_Session_SaveHandler_DbTable
      */
     public function write($id, $data)
     {
-        $isModified = $data !== $this->data;
-        $data = [
-            $this->_modifiedColumn => time(),
-            $this->_dataColumn     => (string) $data
-        ];
+        // TODO FIXME: get rid of user-session usage
         $userSession = new Zend_Session_Namespace('user');
         $userId = empty($userSession?->data?->id) ? null : intval($userSession->data->id);
 
-        // check if the session user namespace exist
-        if($isModified) {
-            $sql = 'INSERT INTO `session` (`session_id`, `name`, `modified`, `lifetime`, `session_data`,`userId`) VALUES (?,?,?,?,?,?)
-                    ON DUPLICATE KEY UPDATE `modified` = ?, `session_data` = ?, `userId` = ? ';
-            $bindings = [
-                $id,
-                $this->_sessionName,
-                intval($data[$this->_modifiedColumn]),
-                intval($this->_lifetime),
-                $data[$this->_dataColumn],
-                $userId,
-                intval($data[$this->_modifiedColumn]),
-                $data[$this->_dataColumn],
-                $userId
-            ];
-        } else {
-            $sql = 'INSERT INTO `session` (`session_id`, `name`, `modified`, `lifetime`, `userId`) VALUES (?,?,?,?,?)
-                    ON DUPLICATE KEY UPDATE `modified` = ?, `userId` = ? ';
-            $bindings = [
-                $id,
-                $this->_sessionName,
-                intval($data[$this->_modifiedColumn]),
-                intval($this->_lifetime),
-                $userId,
-                intval($data[$this->_modifiedColumn]),
-                $userId
-            ];
-        }
-        
-        $db = Zend_Db_Table_Abstract::getDefaultAdapter();
-        //$db->query('SET TRANSACTION ISOLATION LEVEL READ COMMITTED');
-        $db->query($sql, $bindings);
-        
-        return true; // session_write_close(): Session callback expects true/false return value
+        $sessionDb = new ZfExtended_Models_Db_Session();
+        $sessionDb->updateSessionData($id, (string) $data, time(), $userId);
+
+        return true;
     }
     
     /**

@@ -25,8 +25,6 @@ END LICENSE AND COPYRIGHT
 use ZfExtended_Authentication as Auth;
 
 /**
- * Startet die Session
- *
  * - legt die Variable $session->internalSessionUniqId im allgemeinen
  *   Session-Namespace fest. Sie wird nur intern in der Programmierung und für
  *   Flag-Files verwendet und darf aus Sicherheitsgründen nicht nicht in Cookies
@@ -39,6 +37,13 @@ use ZfExtended_Authentication as Auth;
  */
 class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbstract
 {
+    /**
+     * Session Data (tables session & sessionMapInternalUniqId) potentially is updated with every single request.
+     * To minimize excessively updating the session in situations like loading the app,
+     * we introduce a delay that is acceptable, meaning this delay may is deducted from the global session-lifetime
+     * to reduce the neccessary updates on these tables. A delay of 5 sec reduces the DB-writes from 13 to 5
+     */
+    const TIMESTAMP_UPDATE_DELAY = 5;
     /**
      * @var array config Konfiguration der Parameter für die DB-Sessioninitialisierung
      * TODO FIXME: why a combined primary-key )?? see also ZfExtended_Models_Db_Session
@@ -59,6 +64,23 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
         'dataColumn'        => 'session_data', //serialized data
         'lifetimeColumn'    => 'lifetime',     //end of life for a specific record
     ];
+
+    /**
+     * Evaluates if a session timestamp needs to be updated in the DB
+     * @param int|null $dbTimestamp
+     * @param int|null $newTimestamp
+     * @return bool
+     */
+    public static function doUpdateTimestamp(?int $dbTimestamp, ?int $newTimestamp)
+    {
+        if($dbTimestamp === $newTimestamp){
+            return false;
+        }
+        if(is_null($dbTimestamp) || is_null($newTimestamp)){
+            return true;
+        }
+        return $dbTimestamp < ($newTimestamp - self::TIMESTAMP_UPDATE_DELAY);
+    }
 
     /**
      * @throws ZfExtended_Models_Entity_Exceptions_IntegrityDuplicateKey
@@ -108,7 +130,7 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
 
         $this->handleAuthToken();
         
-        //default handling
+        // default handling
         Zend_Session::start();
         $this->setInternalSessionUniqId();
     }
@@ -174,7 +196,7 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
         $session = new Zend_Session_Namespace();
         $user = new Zend_Session_Namespace('user');
         $userId = empty($user->data->id) ? null : intval($user->data->id);
-        $sessionDb->updateAuthToken($row->session_id, $userId);
+        $sessionDb->updateAuthToken($row->session_id, $userId, $row);
         
         //since we have no user instance here, we create the success log by hand
         $loginLog = ZfExtended_Models_LoginLog::createLog("sessionToken");
@@ -191,7 +213,8 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
 
         //since we changed the sessionId, we have to reset the internalSessionUniqId too
         unset($session->internalSessionUniqId);
-        $this->setInternalSessionUniqId();
+        // create a internalSessionUniqId entry with the same timestamp
+        $this->setInternalSessionUniqId(ZfExtended_Utils::parseDbInt($row->modified));
         //reload redirect to remove authToken from parameter
         //or doing this in access plugin because there are several helpers?
         $this->reload(); //making exit
@@ -236,23 +259,16 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
      * as the internalSessionUniqId could easily be saved in the session-table as well
      * @return void
      */
-    private function setInternalSessionUniqId(): void
+    private function setInternalSessionUniqId(int $modified = null): void
     {
         $session = new Zend_Session_Namespace();
         if (!isset($session->internalSessionUniqId)) {
 
             $sessionId = Zend_Session::getId();
             $session->internalSessionUniqId =  md5($sessionId . uniqid(__FUNCTION__, true));
-            // try to reuse existing row to not create duplicate entries
+
             $table = new ZfExtended_Models_Db_SessionMapInternalUniqId();
-            $row = $table->fetchRow(['session_id = ?' => $sessionId]);
-            if($row === null){
-                $row = $table->createRow();
-                $row->session_id = $sessionId;
-            }
-            $row->internalSessionUniqId = $session->internalSessionUniqId;
-            $row->modified = time();
-            $row->save();
+            $table->createOrUpdateRow($sessionId, $session->internalSessionUniqId, $modified ?? time());
         }
     }
 }
