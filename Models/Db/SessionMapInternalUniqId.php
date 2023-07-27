@@ -22,24 +22,66 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
-/**#@+ 
- * @author Marc Mittag
- * @package ZfExtended
- * @version 2.0
- * 
- */
+
 /**
- * Klasse zum Zugriff auf die Tabelle mit Namen des Klassennamens (in lower case)
- * 
- * - Eintrag für Portalbetreiber wird mit der GUIE {00000000-0000-0000-0000-000000000000} vorausgesetzt
+ * Manages the internalSessionUniqId of a session in a seperate entity
+ * This is a quite stupid architecture as a public unique alias for the session could be saved much more easily as a seperate column in the session-table instead of a seperate table
  */
-class ZfExtended_Models_Db_SessionMapInternalUniqId extends Zend_Db_Table_Abstract {
-    protected $_name    = 'sessionMapInternalUniqId';
+class ZfExtended_Models_Db_SessionMapInternalUniqId extends Zend_Db_Table_Abstract
+{
+    protected $_name = 'sessionMapInternalUniqId';
     public $_primary = 'id';
 
     public function name(): string
     {
         return $this->_name;
+    }
+
+    /**
+     * Tries to reuse existing rows to update or create a row
+     * @param string $sessionId
+     * @param string $sessionUniqeId
+     * @param int $modified
+     * @param Zend_Db_Table_Row_Abstract|null $row
+     * @return void
+     */
+    public function createOrUpdateRow(string $sessionId, string $sessionUniqeId, int $modified, Zend_Db_Table_Row_Abstract $row = null)
+    {
+        if ($row === null) {
+            // try to reuse an existing row to avoid duplicates
+            $row = $this->fetchRow(['session_id = ?' => $sessionId]);
+        }
+        // create new row & save
+        if ($row === null) {
+            $row = $this->createRow();
+            $this->setRowData($row, $sessionId, $sessionUniqeId, $modified);
+            $row->save();
+            return;
+        }
+        // reuse row & save only if existing row differs
+        if (
+            $sessionId !== $row->session_id
+            || $sessionUniqeId !== $row->internalSessionUniqId
+            || ZfExtended_Resource_Session::doUpdateTimestamp(ZfExtended_Utils::parseDbInt($row->modified), $modified)
+        ) {
+            $this->setRowData($row, $sessionId, $sessionUniqeId, $modified);
+            $row->save();
+        }
+    }
+
+    /**
+     * Fills a session-map entry with data
+     * @param Zend_Db_Table_Row_Abstract $row
+     * @param string $sessionId
+     * @param string $sessionUniqeId
+     * @param int $modified
+     * @return void
+     */
+    private function setRowData(Zend_Db_Table_Row_Abstract $row, string $sessionId, string $sessionUniqeId, int $modified)
+    {
+        $row->session_id = $sessionId;
+        $row->internalSessionUniqId = $sessionUniqeId;
+        $row->modified = $modified;
     }
 }
 

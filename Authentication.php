@@ -146,8 +146,13 @@ final class ZfExtended_Authentication
         $session = new Zend_Session_Namespace();
         $internalSessionUniqId = $session->internalSessionUniqId;
         $sessionId = Zend_Session::getId();
-        $sessionMapDB = ZfExtended_Factory::get(ZfExtended_Models_Db_SessionMapInternalUniqId::class);
-        $sessionMapDB->delete("internalSessionUniqId  = '" . $internalSessionUniqId . "'");
+        $sessionMapDb = new ZfExtended_Models_Db_SessionMapInternalUniqId();
+        // delete all entries for the uniqueID but also for the session-id to really clean all related entries
+        $sessionMapDb->delete(
+            'internalSessionUniqId = '.$sessionMapDb->getAdapter()->quote($internalSessionUniqId)
+            .' OR session_id = '.$sessionMapDb->getAdapter()->quote($sessionId)
+        );
+
         $auth = Zend_Auth::getInstance();
         // Delete the information from the session
         $auth->clearIdentity();
