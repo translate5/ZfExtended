@@ -155,7 +155,7 @@ class ZfExtended_Models_Installer_Maintenance
             return false;
         }
         $timeStamp = date('Y-m-d H:i', $timeStamp);
-        Zend_Registry::get('logger')->info('E1548', 'Set maintenance at {time} with {msg}', [
+        Zend_Registry::get('logger')->info('E1548', 'Set maintenance at {time} with message "{msg}"', [
             'time' => $timeStamp,
             'msg' => $msg,
         ]);
