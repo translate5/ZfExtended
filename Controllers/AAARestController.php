@@ -531,6 +531,7 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller
     protected function entityLoad()
     {
         $this->entity->load($this->_getParam('id'));
+        $this->entity->checkClientRestriction();
     }
 
     /**

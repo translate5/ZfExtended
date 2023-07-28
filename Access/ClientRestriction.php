@@ -29,6 +29,7 @@ END LICENSE AND COPYRIGHT
 namespace MittagQI\ZfExtended\Access;
 
 use stdClass;
+use Zend_Db;
 use ZfExtended_Models_Entity_Abstract;
 use ZfExtended_Models_Filter;
 use ZfExtended_Models_Filter_ExtJs6;
@@ -77,6 +78,34 @@ final class ClientRestriction
         $filter = new ZfExtended_Models_Filter_ExtJs6($entity);
         $filter->addFilter($this->createFilterData($clientIds));
         return $filter;
+    }
+
+    /**
+     * Checks, if a single entity is accessible for the given client-restriction / client-id's
+     * @param ZfExtended_Models_Entity_Abstract $entity
+     * @param array $clientIds
+     * @return bool
+     */
+    public function isAccessible(ZfExtended_Models_Entity_Abstract $entity, array $clientIds): bool
+    {
+        if (array_key_exists('assoc', $this->config)) {
+            // UGLY: convert the OLD filter-setup layout to a query ... and usually there will already be methods to achieve this
+            $assoc = $this->config['assoc'];
+            $assocClientIds = $entity->db->getAdapter()->fetchAll(
+                'SELECT `' . $assoc['searchField'] . '` FROM `' . $assoc['table'] . '` WHERE `' . $assoc['foreignKey'] . '` = ?',
+                [$entity->getId()],
+                Zend_Db::FETCH_COLUMN
+            );
+        } else {
+            // call the entity getter
+            $method = 'get' . ucfirst($this->getConfiguredField());
+            $assocClientIds = $this->columnToIntArray(call_user_func([$entity, $method]));
+        }
+        // if there is no overlap between the associated clientIds and the ones the user is restricted to the entity is not accessible
+        if (empty(array_intersect($assocClientIds, $clientIds))) {
+            return false;
+        }
+        return true;
     }
 
     /**
@@ -129,13 +158,39 @@ final class ClientRestriction
         return $newVal;
     }
 
+    /**
+     * Retrieves the configured foreign-key constraint column
+     * @return string
+     */
     private function getConfiguredField(): string
     {
         return array_key_exists('field', $this->config) ? $this->config['field'] : 'customerId';
     }
 
+    /**
+     * Retrieves the configured constraint type (normally a list)
+     * @return string
+     */
     private function getConfiguredType(): string
     {
         return array_key_exists('type', $this->config) ? $this->config['type'] : 'list';
+    }
+
+    /**
+     * Turns a DB-column-value to an array of integers (might could become a global helper)
+     * @param mixed $value
+     * @return int[]
+     */
+    private function columnToIntArray(mixed $value): array
+    {
+        if (is_string($value)) {
+            $value = explode(',', trim($value, ','));
+            return array_map('intval', $value);
+        } else if (is_array($value)) {
+            return array_map('intval', $value);
+        } else if (is_int($value)) {
+            return [$value];
+        }
+        return [intval($value)];
     }
 }
