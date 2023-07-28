@@ -49,48 +49,44 @@ class ZfExtended_Session {
      * @throws Zend_Db_Table_Exception
      * @throws Zend_Exception
      */
-    public static function updateSession(bool $regenerate = false, bool $findExisting = false) {
-        $db = ZfExtended_Factory::get('ZfExtended_Models_Db_SessionMapInternalUniqId');
-        /* @var $db ZfExtended_Models_Db_SessionMapInternalUniqId */
+    public static function updateSession(bool $regenerate = false, bool $findExisting = false, int $userId = null) {
+
         $newSessionId = $oldSessionId = null;
 
-        if($findExisting){
-            $userSession = new Zend_Session_Namespace('user');
-            $userId = $userSession->data->id ?? null;
+        // if the user session is set, try to find for the current user existing valid session in the database
+        if($findExisting && !is_null($userId)){
 
-            // if the user session is set, try to find for the current user existing valid session in the database.
-            if(!is_null($userId)){
-                $sessionDb = ZfExtended_Factory::get('ZfExtended_Models_Db_Session');
-                /* @var $sessionDb ZfExtended_Models_Db_Session */
-                $userSessionDb = $sessionDb->loadSessionIdForUser($userId,session_id());
-                $userSessionDb = $userSessionDb['session_id'] ?? null;
-                // the user has valid session in database ?
-                if(!is_null($userSessionDb) && !empty($userSessionDb)){
-                    // remove the current temp session, and replace it with the database session.
-                    session_destroy();
-                    $newSessionId = $oldSessionId = $userSessionDb;
-                    session_id($newSessionId);
-                    session_start();
-                    // when replacing the database session, disable the regenerate
-                    $regenerate = false;
-                }
+            $sessionDb = new ZfExtended_Models_Db_Session();
+            $userSessionDb = $sessionDb->loadSessionIdForUser($userId, session_id());
+            $userSessionDb = $userSessionDb['session_id'] ?? null;
+            // the user has valid session in database ?
+            if(!is_null($userSessionDb) && !empty($userSessionDb)){
+                // remove the current temp session, and replace it with the database session.
+                session_destroy();
+                $newSessionId = $oldSessionId = $userSessionDb;
+                session_id($newSessionId);
+                session_start();
+                // when replacing the database session, disable the regenerate
+                $regenerate = false;
             }
         }
         // if no session id exist, generate new
         if(is_null($newSessionId) || empty($newSessionId)){
-            $newSessionId = $oldSessionId = Zend_Session::getId();;
+            $newSessionId = $oldSessionId = Zend_Session::getId();
         }
 
         if($regenerate){
             $config = Zend_Registry::get('config');
-            Zend_Session::rememberMe($config->resources->ZfExtended_Resource_Session->remember_me_seconds);
+            Zend_Session::rememberMe($config->resources->ZfExtended_Resource_Session->lifetime);
             $newSessionId = Zend_Session::getId();
         }
-
-        $db->update([
+        $sessionMapDb = new ZfExtended_Models_Db_SessionMapInternalUniqId();
+        $sessionMapDb->update([
             'session_id' => $newSessionId,
-            'modified' => time(),
-        ], ['session_id = ?' => $oldSessionId]);
+            'modified' => time()
+        ],[
+            'session_id = ?' => $oldSessionId
+        ]);
         return $newSessionId;
     }
 
@@ -100,11 +96,10 @@ class ZfExtended_Session {
      * @param int $userId
      */
     public function cleanForUser(int $userId){
-        $model = ZfExtended_Factory::get('ZfExtended_Models_Db_Session');
-        /* @var $model ZfExtended_Models_Db_Session */
-        $model->delete([
-            'userId = ?'=>$userId,
-            'session_id != ?'=>session_id()
+        $sessionDb = new ZfExtended_Models_Db_Session();
+        $sessionDb->delete([
+            'userId = ?' => $userId,
+            'session_id != ?' => session_id()
         ]);
         $this->events->trigger('afterSessionCleanForUser', $this, []);
     }

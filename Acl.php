@@ -81,8 +81,7 @@ class ZfExtended_Acl extends Zend_Acl {
      * - only allow rules are set, default is deny
      */
     protected function __construct() {
-        $db = ZfExtended_Factory::get('ZfExtended_Models_Db_AclRules');
-        /* @var $db ZfExtended_Models_Db_AclRules */
+        $db = ZfExtended_Factory::get(ZfExtended_Models_Db_AclRules::class);
 
         //currently we load the rules for all modules, if we ever need to differ,
         // we have to do that in the isAllowed call
@@ -99,8 +98,7 @@ class ZfExtended_Acl extends Zend_Acl {
      * @return array
      */
     public function getAllRoles() {
-        $db = ZfExtended_Factory::get('ZfExtended_Models_Db_AclRules');
-        /* @var $db ZfExtended_Models_Db_AclRules */
+        $db = ZfExtended_Factory::get(ZfExtended_Models_Db_AclRules::class);
         $s = $db->select()
         ->from($db->info($db::NAME), 'role')
         ->distinct();
@@ -115,8 +113,7 @@ class ZfExtended_Acl extends Zend_Acl {
      * @throws Zend_Db_Table_Exception
      */
     public function getResourceByRoles(string $resource, array $roles){
-        $db = ZfExtended_Factory::get('ZfExtended_Models_Db_AclRules');
-        /* @var $db ZfExtended_Models_Db_AclRules */
+        $db = ZfExtended_Factory::get(ZfExtended_Models_Db_AclRules::class);
         $s = $db->select()
             ->from($db->info($db::NAME))
             ->where('resource = ?',$resource)
@@ -132,8 +129,7 @@ class ZfExtended_Acl extends Zend_Acl {
      */
     public function getInitialPageModulesForRoles(array $roles): array
     {
-        $db = ZfExtended_Factory::get('ZfExtended_Models_Db_AclRules');
-        /* @var $db ZfExtended_Models_Db_AclRules */
+        $db = ZfExtended_Factory::get(ZfExtended_Models_Db_AclRules::class);
         $s = $db->select()
             ->from($db->info($db::NAME), 'module')
             ->where('resource = ?',self::INITIAL_PAGE_RESOURCE)

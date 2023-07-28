@@ -74,4 +74,47 @@ abstract class ZfExtended_Models_Filter_JoinAbstract {
      * @param ZfExtended_Models_Filter $filter
      */
     abstract public function configureEntityFilter(ZfExtended_Models_Filter $filter);
+
+
+    /**
+     * Debugs the filter
+     */
+    public function debug(): string
+    {
+        return json_encode($this->debugFilter(), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    }
+
+    /**
+     * Debugs our data
+     * @return stdClass
+     */
+    public function debugFilter(): stdClass
+    {
+        $data = new stdClass();
+        $data->_classname = get_class($this);
+        $data->table = $this->table;
+        $data->searchField = $this->searchField;
+        $data->foreignKey = $this->foreignKey;
+        $data->localKey = $this->localKey;
+        $data->filterType = $this->debugObject($this->filterType);
+        if(property_exists($this, 'finalJoin')){
+            $data->finalJoin = $this->debugObject($this->finalJoin);
+        }
+        return $data;
+    }
+
+    /**
+     * @param $obj
+     * @return mixed
+     */
+    public function debugObject(mixed $obj): mixed
+    {
+        if(is_object($obj) && $obj instanceof ZfExtended_Models_Filter_JoinAbstract){
+            return $obj->debugFilter();
+        }
+        if(!is_object($obj) || $obj instanceof stdClass){
+            return $obj;
+        }
+        return get_class($obj);
+    }
 }

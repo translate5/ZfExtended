@@ -531,6 +531,7 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller
     protected function entityLoad()
     {
         $this->entity->load($this->_getParam('id'));
+        $this->entity->checkClientRestriction();
     }
 
     /**
@@ -569,7 +570,7 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller
      */
     protected function isAllowed($resource = null, $privilege = null)
     {
-        return $this->acl->isInAllowedRoles(ZfExtended_Authentication::getInstance()->getRoles(), $resource, $privilege);
+        return $this->acl->isInAllowedRoles(ZfExtended_Authentication::getInstance()->getUserRoles(), $resource, $privilege);
     }
 
     /***

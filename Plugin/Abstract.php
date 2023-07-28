@@ -69,6 +69,13 @@ abstract class ZfExtended_Plugin_Abstract
     protected static bool $activateForTests = false;
 
     /**
+     * Set to true in the concrete plug-in, if only the configs are needed in the test
+     * (and the plugin is not activated by default for tests)
+     * @var bool
+     */
+    protected static bool $configureForTests = false;
+
+    /**
      * Here configs can be defined that are used to fill the test-DB
      * Structure is [ 'runtimeOptions.plugins.pluginname.configName' => value ]
      * If value is NULL, it will be fetched from the application DB, otherwise the defined value is taken
@@ -111,10 +118,20 @@ abstract class ZfExtended_Plugin_Abstract
 
     /**
      * Return if the plug-in is needed for the test-suite
-     * @return string
+     * @return bool
      */
-    public static function isNeededForTests(): string {
+    public static function isNeededForTests(): bool
+    {
         return static::$activateForTests;
+    }
+
+    /**
+     * Returns if the configs of the plugin are needed for tests
+     * @return bool
+     */
+    public static function hasConfigsForTests(): bool
+    {
+        return static::$activateForTests || static::$configureForTests;
     }
 
     /**
@@ -264,7 +281,7 @@ abstract class ZfExtended_Plugin_Abstract
             return $result;
         }
         foreach($this->frontendControllers as $right => $controller) {
-            if($acl->isInAllowedRoles($auth->getRoles(), 'frontend', $right)) {
+            if($acl->isInAllowedRoles($auth->getUserRoles(), 'frontend', $right)) {
                 $result[] = $controller;
             }
         }

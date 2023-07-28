@@ -31,14 +31,16 @@ END LICENSE AND COPYRIGHT
 /**
  * handles passwd reset
  *
- * @method void setId() setId(int $id)
- * @method void setUserId() setUserId(int $userId)
- * @method void setExpiration() setExpiration(int $expiration)
- * @method void setResetHash() setResetHash(string $resetHash)
- * @method integer getId() getId()
- * @method integer getUserId() getUserId()
- * @method integer getExpiration() getExpiration()
- * @method string getResetHash() getResetHash()
+ * @method void setId(int $id)
+ * @method void setUserId(int $userId)
+ * @method void setExpiration(int $expiration)
+ * @method void setResetHash(string $resetHash)
+ * @method void setInternalSessionUniqId(string $uniqueId)
+ * @method integer getId()
+ * @method integer getUserId()
+ * @method integer getExpiration()
+ * @method string getResetHash()
+ * @method string getInternalSessionUniqId()
  *
  */
 class ZfExtended_Models_Passwdreset extends ZfExtended_Models_Entity_Abstract {

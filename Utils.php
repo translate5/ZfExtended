@@ -584,6 +584,22 @@ class ZfExtended_Utils {
     }
 
     /**
+     * Converts an integer-column value from the database either to an integer or null
+     * @param mixed $dbInt
+     * @return int|null
+     */
+    public static function parseDbInt(mixed $dbInt): ?int
+    {
+        if(is_null($dbInt)){
+            return null;
+        }
+        if(is_int($dbInt)){
+            return $dbInt;
+        }
+        return intval($dbInt);
+    }
+
+    /**
      * Moved from ZfExtended_Controllers_Plugins_LocaleSetup
      *
      * gets locale from browser

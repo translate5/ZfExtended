@@ -54,13 +54,12 @@ class ZfExtended_Controller_Helper_Access extends Zend_Controller_Action_Helper_
      */
     public function isAuthenticated(){
         $acl = ZfExtended_Acl::getInstance();
-
         $auth = ZfExtended_Authentication::getInstance();
-        $authStatus = 0;
-        if($authenticated = $auth->isAuthenticated($authStatus)) {
-
+        $isAuthenticated = false;
+        if($auth->isAuthenticated()) {
+            $isAuthenticated = true;
             $locale = (string) Zend_Registry::get('Zend_Locale');
-            $this->_roles = $auth->getRoles();
+            $this->_roles = $auth->getUserRoles();
             $user = $auth->getUser();
             if($locale !== $user->getLocale()) {
                 $user->setLocale($locale);
@@ -71,13 +70,13 @@ class ZfExtended_Controller_Helper_Access extends Zend_Controller_Action_Helper_
         $resource = $this->getResource();
         $action = $this->getAction();
 
-        $userDeleted = $authStatus == $auth::AUTH_DENY_USER_NOT_FOUND;
+        $userDeleted = $auth->getAuthStatus() == $auth::AUTH_DENY_USER_NOT_FOUND;
         if($userDeleted) {
             Zend_Session::destroy();
         }
 
         if($userDeleted || !$acl->isInAllowedRoles($this->_roles, $resource, $action)) {
-            $this->accessDenied($authenticated, $resource, $action);
+            $this->accessDenied($isAuthenticated, $resource, $action);
         }
         else {
             $this->cleanRedirectTo($resource);

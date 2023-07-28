@@ -358,14 +358,17 @@ class ZfExtended_Test_ApiHelper {
 
     /**
      * Sends a DELETE request
+     * The delete will not be sent, if the cleanup is prevented in the test-setup
+     * if it is expected to fail, it will always be sent
      * @param string $url
      * @param array $parameters
+     * @param bool $expectedToFail
      * @return array|false|stdClass
      * @throws Zend_Http_Client_Exception
      */
-    public function delete(string $url, array $parameters = []) {
-        if($this->cleanup){
-            return $this->fetchJson($url, 'DELETE', $parameters, null, false);
+    public function delete(string $url, array $parameters = [], bool $expectedToFail = false) {
+        if($this->cleanup || $expectedToFail){
+            return $this->fetchJson($url, 'DELETE', $parameters, null, false, $expectedToFail);
         }
         return false;
     }

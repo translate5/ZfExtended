@@ -277,8 +277,8 @@ abstract class ZfExtended_Models_Filter {
           $filter->_origType = $filter->type;
           $filter->type = $typeMap[$filter->type];
           //if the type is percent, set the filter total field
-          if($filter->type=='percent'){
-              $filter->totalField=$typeMap['totalField'];
+          if($filter->type === 'percent'){
+              $filter->totalField = $typeMap['totalField'];
           }
       }
   }
@@ -462,4 +462,47 @@ abstract class ZfExtended_Models_Filter {
       $where = $this->whereOp;
       $this->select->$where($cond, $value, $type);
   }
+
+    /**
+     * Debugs the filter
+     */
+    public function debug(): string
+    {
+        return json_encode($this->debugFilter(), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    }
+
+    /**
+     * Debugs the filter-array
+     * @return stdClass
+     */
+    public function debugFilter(): stdClass
+    {
+        $data = new stdClass();
+        $data->_classname = get_class($this);
+        $data->filter = [];
+        foreach($this->filter as $filter){
+            $data->filter[] = $this->debugFilterItem($filter);
+        }
+        return $data;
+    }
+
+    /**
+     * debugs an filter-array-item
+     * @param stdClass $filter
+     * @return stdClass
+     */
+    private function debugFilterItem(stdClass $filter): stdClass
+    {
+        $data = new stdClass();
+        foreach ($filter as $prop => $value) {
+            if(is_object($value)){
+                $data->$prop = ($value instanceof ZfExtended_Models_Filter || $value instanceof ZfExtended_Models_Filter_JoinAbstract) ?
+                    $value->debugFilter()
+                    : ($value instanceof stdClass ? $value : get_class($value));
+            } else {
+                $data->$prop = $value;
+            }
+        }
+        return $data;
+    }
 }
