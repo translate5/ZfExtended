@@ -171,6 +171,18 @@ abstract class ServiceAbstract
     }
 
     /**
+     * Since Services are usually instantiated with the global config for task or customer specific confige
+     * it might be neccessary to set the used
+     * Keep in mind that this must be a full config-tree and not a e.g. plugin-subset
+     * @param Zend_Config $config
+     * @return void
+     */
+    public function setConfig(Zend_Config $config): void
+    {
+        $this->config = $config;
+    }
+
+    /**
      * Checks, if the service is set up properly and everything works.
      * This will generate the errors/success messages that are accessible after calling this
      * Must be implemented for each service
