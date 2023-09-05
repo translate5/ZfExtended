@@ -56,6 +56,7 @@ class ZfExtended_Test_ApiHelper {
         'LOGOUT_PATH' => null,
         'CAPTURE_MODE' => false,
         'SKIP_PRETESTS' => false,
+        'SKIP_TESTS' => [],
         'XDEBUG_ENABLE' => false,
         'KEEP_DATA' => false,
         'LEGACY_DATA' => false,
@@ -104,6 +105,7 @@ class ZfExtended_Test_ApiHelper {
      *  'LOGOUT_PATH' => the logout url
      *  'CAPTURE_MODE' => if true, defines if we're in capture mode (only when single tests are called), false by default
      *  'SKIP_PRETESTS' => if true, defines if pretests (testing the environment before running the test/suite) shall be reduced to a minimum
+     *  'SKIP_TESTS' => if set, defines tests to be skipped
      *  'XDEBUG_ENABLE' => if true, defines if we should enable XDEBUG on the called test instance , false by default
      *  'KEEP_DATA' => if true, defines if test should be kept after test run, must be implemented in the test, false by default
      *  'LEGACY_DATA' => if true, defines to use the "old" data field sort order (to reduce diff clutter on capturing)
@@ -272,7 +274,7 @@ class ZfExtended_Test_ApiHelper {
      * @var string
      */
     protected string $testClass;
-    
+
     /**
      * Test root directory
      * @var TestCase
@@ -313,6 +315,15 @@ class ZfExtended_Test_ApiHelper {
      */
     public function getTestClass() : string {
         return $this->testClass;
+    }
+
+    /**
+     * Checks if a test is marked as "skipped" by command-options
+     * @return bool
+     */
+    public function isTestSkipped(): bool
+    {
+        return in_array($this->testClass, static::$CONFIG['SKIP_TESTS']);
     }
 
     /**
