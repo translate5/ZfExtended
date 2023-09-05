@@ -55,6 +55,7 @@ class  ZfExtended_Zendoverwrites_Http_Client extends Zend_Http_Client {
             throw new ZfExtended_Zendoverwrites_Http_Exception_TimeOut('E1307', [
                 'method' => ($method ?? $this->method),
                 'url' => $url,
+                'originalMsg' => $msg, // HACK but useful: in most cases it seems the previous exception get's lost ...
             ], $httpException);
             //if the error is one of the following, we have a connection problem
             //ERROR Zend_Http_Client_Adapter_Exception: E9999 - Unable to Connect to tcp://localhost:8080. Error #111: Connection refused
@@ -68,12 +69,14 @@ class  ZfExtended_Zendoverwrites_Http_Client extends Zend_Http_Client {
             throw new ZfExtended_Zendoverwrites_Http_Exception_Down('E1308', [
                 'url' => $url,
                 'server' => join(':', $url),
+                'originalMsg' => $msg, // HACK but useful: in most cases it seems the previous exception get's lost ...
             ], $httpException);
         }elseif(strpos($msg, 'Unable to read response, or response is empty') === 0) {
             //Empty response in {method}ing URL {url}
             throw new ZfExtended_Zendoverwrites_Http_Exception_NoResponse('E1309', [
                 'method' => ($method ?? $this->method),
                 'url' => $url,
+                'originalMsg' => $msg, // HACK but useful: in most cases it seems the previous exception get's lost ...
             ], $httpException);
         }
         //FIXME what do we get here? Wrap with a general Request Exception???
