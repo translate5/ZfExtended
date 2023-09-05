@@ -108,13 +108,18 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
      * @return ZfExtended_Models_Worker
      * @throws ZfExtended_Models_Entity_NotFoundException
      */
-    public function loadFirstOf(string $worker, string $taskGuid): self {
+    public function loadFirstOf(string $worker, string $taskGuid, array $states = []): self {
         try {
             $s = $this->db->select()
-            ->where('taskGuid = ?', $taskGuid)
-            ->where('worker = ?', $worker)
-            ->order('id ASC')
-            ->limit(1);
+                ->where('taskGuid = ?', $taskGuid)
+                ->where('worker = ?', $worker)
+                ->order('id ASC')
+                ->limit(1);
+            if(count($states) === 1){
+                $s->where('state = ?', $states[0]);
+            } else if(count($states) > 1){
+                $s->where('state IN (?)', $states);
+            }
             $row = $this->db->fetchRow($s);
         } catch (Exception $e) {
             $this->notFound('NotFound after other Error', $e);
