@@ -88,16 +88,17 @@ abstract class ZfExtended_Models_Entity_Abstract {
     protected $limit = 0;
 
     /**
-     * List of Field Names the set method was called for.
+     * Assoc array of Field Names the set method was called for.
+     * To avoid array buildup the field names are the keys
      * @var array
      */
-    protected $modified = array();
+    protected $modified = [];
     
     /**
      * List of Field Values overwritten by setting a new value
      * @var array
      */
-    protected $modifiedValues = array();
+    protected $modifiedValues = [];
 
     /**
      * @var ZfExtended_Models_Filter
@@ -120,7 +121,7 @@ abstract class ZfExtended_Models_Entity_Abstract {
     
     public function __construct() {
         $this->db = ZfExtended_Factory::get($this->dbInstanceClass);
-        $this->events = ZfExtended_Factory::get('ZfExtended_EventManager', array(get_class($this)));
+        $this->events = ZfExtended_Factory::get(ZfExtended_EventManager::class, array(get_class($this)));
         $this->init();
         $db = $this->db;
         $this->tableName = $db->info($db::NAME);
@@ -570,7 +571,7 @@ abstract class ZfExtended_Models_Entity_Abstract {
                 if (!isset($arguments[0])) {
                     $arguments[0] = null;
                 }
-                $this->modified[] = $fieldName;
+                $this->modified[$fieldName] = 1;
                 if(!array_key_exists($fieldName, $this->modifiedValues)) {
                     //presave old value
                     $this->modifiedValues[$fieldName] = $this->get($fieldName);
@@ -726,7 +727,7 @@ abstract class ZfExtended_Models_Entity_Abstract {
       $data = $this->row->toArray();
       $result = array();
       foreach($data as $field => $value) {
-        if(in_array($field, $this->modified)){
+        if(array_key_exists($field, $this->modified)){
           $result[$field] = $value;
         }
       }
@@ -743,7 +744,7 @@ abstract class ZfExtended_Models_Entity_Abstract {
         if(empty($field)) {
             return !empty($this->modified);
         }
-        return in_array($field, $this->modified);
+        return array_key_exists($field, $this->modified);
     }
     
     /**
