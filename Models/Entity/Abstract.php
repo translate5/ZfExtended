@@ -22,7 +22,7 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
-use MittagQI\ZfExtended\Access\ClientRestriction;
+use MittagQI\ZfExtended\Acl\ClientRestriction;
 
 abstract class ZfExtended_Models_Entity_Abstract {
     /**

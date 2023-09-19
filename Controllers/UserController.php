@@ -22,6 +22,10 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
+use MittagQI\ZfExtended\Acl\Roles;
+use MittagQI\ZfExtended\Acl\SetAclRoleResource;
+use MittagQI\ZfExtended\Acl\SystemResource;
+
 class ZfExtended_UserController extends ZfExtended_RestController {
 
     protected $entityClass = 'ZfExtended_Models_User';
@@ -56,7 +60,7 @@ class ZfExtended_UserController extends ZfExtended_RestController {
      * FIXME Generell werden nur User mit der Rolle "editor" angezeigt, alle anderen haben eh keinen Zugriff auf T5
      */
     public function indexAction() {
-        $isAllowed=$this->isAllowed('backend','seeAllUsers');
+        $isAllowed = $this->isAllowed(SystemResource::ID, SystemResource::SEE_ALL_USERS);
         if($isAllowed){
             $rows= $this->entity->loadAll();
             $count= $this->entity->getTotalCount();
@@ -70,15 +74,15 @@ class ZfExtended_UserController extends ZfExtended_RestController {
     }
 
     /**
-     * Loads a list of all users with role 'pm'. If 'pmRoles' is set, all users with roles listed in 'pmRoles' will be loaded
+     * Loads a list of all users with role 'pm'. If 'pmRoles' is set,
+     * all users with roles listed in 'pmRoles' will be loaded
      */
     public function pmAction()
     {
         //check if the user is allowed to see all users
-        if($this->isAllowed('backend','seeAllUsers')){
+        if($this->isAllowed(SystemResource::ID, SystemResource::SEE_ALL_USERS)){
             $parentId = false;
-        }
-        else {
+        } else {
             $userSession = new Zend_Session_Namespace('user');
             $parentId = $userSession->data->id;
         }
@@ -547,7 +551,7 @@ class ZfExtended_UserController extends ZfExtended_RestController {
         if(!empty($oldRoles)){
             $toRemove=[];
             foreach ($oldRoles as $old){
-                $isAllowed=$this->isAllowed('setaclrole', $old);
+                $isAllowed=$this->isAllowed(SetAclRoleResource::ID, $old);
                 if($isAllowed){
                     $toRemove[]=$old;
                 }
@@ -563,7 +567,7 @@ class ZfExtended_UserController extends ZfExtended_RestController {
 
         //check if the user is allowed for the requested roles
         foreach ($requestAclsArray as $role){
-            $isAllowed=$this->isAllowed('setaclrole', $role);
+            $isAllowed=$this->isAllowed(SetAclRoleResource::ID, $role);
             if(!$isAllowed){
                 throw new ZfExtended_NoAccessException("Authenticated User is not allowed to modify role ".$role);
             }

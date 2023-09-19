@@ -22,6 +22,7 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
+use MittagQI\Translate5\Acl\Rights;
 use MittagQI\ZfExtended\Service\ServiceAbstract;
 
 /**
@@ -263,25 +264,27 @@ abstract class ZfExtended_Plugin_Abstract
     public function getFrontendControllers() {
         return array_values($this->frontendControllers);
     }
-    
+
     /**
      * reusable function to filter frontend controlles by ACL
      * This is not used by default.
+     * @param string $resourceId
      * @return array
+     * @throws Zend_Acl_Exception
      */
-    protected function getFrontendControllersFromAcl() {
+    protected function getFrontendControllersFromAcl(string $resourceId = Rights::ID): array
+    {
         $result = [];
         $auth = ZfExtended_Authentication::getInstance();
         if(! $auth->isAuthenticated()) {
             return $result;
         }
         $acl = ZfExtended_Acl::getInstance();
-        /* @var $acl ZfExtended_Acl */
-        if(!$acl->has('frontend')) {
+        if(!$acl->has($resourceId)) {
             return $result;
         }
         foreach($this->frontendControllers as $right => $controller) {
-            if($acl->isInAllowedRoles($auth->getUserRoles(), 'frontend', $right)) {
+            if($acl->isInAllowedRoles($auth->getUserRoles(), $resourceId, $right)) {
                 $result[] = $controller;
             }
         }

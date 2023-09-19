@@ -26,7 +26,7 @@ START LICENSE AND COPYRIGHT
 END LICENSE AND COPYRIGHT
 */
 
-namespace MittagQI\ZfExtended\Access;
+namespace MittagQI\ZfExtended\Acl;
 
 use stdClass;
 use Zend_Db;
