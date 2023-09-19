@@ -38,8 +38,11 @@ class ZfExtended_Logger_Writer_ErrorLog extends ZfExtended_Logger_Writer_Abstrac
         if (in_array($event->eventCode, ['E9999', 'E0001', 'E0002'])) {
             if (is_dir(APPLICATION_ROOT . '/.idea')) {
                 //change trace so that phpstorm can directly jump to
-                $event = preg_replace('/(\s+#\d+ )([^(]+)\((\d+)\):/', "$1in file://$2:$3 ", $event);
-                $event = preg_replace('#(\s+in [^/]+)(/[^(]+) \((\d+)\)#', "$1in file://$2:$3 ", $event);
+                $event = preg_replace_callback(['/(\s+#\d+ )([^(]+)\((\d+)\):/', '#(\s+in [^/]+)(/[^(]+) \((\d+)\)#'], function($matches){
+                    $file = str_replace(APPLICATION_ROOT, '', $matches[2]);
+                    $url = (string) 'phpstorm://open?file='.$file.'&line='.$matches[3];
+                    return $matches[1].'in '.$url;
+                }, $event);
             }
             error_log($event);
         } else {

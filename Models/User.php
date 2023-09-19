@@ -22,7 +22,8 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
-use MittagQI\ZfExtended\Access\Roles;
+use MittagQI\ZfExtended\Acl\ConfigLevelResource;
+use MittagQI\ZfExtended\Acl\Roles;
 
 /**
  * @method void setId() setId(int $id)
@@ -57,13 +58,7 @@ use MittagQI\ZfExtended\Access\Roles;
  * @method string getOpenIdSubject() getOpenIdSubject()
  */
 class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract {
-    
-    /***
-     * resource key for the acl level record
-     * @var string
-     */
-    const APPLICATION_CONFIG_LEVEL = 'applicationconfigLevel';
-    
+
     const SYSTEM_LOGIN = 'system';
     const SYSTEM_GUID = '{00000000-0000-0000-0000-000000000000}';
     
@@ -389,7 +384,7 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract {
      */
     public function getApplicationConfigLevel(){
         $acl = ZfExtended_Acl::getInstance();
-        return $acl->getRightsToRolesAndResource($this->getRoles(), self::APPLICATION_CONFIG_LEVEL);
+        return $acl->getRightsToRolesAndResource($this->getRoles(), ConfigLevelResource::ID);
     }
 
     /**

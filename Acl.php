@@ -22,12 +22,12 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
-/**#@+
- * @author Marc Mittag
- * @package ZfExtended
- * @version 2.0
- *
- */
+use MittagQI\Translate5\Acl\Rights;
+use MittagQI\Translate5\Applet\Dispatcher;
+use MittagQI\ZfExtended\Acl\AutoSetRoleResource;
+use MittagQI\ZfExtended\Acl\ResourceManager;
+use MittagQI\ZfExtended\Acl\SetAclRoleResource;
+
 /**
  * Singleton-Instanz
  *
@@ -37,11 +37,6 @@ END LICENSE AND COPYRIGHT
  *
  */
 class ZfExtended_Acl extends Zend_Acl {
-
-    /***
-     * Initial page resource name
-     */
-    const INITIAL_PAGE_RESOURCE = 'initial_page';
 
     /**
      * Singleton Instanzen
@@ -132,7 +127,7 @@ class ZfExtended_Acl extends Zend_Acl {
         $db = ZfExtended_Factory::get(ZfExtended_Models_Db_AclRules::class);
         $s = $db->select()
             ->from($db->info($db::NAME), 'module')
-            ->where('resource = ?',self::INITIAL_PAGE_RESOURCE)
+            ->where('resource = ?', Dispatcher::INITIAL_PAGE_RESOURCE)
             ->where('role IN(?)',$roles)
             ->distinct();
         return array_column($db->fetchAll($s)->toArray(), 'module');
@@ -194,7 +189,7 @@ class ZfExtended_Acl extends Zend_Acl {
             return;
         }
         $this->getControllers();
-        $allowedResource = ['frontend', 'backend', 'setaclrole'];
+        $allowedResource = [Rights::ID, SetAclRoleResource::ID];
         foreach($this->_allRules as $rule) {
             if(in_array($rule['resource'], $allowedResource)) {
                 continue;
@@ -212,6 +207,7 @@ class ZfExtended_Acl extends Zend_Acl {
             if(method_exists($rule['resource'], $rule['right'])){
                 continue;
             }
+        //FIXME den code umbauen so dass er auf die neuen Klassen und den manager prüft
             error_log('The following ACL resource and privilege does not exist in the Application: '.$rule['resource'].'; '.$rule['right']);
         }
     }
@@ -231,7 +227,7 @@ class ZfExtended_Acl extends Zend_Acl {
             $right = $rule['right'];
             $resource = $rule['resource'];
             if ($right == 'all') {
-                if($resource == 'frontend'){
+                if($resource == Rights::ID){
                     throw new Zend_Exception('For the resource "frontend" the right "all" can not be used!');
                 }
                 $this->allow($role, $resource);
@@ -300,21 +296,29 @@ class ZfExtended_Acl extends Zend_Acl {
             }
         }
     }
-    
+
     /**
      * Returns a list of frontend privileges / rights to the given roles
      * @param array $roles
-     * @return array 
+     * @return array
+     * @throws Zend_Acl_Exception
+     * @throws \MittagQI\Translate5\Test\Api\Exception
      */
     public function getFrontendRights(array $roles): array {
-        return $this->getRightsToRolesAndResource($roles, 'frontend');
+        $resources = ResourceManager::getBusinessLogicResources();
+        $rights = [];
+        foreach ($resources as $resource) {
+            $rights = array_merge($rights, $this->getRightsToRolesAndResource($roles, $resource->getId()));
+        }
+        return $rights;
     }
-    
+
     /**
      * returns the configured rights to a resource roles combination
      * @param array $roles
      * @param string $resource
-     * @return array 
+     * @return array
+     * @throws Zend_Acl_Exception
      */
     public function getRightsToRolesAndResource(array $roles, string $resource): array {
         $result = [];
@@ -343,7 +347,7 @@ class ZfExtended_Acl extends Zend_Acl {
      */
     public function mergeAutoSetRoles(array $newUserRoles, array $oldUserRoles) : array{
         // get all auto set roles for the newUserRoles array
-        $setAdditionally = $this->getRightsToRolesAndResource($newUserRoles, 'auto_set_role');
+        $setAdditionally = $this->getRightsToRolesAndResource($newUserRoles, AutoSetRoleResource::ID);
 
         //merge the old roles and the allowed roles from the request
         return array_unique(array_merge($newUserRoles, $oldUserRoles, $setAdditionally));

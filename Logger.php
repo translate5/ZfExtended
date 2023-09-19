@@ -264,7 +264,15 @@ class ZfExtended_Logger {
         if(!empty($previous)) {
             $event->previous = $this->exception($previous, [], true);
         }
-        $event->mergeFromArray($eventOverride);
+        $unknownOverridenFields = $event->mergeFromArray($eventOverride);
+        foreach ($unknownOverridenFields as $unknownOverridenField) {
+            $extra = clone $event->extra;
+            $extra['prop'] = $unknownOverridenField;
+            $newLog = $this->prepareEvent(self::LEVEL_ERROR, 'E9999', $extra);
+            $newLog->message = 'Wrong usage of $eventOverride parameter, added unknown event property {prop}, '.
+                'is the extra array missing? The unknown parameters are moved to extra automatically.';
+            $this->processEvent($newLog);
+        }
         $event->levelName = $this->getLevelName($event->level);
         if($returnEvent) {
             return $event;
@@ -289,7 +297,9 @@ class ZfExtended_Logger {
         
         foreach($availableWriters as $name) {
             $writer = $this->writer[$name];
-            $writer->isAccepted($event) && $writer->write($event);
+            if ($writer->isAccepted($event)) {
+                $writer->write($event);
+            }
         }
     }
     

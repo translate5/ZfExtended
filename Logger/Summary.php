@@ -22,11 +22,14 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
+use MittagQI\Translate5\Acl\Rights;
+use MittagQI\ZfExtended\Acl\SystemResource;
+
 /**
  * Logger Summary creator
  */
 class ZfExtended_Logger_Summary {
-    
+
     /**
      * @var ZfExtended_Models_Db_ErrorLog
      */
@@ -53,7 +56,7 @@ class ZfExtended_Logger_Summary {
         $user = ZfExtended_Factory::get('ZfExtended_Models_User');
         /* @var $user ZfExtended_Models_User */
         $acl = ZfExtended_Acl::getInstance();
-        $admins = $user->loadAllByRole($acl->getRolesWith('backend', 'systemLogSummary'));
+        $admins = $user->loadAllByRole($acl->getRolesWith(Rights::ID, SystemResource::SYSTEM_LOG_SUMMARY));
         
         $mail = ZfExtended_Factory::get('ZfExtended_Mailer', ['utf8']);
         /* @var $mail ZfExtended_Mailer */
