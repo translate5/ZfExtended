@@ -185,8 +185,11 @@ class ZfExtended_Logger_Event {
      * overwrites the data defined in the associative array into the current event
      * The extra array is merged - same named keys in the extra array are overwritten
      * @param array $dataToMerge
+     * @return array returns keys of dataToMerge not belonging to $this (normally they should be used in extra then)
      */
-    public function mergeFromArray(array $dataToMerge) {
+    public function mergeFromArray(array $dataToMerge): array
+    {
+        $unknownFields = [];
         foreach($dataToMerge as $key => $value) {
             if($key == 'extra') {
                 $this->extra = array_merge($this->extra, $value);
@@ -195,7 +198,12 @@ class ZfExtended_Logger_Event {
             if(property_exists($this, $key)) {
                 $this->$key = $value;
             }
+            else {
+                $this->extra[$key] = $value;
+                $unknownFields[] = $key;
+            }
         }
+        return $unknownFields;
     }
 
     /**

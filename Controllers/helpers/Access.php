@@ -199,6 +199,20 @@ class ZfExtended_Controller_Helper_Access extends Zend_Controller_Action_Helper_
     }
 
     /**
+     * Return the redirectTo session data value. If the there is no session, empty value will be returned
+     * @return string
+     */
+    public function getRedirectTo(): string
+    {
+        if(Zend_Session::isDestroyed()) {
+            return '';
+        }
+        $s = new Zend_Session_Namespace();
+        return $s->redirectTo ?? '';
+    }
+
+
+    /**
      * Cleans the stored redirect to variable after successful page access (unless it is not the login page itself!)
      * @param string $resource
      */

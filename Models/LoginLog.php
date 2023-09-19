@@ -38,10 +38,11 @@ END LICENSE AND COPYRIGHT
  */
 class ZfExtended_Models_LoginLog extends ZfExtended_Models_Entity_Abstract
 {
-    
-    const LOGIN_SUCCESS = 'success';
-    const LOGIN_FAILED = 'failed';
-    
+
+    public const LOGIN_SUCCESS = 'success';
+    public const LOGIN_FAILED = 'failed';
+    public const LOGIN_OPENID = 'openid';
+
     protected $dbInstanceClass = 'ZfExtended_Models_Db_LoginLog';
 
     /**
