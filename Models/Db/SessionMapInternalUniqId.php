@@ -38,19 +38,15 @@ class ZfExtended_Models_Db_SessionMapInternalUniqId extends Zend_Db_Table_Abstra
     }
 
     /**
-     * Tries to reuse existing rows to update or create a row
+     * Tries to reuse existing rows to create/update session data
      * @param string $sessionId
      * @param string $sessionUniqeId
      * @param int $modified
-     * @param Zend_Db_Table_Row_Abstract|null $row
      * @return void
      */
-    public function createOrUpdateRow(string $sessionId, string $sessionUniqeId, int $modified, Zend_Db_Table_Row_Abstract $row = null)
+    public function createOrUpdateRow(string $sessionId, string $sessionUniqeId, int $modified)
     {
-        if ($row === null) {
-            // try to reuse an existing row to avoid duplicates
-            $row = $this->fetchRow(['session_id = ?' => $sessionId]);
-        }
+        $row = $this->fetchRow(['session_id = ?' => $sessionId]);
         // create new row & save
         if ($row === null) {
             $row = $this->createRow();

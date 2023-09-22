@@ -61,33 +61,30 @@ class ZfExtended_Models_Db_Session extends Zend_Db_Table_Abstract {
     }
 
     /**
-     * Updates or creates the session data
-     * @param string $sessionId
-     * @param string $sessionData
-     * @param int $modified
-     * @param int|null $userId
-     * @return void
-     */
-    public function updateSessionData(string $sessionId, string $sessionData, int $modified, ?int $userId)
-    {
-        $row = $this->fetchRow(['session_id = ?' => $sessionId]);
-        $authToken = ($row === null) ? null : $row->authToken;
-        $this->createOrUpdateRow($sessionId, $authToken, $modified, $sessionData, $userId, $row);
-    }
-
-    /**
-     * updates the authToken for the given Session ID in the DB and returns it
+     * updates or inserts an authToken for the given Session ID in the DB and returns it
      * @param string $sessionId
      * @param int|null $userId
-     * @param Zend_Db_Table_Row_Abstract|null $row : if given, an already fetched row
      * @return string
      * @throws Exception
      */
-    public function updateAuthToken(string $sessionId, int $userId = null, Zend_Db_Table_Row_Abstract $row = null)
+    public function updateAuthToken(string $sessionId, int $userId = null): string
     {
+        $name = Zend_Session::getOptions('name');
         $authToken = bin2hex(random_bytes(16));
-        $modified = ($row === null) ? null : ZfExtended_Utils::parseDbInt($row->modified);
-        $this->createOrUpdateRow($sessionId, $authToken, $modified, null, $userId, $row);
+        $lifetime = Zend_Session::getSaveHandler()->getLifeTime();
+        if(empty($userId)){
+            $this->getAdapter()->query(
+                'INSERT INTO `session` (`session_id`, `name`, `authToken`, `lifetime`)'
+                . ' VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE authToken = ?',
+                [$sessionId, $name, $authToken, $lifetime, $authToken]
+            );
+        } else {
+            $this->getAdapter()->query(
+                'INSERT INTO `session` (`session_id`, `name`, `authToken`, `lifetime`, `userId`)'
+                . ' VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE authToken = ?, userId = ?',
+                [$sessionId, $name, $authToken, $lifetime, $userId, $authToken, $userId]
+            );
+        }
         return $authToken;
     }
 
@@ -112,35 +109,29 @@ class ZfExtended_Models_Db_Session extends Zend_Db_Table_Abstract {
     /**
      * Tries to reuse existing rows to update or create a row
      * @param string $sessionId
-     * @param string|null $authToken
-     * @param int|null $modified
-     * @param string|null $sessionData
+     * @param string $sessionData
+     * @param int $modified
      * @param int|null $userId
-     * @param Zend_Db_Table_Row_Abstract|null $row
      * @return void
      */
-    public function createOrUpdateRow(string $sessionId, ?string $authToken, ?int $modified, ?string $sessionData = null, ?int $userId, Zend_Db_Table_Row_Abstract $row = null)
+    public function createOrUpdateRow(string $sessionId, string $sessionData, int $modified, ?int $userId)
     {
-        if($row === null){
-            // try to reuse an existing row to avoid duplicates
-            $row = $this->fetchRow(['session_id = ?' => $sessionId]);
-        }
+        $row = $this->fetchRow(['session_id = ?' => $sessionId]);
         // create new row & save
         if($row === null){
             $row = $this->createRow();
-            $this->setRowData($row, $sessionId, $authToken, $modified, $sessionData, $userId);
+            $this->setRowData($row, $sessionId, $modified, $sessionData, $userId);
             $row->save();
             return;
         }
         // reuse row & save only if existing row differs
         if (
             $sessionId !== $row->session_id
-            || $authToken !== $row->authToken
             || $sessionData !== $row->session_data
             || $userId !== ZfExtended_Utils::parseDbInt($row->userId)
             || ZfExtended_Resource_Session::doUpdateTimestamp(ZfExtended_Utils::parseDbInt($row->modified), $modified)
         ) {
-            $this->setRowData($row, $sessionId, $authToken, $modified, $sessionData, $userId);
+            $this->setRowData($row, $sessionId, $modified, $sessionData, $userId);
             $row->save();
         }
     }
@@ -149,17 +140,15 @@ class ZfExtended_Models_Db_Session extends Zend_Db_Table_Abstract {
      * Fills a session-row with the dynamic data
      * @param Zend_Db_Table_Row_Abstract $row
      * @param string $sessionId
-     * @param string|null $authToken
      * @param int|null $modified
      * @param string|null $sessionData
      * @param int|null $userId
      * @return void
      */
-    private function setRowData(Zend_Db_Table_Row_Abstract $row, string $sessionId, ?string $authToken, ?int $modified, ?string $sessionData, ?int $userId)
+    private function setRowData(Zend_Db_Table_Row_Abstract $row, string $sessionId, ?int $modified, ?string $sessionData, ?int $userId)
     {
         $row->session_id = $sessionId;
         $row->name = Zend_Session::getOptions('name');
-        $row->authToken = $authToken;
         $row->modified = $modified;
         $row->lifetime = Zend_Session::getSaveHandler()->getLifeTime();
         $row->session_data = $sessionData;
