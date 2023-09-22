@@ -59,7 +59,7 @@ class ZfExtended_Session_SaveHandler_DbTable extends Zend_Session_SaveHandler_Db
         $userId = empty($userSession?->data?->id) ? null : intval($userSession->data->id);
 
         $sessionDb = new ZfExtended_Models_Db_Session();
-        $sessionDb->updateSessionData($id, (string) $data, time(), $userId);
+        $sessionDb->createOrUpdateRow($id, (string) $data, time(), $userId);
 
         return true;
     }
