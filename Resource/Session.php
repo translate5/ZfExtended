@@ -71,7 +71,7 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
      * @param int|null $newTimestamp
      * @return bool
      */
-    public static function doUpdateTimestamp(?int $dbTimestamp, ?int $newTimestamp)
+    public static function doUpdateTimestamp(?int $dbTimestamp, ?int $newTimestamp): bool
     {
         if($dbTimestamp === $newTimestamp){
             return false;
@@ -148,7 +148,7 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
         header('Location: '.$url);
         exit;
     }
-    
+
     /**
      * returns the session_id to be used when a valid sessionToken was provided
      *
@@ -159,6 +159,7 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
      * @throws ZfExtended_Models_Entity_Exceptions_IntegrityConstraint
      * @throws ZfExtended_Models_Entity_Exceptions_IntegrityDuplicateKey
      * @throws ZfExtended_NotAuthenticatedException
+     * @throws Exception
      */
     private function handleSessionToken(): void
     {
@@ -196,7 +197,7 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
         $session = new Zend_Session_Namespace();
         $user = new Zend_Session_Namespace('user');
         $userId = empty($user->data->id) ? null : intval($user->data->id);
-        $sessionDb->updateAuthToken($row->session_id, $userId, $row);
+        $sessionDb->updateAuthToken($row->session_id, $userId);
         
         //since we have no user instance here, we create the success log by hand
         $loginLog = ZfExtended_Models_LoginLog::createLog("sessionToken");
@@ -220,7 +221,7 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
         $this->reload(); //making exit
     }
 
-    /***
+    /**
      * Handle authentication via app token
      * @return void
      * @throws Zend_Exception
@@ -228,9 +229,7 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
     private function handleAuthToken(): void
     {
         $auth = Auth::getInstance();
-        $tokenParam = $_POST[$auth::APPLICATION_TOKEN_HEADER]
-            ?? getallheaders()[$auth::APPLICATION_TOKEN_HEADER]
-            ?? false;
+        $tokenParam = $_POST[$auth::APPLICATION_TOKEN_HEADER] ?? $this->getFromHeader() ?? false;
 
         if (empty($tokenParam)) {
             return;
@@ -247,7 +246,8 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
         //since we are in an early stage of bootstrapping we must return the HTTP directly (no response available)
         header('HTTP/1.1 401 Unauthorized', true, 401);
         if (ZfExtended_Utils::requestAcceptsJson()) {
-            die('{"success": false, "httpStatus": 401, "errorMessage": "<b>Fatal: Authentication Token: The token is not valid</b>"}');
+            die('{"success": false, "httpStatus": 401, "errorMessage": '
+                .'"<b>Fatal: Authentication Token: The token is not valid</b>"}');
         } else {
             die('Authentication Token: The token is not valid!');
         }
@@ -257,6 +257,7 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
      * Stores the the internalSessionUniqId in a seperate table
      * TODO FIXME: this is a completely superflous DB-operation (which happens on every request!)
      * as the internalSessionUniqId could easily be saved in the session-table as well
+     * @param int|null $modified
      * @return void
      */
     private function setInternalSessionUniqId(int $modified = null): void
@@ -270,5 +271,24 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
             $table = new ZfExtended_Models_Db_SessionMapInternalUniqId();
             $table->createOrUpdateRow($sessionId, $session->internalSessionUniqId, $modified ?? time());
         }
+    }
+
+    /**
+     * returns the app token header in a normalized way
+     * @return string|null
+     */
+    private function getFromHeader(): ?string
+    {
+        //in CLI usage the method does not exist:
+        if (! function_exists('apache_request_headers')) {
+            return null;
+        }
+        //normalize all to lowercase, according to RFC 2616 the names are case insensitive!
+        $headers = array_change_key_case((array) apache_request_headers(), CASE_LOWER);
+        $key = strtolower(Auth::APPLICATION_TOKEN_HEADER);
+        if (array_key_exists($key, $headers)) {
+            return $headers[$key];
+        }
+        return null;
     }
 }

@@ -124,6 +124,13 @@ class ZfExtended_Controller_Helper_Access extends Zend_Controller_Action_Helper_
             }
             else {
                 $e = new ZfExtended_NotAuthenticatedException();
+                $e->setErrors([
+                    'currSess' => substr(Zend_Session::getId(), 0, 4),
+                    'authstatus' => ZfExtended_Authentication::getInstance()->getAuthStatus(),
+                    'resource' => $resource,
+                    'action' => $action,
+                    'roles' => $this->_roles,
+                ]);
             }
             $e->setMessage("");
             throw $e;
