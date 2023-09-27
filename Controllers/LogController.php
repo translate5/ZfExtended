@@ -41,7 +41,7 @@ class ZfExtended_LogController extends ZfExtended_RestController {
         //sanitize data
         foreach ($this->view->rows as &$log) {
             foreach($log as $idx => $value) {
-                $log[$idx] = htmlspecialchars($value, ENT_NOQUOTES);
+                $log[$idx] = ($value === null) ? '' : htmlspecialchars($value, ENT_NOQUOTES);
             }
         }
     }
