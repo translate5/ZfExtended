@@ -414,9 +414,9 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract {
         $lngs=$this->loadAll();
         foreach($lngs as $l){
             if($lowercase){
-                $rfcToIsoLanguage[strtolower($l[$key])]=strtolower($l[$value]);
+                $rfcToIsoLanguage[strtolower($l[$key])] = empty($l[$value]) ? $l[$value] : strtolower($l[$value]);
             }else{
-                $rfcToIsoLanguage[$l[$key]]=$l[$value];
+                $rfcToIsoLanguage[$l[$key]] = $l[$value];
             }
         }
         return $rfcToIsoLanguage;
