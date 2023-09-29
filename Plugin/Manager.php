@@ -22,10 +22,13 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
+use MittagQI\ZfExtended\Acl\ResourceManager;
+
 /**
  * provides basic functionality for plugins
  */
 class ZfExtended_Plugin_Manager {
+    const EVENT_AFTER_PLUGIN_BOOTSTRAP = 'afterPluginBootstrap';
 
     /**
      * returns the Plugin Name distilled from class name
@@ -156,8 +159,14 @@ class ZfExtended_Plugin_Manager {
         
         //due to ACL restrictions we have first load all plugins, then we can call getFrontendControllers
         foreach($this->pluginInstances as $plugin) {
-            $this->allFrontendControllers = array_merge($this->allFrontendControllers, $plugin->getFrontendControllers());
+            $this->allFrontendControllers = array_merge(
+                $this->allFrontendControllers,
+                $plugin->getFrontendControllers()
+            );
         }
+
+        $events = ZfExtended_Factory::get(ZfExtended_EventManager::class, [$this::class]);
+        $events->trigger(self::EVENT_AFTER_PLUGIN_BOOTSTRAP, $this, ['pluginManager' => $this]);
     }
     
     /**

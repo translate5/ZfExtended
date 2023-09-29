@@ -77,7 +77,7 @@ class ZfExtended_Models_Passwdreset extends ZfExtended_Models_Entity_Abstract {
     * @param string $login
     * @return boolean
     */
-    public function reset(string $login) {
+    public function reset(string $login, string $origin) {
         $session = new Zend_Session_Namespace();
         $user = ZfExtended_Factory::get('ZfExtended_Models_User');
         /* @var $user ZfExtended_Models_User */
@@ -88,6 +88,12 @@ class ZfExtended_Models_Passwdreset extends ZfExtended_Models_Entity_Abstract {
         }
         $session->resetHash = md5(ZfExtended_Utils::uuid());
 
+        /* @var ZfExtended_Logger $log */
+        $log = Zend_Registry::get('logger');
+        $log->info('E1556', 'Password reset hash requested for user {login}', [
+            'login' => $login,
+            'origin' => $origin,
+        ]);
 
         $this->setUserId($user->getId());
         $this->setResetHash($session->resetHash);

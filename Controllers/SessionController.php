@@ -17,11 +17,13 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
  @copyright  Marc Mittag, MittagQI - Quality Informatics
  @author     MittagQI - Quality Informatics
  @license    GNU LESSER GENERAL PUBLIC LICENSE version 3
-			 https://www.gnu.org/licenses/lgpl-3.0.txt
+             https://www.gnu.org/licenses/lgpl-3.0.txt
 
 END LICENSE AND COPYRIGHT
 */
 
+use MittagQI\Translate5\Acl\Rights;
+use MittagQI\ZfExtended\Acl\SystemResource;
 use ZfExtended_Authentication as Auth;
 
 /**
@@ -138,11 +140,13 @@ class ZfExtended_SessionController extends ZfExtended_RestController {
         $invalidLoginCounter = ZfExtended_Factory::get('ZfExtended_Models_Invalidlogin',array($login));
         /* @var $invalidLoginCounter ZfExtended_Models_Invalidlogin */
 
+        $oldSessId = substr(Zend_Session::getId(), 0, 10);
         if ($authentication->authenticatePasswordAndToken($login, $passwd)) {
             $userModel = $authentication->getUser();
 
             // check for existing valid session for the current user
             $sessionId = ZfExtended_Session::updateSession(true, true, intval($userModel->getId()));
+            $newSessId = substr($sessionId, 0, 10);
 
             $session = new Zend_Session_Namespace();
             $this->setLocale($session, $userModel);
@@ -156,10 +160,10 @@ class ZfExtended_SessionController extends ZfExtended_RestController {
             $userSession->loginByApiAuth = true;
             $this->log('User authentication by API successful for '.$login);
             $invalidLoginCounter->resetCounter();
-            ZfExtended_Models_LoginLog::addSuccess($authentication, 'sessionapi');
+            ZfExtended_Models_LoginLog::addSuccess($authentication, 'sessionapi'.'#'.$oldSessId.'#'.$newSessId);
             return true;
         }
-        ZfExtended_Models_LoginLog::addFailed($login, 'sessionapi');
+        ZfExtended_Models_LoginLog::addFailed($login, 'sessionapi'.'#'.$oldSessId);
         $invalidLoginCounter->increment();
         //throwing a 403 on the authentication request means:
         //  hey guy you could not be authenticated with the given credentials!
@@ -188,9 +192,10 @@ class ZfExtended_SessionController extends ZfExtended_RestController {
         $sessionTable = new ZfExtended_Models_Db_Session();
         $SessionMapInternalUniqIdTable = new ZfExtended_Models_Db_SessionMapInternalUniqId();
 
-        //longer as 30 (32) means that it is the sessionMapInternalUniqId, so we have to fetch the real session_id before
+        //longer as 30 (32) means that it is the sessionMapInternalUniqId,
+        // so we have to fetch the real session_id before
         $this->acl = ZfExtended_Acl::getInstance();
-        if($this->isAllowed('backend', 'sessionDeleteByInternalId') && strlen($sessionId) > 30) {
+        if($this->isAllowed(Rights::ID, SystemResource::SESSION_DELETE_BY_INTERNAL_ID) && strlen($sessionId) > 30) {
             $result = $SessionMapInternalUniqIdTable->fetchRow([
                 'internalSessionUniqId = ?' => $sessionId
             ]);
