@@ -22,7 +22,7 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
-use MittagQI\ZfExtended\Acl\Roles;
+use MittagQI\Translate5\Acl\Rights;
 use MittagQI\ZfExtended\Acl\SetAclRoleResource;
 use MittagQI\ZfExtended\Acl\SystemResource;
 
@@ -504,7 +504,7 @@ class ZfExtended_UserController extends ZfExtended_RestController {
     protected function checkUserAccessByParent(): void
     {
         //Am I allowed to see any user:
-        if($this->isAllowed(SystemResource::ID, SystemResource::SEE_ALL_USERS)) {
+        if($this->isAllowed(Rights::ID, SystemResource::SEE_ALL_USERS)) {
             return;
         }
 
