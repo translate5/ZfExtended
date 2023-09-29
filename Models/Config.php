@@ -64,20 +64,23 @@ END LICENSE AND COPYRIGHT
 class ZfExtended_Models_Config extends ZfExtended_Models_Entity_Abstract {
     protected $dbInstanceClass = 'ZfExtended_Models_Db_Config';
     //protected $validatorInstanceClass = 'ZfExtended_Models_Validator_User';
-  
+
     /**
      * Sets the given configuration value for the configuration identified via the given name
      * loads internally the configuration instance so that the instance is a fully loaded instance then
      * @param string $name the configuration name
      * @param string $value the value to be set
+     * @param string|null $comment
+     * @param bool $forceSystemLevel
+     * @return ZfExtended_Models_Config
      */
-    public function update(string $name, string $value, string $comment = null, bool $forceSystemLevel = null)
+    public function update(string $name, string $value, string $comment = null, bool $forceSystemLevel = false): static
     {
         $update = ['value' => $value];
         if (! is_null($comment)) {
             $update['comment'] = $comment;
         }
-        if (! is_null($forceSystemLevel)) {
+        if ($forceSystemLevel) {
             $update['level'] = 1;
         }
         $this->db->update($update, ['name = ?' => $name]);

@@ -218,7 +218,7 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
         if($invalidLogin->hasMaximumInvalidations()) {
             $passwdreset = ZfExtended_Factory::get('ZfExtended_Models_Passwdreset');
             /* @var $passwdreset ZfExtended_Models_Passwdreset */
-            $passwdreset->reset($this->_form->getValue('login'));
+            $passwdreset->reset($this->_form->getValue('login'), __FUNCTION__);
             $this->view->errors = true;
             $this->_form->addError(sprintf($this->_translate->_('Ungültige Logindaten - Zugang gesperrt!<br/>Sie haben Ihr Passwort in den letzten 24 Stunden mehrmals falsch eingegeben, ihr Login wurde gesperrt.<br />Per E-Mail wurde Ihnen ein Link zugesandt, mit welchem Sie Ihr Passwort neu setzen können. Dieser Link ist 30 min gültig und funktioniert nur, so lange Sie Ihren Browser nicht zwischenzeitlich geschlossen haben. Sie können jederzeit einen neuen Link %shier%s anfordern.'),
                     '<a href="'. APPLICATION_RUNDIR .'/login/passwdreset">','</a>'));
@@ -278,7 +278,7 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
         if($this->getRequest()->getParam('login') && $this->_form->isValid($this->_request->getParams())){
             $passwdreset = ZfExtended_Factory::get('ZfExtended_Models_Passwdreset');
             /* @var $passwdreset ZfExtended_Models_Passwdreset */
-            $passwdreset->reset($this->_form->getValue('login'));
+            $passwdreset->reset($this->_form->getValue('login'), __FUNCTION__);
             $this->view->message = $this->_translate->_('Per E-Mail wurde Ihnen ein Link zugesandt, mit welchem Sie Ihr Passwort neu setzen können. Dieser Link ist 30 min gültig und funktioniert nur, so lange Sie Ihren Browser nicht zwischenzeitlich geschlossen haben. Sie können jederzeit einen neuen Link über dieses Formular anfordern.');
         }
         $this->view->form = $this->_form;
