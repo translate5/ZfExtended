@@ -22,7 +22,7 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
-use MittagQI\ZfExtended\Acl\Roles;
+use MittagQI\Translate5\Acl\Rights;
 use MittagQI\ZfExtended\Acl\SetAclRoleResource;
 use MittagQI\ZfExtended\Acl\SystemResource;
 
@@ -501,19 +501,22 @@ class ZfExtended_UserController extends ZfExtended_RestController {
      * which needs to be modified
      * @throws ZfExtended_NoAccessException
      */
-    protected function checkUserAccessByParent(){
-        //if current user has right seeAllUsers everything is OK
-        if($this->isAllowed("backend", "seeAllUsers")) {
+    protected function checkUserAccessByParent(): void
+    {
+        //Am I allowed to see any user:
+        if($this->isAllowed(Rights::ID, SystemResource::SEE_ALL_USERS)) {
             return;
         }
-        $userSession = new Zend_Session_Namespace('user');
+
+        $authenticatedUser = ZfExtended_Authentication::getInstance()->getUser();
+
 
         //if the edited user is the current user, also everything is OK
-        if($userSession->data->userGuid == $this->entity->getUserGuid()) {
+        if($authenticatedUser->getUserGuid() == $this->entity->getUserGuid()) {
             return;
         }
 
-        if($this->entity->hasParent($userSession->data->id)){
+        if($this->entity->hasParent($authenticatedUser->getId())){
             return;
         }
         throw new ZfExtended_NoAccessException();
