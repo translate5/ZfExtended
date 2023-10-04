@@ -204,6 +204,11 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract {
      * @param integer $parentIdFilter or false if no filter to be used
      */
     protected function addByRoleSql(&$s, array $roles, $parentIdFilter) {
+        if (empty($roles)) {
+            //if there are no roles given, we may not find a user for them!
+            $s->where('false');
+            return;
+        }
         $adapter = $this->db->getAdapter();
         $first = true;
         foreach ($roles as $role) {
