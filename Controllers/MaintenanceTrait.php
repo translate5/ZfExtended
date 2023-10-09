@@ -41,8 +41,14 @@ trait ZfExtended_Controllers_MaintenanceTrait{
         if(!isset($config->runtimeOptions->maintenance)){
             return;
         }
+        //FIXME proxy config must be automated by a an env setting the proxy hostname, must be configurable for
+        // setups with additional proxies
+        $ip = new ZfExtended_RemoteAddress();
+        $ip->setProxyHeader('HTTP_X_REAL_IP');
+        $ip->setTrustedProxies(['proxy']);
+        $ip->setUseProxy();
         if(isset($config->runtimeOptions->maintenance->allowedIPs)){
-            $allowedByIP = in_array($_SERVER['REMOTE_ADDR'], $config->runtimeOptions->maintenance->allowedIPs->toArray() ?? []);
+            $allowedByIP = in_array($ip->getIpAddress(), $config->runtimeOptions->maintenance->allowedIPs->toArray() ?? []);
         }
         else {
             $allowedByIP = false;
