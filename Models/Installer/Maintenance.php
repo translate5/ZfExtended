@@ -55,8 +55,12 @@ class ZfExtended_Models_Installer_Maintenance
         $config = Zend_Registry::get('config');
         $rop = $config->runtimeOptions;
         if (isset($config->runtimeOptions->maintenance->allowedIPs)) {
+            $ip = new ZfExtended_RemoteAddress();
+            $ip->setProxyHeader('HTTP_X_REAL_IP');
+            $ip->setTrustedProxies(['proxy']);
+            $ip->setUseProxy();
             $allowedIPs = $config->runtimeOptions->maintenance->allowedIPs->toArray() ?? [];
-            $allowedByIP = in_array($_SERVER['REMOTE_ADDR'] ?? null, $allowedIPs);
+            $allowedByIP = in_array($ip->getIpAddress() ?? null, $allowedIPs);
         } else {
             $allowedByIP = false;
         }

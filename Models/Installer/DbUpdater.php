@@ -533,7 +533,7 @@ class ZfExtended_Models_Installer_DbUpdater {
     public function createDatabase(\ZfExtended_Models_Installer_DbConfig $dbConfig, bool $dropIfExists = false): void
     {
         // we need to use PDO, Zend works only with databases
-        $pdo = new \PDO($dbConfig->toPdoString(), $dbConfig->username, $dbConfig->password);
+        $pdo = new \PDO($dbConfig->toPdoString(omitField: ['dbname']), $dbConfig->username, $dbConfig->password);
 
         if ($dropIfExists) {
             $pdo->query('DROP DATABASE IF EXISTS ' . $dbConfig->dbname . ';');

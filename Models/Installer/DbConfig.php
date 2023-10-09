@@ -59,11 +59,17 @@ class ZfExtended_Models_Installer_DbConfig {
      * Prepare and return string to be used as $dsn argument for new PDO() call
      *
      * @see https://www.php.net/manual/en/pdo.construct.php
+     * @param array $omitField field names listed in this array are not added to the PDO string
+     * @return string
      */
-    public function toPdoString() : string {
+    public function toPdoString(array $omitField = []) : string {
         $pdo = 'mysql:host=' . $this->host;
-        if (isset($this->port)) $pdo .= ';port=' . $this->port;
-        if (isset($this->dbname)) $pdo .= ';dbname=' . $this->dbname;
+        if (isset($this->port) && !in_array('port', $omitField)) {
+            $pdo .= ';port=' . $this->port;
+        }
+        if (isset($this->dbname) && !in_array('dbname', $omitField)) {
+            $pdo .= ';dbname=' . $this->dbname;
+        }
         return $pdo;
     }
 }
