@@ -173,18 +173,23 @@ class ZfExtended_Utils {
     }
 
     /**
-     * Deletes recursivly a directory. Optionally a extension whitelist can be passed that will only delete files with the given extension
-     * If a whitelist is given, no directories will be deleted
-     * If a blacklist is given, only empty directories will be deleted
-     * Returns, if the passed directory was deleted
+     * Deletes recursively a directory. Optionally a extension whitelist can be passed that will only delete files with
+     * the given extension. If a whitelist is given, no directories will be deleted. If a blacklist is given,
+     * only empty directories will be deleted. Returns, if the passed directory was deleted.
      * HINT: Symlinks will not be deleted!
      * @param string $directory
-     * @param array|null $extensionWhitelist: if set, only files of the given extensions are deleted. This also prevents deleting any directories including the passed one
-     * @param bool $whitelistIsBlacklist: if set, the extension whitelist will be treated as blacklist leaving out the defined extensions. This prevents the deletion of only those dirs, that are not empty therefore
+     * @param array|null $extensionWhitelist if set, only files of the given extensions are deleted.
+     * This also prevents deleting any directories including the passed one
+     * @param bool $whitelistIsBlacklist if set, the extension whitelist will be treated as blacklist leaving out
+     * the defined extensions. This prevents the deletion of only those dirs, that are not empty therefore
      * @param bool $doDeletePassedDirectory: if not set, the passed directory will not be removed, just it's contents
      * @return bool
      */
-    public static function recursiveDelete(string $directory, ?array $extensionWhitelist = null, bool $whitelistIsBlacklist = false, bool $doDeletePassedDirectory = true): bool {
+    public static function recursiveDelete(
+        string $directory,
+        ?array $extensionWhitelist = null,
+        bool $whitelistIsBlacklist = false,
+        bool $doDeletePassedDirectory = true): bool {
         $iterator = new DirectoryIterator($directory);
         $dirIsEmpty = true; // we need to know for deleting $directory
         foreach ($iterator as $fileinfo) { /* @var DirectoryIterator $fileinfo */
@@ -192,14 +197,27 @@ class ZfExtended_Utils {
                 continue;
             }
             if ($fileinfo->isDir()) {
-                if(!self::recursiveDelete($directory.DIRECTORY_SEPARATOR.$fileinfo->getFilename())){
+                if(!self::recursiveDelete(
+                    $directory.DIRECTORY_SEPARATOR.$fileinfo->getFilename(),
+                    $extensionWhitelist,
+                    $whitelistIsBlacklist,
+                    $doDeletePassedDirectory
+                )){
                     $dirIsEmpty = false;
                 }
-            } else if($fileinfo->isFile() && static::recursiveDoDeleteExtension($fileinfo->getExtension(), $extensionWhitelist, $whitelistIsBlacklist)) {
+            } elseif(
+                $fileinfo->isFile() &&
+                static::recursiveDoDeleteExtension(
+                    $fileinfo->getExtension(),
+                    $extensionWhitelist,
+                    $whitelistIsBlacklist
+                )){
                 try {
                     unlink($directory.DIRECTORY_SEPARATOR.$fileinfo->getFilename());
-                } catch (Exception){
-                    error_log('ZfExtended_Utils::recursiveDelete: Could not delete file '.$directory.DIRECTORY_SEPARATOR.$fileinfo->getFilename());
+                } catch (Exception $e){
+                    error_log('ZfExtended_Utils::recursiveDelete: Could not delete file ' .
+                        $directory.DIRECTORY_SEPARATOR.$fileinfo->getFilename() . ': ' . $e->getMessage()
+                    );
                     $dirIsEmpty = false;
                 }
             } else {
@@ -212,8 +230,10 @@ class ZfExtended_Utils {
                 if(rmdir($directory)){
                     return true;
                 }
-            } catch (Exception){
-                error_log('ZfExtended_Utils::recursiveDelete: Could not delete directory '.$directory);
+            } catch (Exception $e){
+                error_log('ZfExtended_Utils::recursiveDelete: Could not delete file ' .
+                    $directory.DIRECTORY_SEPARATOR.$fileinfo->getFilename() . ': ' . $e->getMessage()
+                );
             }
         }
         return false;
