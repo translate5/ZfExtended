@@ -33,6 +33,7 @@ END LICENSE AND COPYRIGHT
  *
  * - liest Form aus ini ein entsprechend der Konvention "controllerAction" des aufrufenden Controllers und der aufrufenden Action
  * - Kinder können auch zur Datenvalidierung im Modell herangezogen werden
+ * @deprecated  should be removed!
  */
 class  ZfExtended_Zendoverwrites_Form extends Zend_Form
 {

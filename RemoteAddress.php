@@ -87,7 +87,7 @@ class ZfExtended_RemoteAddress {
      */
     public function setTrustedProxies(array $trustedProxies)
     {
-        $this->trustedProxies = $trustedProxies;
+        $this->trustedProxies = array_map('gethostbyname', $trustedProxies);
         return $this;
     }
     
