@@ -26,27 +26,44 @@ declare(strict_types=1);
 
 namespace MittagQI\ZfExtended\Worker\Trigger;
 
+use ZfExtended_Debug;
+
 class Process implements TriggerInterface
 {
     /**
      * Trigger worker with id = $id.
      * To run mutex-save, the current hash is needed
      *
-     * @param int $id
+     * @param string $id
      * @param string $hash
+     * @param string $worker
+     * @param string|null $taskGuid
      * @return bool
      */
-    public function triggerWorker($id, string $hash): bool
+    public function triggerWorker(string $id, string $hash, string $worker, ?string $taskGuid): bool
+    {
+        $this->exec('worker:run ' . $id . ' -n --porcelain --debug="(' . $worker . ':' . $taskGuid . ')"');
+        return true;
+    }
+
+    private function exec(string $workerCmd): void
     {
         chdir(APPLICATION_ROOT);
-        exec('nohup ./translate5.sh worker:run ' . $id . ' -n --porcelain >/dev/null 2>&1 &');
-        return true; //FIXME check result code of nuhup
+        $cmd = '';
+        $debug =
+            isset($_COOKIE['XDEBUG_SESSION'])
+            || isset($_SERVER['XDEBUG_CONFIG'])
+            || ZfExtended_Debug::hasLevel('core', 'worker');
+        if ($debug) {
+            $cmd .= 'XDEBUG_MODE=debug XDEBUG_SESSION=1 PHP_IDE_CONFIG="serverName=default_upstream" ';
+        }
+        $cmd .= 'nohup ./translate5.sh ' . $workerCmd . ' >/dev/null 2>&1 &';
+        exec($cmd);
     }
 
     public function triggerQueue(): bool
     {
-        chdir(APPLICATION_ROOT);
-        exec('nohup ./translate5.sh worker:queue -n --porcelain >/dev/null 2>&1 &');
-        return true; //FIXME check result code of nuhup
+        $this->exec('worker:queue -n --porcelain');
+        return true;
     }
 }
