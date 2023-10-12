@@ -449,7 +449,7 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
         $db = $this->db;
         $sql = $db->select()
         //->columns(array('resource', 'slot')) // this does not work :-((((
-        ->from($db->info($db::NAME), array('resource', 'slot', 'blockingType'))
+        ->from($db->info($db::NAME), array('resource', 'slot', 'blockingType', 'worker', 'taskGuid'))
         ->where('state = ?', self::STATE_RUNNING)
         ->order('resource ASC')->order('slot ASC');
         
