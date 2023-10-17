@@ -620,6 +620,25 @@ class ZfExtended_Utils {
     }
 
     /**
+     * Adds a Condition to a Zend select, that ditinguishes between "IN" and "=" depending on the count
+     * The column argument is expected to be fully qualified if neccessary like "table.column"
+     * @param Zend_Db_Table_Select $select
+     * @param array $values
+     * @param string $column
+     * @return void
+     */
+    public static function addArrayCondition(Zend_Db_Table_Select $select, array $values, string $column): void
+    {
+        if (count($values) > 1) {
+            $select->where($column . ' IN (?)', $values);
+        } else if (count($values) === 1) {
+            $select->where($column . ' = ?', $values[0]);
+        } else {
+            $select->where('1 = 0');
+        }
+    }
+
+    /**
      * Moved from ZfExtended_Controllers_Plugins_LocaleSetup
      *
      * gets locale from browser
