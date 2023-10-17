@@ -84,7 +84,7 @@ class ZfExtended_ApiClient extends Zend_Http_Client {
         // complement T5 base url
         if(is_string($uri)){
             $uri = $this->setT5SchemeAndHost($uri);
-        } else if($uri instanceof Zend_Uri_Http) {
+        } elseif($uri instanceof Zend_Uri_Http) {
             $uri = $this->setT5SchemeAndHost($uri->__toString());
         }
         return parent::setUri($uri);
