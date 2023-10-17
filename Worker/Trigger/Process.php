@@ -17,7 +17,7 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
  @copyright  Marc Mittag, MittagQI - Quality Informatics
  @author     MittagQI - Quality Informatics
  @license    GNU LESSER GENERAL PUBLIC LICENSE version 3
-			 https://www.gnu.org/licenses/lgpl-3.0.txt
+             https://www.gnu.org/licenses/lgpl-3.0.txt
 
 END LICENSE AND COPYRIGHT
 */
@@ -26,6 +26,8 @@ declare(strict_types=1);
 
 namespace MittagQI\ZfExtended\Worker\Trigger;
 
+use Zend_Exception;
+use Zend_Registry;
 use ZfExtended_Debug;
 
 class Process implements TriggerInterface
@@ -39,10 +41,16 @@ class Process implements TriggerInterface
      * @param string $worker
      * @param string|null $taskGuid
      * @return bool
+     * @throws Zend_Exception
      */
     public function triggerWorker(string $id, string $hash, string $worker, ?string $taskGuid): bool
     {
-        $this->exec('worker:run ' . $id . ' -n --porcelain --debug="(' . $worker . ':' . $taskGuid . ')"');
+        $workerId = [$worker, $taskGuid];
+        $dbName = Zend_Registry::get('config')->resources->db->params->dbname;
+        if ($dbName != 'translate5') { //we ignore default tables in debugging
+            array_unshift($workerId, $dbName);
+        }
+        $this->exec('worker:run ' . $id . ' -n --porcelain --debug="' . join(':', $workerId) . '"');
         return true;
     }
 
