@@ -34,10 +34,6 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
     /**
      * @var Zend_Session_Namespace
      */
-    protected  $_user;
-    /**
-     * @var Zend_Session_Namespace
-     */
     protected  $_session;
     /**
      * @var ZfExtended_Zendoverwrites_Translate
@@ -52,7 +48,6 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
         parent::init();
         $this->_translate = ZfExtended_Zendoverwrites_Translate::getInstance();
         $this->_session = new Zend_Session_Namespace();
-        $this->_user = new Zend_Session_Namespace('user');
     }
 
     /**
@@ -85,7 +80,7 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
             return;
         }
         //redirect the user if the session contains already a user
-        if($this->isAuthenticated()) {
+        if(ZfExtended_Authentication::getInstance()->isAuthenticated()) {
             //set login status to 'authenticated'
             $this->view->loginStatus=ZfExtended_Authentication::LOGIN_STATUS_AUTHENTICATED;
             $this->initDataAndRedirect();
@@ -104,14 +99,6 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
      */
     public function statusAction() {
         throw new BadMethodCallException('"API login/status" is deprecated use "API session/SESSIONID" instead.');
-    }
-    
-    /**
-     * returns true if a user is already registered in this session
-     * @return boolean
-     */
-    protected function isAuthenticated() {
-        return !empty($this->_user->data->userGuid);
     }
     
     /**
@@ -361,13 +348,16 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
         $this->view->form = $this->_form;
         $this->render('passwdreset');
     }
-    
+
     /**
      * updates the session locale by the locale stored in the DB for this user
+     * @throws Zend_Locale_Exception
      */
-    protected function localeSetup() {
-        $locale = $this->_user?->data?->locale ?? null;
-        if(!is_null($locale) && Zend_Locale::isLocale($locale)){
+    protected function localeSetup(): void
+    {
+        $user = ZfExtended_Authentication::getInstance()->getUser();
+        $locale = $user?->getLocale();
+        if($locale !== null && Zend_Locale::isLocale($locale)){
             $this->_setLocale($locale);
         }
         else{

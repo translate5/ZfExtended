@@ -82,8 +82,7 @@ class ZfExtended_UserController extends ZfExtended_RestController {
         if($this->isAllowed(SystemResource::ID, SystemResource::SEE_ALL_USERS)){
             $parentId = false;
         } else {
-            $userSession = new Zend_Session_Namespace('user');
-            $parentId = $userSession->data->id;
+            $parentId = ZfExtended_Authentication::getInstance()->getUserId();
         }
         $pmRoles = explode(',', $this->getParam('pmRoles', ''));
         $pmRoles[] = 'pm';
@@ -196,8 +195,7 @@ class ZfExtended_UserController extends ZfExtended_RestController {
      * @throws ZfExtended_BadMethodCallException
      */
     public function authenticatedAction() {
-        $userSession = new Zend_Session_Namespace('user');
-        $id = $userSession->data->id;
+        $id = ZfExtended_Authentication::getInstance()->getUserId();
         $this->setParam('id', $id);
         if($this->_request->isPut()){
             $this->entity->load($id);
@@ -405,8 +403,7 @@ class ZfExtended_UserController extends ZfExtended_RestController {
             $userData = $user->getDataObject();
         }
         elseif($this->_request->isPost()) {
-            $userSession = new Zend_Session_Namespace('user');
-            $userData = $userSession->data;
+            $userData = ZfExtended_Authentication::getInstance()->getUserData();
         }
 
         //FIXME currently its not possible for seeAllUsers users to remove the parentIds flag by set it to null/""
