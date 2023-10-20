@@ -77,21 +77,73 @@ class ZfExtended_Logger {
      * @var integer
      */
     protected $enableTraceFor = 51; // 1 + 2 + 16 + 32
-    
+
     /**
      * Add ecodes where the duplication should be checked by formatted message ({variables} replaced with content)
      * @param string ...$ecode
      */
-    static public function addDuplicatesByMessage(string ... $ecode) {
+    public static function addDuplicatesByMessage(string ...$ecode)
+    {
         ZfExtended_Logger_DuplicateHandling::addDuplicates($ecode, ZfExtended_Logger_DuplicateHandling::DUPLICATION_BY_MESSAGE);
     }
-    
+
     /**
      * Add ecodes where the duplication should be checked by formatted message ({variables} replaced with content)
      * @param string ...$ecode
      */
-    static public function addDuplicatesByEcode(string ... $ecode) {
+    public static function addDuplicatesByEcode(string ...$ecode)
+    {
         ZfExtended_Logger_DuplicateHandling::addDuplicates($ecode, ZfExtended_Logger_DuplicateHandling::DUPLICATION_BY_ECODE);
+    }
+
+    /**
+     * Renders the Exception#s message
+     * @param Throwable $exception
+     * @return string
+     */
+    public static function renderException(Throwable $exception): string
+    {
+        if(is_a($exception, ZfExtended_ErrorCodeException::class)){
+            return static::renderMessageExtra($exception->getMessage(), $exception->getErrors());
+        }
+        return $exception->getMessage();
+    }
+
+    /**
+     * Renders the extra-data into the message
+     * @param string|null $message
+     * @param array|null $extra
+     * @return string
+     */
+    protected static function renderMessageExtra(string $message, array $extra = null)
+    {
+        if ($message === '' || empty($extra)) {
+            return $message;
+        }
+        $keys = array_keys($extra);
+        $data = array_values($extra);
+        $numericKeys = array_keys($data);
+        $toPlaceholder = function ($item) {
+            return '{' . $item . '}';
+        };
+        $keys = array_map($toPlaceholder, $keys);
+        $numericKeys = array_map($toPlaceholder, $numericKeys);
+
+        //flatten data to strings
+        $data = array_map(function ($item) {
+            if (is_object($item) && $item instanceof ZfExtended_Models_Entity_Abstract) {
+                $item = $item->getDataObject();
+            }
+            if (is_array($item) || is_object($item) && !method_exists($item, '__toString')) {
+                return print_r($item, 1);
+            }
+            return (string)$item;
+        }, $data);
+
+        //replace numeric placeholders
+        $message = str_replace($numericKeys, $data, $message);
+        //replace assoc key placeholders
+        return (string) str_replace($keys, $data, $message);
     }
     
     /**
@@ -450,33 +502,7 @@ class ZfExtended_Logger {
      * @return string
      */
     public function formatMessage($message, array $extra = null){
-        if(empty($extra) || !$message) {
-            return $message ?: '';
-        }
-        $keys = array_keys($extra);
-        $data = array_values($extra);
-        $numericKeys = array_keys($data);
-        $toPlaceholder = function($item) {
-            return '{'.$item.'}';
-        };
-        $keys = array_map($toPlaceholder, $keys);
-        $numericKeys = array_map($toPlaceholder, $numericKeys);
-        
-        //flatten data to strings
-        $data = array_map(function($item) {
-            if(is_object($item) && $item instanceof ZfExtended_Models_Entity_Abstract) {
-                $item = $item->getDataObject();
-            }
-            if(is_array($item) || is_object($item) && !method_exists($item, '__toString')) {
-                return print_r($item, 1);
-            }
-            return (string) $item;
-        }, $data);
-        
-        //replace numeric placeholders
-        $message = str_replace($numericKeys, $data, $message);
-        //replace assoc key placeholders
-        return str_replace($keys, $data, $message);
+        return static::renderMessageExtra((string) $message, $extra);
     }
     
     /**
