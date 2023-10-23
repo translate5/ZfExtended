@@ -110,9 +110,9 @@ class  ZfExtended_Log extends ZfExtended_TemplateBasedMail {
      * @return string
      */
     protected function addUserInfo($msg) {
-        $sessionUser = new Zend_Session_Namespace('user');
-        if(!empty($sessionUser->data->login)) {
-            $msg .= "\n".' current user: '.$sessionUser->data->login;
+        $auth = ZfExtended_Authentication::getInstance();
+        if(!empty($auth->isAuthenticated())) {
+            $msg .= "\n".' current user: '.$auth->getLogin();
         }
         return $msg;
     }

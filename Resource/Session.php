@@ -17,7 +17,7 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
  @copyright  Marc Mittag, MittagQI - Quality Informatics
  @author     MittagQI - Quality Informatics
  @license    GNU LESSER GENERAL PUBLIC LICENSE version 3
-			 https://www.gnu.org/licenses/lgpl-3.0.txt
+             https://www.gnu.org/licenses/lgpl-3.0.txt
 
 END LICENSE AND COPYRIGHT
 */
@@ -194,22 +194,21 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
         Zend_Session::setId($row->session_id);
         Zend_Session::start();
 
+        $auth = ZfExtended_Authentication::getInstance();
         $session = new Zend_Session_Namespace();
-        $user = new Zend_Session_Namespace('user');
-        $userId = empty($user->data->id) ? null : intval($user->data->id);
-        $sessionDb->updateAuthToken($row->session_id, $userId);
+        $sessionDb->updateAuthToken($row->session_id, $auth->getUserId() ?: null);
         
         //since we have no user instance here, we create the success log by hand
         $loginLog = ZfExtended_Models_LoginLog::createLog("sessionToken");
-        $loginLog->setLogin($user->data->login);
-        $loginLog->setUserGuid($user->data->userGuid);
+        $loginLog->setLogin($auth->getLogin());
+        $loginLog->setUserGuid($auth->getUserGuid());
         $loginLog->setStatus($loginLog::LOGIN_SUCCESS);
         $loginLog->save();
         
         $sysLog->debug('E1332', 'Authentication: Spawning session for sessionToken {token} and user {login}', [
             'token' => $_REQUEST['sessionToken'],
-            'login' => $user->data->login,
-            'userGuid' => $user->data->userGuid,
+            'login' => $auth->getLogin(),
+            'userGuid' => $auth->getUserGuid(),
         ]);
 
         //since we changed the sessionId, we have to reset the internalSessionUniqId too
