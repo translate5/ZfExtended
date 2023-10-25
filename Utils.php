@@ -456,7 +456,7 @@ class ZfExtended_Utils {
     /***
      * Replace the co and c1 controll characters with empty space.
      */
-    public static function replaceC0C1ControlCharacters(string $term)
+    public static function replaceC0C1ControlCharacters(string $term): string
     {
         foreach (mb_str_split($term, 1, 'utf-8') as $ch) {
             $ord = mb_ord($ch);
@@ -468,7 +468,7 @@ class ZfExtended_Utils {
                 $term =  str_replace($ch,'',$term);
             }
         }
-        return $term;
+        return (string) $term;
     }
 
     /**
