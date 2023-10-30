@@ -37,7 +37,7 @@ abstract class ZfExtended_Logger_Writer_Abstract
     /**
      * filter instance
      */
-    protected ZfExtended_Logger_Filter $filter;
+    protected ?ZfExtended_Logger_Filter $filter;
 
     /**
      * @throws ZfExtended_Logger_Exception
