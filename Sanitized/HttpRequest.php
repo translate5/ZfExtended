@@ -144,15 +144,29 @@ class ZfExtended_Sanitized_HttpRequest extends REST_Controller_Request_Http {
      * @param bool $decodeAssociative
      * @param array $typeMap
      * @return stdClass|array|string
+     * @throws ZfExtended_BadRequest
      * @throws ZfExtended_SecurityException
      */
-    public function getData(bool $decodeAssociative, array $typeMap = []){
-        $data = json_decode(parent::getParam('data'), $decodeAssociative);
-        if(is_array($data)){
+    public function getData(bool $decodeAssociative, array $typeMap = []): mixed
+    {
+        $hasLegacyDataField = parent::has('data');
+        if ($hasLegacyDataField) {
+            $data = parent::getParam('data');
+        } else {
+            $data = $this->getRawBody();
+        }
+        try {
+            $data = json_decode($data, $decodeAssociative, flags: JSON_THROW_ON_ERROR);
+        } catch (JsonException $e) {
+            throw new ZfExtended_BadRequest('E1560', [
+                'error' => $e->getMessage()
+            ], $e);
+        }
+        if (is_array($data)){
             return $this->sanitizeArray($data, $typeMap);
-        } else if(is_object($data)){
+        } elseif(is_object($data)){
             return $this->sanitizeObject($data, $typeMap);
-        } else if(is_string($data)){
+        } elseif(is_string($data)){
             return ZfExtended_Sanitizer::string($data);
         }
         // can only be number, bool or null here, so needs no sanitization
