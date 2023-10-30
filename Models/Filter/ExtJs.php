@@ -318,7 +318,8 @@ class ZfExtended_Models_Filter_ExtJs extends ZfExtended_Models_Filter {
    * @param string $value
    */
   protected function applyString($field, $value) {
-    $this->where($field.' like ?', '%'.$value.'%');
+      $value = preg_replace('~[%_]~', '\\\$0', $value);
+      $this->where($field.' like ?', '%'.$value.'%');
   }
   /**
    * @param string $field
