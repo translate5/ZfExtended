@@ -505,4 +505,14 @@ abstract class ZfExtended_Models_Filter {
         }
         return $data;
     }
+
+    /**
+     * Escape mysql wildcard characters '%' and '_' from a given $value and return escaped
+     *
+     * @param string $value
+     * @return string
+     */
+    public function escapeMysqlWildcards(string $value) : string {
+        return preg_replace('~[%_]~', '\\\$0', $value);
+    }
 }
