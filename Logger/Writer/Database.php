@@ -28,6 +28,7 @@ class ZfExtended_Logger_Writer_Database extends ZfExtended_Logger_Writer_Abstrac
 {
 
     protected string $insertedId;
+    protected array $insertedData;
 
     public function write(ZfExtended_Logger_Event $event): void
     {
@@ -85,5 +86,6 @@ class ZfExtended_Logger_Writer_Database extends ZfExtended_Logger_Writer_Abstrac
         //flatten entities to their dataobjects and handles JSON errors:
         $data['extra'] = $event->getExtraAsJson();
         $this->insertedId = (string) $db->insert($data);
+        $this->insertedData = $data;
     }
 }

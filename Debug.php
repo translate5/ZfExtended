@@ -169,7 +169,10 @@ class ZfExtended_Debug {
         /* @var $dbUpdater ZfExtended_Models_Installer_DbUpdater */
         $dbUpdater->calculateChanges();
         $result->database = new stdClass();
-        $result->database->newCount = count($dbUpdater->getNewFiles());
+        $result->database->newCount = count($newFiles = $dbUpdater->getNewFiles());
+        if ($result->database->newCount > 0) {
+            $result->database->newFiles = $newFiles;
+        }
         $result->database->modCount = count($dbUpdater->getModifiedFiles());
         $result->database->isUptodate = $result->database->newCount === 0 && $result->database->modCount === 0;
         
