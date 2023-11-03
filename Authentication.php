@@ -331,6 +331,11 @@ final class ZfExtended_Authentication
         return ($this->authenticatedUser === null) ? 0 : (int) $this->authenticatedUser->getId();
     }
 
+    public function getLogin(): ?string
+    {
+        return $this->authenticatedUser?->getLogin();
+    }
+
     /**
      * Retrieves the roles of the authenticated user
      * @return string[]

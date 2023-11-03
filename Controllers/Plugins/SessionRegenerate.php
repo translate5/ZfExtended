@@ -34,18 +34,20 @@ END LICENSE AND COPYRIGHT
 class ZfExtended_Controllers_Plugins_SessionRegenerate extends Zend_Controller_Plugin_Abstract {
 
     /**
-     * Wird vor dem Start des Dispatcher Laufes ausgeführt
-     *
-     * @param  Zend_Controller_Request_Abstract $request
      * @return void
+     * @throws Zend_Db_Table_Exception
+     * @throws Zend_Exception
      */
     public function dispatchLoopShutdown() {
         $layouthelper = ZfExtended_Zendoverwrites_Controller_Action_HelperBroker::getStaticHelper(
             'layout'
         );
-        $user = new Zend_Session_Namespace('user');
-        $isAuthenticated = !empty($user->data->userGuid);
+        $isAuthenticated = ZfExtended_Authentication::getInstance()->isAuthenticated();
         // if you are not in the rest context, we want this to happen.
-        ZfExtended_Session::updateSession($layouthelper->isEnabled() && !$isAuthenticated && !Zend_Session::isDestroyed());
+        ZfExtended_Session::updateSession(
+            $layouthelper->isEnabled()
+            && !$isAuthenticated
+            && !Zend_Session::isDestroyed()
+        );
     }
 }

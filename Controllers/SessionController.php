@@ -63,15 +63,15 @@ class ZfExtended_SessionController extends ZfExtended_RestController {
      * HTTP 404 (!=200) if not authenticated
      */
     public function getAction() {
-        $user = new Zend_Session_Namespace('user');
-        if(empty($user->data->userGuid)) {
+        $auth = ZfExtended_Authentication::getInstance();
+        if(! $auth->isAuthenticated()) {
             $this->_response->setHttpResponseCode(404);
             $this->view->state = self::STATE_NOT_AUTHENTICATED;
             $this->view->user = null;
             return;
         }
         $this->view->state = self::STATE_AUTHENTICATED;
-        $this->view->user = clone $user->data;
+        $this->view->user = clone $auth->getUserData();
         $this->view->user->passwd = '********';
         unset($this->view->user->openIdSubject);
         unset($this->view->user->openIdIssuer);
@@ -155,9 +155,6 @@ class ZfExtended_SessionController extends ZfExtended_RestController {
             $sessionDb = new ZfExtended_Models_Db_Session();
             $this->view->sessionToken = $sessionDb->updateAuthToken($this->view->sessionId, $userModel->getId());
             
-            $userSession = new Zend_Session_Namespace('user');
-            //set a flag to identify that this session was started by API
-            $userSession->loginByApiAuth = true;
             $this->log('User authentication by API successful for '.$login);
             $invalidLoginCounter->resetCounter();
             ZfExtended_Models_LoginLog::addSuccess($authentication, 'sessionapi'.'#'.$oldSessId.'#'.$newSessId);

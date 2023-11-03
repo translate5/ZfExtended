@@ -150,22 +150,22 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract {
         $s = $this->_loadAll();
         return $this->loadFilterdCustom($s);
     }
-    
-    /***
+
+    /**
      * Load users hierarchically, based on the current logged in user.
      * @return array
+     * @throws Zend_Db_Table_Exception
      */
     public function loadAllOfHierarchy(){
-        $userSession = new Zend_Session_Namespace('user');
-        $userData=$userSession->data;
-        $adapter=$this->db->getAdapter();
-        $s=$this->_loadAll();
+        $id = ZfExtended_Authentication::getInstance()->getUserId();
+        $adapter = $this->db->getAdapter();
+        $s = $this->_loadAll();
         //NOTE:the where must be in one row because of the brackets
         //$s->where( parentIds like "%,4,5,6,%" OR id=2 )  sql=> WHERE (parentIds like "%,4,5,6,%" OR id=2)
         //$s->where( parentIds like)
         //$s->where( id=2 ) sql=> WHERE (parentIds like "%,4,5,6,%") OR id=2
         //this with combination of the filters will provide different result
-        $s->where('parentIds like "%,'.$adapter->quote($userData->id).',%" OR id='.$adapter->quote($userData->id));
+        $s->where('parentIds like "%,'.$adapter->quote($id).',%" OR id='.$adapter->quote($id));
         return $this->loadFilterdCustom($s);
     }
     
@@ -259,21 +259,21 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract {
         return $this->computeTotalCount($s);
     }
     
-    /***
+    /**
      * Get total count of hierarchy users
-     * @return number
+     * @return int
      */
-    public function getTotalCountHierarchy(){
-        $userSession = new Zend_Session_Namespace('user');
-        $userData=$userSession->data;
-        $adapter=$this->db->getAdapter();
+    public function getTotalCountHierarchy(): int
+    {
+        $id = ZfExtended_Authentication::getInstance()->getUserId();
+        $adapter = $this->db->getAdapter();
         $s = $this->db->select();
         $s->where('login != ?', self::SYSTEM_LOGIN); //filter out the system user
-        $s->where('parentIds like "%,'.$adapter->quote($userData->id).',%" OR id='.$adapter->quote($userData->id));
+        $s->where('parentIds like "%,'.$adapter->quote($id).',%" OR id='.$adapter->quote($id));
         return $this->computeTotalCount($s);
     }
     
-    /***
+    /**
      * Check if the current user has parent user with the given id
      * @param string $parentId -> the parent userid to be checked if it is a parent of the current one
      * @param string $parentIds optional, if empty take the parentIds of the current user instance. A custom comma separated string can be given here

@@ -54,9 +54,7 @@ class ZfExtended_Session_SaveHandler_DbTable extends Zend_Session_SaveHandler_Db
      */
     public function write($id, $data)
     {
-        // TODO FIXME: get rid of user-session usage
-        $userSession = new Zend_Session_Namespace('user');
-        $userId = empty($userSession?->data?->id) ? null : intval($userSession->data->id);
+        $userId = ZfExtended_Authentication::getInstance()->getUserId() ?: null;
 
         $sessionDb = new ZfExtended_Models_Db_Session();
         $sessionDb->createOrUpdateRow($id, (string) $data, time(), $userId);
