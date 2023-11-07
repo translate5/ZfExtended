@@ -43,7 +43,11 @@ class ZfExtended_Controllers_Plugins_RegisterRestControllerPluginRestHandler ext
     public function routeShutdown(Zend_Controller_Request_Abstract $request)
     {
         $front = Zend_Controller_Front::getInstance();
-        $restFulRoutes = array('ZfExtended_Controller_RestLikeRoute', 'Zend_Rest_Route');
+        $restFulRoutes = [
+            Zend_Rest_Route::class,
+            ZfExtended_Controller_RestLikeRoute::class,
+            ZfExtended_Controller_RestLikeRouteRegex::class
+        ];
         $routeClass = get_class($front->getRouter()->getCurrentRoute());
         if(in_array($routeClass, $restFulRoutes, true)){
             $front->registerPlugin(new REST_Controller_Plugin_RestHandler($front));
