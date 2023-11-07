@@ -96,4 +96,20 @@ class ZfExtended_Models_Log extends ZfExtended_Models_Entity_Abstract {
             'created < NOW() - INTERVAL ? WEEK' => $weeks
         ]);
     }
+
+    /**
+     * Get all events created after the one having `id` equal to given $eventId
+     *
+     * @param int $recordId
+     * @param int $limit
+     * @return array
+     * @throws Zend_Db_Statement_Exception
+     */
+    public function getAllAfter(int $recordId, int $limit = 0): array
+    {
+        return $this->db->getAdapter()
+            ->query('SELECT * FROM `Zf_errorlog` WHERE `id` > ? ORDER BY `id`'
+                . ($limit ? " LIMIT $limit" : ''), $recordId)
+            ->fetchAll();
+    }
 }

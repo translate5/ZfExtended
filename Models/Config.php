@@ -111,6 +111,7 @@ class ZfExtended_Models_Config extends ZfExtended_Models_Entity_Abstract {
      * @param string $pmGuid
      * @param string $tasktype
      * @return array
+     * @deprecated must be removed see TRANSLATE-3559
      */
     public function loadListByNamePart(string $name) {
         $s = $this->db->select()

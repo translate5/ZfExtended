@@ -92,7 +92,7 @@ abstract class AbstractResource implements ResourceInterface {
         }
         $docBlock = $factory->create($docBlock);
         $result = trim($docBlock->getSummary());
-        if (strlen($result) === null) {
+        if (strlen($result) === 0) {
             return 'NO DOCBLOCK DESCRIPTION GIVEN FOR ' . $acl->id;
         }
         return $result;
