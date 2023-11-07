@@ -171,8 +171,8 @@ abstract class ServiceAbstract
     }
 
     /**
-     * Since Services are usually instantiated with the global config for task or customer specific confige
-     * it might be neccessary to set the used
+     * Since Services are usually instantiated with the global config
+     *  for task or customer specific configs it might be neccessary to change the used config later on
      * Keep in mind that this must be a full config-tree and not a e.g. plugin-subset
      * @param Zend_Config $config
      * @return void
