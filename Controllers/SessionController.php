@@ -119,7 +119,7 @@ class ZfExtended_SessionController extends ZfExtended_RestController {
         $passwd = trim($this->getParam('passwd', $this->data->passwd));
         $errors = [];
         $t = ZfExtended_Zendoverwrites_Translate::getInstance();
-        /* @var $t ZfExtended_Zendoverwrites_Translate */;;
+        /* @var $t ZfExtended_Zendoverwrites_Translate */
         if(empty($login)) {
              $errors['login'] = $t->_('Kein Benutzername angegeben.');
         }
