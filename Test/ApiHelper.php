@@ -449,20 +449,31 @@ class ZfExtended_Test_ApiHelper {
      * @param string $url
      * @param string $content
      * @param array $parameters
-     * @return bool|mixed|stdClass|null
+     * @param string|null $jsonFileName
+     * @param bool $expectedToFail
+     * @param string $enctype
+     * @return stdClass
      * @throws Zend_Http_Client_Exception
      */
-    public function postRawData(string $url, string $content, array $parameters=[], string $jsonFileName = null, bool $expectedToFail=false) : stdClass {
+    public function postRawData(
+        string $url,
+        string $content,
+        array $parameters = [],
+        string $jsonFileName = null,
+        bool $expectedToFail = false,
+        string $enctype = 'application/octet-stream'
+    ) : stdClass {
         $http = new Zend_Http_Client();
         $http->setUri(static::$CONFIG['API_URL'].ltrim($url, '/'));
         $this->addClientAuthorization($http);
         
         $http->setHeaders('Accept', 'application/json');
-        $http->setRawData($content, 'application/octet-stream');
-        $http->setHeaders(Zend_Http_Client::CONTENT_TYPE, 'application/octet-stream');
+        $http->setRawData($content, $enctype);
+        $http->setHeaders(Zend_Http_Client::CONTENT_TYPE, $enctype);
         if(!empty($parameters)) {
             foreach($parameters as $key => $value) {
-                $http->setParameterGet($key, $value); // when setting the raw request-body params can only be set as GET params!
+                // when setting the raw request-body params can only be set as GET params!
+                $http->setParameterGet($key, $value);
             }
         }
         if(self::TRACE_REQUESTS){
@@ -470,9 +481,9 @@ class ZfExtended_Test_ApiHelper {
         }
         $this->lastResponse = $http->request('POST');
         $result = $this->decodeJsonResponse($this->lastResponse, false);
-        if(!$expectedToFail && !$this->isStatusSuccess($this->lastResponse->getStatus())) {
+        if (!$expectedToFail && !$this->isStatusSuccess($this->lastResponse->getStatus())) {
             $this->test::fail('apiTest POST RAW DATA on '.$url.' returned '.$this->lastResponse->__toString());
-        } else if($this->isCapturing() && !empty($jsonFileName)){
+        } elseif ($this->isCapturing() && !empty($jsonFileName)){
             // in capturing mode we save the requested data as the data to test against
             $this->captureData($jsonFileName, $this->encodeTestData($result));
         }
@@ -957,6 +968,7 @@ class ZfExtended_Test_ApiHelper {
             }
             $json = json_decode($resp->getBody());
             $this->test::assertEquals('No error', json_last_error_msg(), 'Server did not response valid JSON: '.$resp->getBody());
+            $this->test::assertNotNull($json, 'Server did not response valid JSON: '.$resp->getBody());
             if($isTreeData){
                 if(property_exists($json, 'children') && count($json->children) > 0){
                     return $json->children[0];
@@ -965,7 +977,7 @@ class ZfExtended_Test_ApiHelper {
                     $result->error = 'The fetched data had no children in the root object';
                     return $result;
                 }
-            } else if(property_exists($json, 'rows')){
+            } elseif (property_exists($json, 'rows')){
                 return $json->rows;
             } else {
                 return $json;
