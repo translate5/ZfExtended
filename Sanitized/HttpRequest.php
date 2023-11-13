@@ -153,6 +153,10 @@ class ZfExtended_Sanitized_HttpRequest extends REST_Controller_Request_Http {
         if ($hasLegacyDataField) {
             $data = parent::getParam('data');
         } else {
+            // if the request does not contain the data field, we assume JSON in raw body if content type is appropriate
+            if ($this->getHeader('content-type') !== 'application/json') {
+                return null;
+            }
             $data = $this->getRawBody();
         }
         try {
