@@ -72,9 +72,9 @@ class ZfExtended_Sanitized_HttpRequest extends REST_Controller_Request_Http {
         $paramSources = $this->getParamSources();
         if (isset($this->_params[$keyName])) {
             return $this->_params[$keyName];
-        } elseif ($keyName != 'data' && in_array('_GET', $paramSources) && (isset($_GET[$keyName]))) {
+        } elseif ($keyName != 'data' && in_array('_GET', $paramSources) && isset($_GET[$keyName])) {
             return $this->sanitizeRequestValue($_GET[$keyName]);
-        } elseif ($keyName != 'data' && in_array('_POST', $paramSources) && (isset($_POST[$keyName]))) {
+        } elseif ($keyName != 'data' && in_array('_POST', $paramSources) && isset($_POST[$keyName])) {
             return $this->sanitizeRequestValue($_POST[$keyName]);
         }
         return $default;
@@ -116,16 +116,12 @@ class ZfExtended_Sanitized_HttpRequest extends REST_Controller_Request_Http {
         $paramSources = $this->getParamSources();
         if (in_array('_GET', $paramSources) && isset($_GET) && is_array($_GET)){
             foreach($_GET as $key => $val){
-                if(!array_key_exists($key, $return)){
-                    $return[$key] = ($key === 'data') ? $val : $this->sanitizeRequestValue($val);
-                }
+                $return[$key] = ($key === 'data') ? $val : $this->sanitizeRequestValue($val);
             }
         }
         if (in_array('_POST', $paramSources) && isset($_POST) && is_array($_POST)){
             foreach($_POST as $key => $val){
-                if(!array_key_exists($key, $return)){
-                    $return[$key] = ($key === 'data') ? $val : $this->sanitizeRequestValue($val);
-                }
+                $return[$key] = ($key === 'data') ? $val : $this->sanitizeRequestValue($val);
             }
         }
         return $return;
