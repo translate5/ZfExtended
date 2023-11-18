@@ -27,6 +27,7 @@ namespace MittagQI\ZfExtended\Service;
 use Zend_Config;
 use Zend_Registry;
 use Zend_Exception;
+use ZfExtended_Exception;
 use ZfExtended_Models_SystemRequirement_Result;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
@@ -76,10 +77,16 @@ abstract class ServiceAbstract
     protected array $checkedVersions = [];
 
     /**
-     * Represents the the global config
+     * Represents the global config
      * @var Zend_Config
      */
     protected Zend_Config $config;
+
+    /**
+     * An accessor-helper to retrieve config values from the set config
+     * @var ConfigHelper
+     */
+    protected ConfigHelper $configHelper;
 
     /**
      * @var string|null
@@ -110,6 +117,15 @@ abstract class ServiceAbstract
     protected array $testConfigs = [];
 
     /**
+     * Here configs can be defined that are used when setting up the service when API testing
+     * These Configs will be used instead of the really configured ones UNLESS the service is completely configured
+     * In this case the real configs will be used (to be able to test REAL endpoints)
+     * Structure is [ 'runtimeOptions.plugins.pluginname.configName' => value ]
+     * @var array|null
+     */
+    protected ?array $mockConfigs = null;
+
+    /**
      * Holds the info if this is a plugin or global service
      * @var bool
      */
@@ -124,9 +140,9 @@ abstract class ServiceAbstract
     public function __construct(string $name, string $pluginName = null, Zend_Config $config = null)
     {
         $this->name = $name;
-        $this->config = $config ?? Zend_Registry::get('config');
         $this->pluginName = $pluginName;
         $this->isPlugin = ($pluginName !== null);
+        $this->setConfig($config ?? Zend_Registry::get('config'));
     }
 
     /**
@@ -140,9 +156,18 @@ abstract class ServiceAbstract
     /**
      * @return bool
      */
-    public function isPluginService(): bool
+    final public function isPluginService(): bool
     {
         return $this->isPlugin;
+    }
+
+    /**
+     * Retrieves, if a service is mocked in case of API-Tests
+     * @return bool
+     */
+    final public function isMocked(): bool
+    {
+        return !empty($this->mockConfigs);
     }
 
     /**
@@ -165,9 +190,26 @@ abstract class ServiceAbstract
      * See ::$testConfigs for the structure of the returned array
      * @return array
      */
-    public function getTestConfigs(): array
+    final public function getTestConfigs(): array
     {
+        if(!empty($this->mockConfigs)){
+            return array_merge($this->testConfigs, $this->mockConfigs);
+        }
         return $this->testConfigs;
+    }
+
+    /**
+     * Returns the mock endpoints/configs if configured and when API-testing
+     * @return array
+     */
+    final public function getMockConfigs(): array
+    {
+        if(defined('APPLICATION_APITEST')
+            && constant('APPLICATION_APITEST')
+            && $this->isMocked()){
+            return $this->mockConfigs;
+        }
+        return [];
     }
 
     /**
@@ -177,9 +219,10 @@ abstract class ServiceAbstract
      * @param Zend_Config $config
      * @return void
      */
-    public function setConfig(Zend_Config $config): void
+    final public function setConfig(Zend_Config $config): void
     {
         $this->config = $config;
+        $this->configHelper = new ConfigHelper($config, $this->getMockConfigs());
     }
 
     /**
@@ -201,7 +244,18 @@ abstract class ServiceAbstract
      */
     public function isCheckSkipped(): bool
     {
-        return false;
+        return !$this->isProperlySetup();
+    }
+
+    /**
+     * Main API to check, if a service is properly configured
+     * and all other dependencies there may be are resolved
+     * This API must not make HTTP requests !!
+     * @return bool
+     */
+    public function isProperlySetup(): bool
+    {
+        return true;
     }
 
     /**
@@ -311,6 +365,21 @@ abstract class ServiceAbstract
     public function hasErrors(): bool
     {
         return !empty($this->errors);
+    }
+
+    /**
+     * Checks if the given config-names are set in the current configuration
+     * @param string[] $configNames
+     * @return bool
+     */
+    public function hasConfigurations(array $configNames): bool
+    {
+        foreach($configNames as $configName){
+            if(!$this->configHelper->hasValue($configName)){
+                return false;
+            }
+        }
+        return true;
     }
 
     /**

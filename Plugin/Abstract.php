@@ -184,6 +184,22 @@ abstract class ZfExtended_Plugin_Abstract
     }
 
     /**
+     * Retrieves the mocked service configurations - if any
+     * @param Zend_Config $config
+     * @return array
+     */
+    public static function getMockConfigs(Zend_Config $config): array
+    {
+        $configs = [];
+        foreach (static::createAllServices($config) as $service) {
+            if($service->isMocked()){
+                $configs[] = $service->getMockConfigs();
+            }
+        }
+        return array_merge(...$configs);
+    }
+
+    /**
      * Retrieves if the plugin has a service of the given name
      * @param string $serviceName
      * @return bool
