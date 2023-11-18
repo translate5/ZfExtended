@@ -56,17 +56,39 @@ class ZfExtended_DbConfig_Type_CoreTypes extends ZfExtended_DbConfig_Type_Abstra
      * @param string $configType
      * @return string
      */
-    public static function getSanitizationType(string $configType) : string {
-        switch($configType){
+    public static function sanitizationType(string $configType) : string
+    {
+        return match ($configType) {
+            self::TYPE_REGEX, self::TYPE_REGEXLIST => ZfExtended_Sanitizer::UNSANITIZED,
+            self::TYPE_MARKUP => ZfExtended_Sanitizer::MARKUP,
+            default => ZfExtended_Sanitizer::STRING,
+        };
+    }
 
-            case self::TYPE_REGEX:
-            case self::TYPE_REGEXLIST:
-                return ZfExtended_Sanitizer::UNSANITIZED;
+    /**
+     * converts the type of the config value to the corresponding PHP type
+     * @param string $type
+     * @return string
+     */
+    public static function phpType(string $type): string
+    {
+        return match ($type) {
+            self::TYPE_LIST, self::TYPE_MAP, self::TYPE_REGEXLIST => 'array',
+            self::TYPE_ABSPATH, self::TYPE_JSON, self::TYPE_MARKUP, self::TYPE_REGEX => 'string',
+            default => $type,
+        };
+    }
 
-            case self::TYPE_MARKUP:
-                return ZfExtended_Sanitizer::MARKUP;
-        }
-        return ZfExtended_Sanitizer::STRING;
+    /**
+     * Sets the given PHP type for a value
+     * @param mixed $value
+     * @param string $type
+     * @return mixed
+     */
+    public static function setPhpType(mixed $value, string $type): mixed
+    {
+        settype($value, self::phpType($type));
+        return $value;
     }
 
     /**
@@ -206,21 +228,9 @@ class ZfExtended_DbConfig_Type_CoreTypes extends ZfExtended_DbConfig_Type_Abstra
      * @param string $type
      * @return string
      */
-    public function getPhpType(string $type): string {
-        switch ($type) {
-
-            case self::TYPE_LIST:
-            case self::TYPE_MAP:
-            case self::TYPE_REGEXLIST:
-                return 'array';
-
-            case self::TYPE_ABSPATH:
-            case self::TYPE_JSON:
-            case self::TYPE_MARKUP:
-            case self::TYPE_REGEX:
-                return 'string';
-        }
-        return $type;
+    public function getPhpType(string $type): string
+    {
+        return self::phpType($type);
     }
 
     /**

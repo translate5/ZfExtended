@@ -204,9 +204,9 @@ abstract class ServiceAbstract
      */
     final public function getMockConfigs(): array
     {
-        if(defined('APPLICATION_APITEST')
-            && constant('APPLICATION_APITEST')
-            && $this->isMocked()){
+        if($this->isMocked()
+            && ((defined('APPLICATION_APITEST') && APPLICATION_APITEST)
+            || (defined('APPLICATION_UNITTEST') && APPLICATION_UNITTEST))){
             return $this->mockConfigs;
         }
         return [];

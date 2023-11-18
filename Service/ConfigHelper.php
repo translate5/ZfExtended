@@ -27,7 +27,7 @@ namespace MittagQI\ZfExtended\Service;
 use Exception;
 use Throwable;
 use Zend_Config;
-use ZfExtended_DbConfig_Type_CoreTypes;
+use ZfExtended_DbConfig_Type_CoreTypes as CoreTypes;
 use ZfExtended_Exception;
 
 /**
@@ -51,12 +51,12 @@ final class ConfigHelper
     /**
      * Retrieves a config value by providing the full "path" like 'runtimeOptions.pluginName.configName'
      * @param string $configName
-     * @param string $configType
+     * @param string|null $configType
      * @param bool $asArray
      * @return mixed
      * @throws ZfExtended_Exception
      */
-    public function getValue(string $configName, string $configType = 'string', bool $asArray = false): mixed
+    public function getValue(string $configName, string $configType = 'notype', bool $asArray = false): mixed
     {
         if (array_key_exists($configName, $this->overrides)) {
             return $this->getOverriddenValue($configName, $asArray);
@@ -65,7 +65,7 @@ final class ConfigHelper
         try {
             foreach (explode('.', $configName) as $section) {
                 // to avoid warnings ...
-                if(empty($value)){
+                if (empty($value)) {
                     throw new Exception('Value is null');
                 }
                 $value = $value->$section;
@@ -74,10 +74,11 @@ final class ConfigHelper
             throw new ZfExtended_Exception('Global Config did not contain "' . $configName . '"');
         }
         return match ($configType) {
-            ZfExtended_DbConfig_Type_CoreTypes::TYPE_LIST,
-            ZfExtended_DbConfig_Type_CoreTypes::TYPE_MAP,
-            ZfExtended_DbConfig_Type_CoreTypes::TYPE_REGEXLIST => $value->toArray(),
-            default => $this->formatValue($value, $asArray)
+            CoreTypes::TYPE_LIST,
+            CoreTypes::TYPE_MAP,
+            CoreTypes::TYPE_REGEXLIST => $value->toArray(),
+            'notype' => $this->formatValue($value, $asArray),
+            default => $this->asArray(CoreTypes::setPhpType($value, $configType), $asArray)
         };
     }
 
@@ -162,7 +163,19 @@ final class ConfigHelper
     {
         if (is_object($value) && get_class($value) === 'Zend_Config') {
             return $value->toArray();
-        } else if ($asArray) {
+        }
+        return $this->asArray($value, $asArray);
+    }
+
+    /**
+     * Turns an value to an array - if wanted
+     * @param mixed $value
+     * @param bool $asArray
+     * @return mixed
+     */
+    private function asArray(mixed $value, bool $asArray): mixed
+    {
+        if($asArray) {
             return $this->convertValueToArray($value);
         }
         return $value;
