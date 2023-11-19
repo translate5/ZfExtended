@@ -132,6 +132,12 @@ abstract class ServiceAbstract
     private bool $isPlugin;
 
     /**
+     * Set on instantiation to flag if we are using mock-configs
+     * @var bool
+     */
+    private bool $isMocked;
+
+    /**
      * @param string $name : The name of the service, which MUST be unique across the application and all plugins
      * @param string|null $pluginName : If given, the service is a plugin service for the given plugin
      * @param Zend_Config|null $config : The global config
@@ -162,12 +168,21 @@ abstract class ServiceAbstract
     }
 
     /**
-     * Retrieves, if a service is potentially mocked in case of API-Tests
-     * If the mocks are really used depends, if not all neccessary configs are set
-     * So it is possible to use real services when this is defined in the database
+     * Rtrieves if the service iscurrently being mocked
      * @return bool
      */
-    final public function isMocked(): bool
+    final public function isMockedService(): bool
+    {
+        return $this->isMocked;
+    }
+
+    /**
+     * Retrieves, if a service can be mocked in case of API-Tests
+     * If the mocks are really used depends, if not all neccessary configs are set
+     * So it is possible to use real services if the configs are set in the DB or installation.ini
+     * @return bool
+     */
+    final public function isMockable(): bool
     {
         return !empty($this->mockConfigs);
     }
@@ -201,18 +216,19 @@ abstract class ServiceAbstract
     }
 
     /**
-     * Returns the mock endpoints/configs if configured and when API-testing
+     * Returns the mock endpoints/configs if configured and when API-testing and being mocked
      * @return array
      */
     final public function getMockConfigs(): array
     {
         // retrieve mock-config only, if in API or UNIT tests and no real config can be found
-        if($this->isMocked()
-            && ((defined('APPLICATION_APITEST') && APPLICATION_APITEST)
-            || (defined('APPLICATION_UNITTEST') && APPLICATION_UNITTEST))
-            && !$this->hasConfigurations(array_keys($this->mockConfigs))
-        ){
-            return $this->mockConfigs;
+        if($this->isMocked){
+            $mockConfigs = [];
+            // we want the real values used (there can be transformations on the values)
+            foreach(array_keys($this->mockConfigs) as $name) {
+                $mockConfigs[$name] = $this->configHelper->getValue($name);
+            }
+            return $mockConfigs;
         }
         return [];
     }
@@ -228,8 +244,18 @@ abstract class ServiceAbstract
     {
         $this->config = $config;
         $this->configHelper = new ConfigHelper($config);
-        // mocks cannot be added on instantiation as they check the config ...
-        $this->configHelper->setValues($this->getMockConfigs());
+        // mock the service in case of API/UNIT tests and no proper config exists
+        if($this->isMockable()
+            && ((defined('APPLICATION_APITEST') && APPLICATION_APITEST)
+                || (defined('APPLICATION_UNITTEST') && APPLICATION_UNITTEST))
+            && !$this->hasConfigurations(array_keys($this->mockConfigs))
+        ){
+            // mocks cannot be added on instantiation as they check the config ...
+            $this->configHelper->setValues($this->mockConfigs);
+            $this->isMocked = true;
+        } else {
+            $this->isMocked = false;
+        }
     }
 
     /**

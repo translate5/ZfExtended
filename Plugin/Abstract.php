@@ -192,7 +192,7 @@ abstract class ZfExtended_Plugin_Abstract
     {
         $configs = [];
         foreach (static::createAllServices($config) as $service) {
-            if($service->isMocked()){
+            if($service->isMockedService()){
                 $configs[] = $service->getMockConfigs();
             }
         }
