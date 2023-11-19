@@ -27,7 +27,6 @@ namespace MittagQI\ZfExtended\Service;
 use Zend_Config;
 use Zend_Registry;
 use Zend_Exception;
-use ZfExtended_Exception;
 use ZfExtended_Models_SystemRequirement_Result;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
@@ -162,7 +161,9 @@ abstract class ServiceAbstract
     }
 
     /**
-     * Retrieves, if a service is mocked in case of API-Tests
+     * Retrieves, if a service is potentially mocked in case of API-Tests
+     * If the mocks are really used depends, if not all neccessary configs are set
+     * So it is possible to use real services when this is defined in the database
      * @return bool
      */
     final public function isMocked(): bool
@@ -204,9 +205,12 @@ abstract class ServiceAbstract
      */
     final public function getMockConfigs(): array
     {
+        // retrieve mock-config only, if in API or UNIT tests and no real config can be found
         if($this->isMocked()
             && ((defined('APPLICATION_APITEST') && APPLICATION_APITEST)
-            || (defined('APPLICATION_UNITTEST') && APPLICATION_UNITTEST))){
+            || (defined('APPLICATION_UNITTEST') && APPLICATION_UNITTEST))
+            && !$this->hasConfigurations(array_keys($this->mockConfigs))
+        ){
             return $this->mockConfigs;
         }
         return [];
@@ -222,7 +226,9 @@ abstract class ServiceAbstract
     final public function setConfig(Zend_Config $config): void
     {
         $this->config = $config;
-        $this->configHelper = new ConfigHelper($config, $this->getMockConfigs());
+        $this->configHelper = new ConfigHelper($config);
+        // mocks cannot be added on instantiation as they check the config ...
+        $this->configHelper->setValues($this->getMockConfigs());
     }
 
     /**
@@ -279,7 +285,7 @@ abstract class ServiceAbstract
      * outputs a simple check in the Symfony Command style
      * @param SymfonyStyle $io
      */
-    public function serviceCheck(SymfonyStyle $io)
+    public function serviceCheck(SymfonyStyle $io): void
     {
         if ($this->isCheckSkipped()) {
             $this->output($this->getIrrelevant(), $io, 'info');
@@ -425,14 +431,12 @@ abstract class ServiceAbstract
      * @param SymfonyStyle|null $io
      * @param string $ioMethod : can be 'note' | 'writeln' | 'success' | 'warning' | 'error' | 'caution'
      */
-    public function output(string $msg, SymfonyStyle $io = null, string $ioMethod = 'note')
+    public function output(string $msg, SymfonyStyle $io = null, string $ioMethod = 'note'): void
     {
         if (self::DO_DEBUG) {
             error_log('SERVICE ' . $ioMethod . ': ' . $msg);
         }
-        if ($io) {
-            $io->$ioMethod($msg);
-        }
+        $io?->$ioMethod($msg);
     }
 
     /**
@@ -440,7 +444,7 @@ abstract class ServiceAbstract
      * @param string $url
      * @param string|null $version
      */
-    protected function addCheckResult(string $url, string $version = null)
+    protected function addCheckResult(string $url, string $version = null): void
     {
         if (!in_array($url, $this->checkedUrls)) {
             $this->checkedUrls[] = $url;
