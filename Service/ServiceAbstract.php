@@ -33,14 +33,15 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 /**
  * Represents a general Service used by a plugin or the base application
  * This usually is a Docker service but can generally represent any type of service outside the scope of the app code
- * This should not be mixed with a Languageresource-service, which in this is a special case of this general service (and unfortunately is not coded in a languageresource-specific scope)
+ * This should not be mixed with a Languageresource-service, which is a special case of this general service (and unfortunately is not coded in a languageresource-specific scope)
  * Currently, this base-class is tailored for administrative purposes
  */
 abstract class ServiceAbstract
 {
     const DO_DEBUG = false;
+
     /**
-     * This usually represents a dockerized service. The name is defined as array-key in a plugins $services prop and must be UNIQUE across all plugins and the base services
+     * The name is defined as array-key in a plugins $services prop and must be UNIQUE across all plugins and the base services
      * @var string
      */
     protected string $name;

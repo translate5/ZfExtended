@@ -42,6 +42,22 @@ final class ConfigHelper
     const BASE_URL = '{BASE_URL}';
 
     /**
+     * Retrieves if a config value can be seen as empty
+     * This is always used to evaluate if configs are set in services
+     * @param mixed $value
+     * @return bool
+     */
+    public static function isValueEmpty(mixed $value): bool
+    {
+        return
+            $value === null
+            || (is_array($value) && empty($value))
+            || (is_string($value) && strlen($value) < 1)
+            || (is_int($value) && $value === 0)
+            || (is_float($value) && $value == 0);
+    }
+
+    /**
      * @param Zend_Config $config
      */
     public function __construct(private Zend_Config $config, private array $overrides = [])
@@ -84,11 +100,13 @@ final class ConfigHelper
 
     /**
      * Checks wether a config value is set and not empty
-     * It counts always as being set if it is in the overrides
+     * It counts always as being set, if it is in the overrides
+     * Empty arrays, 0, empty strings will be seen as non-existant, if they should count use strict-param
      * @param string $configName
+     * @param bool $strict: if given, only null /non-existant will lead to a false evaluation
      * @return bool
      */
-    public function hasValue(string $configName): bool
+    public function hasValue(string $configName, bool $strict = false): bool
     {
         if (array_key_exists($configName, $this->overrides)) {
             return true;
@@ -106,13 +124,9 @@ final class ConfigHelper
             return false;
         }
         if ($value instanceof Zend_Config) {
-            return !empty($value->toArray());
-        } else if (is_string($value)) {
-            return $value !== null && strlen($value) > 0;
-        } else if (is_float($value) || is_int($value)) {
-            return $value !== 0;
+            return $strict ? true : !empty($value->toArray());
         }
-        return !empty($value);
+        return $strict ? ($value !== null) : !self::isValueEmpty($value);
     }
 
     /**
