@@ -123,7 +123,14 @@ abstract class ServiceAbstract
      * Structure is [ 'runtimeOptions.plugins.pluginname.configName' => value ]
      * @var array
      */
-    protected ?array $mockConfigs = [];
+    protected array $mockConfigs = [];
+
+    /**
+     * If set, for the UNIT and API tests the mock-configuration is always used
+     * Otherwise the configs from the DB or installation.ini are used if they are complete
+     * @var bool
+     */
+    protected bool $alwaysMockForTests = false;
 
     /**
      * Holds the info if this is a plugin or global service
@@ -233,11 +240,11 @@ abstract class ServiceAbstract
     {
         $this->config = $config;
         $this->configHelper = new ConfigHelper($config);
-        // mock the service in case of API/UNIT tests and no proper config exists
+        // mock the service in case of API/UNIT tests and no proper config exists or we should always mocks
         if(!empty($this->mockConfigs)
             && ((defined('APPLICATION_APITEST') && APPLICATION_APITEST)
                 || (defined('APPLICATION_UNITTEST') && APPLICATION_UNITTEST))
-            && !$this->hasConfigurations(array_keys($this->mockConfigs))
+            && ($this->alwaysMockForTests || !$this->hasConfigurations(array_keys($this->mockConfigs)))
         ){
             // mocks cannot be added on instantiation as they check the config ...
             $this->configHelper->setValues($this->mockConfigs);
