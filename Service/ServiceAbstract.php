@@ -121,9 +121,9 @@ abstract class ServiceAbstract
      * These Configs will be used instead of the really configured ones UNLESS the service is completely configured
      * In this case the real configs will be used (to be able to test REAL endpoints)
      * Structure is [ 'runtimeOptions.plugins.pluginname.configName' => value ]
-     * @var array|null
+     * @var array
      */
-    protected ?array $mockConfigs = null;
+    protected ?array $mockConfigs = [];
 
     /**
      * Holds the info if this is a plugin or global service
@@ -168,23 +168,12 @@ abstract class ServiceAbstract
     }
 
     /**
-     * Rtrieves if the service iscurrently being mocked
+     * Retrieves if the service is currently being mocked
      * @return bool
      */
     final public function isMockedService(): bool
     {
         return $this->isMocked;
-    }
-
-    /**
-     * Retrieves, if a service can be mocked in case of API-Tests
-     * If the mocks are really used depends, if not all neccessary configs are set
-     * So it is possible to use real services if the configs are set in the DB or installation.ini
-     * @return bool
-     */
-    final public function isMockable(): bool
-    {
-        return !empty($this->mockConfigs);
     }
 
     /**
@@ -245,7 +234,7 @@ abstract class ServiceAbstract
         $this->config = $config;
         $this->configHelper = new ConfigHelper($config);
         // mock the service in case of API/UNIT tests and no proper config exists
-        if($this->isMockable()
+        if(!empty($this->mockConfigs)
             && ((defined('APPLICATION_APITEST') && APPLICATION_APITEST)
                 || (defined('APPLICATION_UNITTEST') && APPLICATION_UNITTEST))
             && !$this->hasConfigurations(array_keys($this->mockConfigs))
