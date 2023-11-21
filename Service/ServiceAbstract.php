@@ -33,14 +33,15 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 /**
  * Represents a general Service used by a plugin or the base application
  * This usually is a Docker service but can generally represent any type of service outside the scope of the app code
- * This should not be mixed with a Languageresource-service, which in this is a special case of this general service (and unfortunately is not coded in a languageresource-specific scope)
+ * This should not be mixed with a Languageresource-service, which is a special case of this general service (and unfortunately is not coded in a languageresource-specific scope)
  * Currently, this base-class is tailored for administrative purposes
  */
 abstract class ServiceAbstract
 {
     const DO_DEBUG = false;
+
     /**
-     * This usually represents a dockerized service. The name is defined as array-key in a plugins $services prop and must be UNIQUE across all plugins and the base services
+     * The name is defined as array-key in a plugins $services prop and must be UNIQUE across all plugins and the base services
      * @var string
      */
     protected string $name;
@@ -76,10 +77,16 @@ abstract class ServiceAbstract
     protected array $checkedVersions = [];
 
     /**
-     * Represents the the global config
+     * Represents the global config
      * @var Zend_Config
      */
     protected Zend_Config $config;
+
+    /**
+     * An accessor-helper to retrieve config values from the set config
+     * @var ConfigHelper
+     */
+    protected ConfigHelper $configHelper;
 
     /**
      * @var string|null
@@ -110,10 +117,32 @@ abstract class ServiceAbstract
     protected array $testConfigs = [];
 
     /**
+     * Here configs can be defined that are used when setting up the service when API testing
+     * These Configs will be used instead of the really configured ones UNLESS the service is completely configured
+     * In this case the real configs will be used (to be able to test REAL endpoints)
+     * Structure is [ 'runtimeOptions.plugins.pluginname.configName' => value ]
+     * @var array
+     */
+    protected array $mockConfigs = [];
+
+    /**
+     * If set, for the UNIT and API tests the mock-configuration is always used
+     * Otherwise the configs from the DB or installation.ini are used if they are complete
+     * @var bool
+     */
+    protected bool $alwaysMockForTests = false;
+
+    /**
      * Holds the info if this is a plugin or global service
      * @var bool
      */
     private bool $isPlugin;
+
+    /**
+     * Set on instantiation to flag if we are using mock-configs
+     * @var bool
+     */
+    private bool $isMocked;
 
     /**
      * @param string $name : The name of the service, which MUST be unique across the application and all plugins
@@ -124,9 +153,9 @@ abstract class ServiceAbstract
     public function __construct(string $name, string $pluginName = null, Zend_Config $config = null)
     {
         $this->name = $name;
-        $this->config = $config ?? Zend_Registry::get('config');
         $this->pluginName = $pluginName;
         $this->isPlugin = ($pluginName !== null);
+        $this->setConfig($config ?? Zend_Registry::get('config'));
     }
 
     /**
@@ -140,9 +169,18 @@ abstract class ServiceAbstract
     /**
      * @return bool
      */
-    public function isPluginService(): bool
+    final public function isPluginService(): bool
     {
         return $this->isPlugin;
+    }
+
+    /**
+     * Retrieves if the service is currently being mocked
+     * @return bool
+     */
+    final public function isMockedService(): bool
+    {
+        return $this->isMocked;
     }
 
     /**
@@ -165,9 +203,30 @@ abstract class ServiceAbstract
      * See ::$testConfigs for the structure of the returned array
      * @return array
      */
-    public function getTestConfigs(): array
+    final public function getTestConfigs(): array
     {
+        if(!empty($this->mockConfigs)){
+            return array_merge($this->testConfigs, $this->mockConfigs);
+        }
         return $this->testConfigs;
+    }
+
+    /**
+     * Returns the mock endpoints/configs if configured and when API-testing and being mocked
+     * @return array
+     */
+    final public function getMockConfigs(): array
+    {
+        // retrieve mock-config only, if in API or UNIT tests and no real config can be found
+        if($this->isMocked){
+            $mockConfigs = [];
+            // we want the real values used (there can be transformations on the values)
+            foreach(array_keys($this->mockConfigs) as $name) {
+                $mockConfigs[$name] = $this->configHelper->getValue($name);
+            }
+            return $mockConfigs;
+        }
+        return [];
     }
 
     /**
@@ -177,9 +236,22 @@ abstract class ServiceAbstract
      * @param Zend_Config $config
      * @return void
      */
-    public function setConfig(Zend_Config $config): void
+    final public function setConfig(Zend_Config $config): void
     {
         $this->config = $config;
+        $this->configHelper = new ConfigHelper($config);
+        // mock the service in case of API/UNIT tests and no proper config exists or we should always mocks
+        if(!empty($this->mockConfigs)
+            && ((defined('APPLICATION_APITEST') && APPLICATION_APITEST)
+                || (defined('APPLICATION_UNITTEST') && APPLICATION_UNITTEST))
+            && ($this->alwaysMockForTests || !$this->hasConfigurations(array_keys($this->mockConfigs)))
+        ){
+            // mocks cannot be added on instantiation as they check the config ...
+            $this->configHelper->setValues($this->mockConfigs);
+            $this->isMocked = true;
+        } else {
+            $this->isMocked = false;
+        }
     }
 
     /**
@@ -201,7 +273,18 @@ abstract class ServiceAbstract
      */
     public function isCheckSkipped(): bool
     {
-        return false;
+        return !$this->isProperlySetup();
+    }
+
+    /**
+     * Main API to check, if a service is properly configured
+     * and all other dependencies there may be are resolved
+     * This API must not make HTTP requests !!
+     * @return bool
+     */
+    public function isProperlySetup(): bool
+    {
+        return true;
     }
 
     /**
@@ -225,7 +308,7 @@ abstract class ServiceAbstract
      * outputs a simple check in the Symfony Command style
      * @param SymfonyStyle $io
      */
-    public function serviceCheck(SymfonyStyle $io)
+    public function serviceCheck(SymfonyStyle $io): void
     {
         if ($this->isCheckSkipped()) {
             $this->output($this->getIrrelevant(), $io, 'info');
@@ -314,6 +397,21 @@ abstract class ServiceAbstract
     }
 
     /**
+     * Checks if the given config-names are set in the current configuration
+     * @param string[] $configNames
+     * @return bool
+     */
+    public function hasConfigurations(array $configNames): bool
+    {
+        foreach($configNames as $configName){
+            if(!$this->configHelper->hasValue($configName)){
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
      * Administrative message if the service is set up properly
      * @return string
      */
@@ -356,14 +454,12 @@ abstract class ServiceAbstract
      * @param SymfonyStyle|null $io
      * @param string $ioMethod : can be 'note' | 'writeln' | 'success' | 'warning' | 'error' | 'caution'
      */
-    public function output(string $msg, SymfonyStyle $io = null, string $ioMethod = 'note')
+    public function output(string $msg, SymfonyStyle $io = null, string $ioMethod = 'note'): void
     {
         if (self::DO_DEBUG) {
             error_log('SERVICE ' . $ioMethod . ': ' . $msg);
         }
-        if ($io) {
-            $io->$ioMethod($msg);
-        }
+        $io?->$ioMethod($msg);
     }
 
     /**
@@ -371,7 +467,7 @@ abstract class ServiceAbstract
      * @param string $url
      * @param string|null $version
      */
-    protected function addCheckResult(string $url, string $version = null)
+    protected function addCheckResult(string $url, string $version = null): void
     {
         if (!in_array($url, $this->checkedUrls)) {
             $this->checkedUrls[] = $url;

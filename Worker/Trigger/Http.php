@@ -253,7 +253,7 @@ class Http implements TriggerInterface
             $out .= 'Cookie: XDEBUG_SESSION=' . $debug . "\r\n";
         }
         // we need to trigger correct environment for worker in API tests
-        if (defined('APPLICATION_APITEST')) {
+        if (defined('APPLICATION_APITEST') && APPLICATION_APITEST) {
             $origin = (APPLICATION_ENV === ZfExtended_BaseIndex::ENVIRONMENT_TEST)
                 ? ZfExtended_BaseIndex::ORIGIN_TEST
                 : ZfExtended_BaseIndex::ORIGIN_APPTEST;

@@ -121,7 +121,7 @@ final class CsrfProtection
 
     private function __construct()
     {
-        $this->isApiTest = defined('APPLICATION_APITEST') && (bool) constant('APPLICATION_APITEST');
+        $this->isApiTest = defined('APPLICATION_APITEST') && APPLICATION_APITEST;
     }
 
     /**

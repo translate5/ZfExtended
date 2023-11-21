@@ -350,4 +350,22 @@ class ZfExtended_Plugin_Manager {
         }
         return $testConfigs;
     }
+
+    /**
+     * Retrieves the plugin service configs that represent mocked services
+     * @return array
+     */
+    public function getMockConfigs(): array
+    {
+        $mockConfigs = [];
+        $config = Zend_Registry::get('config');
+        $plugins = $this->getAvailable();
+        /* @var ZfExtended_Plugin_Abstract $cls */
+        foreach($plugins as $plugin => $cls) {
+            if($cls::hasConfigsForTests()) {
+                $mockConfigs = array_merge($mockConfigs, $cls::getMockConfigs($config));
+            }
+        }
+        return $mockConfigs;
+    }
 }
