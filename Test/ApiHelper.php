@@ -1095,6 +1095,10 @@ class ZfExtended_Test_ApiHelper {
                 $client->setHeaders(CsrfProtection::HEADER_NAME, static::$CONFIG['CSRF_TOKEN']);
             }
         }
+        // add test-filename as header to evaluate it within bitbucket
+        if(isset($this->testClass)){
+            $client->setHeaders('x-translate5-testname', $this->testClass);
+        }
     }
 
     /**

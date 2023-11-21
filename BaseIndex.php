@@ -150,7 +150,7 @@ class ZfExtended_BaseIndex {
         $front = $bootstrap->getResource('frontController');
         Zend_Registry::set('frontController',$front );
         
-        $config = new Zend_config($bootstrap->getOptions());
+        $config = new Zend_Config($bootstrap->getOptions());
         Zend_Registry::set('config', $config);
 
         $bootstrap->bootstrap('db');
