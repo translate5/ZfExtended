@@ -577,8 +577,8 @@ abstract class ZfExtended_Worker_Abstract {
     private function logWorkerUsage(): void
     {
         $duration = 0;
-        $start = strtotime($this->workerModel->getStarttime());
-        $end = strtotime($this->workerModel->getEndtime());
+        $start = strtotime($this->workerModel->getStarttime() ?? '');
+        $end = strtotime($this->workerModel->getEndtime() ?? '');
 
         if ($end === false) {
            $end = time();

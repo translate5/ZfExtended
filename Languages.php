@@ -43,6 +43,17 @@ END LICENSE AND COPYRIGHT
  */
 abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract {
 
+    /**
+     * Retrieves the primary language of a RFC 5646 language (e.g. "en" from "en-GB")
+     * @param string $rfc5646
+     * @return string
+     */
+    public static function primaryCodeByRfc5646(string $rfc5646): string
+    {
+        $parts = explode('-', $rfc5646);
+        return strtolower($parts[0]);
+    }
+
     const LANG_TYPE_ID = 'id';
     const LANG_TYPE_RFC5646 = 'rfc5646';
     const LANG_TYPE_LCID = 'lcid';
@@ -63,7 +74,7 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract {
      */
     public function getMajorRfc5646(): string
     {
-        return $this->getMainlanguageByRfc5646($this->getRfc5646());
+        return static::primaryCodeByRfc5646($this->getRfc5646());
     }
 
     /**
@@ -96,7 +107,7 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract {
     /**
      * loads the languages by the given DB ID's
      * @param mixed $id's
-     * @return Zend_Db_Table_Row_Abstract | null
+     * @return array | null
      */
     public function loadByIds($ids){
         return $this->loaderByIds($ids, self::LANG_TYPE_ID);
@@ -141,7 +152,7 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract {
     /**
      * @param mixed $lang
      * @param string $field
-     * @return Zend_Db_Table_Row_Abstract | null
+     * @return array | null
      */
     protected function loaderByIds($langs, $field) {
         $s = $this->db->select();
@@ -229,14 +240,14 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract {
     }
     
     /**
+     * @deprecated: Use static ::primaryCodeByRfc5646 API
      * Gibt den Sprachteil von RFC5646-Sprachkürzel zurück (unabh. vom Land),
      * z.B. für "de" für "de-AT" oder "de" für "de" oder "sr" für "Sr-Cyrl".
      * @param int $lang Sprachkürzel nach RFC5646, wie in Tabelle languages hinterlegt
      * @return string mainlanguage der gesuchten Sprache
      */
     public function getMainlanguageByRfc5646($lang){
-        $parts = explode("-", $lang);
-        return strtolower($parts[0]);
+        return static::primaryCodeByRfc5646($lang);
     }
     
     /**
@@ -414,9 +425,9 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract {
         $lngs=$this->loadAll();
         foreach($lngs as $l){
             if($lowercase){
-                $rfcToIsoLanguage[strtolower($l[$key])]=strtolower($l[$value]);
+                $rfcToIsoLanguage[strtolower($l[$key])] = empty($l[$value]) ? $l[$value] : strtolower($l[$value]);
             }else{
-                $rfcToIsoLanguage[$l[$key]]=$l[$value];
+                $rfcToIsoLanguage[$l[$key]] = $l[$value];
             }
         }
         return $rfcToIsoLanguage;

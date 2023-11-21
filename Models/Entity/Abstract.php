@@ -275,10 +275,22 @@ abstract class ZfExtended_Models_Entity_Abstract {
      * Opposed to loadAll this will not return raw data but Entity Objects
      * @return ZfExtended_Models_Entity_Abstract[]
      */
-    protected function loadAllEntities() : array {
+    protected function loadAllEntities() : array
+    {
         $entities = [];
         $select = $this->db->select();
         $this->applyFilterAndSort($select);
+        return $this->loadSelectedEntities($select);
+    }
+
+    /**
+     * Creates Entity-Objects from the passed Zend-Select
+     * @param Zend_Db_Table_Select $select
+     * @return ZfExtended_Models_Entity_Abstract[]
+     */
+    protected function loadSelectedEntities(Zend_Db_Table_Select $select) : array
+    {
+        $entities = [];
         foreach($this->db->fetchAll($select) as $row){
             $entity = new static();
             $entity->initByRow($row);
