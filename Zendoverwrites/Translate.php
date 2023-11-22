@@ -366,22 +366,6 @@ class  ZfExtended_Zendoverwrites_Translate extends Zend_Translate
         return $s;
     }
 
-    /**
-     * Translates a string, if a translation is available, otherwise returns the given fallback
-     * @param string $messageId : string to be translated
-     * @param string $fallback : fallback if no translation is available
-     * @param string|null $locale : language locale
-     * @return string
-     * @throws Zend_Exception
-     */
-    public function _if(string $messageId, string $fallback, string $locale = null)
-    {
-        if ($this->isTranslated($messageId, false, $locale)) {
-            return $this->_($messageId, $locale);
-        }
-        return $fallback;
-    }
-
     public function setJsonEncode(bool $val) {
         $this->_jsonEncode = $val;
     }

@@ -24,22 +24,22 @@ END LICENSE AND COPYRIGHT
 
 /**
  *
- * @method int getId() getId()
- * @method void setId() setId(integer $id)
- * @method int getLangName() getLangName()
- * @method void setLangName() setLangName(string $langName)
- * @method int getLcid() getLcid()
- * @method void setLcid() setLcid(string $lcid)
- * @method string getRfc5646() getRfc5646()
- * @method void setRfc5646() setRfc5646(string $lang)
- * @method string getIso3166Part1alpha2() getIso3166Part1alpha2()
- * @method void setIso3166Part1alpha2() setIso3166Part1alpha2(string $lang)
- * @method int getSublanguage() getSublanguage()
- * @method void setSublanguage() setSublanguage(string $sublang)
- * @method int getRtl() getRtl()
- * @method void setRtl() setRtl(boolean $rtl)
- * @method string getIso6393() getIso6393()
- * @method void setIso6393() setIso6393(string $lang)
+ * @method int getId()
+ * @method void setId(integer $id)
+ * @method string getLangName()
+ * @method void setLangName(string $langName)
+ * @method string getLcid()
+ * @method void setLcid(string $lcid)
+ * @method string getRfc5646()
+ * @method void setRfc5646(string $lang)
+ * @method string getIso3166Part1alpha2()
+ * @method void setIso3166Part1alpha2(string $lang)
+ * @method string getSublanguage()
+ * @method void setSublanguage(string $sublang)
+ * @method int getRtl()
+ * @method void setRtl(boolean $rtl)
+ * @method string getIso6393()
+ * @method void setIso6393(string $lang)
  */
 abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract {
 
@@ -243,7 +243,7 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract {
      * @deprecated: Use static ::primaryCodeByRfc5646 API
      * Gibt den Sprachteil von RFC5646-Sprachkürzel zurück (unabh. vom Land),
      * z.B. für "de" für "de-AT" oder "de" für "de" oder "sr" für "Sr-Cyrl".
-     * @param int $lang Sprachkürzel nach RFC5646, wie in Tabelle languages hinterlegt
+     * @param string $lang Sprachkürzel nach RFC5646, wie in Tabelle languages hinterlegt
      * @return string mainlanguage der gesuchten Sprache
      */
     public function getMainlanguageByRfc5646($lang){

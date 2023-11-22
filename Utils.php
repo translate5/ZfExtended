@@ -232,7 +232,7 @@ class ZfExtended_Utils {
                 }
             } catch (Exception $e){
                 error_log('ZfExtended_Utils::recursiveDelete: Could not delete file ' .
-                    $directory.DIRECTORY_SEPARATOR.$fileinfo->getFilename() . ': ' . $e->getMessage()
+                    $directory . DIRECTORY_SEPARATOR . ': ' . $e->getMessage()
                 );
             }
         }
