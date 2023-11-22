@@ -67,7 +67,7 @@ final class ConfigHelper
     /**
      * Retrieves a config value by providing the full "path" like 'runtimeOptions.pluginName.configName'
      * @param string $configName
-     * @param string|null $configType
+     * @param string $configType
      * @param bool $asArray
      * @return mixed
      * @throws ZfExtended_Exception

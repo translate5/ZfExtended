@@ -26,12 +26,12 @@ END LICENSE AND COPYRIGHT
  * design facts:
  * - since we are not only logging errors but also warnings, infos etc, we are talking about events not errors to be logged.
  *
- * @method void fatal() fatal(string $code, string $message, $extra = null, $writer = [])
- * @method void error() error(string $code, string $message, $extra = null, $writer = [])
- * @method void warn() warn  (string $code, string $message, $extra = null, $writer = [])
- * @method void info() info  (string $code, string $message, $extra = null, $writer = [])
- * @method void debug() debug(string $code, string $message, $extra = null, $writer = []) is only processed if filters are configured to do so (matching domain and level)
- * @method void trace() trace(string $code, string $message, $extra = null, $writer = []) is only processed if filters are configured to do so (matching domain and level)
+ * @method void fatal(string $code, string $message, $extra = null, $writer = [])
+ * @method void error(string $code, string $message, $extra = null, $writer = [])
+ * @method void warn  (string $code, string $message, $extra = null, $writer = [])
+ * @method void info  (string $code, string $message, $extra = null, $writer = [])
+ * @method void debug(string $code, string $message, $extra = null, $writer = []) is only processed if filters are configured to do so (matching domain and level)
+ * @method void trace(string $code, string $message, $extra = null, $writer = []) is only processed if filters are configured to do so (matching domain and level)
  */
 class ZfExtended_Logger {
     /**
@@ -111,7 +111,7 @@ class ZfExtended_Logger {
 
     /**
      * Renders the extra-data into the message
-     * @param string|null $message
+     * @param string $message
      * @param array|null $extra
      * @return string
      */
@@ -280,15 +280,20 @@ class ZfExtended_Logger {
         $event->levelName = $this->getLevelName($event->level);
         return $event;
     }
-    
+
     /**
      * Log the given exception
      * @param Exception $exception
      * @param array $eventOverride array to override the event generated from the exception
      * @param boolean $returnEvent if true given: return the created event instead processing it
      * @return ZfExtended_Logger_Event|null
+     * @throws Zend_Exception
      */
-    public function exception(\Throwable $exception, array $eventOverride = [], $returnEvent = false): ?ZfExtended_Logger_Event {
+    public function exception(
+        \Throwable $exception,
+        array $eventOverride = [],
+        $returnEvent = false
+    ): ?ZfExtended_Logger_Event {
         $event = new ZfExtended_Logger_Event();
         $event->created = NOW_ISO;
         
