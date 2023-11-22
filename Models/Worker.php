@@ -520,6 +520,16 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
         //    $row->delete();
         //}
     }
+
+    /**
+     * Removes all workers for the given task
+     * @param string $taskGuid
+     * @return void
+     */
+    public function cleanForTask(string $taskGuid)
+    {
+        $this->db->delete($this->db->getAdapter()->quoteInto('taskGuid = ?', $taskGuid));
+    }
     
     /**
      * returns a summary of how many workers are in DB, grouped by state
