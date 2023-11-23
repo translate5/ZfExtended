@@ -22,6 +22,7 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
+use MittagQI\ZfExtended\Session\SessionInternalUniqueId;
 use ZfExtended_Models_User as User;
 
 /**
@@ -143,11 +144,10 @@ final class ZfExtended_Authentication
      */
     public function logoutUser(): void
     {
-        $session = new Zend_Session_Namespace();
-        $internalSessionUniqId = $session->internalSessionUniqId;
+        $internalSessionUniqId = SessionInternalUniqueId::getInstance()->get();
         $sessionId = Zend_Session::getId();
-        $sessionMapDb = new ZfExtended_Models_Db_SessionMapInternalUniqId();
-        // delete all entries for the uniqueID but also for the session-id to really clean all related entries
+        $sessionMapDb = new ZfExtended_Models_Db_Session();
+        // delete all entries for the uniqueID but also for the session-id to clean all related entries
         $sessionMapDb->delete(
             'internalSessionUniqId = '.$sessionMapDb->getAdapter()->quote($internalSessionUniqId)
             .' OR session_id = '.$sessionMapDb->getAdapter()->quote($sessionId)

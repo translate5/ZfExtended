@@ -51,9 +51,6 @@ class ZfExtended_WorkerController extends ZfExtended_RestController {
     
     public function __destruct() {
         if($this->cleanupSessionAfterRun){
-            $session = new Zend_Session_Namespace();
-            $SessionMapInternalUniqIdTable = new ZfExtended_Models_Db_SessionMapInternalUniqId();
-            $SessionMapInternalUniqIdTable->update(array('modified'=>0),'`internalSessionUniqId` = \''.$session->internalSessionUniqId.'\'');
             $sessionTable = new ZfExtended_Models_Db_Session();
             $sessionTable->update(array('modified'=>0),'`session_id` = \''.Zend_Session::getId().'\'');
         }

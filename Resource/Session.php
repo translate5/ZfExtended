@@ -125,14 +125,13 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
         $saveHandler = new ZfExtended_Session_SaveHandler_DbTable($this->sessionConfig);
         Zend_Session::setSaveHandler($saveHandler);
 
-        //makes a redirect if successfull
+        //makes a redirect if successfully
         $this->handleSessionToken();
 
         $this->handleAuthToken();
-        
+
         // default handling
         Zend_Session::start();
-        $this->setInternalSessionUniqId();
     }
     
     private function reload(): void
@@ -195,7 +194,6 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
         Zend_Session::start();
 
         $auth = ZfExtended_Authentication::getInstance();
-        $session = new Zend_Session_Namespace();
         $sessionDb->updateAuthToken($row->session_id, $auth->getUserId() ?: null);
         
         //since we have no user instance here, we create the success log by hand
@@ -210,11 +208,6 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
             'login' => $auth->getLogin(),
             'userGuid' => $auth->getUserGuid(),
         ]);
-
-        //since we changed the sessionId, we have to reset the internalSessionUniqId too
-        unset($session->internalSessionUniqId);
-        // create a internalSessionUniqId entry with the same timestamp
-        $this->setInternalSessionUniqId(ZfExtended_Utils::parseDbInt($row->modified));
         //reload redirect to remove authToken from parameter
         //or doing this in access plugin because there are several helpers?
         $this->reload(); //making exit
@@ -227,12 +220,13 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
      */
     private function handleAuthToken(): void
     {
-        $auth = Auth::getInstance();
-        $tokenParam = $_POST[$auth::APPLICATION_TOKEN_HEADER] ?? $this->getFromHeader() ?? false;
+        $tokenParam = $_POST[Auth::APPLICATION_TOKEN_HEADER] ?? $this->getFromHeader() ?? false;
 
         if (empty($tokenParam)) {
             return;
         }
+
+        $auth = Auth::getInstance();
 
         if ($auth->authenticateByToken($tokenParam)) {
             ZfExtended_Models_LoginLog::addSuccess($auth, "authtoken");
@@ -249,26 +243,6 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
                 .'"<b>Fatal: Authentication Token: The token is not valid</b>"}');
         } else {
             die('Authentication Token: The token is not valid!');
-        }
-    }
-
-    /**
-     * Stores the the internalSessionUniqId in a seperate table
-     * TODO FIXME: this is a completely superflous DB-operation (which happens on every request!)
-     * as the internalSessionUniqId could easily be saved in the session-table as well
-     * @param int|null $modified
-     * @return void
-     */
-    private function setInternalSessionUniqId(int $modified = null): void
-    {
-        $session = new Zend_Session_Namespace();
-        if (!isset($session->internalSessionUniqId)) {
-
-            $sessionId = Zend_Session::getId();
-            $session->internalSessionUniqId =  md5($sessionId . uniqid(__FUNCTION__, true));
-
-            $table = new ZfExtended_Models_Db_SessionMapInternalUniqId();
-            $table->createOrUpdateRow($sessionId, $session->internalSessionUniqId, $modified ?? time());
         }
     }
 

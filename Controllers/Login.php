@@ -22,6 +22,7 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
+use MittagQI\ZfExtended\Session\SessionInternalUniqueId;
 use ZfExtended_Models_User as User;
 use ZfExtended_Authentication as Auth;
 
@@ -171,7 +172,7 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
         try {
             $lock->insert(array(
                 'login' => $login,
-                'internalSessionUniqId' => $this->_session->internalSessionUniqId,
+                'internalSessionUniqId' => SessionInternalUniqueId::getInstance()->get(),
             ));
             return false;
         }

@@ -22,6 +22,8 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
+use MittagQI\ZfExtended\Session\SessionInternalUniqueId;
+
 class ZfExtended_Session {
 
     /**
@@ -32,26 +34,29 @@ class ZfExtended_Session {
     public function __construct(){
         $this->events = ZfExtended_Factory::get('ZfExtended_EventManager', array(get_class($this)));
     }
-    /***
-     * Updates the sessionMapInternalUniqId table modified stamp and regenerates the session id if needed
-     * @param bool $regenerate if true, the session id is regenerated!
-     * @return string : return the generated sessionid
-     *
-     */
 
-    /***
-     * Updates the sessionMapInternalUniqId table modified stamp and regenerates the session id if needed.
+    public static function getInternalSessionUniqId(): string
+    {
+        return SessionInternalUniqueId::getInstance()->get();
+    }
+
+    /**
+     * Take over existing session for the current user if existed.
      * In addition, if $findExisting is set to true, this function will try to find an existing valid session for the
      * currently authenticated user, and use this session for the current request
      * @param bool $regenerate
      * @param bool $findExisting
+     * @param int|null $userId
      * @return mixed|string
      * @throws Zend_Db_Table_Exception
      * @throws Zend_Exception
      */
-    public static function updateSession(bool $regenerate = false, bool $findExisting = false, int $userId = null) {
+    public static function updateSession(bool $regenerate = false,
+                                         bool $findExisting = false,
+                                         int $userId = null): mixed
+    {
 
-        $newSessionId = $oldSessionId = null;
+        $newSessionId = null;
 
         // if the user session is set, try to find for the current user existing valid session in the database
         if($findExisting && !is_null($userId)){
@@ -59,43 +64,37 @@ class ZfExtended_Session {
             $sessionDb = new ZfExtended_Models_Db_Session();
             $userSessionDb = $sessionDb->loadSessionIdForUser($userId, session_id());
             $userSessionDb = $userSessionDb['session_id'] ?? null;
+
             // the user has valid session in database ?
-            if(!is_null($userSessionDb) && !empty($userSessionDb)){
+            if(!empty($userSessionDb)){
                 // remove the current temp session, and replace it with the database session.
                 session_destroy();
-                $newSessionId = $oldSessionId = $userSessionDb;
+                $newSessionId = $userSessionDb;
                 session_id($newSessionId);
                 session_start();
                 // when replacing the database session, disable the regenerate
                 $regenerate = false;
             }
         }
-        // if no session id exist, generate new
-        if(is_null($newSessionId) || empty($newSessionId)){
-            $newSessionId = $oldSessionId = Zend_Session::getId();
-        }
 
         if($regenerate){
-            $config = Zend_Registry::get('config');
-            Zend_Session::rememberMe($config->resources->ZfExtended_Resource_Session->lifetime);
+            Zend_Session::rememberMe(Zend_Registry::get('config')->resources->ZfExtended_Resource_Session->lifetime);
+        }
+
+        // if no session id exist, generate new
+        if(empty($newSessionId) || $regenerate){
             $newSessionId = Zend_Session::getId();
         }
-        $sessionMapDb = new ZfExtended_Models_Db_SessionMapInternalUniqId();
-        $sessionMapDb->update([
-            'session_id' => $newSessionId,
-            'modified' => time()
-        ],[
-            'session_id = ?' => $oldSessionId
-        ]);
         return $newSessionId;
     }
 
-    /***
+    /**
      * Remove all sessions for given user, and run the garbage collector after this. <br/>
      * <b>NOTE: this will NOT check if the session is expired, it will just remove all session entries for given userId</b>
      * @param int $userId
      */
-    public function cleanForUser(int $userId){
+    public function cleanForUser(int $userId): void
+    {
         $sessionDb = new ZfExtended_Models_Db_Session();
         $sessionDb->delete([
             'userId = ?' => $userId,
@@ -103,4 +102,5 @@ class ZfExtended_Session {
         ]);
         $this->events->trigger('afterSessionCleanForUser', $this, []);
     }
+
 }
