@@ -179,7 +179,7 @@ class ZfExtended_SessionController extends ZfExtended_RestController {
     }
     
     /**
-     * Deleteing the session via session_id or internalSessionUniqId
+     * Deleting the session via session_id or internalSessionUniqId
      * (non-PHPdoc)
      * @see ZfExtended_RestController::deleteAction()
      */
@@ -187,28 +187,18 @@ class ZfExtended_SessionController extends ZfExtended_RestController {
         $sessionId = $this->_getParam('id');
 
         $sessionTable = new ZfExtended_Models_Db_Session();
-        $SessionMapInternalUniqIdTable = new ZfExtended_Models_Db_SessionMapInternalUniqId();
-
-        //longer as 30 (32) means that it is the sessionMapInternalUniqId,
-        // so we have to fetch the real session_id before
+        // longer as 30 (32) means that it is the internalSessionUniqId,
+        // and we delete the session by internalSessionUniqId then
         $this->acl = ZfExtended_Acl::getInstance();
         if($this->isAllowed(SystemResource::ID, SystemResource::SESSION_DELETE_BY_INTERNAL_ID)
             && strlen($sessionId) > 30) {
-            $result = $SessionMapInternalUniqIdTable->fetchRow([
+            $sessionTable->delete([
                 'internalSessionUniqId = ?' => $sessionId
             ]);
-            if(!$result) {
-                //we don't throw any information about the success here due security reasons, we just do nothing
-                return;
-            }
-            $sessionId = $result->session_id;
+            return;
         }
         
         $sessionTable->delete([
-            'session_id = ?' => $sessionId
-        ]);
-
-        $SessionMapInternalUniqIdTable->delete([
             'session_id = ?' => $sessionId
         ]);
     }

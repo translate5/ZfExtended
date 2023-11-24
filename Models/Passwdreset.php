@@ -28,6 +28,9 @@ END LICENSE AND COPYRIGHT
  * @version 2.0
  *
  */
+
+use MittagQI\ZfExtended\Session\SessionInternalUniqueId;
+
 /**
  * handles passwd reset
  *
@@ -62,10 +65,9 @@ class ZfExtended_Models_Passwdreset extends ZfExtended_Models_Entity_Abstract {
    */
   public function hashMatches($hash) {
       try {
-          $session = new Zend_Session_Namespace();
           $s = $this->db->select();
           $s->where('resetHash = ?', $hash)
-                    ->where('internalSessionUniqId = ?', $session->internalSessionUniqId);
+                    ->where('internalSessionUniqId = ?', SessionInternalUniqueId::getInstance()->get());
             $this->loadRowBySelect($s);
         } catch (ZfExtended_Models_Entity_NotFoundException $exc) {
             return false;
@@ -98,7 +100,6 @@ class ZfExtended_Models_Passwdreset extends ZfExtended_Models_Entity_Abstract {
         $this->setUserId($user->getId());
         $this->setResetHash($session->resetHash);
         $this->setExpiration(time()+1800);
-        $this->setInternalSessionUniqId($session->internalSessionUniqId);
 
         $this->validate();
         $this->save();

@@ -24,11 +24,13 @@ END LICENSE AND COPYRIGHT
 
 /**
  * Class representing the session storage table
- * TODO FIXME: why is the primary-key combined session_id/name ? Also, this should icorporate a "uniqieId" colun instead of adding the 1:1 related table sessionMapInternalUniqId
  */
 class ZfExtended_Models_Db_Session extends Zend_Db_Table_Abstract {
 
-    const GET_VALID_SESSIONS_SQL = 'SELECT `internalSessionUniqId` FROM `sessionMapInternalUniqId` m, `session` s  WHERE s.modified + s.lifetime >= UNIX_TIMESTAMP() AND s.session_id = m.session_id';
+    /**
+     * Select query for not expired sessions.
+     */
+    const GET_VALID_SESSIONS_SQL = 'SELECT `internalSessionUniqId` FROM `session` s WHERE s.modified + INTERVAL s.lifetime SECOND >= NOW()';
 
     protected $_name    = 'session';
     public $_primary = 'session_id';
@@ -57,7 +59,7 @@ class ZfExtended_Models_Db_Session extends Zend_Db_Table_Abstract {
             return self::GET_VALID_SESSIONS_SQL;
         }
 
-        return self::GET_VALID_SESSIONS_SQL . $this->getAdapter()->quoteInto(' AND m.session_id NOT IN (?)', $merged);
+        return self::GET_VALID_SESSIONS_SQL . $this->getAdapter()->quoteInto(' AND s.session_id NOT IN (?)', $merged);
     }
 
     /**
@@ -89,13 +91,13 @@ class ZfExtended_Models_Db_Session extends Zend_Db_Table_Abstract {
     }
 
     /**
-     * Load the session_id for the given user. If $excludeSession is provided, this session value will be ignored from the select.
+     * Load the session_id for the given user. If $excludeSession is provided,
+     * this session value will be ignored from the select.
      * @param int $userId
      * @param string $excludeSession
      * @return mixed
-     * @throws Zend_Db_Table_Exception
      */
-    public function loadSessionIdForUser(int $userId, string $excludeSession = '')
+    public function loadSessionIdForUser(int $userId, string $excludeSession = ''): mixed
     {
         $s = $this->select()
             ->from($this->_name,'session_id')
@@ -104,55 +106,6 @@ class ZfExtended_Models_Db_Session extends Zend_Db_Table_Abstract {
             $s->where('session_id != ?',$excludeSession);
         }
         return $this->getAdapter()->fetchRow($s);
-    }
-
-    /**
-     * Tries to reuse existing rows to update or create a row
-     * @param string $sessionId
-     * @param string $sessionData
-     * @param int $modified
-     * @param int|null $userId
-     * @return void
-     */
-    public function createOrUpdateRow(string $sessionId, string $sessionData, int $modified, ?int $userId)
-    {
-        $row = $this->fetchRow(['session_id = ?' => $sessionId]);
-        // create new row & save
-        if($row === null){
-            $row = $this->createRow();
-            $this->setRowData($row, $sessionId, $modified, $sessionData, $userId);
-            $row->save();
-            return;
-        }
-        // reuse row & save only if existing row differs
-        if (
-            $sessionId !== $row->session_id
-            || $sessionData !== $row->session_data
-            || $userId !== ZfExtended_Utils::parseDbInt($row->userId)
-            || ZfExtended_Resource_Session::doUpdateTimestamp(ZfExtended_Utils::parseDbInt($row->modified), $modified)
-        ) {
-            $this->setRowData($row, $sessionId, $modified, $sessionData, $userId);
-            $row->save();
-        }
-    }
-
-    /**
-     * Fills a session-row with the dynamic data
-     * @param Zend_Db_Table_Row_Abstract $row
-     * @param string $sessionId
-     * @param int|null $modified
-     * @param string|null $sessionData
-     * @param int|null $userId
-     * @return void
-     */
-    private function setRowData(Zend_Db_Table_Row_Abstract $row, string $sessionId, ?int $modified, ?string $sessionData, ?int $userId)
-    {
-        $row->session_id = $sessionId;
-        $row->name = Zend_Session::getOptions('name');
-        $row->modified = $modified;
-        $row->lifetime = Zend_Session::getSaveHandler()->getLifeTime();
-        $row->session_data = $sessionData;
-        $row->userId = $userId;
     }
 }
 
