@@ -65,7 +65,7 @@ final class ConfigHelper
      * @param int|float|string|array|stdClass $expected: the expected value
      * @return bool
      */
-    public static function isValueEqual(mixed $value, int|float|string|array|stdClass $expected): bool
+    public static function isValueEqual(mixed $value, int|float|string|bool|array|stdClass $expected): bool
     {
         // ease of use: supprt Zend_Config values
         if (is_object($value) && $value instanceof Zend_Config) {
