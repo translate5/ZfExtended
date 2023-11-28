@@ -60,7 +60,7 @@ final class ConfigHelper
 
     /**
      * This compares config-values to match an expectation
-     * and the expectation can only be a primitive od stdClass
+     * The expectation can only be a primitive od stdClass
      * @param mixed $value: the value to compare
      * @param int|float|string|array|stdClass $expected: the expected value
      * @return bool
