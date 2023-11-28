@@ -25,6 +25,7 @@ END LICENSE AND COPYRIGHT
 namespace MittagQI\ZfExtended\Service;
 
 use Exception;
+use stdClass;
 use Throwable;
 use Zend_Config;
 use ZfExtended_DbConfig_Type_CoreTypes as CoreTypes;
@@ -55,6 +56,43 @@ final class ConfigHelper
             || (is_string($value) && strlen($value) < 1)
             || (is_int($value) && $value === 0)
             || (is_float($value) && $value == 0);
+    }
+
+    /**
+     * This compares config-values to match an expectation
+     * and the expectation can only be a primitive od stdClass
+     * @param mixed $value: the value to compare
+     * @param int|float|string|array|stdClass $expected: the expected value
+     * @return bool
+     */
+    public static function isValueEqual(mixed $value, int|float|string|array|stdClass $expected): bool
+    {
+        // ease of use: supprt Zend_Config values
+        if (is_object($value) && $value instanceof Zend_Config) {
+            $value = $value->toArray();
+        }
+        // differing complex types: not equal
+        if ((is_object($expected) && !is_object($value)) || (is_array($expected) && !is_array($value))) {
+            return false;
+        }
+        //
+        // objects: turn to arrays
+        if (is_object($expected)) {
+            // just to be sure: dismiss all non-stdClass objects
+            if ($value instanceof stdClass) {
+                $expected = json_decode(json_encode($expected), true);
+                $value = json_decode(json_encode($value), true);
+            } else {
+                return false;
+            }
+        }
+        if (is_array($expected)) {
+            $expected = sort($expected);
+            $value = sort($value);
+            return json_encode($value) === json_encode($expected);
+        }
+        // take care about int/float: 0 !== 0.0 !
+        return (is_int($expected) || is_float($expected)) ? $value == $expected : $value === $expected;
     }
 
     /**
