@@ -25,7 +25,7 @@ END LICENSE AND COPYRIGHT
 use MittagQI\ZfExtended\CsrfProtection;
 
 /**
- * Represents an API-Request on the T5 API
+ * Represents an API-Client for the T5 API
  * Sets the correct environment & authorization cookie
  */
 class ZfExtended_ApiClient extends Zend_Http_Client {
