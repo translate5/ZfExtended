@@ -129,6 +129,9 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
         $this->handleSessionToken();
 
         $this->handleAuthToken();
+
+        // default handling
+        Zend_Session::start();
     }
     
     private function reload(): void
