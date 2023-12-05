@@ -36,13 +36,48 @@ END LICENSE AND COPYRIGHT
  */
 class  ZfExtended_Zendoverwrites_Translate extends Zend_Translate
 {
+
+    protected static $_instance = null;
+
+    /**
+     * always sets jsonEncode to false to ensure strings are only jsonencoded if explicitly set after instance is fetched
+     * @param bool $init causes getInstance, to create the singleton new
+     * @return ZfExtended_Zendoverwrites_Translate
+     */
+    public static function getInstance($init = false)
+    {
+        if (null === self::$_instance || $init) {
+            //warning overwriting this method changes also the class
+            //name since self point to the method defining class!
+            try {
+                self::$_instance = ZfExtended_Factory::get(__CLASS__);
+                self::$_instance->setJsonEncode(false);
+                Zend_Registry::set('Zend_Translate', self::$_instance);
+            }
+            catch(Exception $e){
+                self::$_instance = new ZfExtended_Zendoverwrites_TranslateError($e);
+                return self::$_instance;
+            }
+        }
+
+        return self::$_instance;
+    }
+
+    /**
+     * Singleton Instanz auf NULL setzen, um sie neu initialiseren zu können
+     *
+     * @return void
+     */
+    public static function reset() {
+        self::$_instance = NULL;
+    }
+
+
     /**
      * @var boolean if the to translated string should be json-encoded before return
      */
     protected $_jsonEncode = false;
-    
-    protected static $_instance = null;
-    
+
     /**
      * @var string the language part of the locale
      */
@@ -116,31 +151,7 @@ class  ZfExtended_Zendoverwrites_Translate extends Zend_Translate
         parent::__construct($config);
         $this->addTranslations();
     }
-    
-    /**
-     * always sets jsonEncode to false to ensure strings are only jsonencoded if explicitly set after instance is fetched
-     * @param bool $init causes getInstance, to create the singleton new
-     * @return ZfExtended_Zendoverwrites_Translate
-     */
-    public static function getInstance($init = false)
-    {
-        if (null === self::$_instance || $init) {
-            //warning overwriting this method changes also the class
-            //name since self point to the method defining class!
-            try {
-                self::$_instance = ZfExtended_Factory::get(__CLASS__);
-                self::$_instance->setJsonEncode(false);
-                Zend_Registry::set('Zend_Translate', self::$_instance);
-            }
-            catch(Exception $e){
-                self::$_instance = new ZfExtended_Zendoverwrites_TranslateError($e);
-                return self::$_instance;
-            }
-        }
-        
-        return self::$_instance;
-    }
-    
+
     /**
      * returns an assoc array with the available translations.
      * Key is the localeKey (de/en), value is the name of the language.
@@ -354,19 +365,12 @@ class  ZfExtended_Zendoverwrites_Translate extends Zend_Translate
         }
         return $s;
     }
+
     public function setJsonEncode(bool $val) {
         $this->_jsonEncode = $val;
     }
+
     public function getJsonEncode(){
         return $this->_jsonEncode;
-    }
-
-    /**
-     * Singleton Instanz auf NULL setzen, um sie neu initialiseren zu können
-     *
-     * @return void
-     */
-    public static function reset() {
-        self::$_instance = NULL;
     }
 }

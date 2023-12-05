@@ -275,10 +275,22 @@ abstract class ZfExtended_Models_Entity_Abstract {
      * Opposed to loadAll this will not return raw data but Entity Objects
      * @return ZfExtended_Models_Entity_Abstract[]
      */
-    protected function loadAllEntities() : array {
+    protected function loadAllEntities() : array
+    {
         $entities = [];
         $select = $this->db->select();
         $this->applyFilterAndSort($select);
+        return $this->loadSelectedEntities($select);
+    }
+
+    /**
+     * Creates Entity-Objects from the passed Zend-Select
+     * @param Zend_Db_Table_Select $select
+     * @return ZfExtended_Models_Entity_Abstract[]
+     */
+    protected function loadSelectedEntities(Zend_Db_Table_Select $select) : array
+    {
+        $entities = [];
         foreach($this->db->fetchAll($select) as $row){
             $entity = new static();
             $entity->initByRow($row);
@@ -804,31 +816,42 @@ abstract class ZfExtended_Models_Entity_Abstract {
         }
         return (string)mb_substr($value, 0, $md[$field]['LENGTH'], 'utf-8');
     }
-    
+
     /***
      * Get specificData field value. The returned value will be json decoded.
      * If $propertyName is provided, only the value for this field will be returned if exisit.
-     * @param string $propertyName
-     * @return mixed|NULL
+     *
+     * @param string|null $propertyName
+     * @param bool $parseAsArray
+     *
+     * @return mixed|null
+     *
+     * @throws Zend_Exception
      */
-    public function getSpecificData($propertyName=null){
-        $specificData=$this->__call('getSpecificData', array());
-        
-        if(empty($specificData)){
+    public function getSpecificData(?string $propertyName = null, bool $parseAsArray = false): mixed
+    {
+        $specificData = $this->__call('getSpecificData', []);
+
+        if (empty($specificData)) {
             return null;
         }
+
         //try to decode the data
         try {
-            $specificData=json_decode($specificData);
-            
+            $specificData = json_decode($specificData, $parseAsArray, flags: JSON_THROW_ON_ERROR);
+
             //return the property name value if exist
-            if(isset($propertyName)){
+            if ($parseAsArray && isset($specificData[$propertyName])) {
+                return $specificData[$propertyName];
+            } elseif (isset($propertyName)) {
                 return $specificData->$propertyName ?? null;
             }
+
             return $specificData;
         } catch (Exception $e) {
-            
+            // Nothing to do here as null will be returned
         }
+
         return null;
     }
     

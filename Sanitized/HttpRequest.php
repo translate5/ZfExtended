@@ -139,7 +139,8 @@ class ZfExtended_Sanitized_HttpRequest extends REST_Controller_Request_Http {
      * Sanitizes the "data" param that represents the JSON data of a PUT or POST
      * @param bool $decodeAssociative
      * @param array $typeMap
-     * @return stdClass|array|string
+     * @return mixed
+     * @throws Zend_Controller_Request_Exception
      * @throws ZfExtended_BadRequest
      * @throws ZfExtended_SecurityException
      */

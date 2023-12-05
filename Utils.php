@@ -232,7 +232,7 @@ class ZfExtended_Utils {
                 }
             } catch (Exception $e){
                 error_log('ZfExtended_Utils::recursiveDelete: Could not delete file ' .
-                    $directory.DIRECTORY_SEPARATOR.$fileinfo->getFilename() . ': ' . $e->getMessage()
+                    $directory . DIRECTORY_SEPARATOR . ': ' . $e->getMessage()
                 );
             }
         }
@@ -456,7 +456,7 @@ class ZfExtended_Utils {
     /***
      * Replace the co and c1 controll characters with empty space.
      */
-    public static function replaceC0C1ControlCharacters(string $term)
+    public static function replaceC0C1ControlCharacters(string $term): string
     {
         foreach (mb_str_split($term, 1, 'utf-8') as $ch) {
             $ord = mb_ord($ch);
@@ -468,7 +468,7 @@ class ZfExtended_Utils {
                 $term =  str_replace($ch,'',$term);
             }
         }
-        return $term;
+        return (string) $term;
     }
 
     /**
@@ -617,6 +617,25 @@ class ZfExtended_Utils {
             return $dbInt;
         }
         return intval($dbInt);
+    }
+
+    /**
+     * Adds a Condition to a Zend select, that ditinguishes between "IN" and "=" depending on the count
+     * The column argument is expected to be fully qualified if neccessary like "table.column"
+     * @param Zend_Db_Table_Select $select
+     * @param array $values
+     * @param string $column
+     * @return void
+     */
+    public static function addArrayCondition(Zend_Db_Table_Select $select, array $values, string $column): void
+    {
+        if (count($values) > 1) {
+            $select->where($column . ' IN (?)', $values);
+        } else if (count($values) === 1) {
+            $select->where($column . ' = ?', $values[0]);
+        } else {
+            $select->where('1 = 0');
+        }
     }
 
     /**
