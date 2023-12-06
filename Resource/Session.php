@@ -135,7 +135,7 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
         {
             // if the auth token was used, we need to save the session id in the DB
             // we set the read-only flag to false in case later some other plugin needs to write to the session
-            Zend_Session::writeClose(false);
+            //Zend_Session::writeClose(false);
         }
     }
     
