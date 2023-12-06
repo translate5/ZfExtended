@@ -147,9 +147,6 @@ class ZfExtended_SessionController extends ZfExtended_RestController {
         if ($authentication->authenticatePasswordAndToken($login, $passwd)) {
             $userModel = $authentication->getUser();
 
-            // check for existing valid session for the current user
-            //$sessionId = ZfExtended_Session::updateSession(true, true, intval($userModel->getId()));
-
             $newSessId = substr($sessionId, 0, 10);
 
             $session = new Zend_Session_Namespace();

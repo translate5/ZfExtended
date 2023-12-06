@@ -131,12 +131,7 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
         // default handling
         Zend_Session::start();
 
-        if($this->handleAuthToken())
-        {
-            // if the auth token was used, we need to save the session id in the DB
-            // we set the read-only flag to false in case later some other plugin needs to write to the session
-            //Zend_Session::writeClose(false);
-        }
+        $this->handleAuthToken();
     }
     
     private function reload(): void
@@ -220,22 +215,22 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
 
     /**
      * Handle authentication via app token
-     * @return bool
+     * @return void
      * @throws Zend_Exception
      */
-    private function handleAuthToken(): bool
+    private function handleAuthToken(): void
     {
         $tokenParam = $_POST[Auth::APPLICATION_TOKEN_HEADER] ?? $this->getFromHeader() ?? false;
 
         if (empty($tokenParam)) {
-            return false;
+            return;
         }
 
         $auth = Auth::getInstance();
 
         if ($auth->authenticateByToken($tokenParam)) {
             ZfExtended_Models_LoginLog::addSuccess($auth, "authtoken");
-            return true;
+            return;
         }
 
         $sysLog = Zend_Registry::get('logger');
