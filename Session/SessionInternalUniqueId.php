@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MittagQI\ZfExtended\Session;
 
 use Exception;
@@ -12,7 +14,7 @@ use Exception;
 class SessionInternalUniqueId
 {
 
-    public const INTERNAL_SESSION_UNIQUE_ID = 'INTERNAL_SESSION_UNIQUE_ID';
+    private string $internalId;
 
     private static ?SessionInternalUniqueId $instance = null;
 
@@ -20,6 +22,7 @@ class SessionInternalUniqueId
     {
         if (self::$instance === null) {
             self::$instance = new self();
+            self::$instance->generate();
         }
         return self::$instance;
     }
@@ -28,30 +31,22 @@ class SessionInternalUniqueId
      * Generate uniqie hash and store it in a constant.
      * @throws Exception
      */
-    public function generate(): string
+    private function generate(): string
     {
-        if (!defined(self::INTERNAL_SESSION_UNIQUE_ID)) {
-            define(
-                self::INTERNAL_SESSION_UNIQUE_ID,
-                bin2hex(random_bytes(16))
-            );
-        }
-        return constant(self::INTERNAL_SESSION_UNIQUE_ID);
+        return $this->internalId = bin2hex(random_bytes(16));
     }
 
-    public function set(string $value): void
+    public function set(?string $value): void
     {
-        if (!defined(self::INTERNAL_SESSION_UNIQUE_ID)) {
-            define(self::INTERNAL_SESSION_UNIQUE_ID, $value);
+        if (is_null($value)) {
+            $this->generate();
         }
+        $this->internalId = $value;
     }
 
     public function get(): ?string
     {
-        if (defined(self::INTERNAL_SESSION_UNIQUE_ID)) {
-            return constant(self::INTERNAL_SESSION_UNIQUE_ID);
-        }
-        return null;
+        return $this->internalId;
     }
 
 }
