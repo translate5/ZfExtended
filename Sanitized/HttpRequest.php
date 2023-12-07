@@ -194,7 +194,10 @@ class ZfExtended_Sanitized_HttpRequest extends REST_Controller_Request_Http {
             }
             return $requestValue;
         }
-        return ZfExtended_Sanitizer::string($requestValue);
+        if(!empty($requestValue)){
+            return ZfExtended_Sanitizer::string($requestValue);
+        }
+        return $requestValue;
     }
 
     /**
