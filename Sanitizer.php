@@ -44,12 +44,15 @@ final class ZfExtended_Sanitizer {
     /**
      * Sanitizes a request value that represents the given type
      * The type must be one of our constants
-     * @param string $val
+     * @param string|null $val
      * @param string $type
-     * @return string
+     * @return string|null
      * @throws ZfExtended_SecurityException
      */
-    public static function sanitize(string $val, string $type) : string {
+    public static function sanitize(?string $val, string $type): ?string {
+        if(empty($val)){
+            return $val;
+        }
         return match ($type) {
             self::MARKUP => self::markup($val),
             self::UNSANITIZED => $val,
@@ -61,7 +64,7 @@ final class ZfExtended_Sanitizer {
      * @param string $string
      * @return string
      */
-    public static function string(string $string) : string {
+    public static function string(string $string): string {
         return strip_tags($string);
     }
 
@@ -74,7 +77,7 @@ final class ZfExtended_Sanitizer {
      * @return string
      * @throws ZfExtended_SecurityException
      */
-    public static function markup(string $markup) : string {
+    public static function markup(string $markup): string {
         $dom = new ZfExtended_Dom();
         $nodeList = $dom->loadUnicodeMarkup($markup);
         // this is debatable: when invalid markup is posted, we remove it and use the posted text contents

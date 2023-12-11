@@ -84,7 +84,7 @@ class ZfExtended_Session_SaveHandler_DbTable extends Zend_Session_SaveHandler_Db
      */
     public function write($id, $data): bool
     {
-        $internalId = SessionInternalUniqueId::getInstance()->generate();
+        $internalId = SessionInternalUniqueId::getInstance()->get();
 
         $userId = ZfExtended_Authentication::getInstance()->getUserId() ?: null;
         $data = [
