@@ -69,7 +69,12 @@ final class ZfExtended_Dom extends DOMDocument {
 
     private DOMXPath $xpath;
 
-    public function __construct($version=null, $encoding=null){
+    /**
+     * @param string $version
+     * @param string $encoding
+     */
+    public function __construct(string $version = '1.0', string $encoding = '')
+    {
         parent::__construct($version, $encoding);
         // as long as libxml reports completely outdated errors (-> HTML 4.0.1 strict specs) we disable this
         $this->strictErrorChecking = false;
@@ -78,15 +83,16 @@ final class ZfExtended_Dom extends DOMDocument {
     /**
      * @param string $filename
      * @param null $options
-     * @return bool|DOMDocument
+     * @return bool|DOMDocument // returns bool when called dynamic
      */
-    public function load ($filename, $options=NULL) { // returns bool when called dynamic
+    public function load(string $filename, int $options = null): bool|DOMDocument
+    {
         $filename = realpath($filename);
         $this->domErrors = [];
         libxml_clear_errors();
         $useErrors = libxml_use_internal_errors(true);
         try {
-            $result = parent::load($filename, $options);
+            $result = parent::load($filename, $options ?? 0);
             $this->domErrors = libxml_get_errors();
         } catch (Exception $e) {
             $this->domErrors[] = $this->createLibXmlError($e->getMessage(), $filename);
@@ -102,12 +108,13 @@ final class ZfExtended_Dom extends DOMDocument {
      * @param null $options
      * @return bool|DOMDocument
      */
-    public function loadXML ($source, $options=NULL){
+    public function loadXML(string $source, int $options = null): bool|DOMDocument
+    {
         $this->domErrors = [];
         libxml_clear_errors();
         $useErrors = libxml_use_internal_errors(true);
         try {
-            $result = parent::loadXML($source, $options);
+            $result = parent::loadXML($source, $options ?? 0);
             $this->domErrors = libxml_get_errors();
         } catch (Exception $e) {
             $this->domErrors[] = $this->createLibXmlError($e->getMessage());
@@ -123,12 +130,13 @@ final class ZfExtended_Dom extends DOMDocument {
      * @param null $options
      * @return bool|DOMDocument
      */
-    public function loadHTML ($source, $options=NULL){
+    public function loadHTML(string $source, int $options = null): bool|DOMDocument
+    {
         $this->domErrors = [];
         libxml_clear_errors();
         $useErrors = libxml_use_internal_errors(true);
         try {
-            $result = parent::loadHTML($source, $options);
+            $result = parent::loadHTML($source, $options ?? 0);
             $this->domErrors = libxml_get_errors();
         } catch (Exception $e) {
             $this->domErrors[] = $this->createLibXmlError($e->getMessage());
@@ -166,7 +174,7 @@ final class ZfExtended_Dom extends DOMDocument {
         if($nodes != NULL){
             for($i=0; $i < $nodes->length; $i++){
                 $node = $nodes->item($i);
-                if($node->nodeType == XML_ELEMENT_NODE){
+                if($node->nodeType === XML_ELEMENT_NODE){
                     return $node;
                 }
             }
@@ -179,13 +187,14 @@ final class ZfExtended_Dom extends DOMDocument {
      * @param null $options
      * @return bool|DOMDocument
      */
-    public function loadHTMLFile ($filename, $options=NULL){
+    public function loadHTMLFile(string $filename, int $options = null): bool|DOMDocument
+    {
         $filename = realpath($filename);
         $this->domErrors = [];
         libxml_clear_errors();
         $useErrors = libxml_use_internal_errors(true);
         try {
-            $result = parent::loadHTMLFile($filename, $options);
+            $result = parent::loadHTMLFile($filename, $options ?? 0);
             $this->domErrors = libxml_get_errors();
         } catch (Exception $e) {
             $this->domErrors[] = $this->createLibXmlError($e->getMessage(), $filename);
