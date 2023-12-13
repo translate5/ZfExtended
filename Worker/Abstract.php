@@ -578,9 +578,13 @@ abstract class ZfExtended_Worker_Abstract {
     {
         $duration = 0;
         $start = strtotime($this->workerModel->getStarttime() ?? '');
-        $end = strtotime($this->workerModel->getEndtime() ?? '');
 
-        if ($end === false) {
+        $end = $this->workerModel->getEndtime();
+        if (! is_null($end)) {
+            $end = strtotime($this->workerModel->getEndtime());
+        }
+
+        if (is_null($end) || $end === false) {
            $end = time();
         }
 
