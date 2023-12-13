@@ -359,6 +359,8 @@ class ZfExtended_Utils {
         $c = $db->getConfig();
         //FIXME on cluster installations this would fail, since hostname is different for the different web servers.
         // no solution here, since putting a random value into the config would not prevent same ids on cloning installations.
+        // addition: it depends on the use case: for worker:queue locking that would be ok,
+        // so that queue can be triggered on each node
         $host = gethostname();
         return md5($salt.$host.$c['host'].$c['username'].$c['dbname']);
     }
@@ -379,10 +381,11 @@ class ZfExtended_Utils {
 
     /**
      * creates a guid as defined in the config (md5 or uuid v4), for historical reasons for some entities
-     * @param bool addBrackets to add {}-brackets around the GUID, defaults to false
+     * @param bool $addBrackets to add {}-brackets around the GUID, defaults to false
      * @return string $guid
+     * @throws Exception
      */
-    public static function guid($addBrackets = false): string {
+    public static function guid(bool $addBrackets = false): string {
         $validator = new ZfExtended_Validate_Guid();
         switch (true) {
             //some intallations are using md5 formatted UUIDs
@@ -395,7 +398,7 @@ class ZfExtended_Utils {
                     return '{' . self::uuid() . '}';
                 }
                 return self::uuid();
-        };
+        }
     }
     
     /***
