@@ -76,6 +76,12 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract {
     {
         return array_map('intval', explode(',', trim($customers, ',')));
     }
+
+    /**
+     * Caches the setaclrole restricted roles
+     * @var array
+     */
+    protected static array $setaclroleCache = [];
     
     protected $dbInstanceClass = 'ZfExtended_Models_Db_User';
     protected $validatorInstanceClass = 'ZfExtended_Models_Validator_User';
@@ -413,7 +419,7 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract {
     }
 
     /**
-     * If this API returns truie, all views this user accesses have to be client-filtered
+     * If this API returns true, all views this user accesses have to be client-filtered
      * @return bool
      */
     public function isClientRestricted(): bool
@@ -432,5 +438,32 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract {
             return $this->getCustomersArray();
         }
         return [];
+    }
+
+    /**
+     * Retrieves the roles a user is allowed to set for other users
+     * This also defines, if another user is editable for a user
+     * @return string[]
+     */
+    public function getSetableRoles(): array
+    {
+        if(!array_key_exists($this->getId(), static::$setaclroleCache)){
+            static::$setaclroleCache[$this->getId()]
+                = ZfExtended_Acl::getInstance()->getSetableRolesForRoles($this->getRoles());
+        }
+        return static::$setaclroleCache[$this->getId()];
+    }
+
+    /**
+     * Retrieves, if a user can be edited by another user.
+     * This will be evaluated by the "setaclrule" ACLs of the given user:
+     * If the user is allowed to set all our roles, he is allowed to edit
+     * @param ZfExtended_Models_User|null $user
+     * @return bool
+     */
+    public function isEditableFor(?ZfExtended_Models_User $user): bool
+    {
+        $userSetableRoles = ($user === null) ? [] : $user->getSetableRoles();
+        return empty(array_diff($this->getRoles(), $userSetableRoles));
     }
 }

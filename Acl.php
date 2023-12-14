@@ -80,7 +80,7 @@ class ZfExtended_Acl extends Zend_Acl {
 
         //currently we load the rules for all modules, if we ever need to differ,
         // we have to do that in the isAllowed call
-        // the previous module filter was producing to much problems
+        // the previous module filter was producing too many problems
         $rules = $db->loadAll();
 
         $this->addRoles(array_unique(array_column($rules, 'role')));
@@ -112,7 +112,7 @@ class ZfExtended_Acl extends Zend_Acl {
         $s = $db->select()
             ->from($db->info($db::NAME))
             ->where('resource = ?',$resource)
-            ->where('role IN(?)',$roles);
+            ->where('role IN (?)',$roles);
         return $db->fetchAll($s)->toArray();
     }
 
@@ -128,7 +128,7 @@ class ZfExtended_Acl extends Zend_Acl {
         $s = $db->select()
             ->from($db->info($db::NAME), 'module')
             ->where('resource = ?', Dispatcher::INITIAL_PAGE_RESOURCE)
-            ->where('role IN(?)',$roles)
+            ->where('role IN (?)',$roles)
             ->distinct();
         return array_column($db->fetchAll($s)->toArray(), 'module');
     }
@@ -235,6 +235,24 @@ class ZfExtended_Acl extends Zend_Acl {
             }
             $this->allow($role, $resource, $right);
         }
+    }
+
+    /**
+     * Retrieves all Roles that can be set in the user-management for the given roleset
+     * @param string[] $roles
+     * @return string[]
+     */
+    public function getSetableRolesForRoles(array $roles): array
+    {
+        $setableRoles = [];
+        foreach($this->_allRules as $rule) {
+            if($rule['resource'] === SetAclRoleResource::ID
+                && in_array($rule['role'], $roles)
+                && !in_array($rule['right'], $setableRoles)){
+                $setableRoles[] = $rule['right'];
+            }
+        }
+        return $setableRoles;
     }
     
     /**
