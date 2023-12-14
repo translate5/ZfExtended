@@ -58,17 +58,33 @@ class ZfExtended_UserController extends ZfExtended_RestController {
      * FIXME Sicherstellen, dass für nicht PMs diese Methode nur die User liefert, die gemeinsam mit dem aktuellen User an Tasks arbeiten.
      * FIXME Generell werden nur User mit der Rolle "editor" angezeigt, alle anderen haben eh keinen Zugriff auf T5
      */
-    public function indexAction() {
+    public function indexAction()
+    {
         $isAllowed = $this->isAllowed(SystemResource::ID, SystemResource::SEE_ALL_USERS);
-        if($isAllowed){
-            $rows= $this->entity->loadAll();
-            $count= $this->entity->getTotalCount();
-        }else{
-            $rows= $this->entity->loadAllOfHierarchy();
-            $count= $this->entity->getTotalCountHierarchy();
+        if ($isAllowed) {
+            $rows = $this->entity->loadAll();
+            $count = $this->entity->getTotalCount();
+        } else {
+            $rows = $this->entity->loadAllOfHierarchy();
+            $count = $this->entity->getTotalCountHierarchy();
         }
         $this->view->rows = $rows;
         $this->view->total = $count;
+
+        // Checking user-access of the authenticated user on other users
+        // retrive the roles the auth user is allowed to set
+        $authenticatedUser = ZfExtended_Authentication::getInstance()->getUser();
+        $editableRoles = $authenticatedUser->getSetableRoles();
+        // a user will be regarded as editable if all roles of the user can be set
+        // note, the editable prop is not persisting in the frontend
+        foreach ($this->view->rows as $index => $user) {
+            if ($user['id'] !== $authenticatedUser->getId()
+                && $user['editable'] === '1'
+                && !empty(array_diff(explode(',', $user['roles']), $editableRoles))) {
+                $this->view->rows[$index]['editable'] = '0';
+            }
+        }
+
         $this->csvToArray();
     }
 
@@ -92,7 +108,6 @@ class ZfExtended_UserController extends ZfExtended_RestController {
         $this->csvToArray();
     }
 
-
     /**
      * (non-PHPdoc)
      * @see ZfExtended_RestController::putAction()
@@ -100,6 +115,16 @@ class ZfExtended_UserController extends ZfExtended_RestController {
     public function putAction() {
         try {
             $this->entityLoad();
+
+            // check, if the authenticated user is entitled to edit the sent user
+            // note, that a user always is entitled to edit himself
+            $authenticatedUser = ZfExtended_Authentication::getInstance()->getUser();
+            if($this->entity->getId() != $authenticatedUser->getId()
+                && !$this->entity->isEditableFor($authenticatedUser)){
+                // TODO: may should get an own Exception
+                throw new ZfExtended_Exception('You are not entitled to edit this user.');
+            }
+
             $this->decodePutData();
 
             // UGLY/QUIRK: client-restricted PMs may save Users, that contain customers, the PMs cannot see in the frontend and they have no rights to remove.
@@ -524,56 +549,53 @@ class ZfExtended_UserController extends ZfExtended_RestController {
      * @throws ZfExtended_NoAccessException
      */
     protected function handleUserSetAclRole(){
-        $isPost=$this->_request->isPost();
-        $isPut=$this->_request->isPut();
-        if(!$isPost && !$isPut) {
+
+        if (!$this->_request->isPost() && !$this->_request->isPut()) {
             return;
         }
 
-        if(!isset($this->data->roles)){
+        if (!isset($this->data->roles)) {
             return;
         }
 
         $this->data->roles = trim($this->data->roles, ',');
 
         //get the user old roles (put only)
-        $oldRoles=[];
-        if(isset($this->data->id)){
-            $userModel=ZfExtended_Factory::get('ZfExtended_Models_User');
-            /* @var $userModel ZfExtended_Models_User */
+        $oldRoles = [];
+        if (isset($this->data->id)) {
+            $userModel = ZfExtended_Factory::get(ZfExtended_Models_User::class);
             $userModel->load($this->data->id);
-
             $oldRoles = $userModel->getRoles();
         }
 
         //if there are old roles, remove the roles for which the user isAllowed for setaclrole
-        if(!empty($oldRoles)){
-            $toRemove=[];
-            foreach ($oldRoles as $old){
-                $isAllowed=$this->isAllowed(SetAclRoleResource::ID, $old);
-                if($isAllowed){
-                    $toRemove[]=$old;
+        if (!empty($oldRoles)) {
+            $toRemove = [];
+            foreach ($oldRoles as $old) {
+                $isAllowed = $this->isAllowed(SetAclRoleResource::ID, $old);
+                if ($isAllowed) {
+                    $toRemove[] = $old;
                 }
             }
             //remove the roles for which the user is allowed
-            $oldRoles= array_diff($oldRoles,$toRemove);
+            $oldRoles = array_diff($oldRoles, $toRemove);
         }
 
-        $requestAclsArray=[];
-        if(!empty($this->data->roles)){
-            $requestAclsArray = explode(',',$this->data->roles);
+        $requestAclsArray = [];
+        if (!empty($this->data->roles)) {
+            $requestAclsArray = explode(',', $this->data->roles);
         }
 
         //check if the user is allowed for the requested roles
-        foreach ($requestAclsArray as $role){
-            $isAllowed=$this->isAllowed(SetAclRoleResource::ID, $role);
-            if(!$isAllowed){
-                throw new ZfExtended_NoAccessException("Authenticated User is not allowed to modify role ".$role);
+        foreach ($requestAclsArray as $role) {
+            $isAllowed = $this->isAllowed(SetAclRoleResource::ID, $role);
+            if (!$isAllowed) {
+                throw new ZfExtended_NoAccessException("Authenticated User is not allowed to modify role " . $role);
             }
         }
 
         // merge the requested roles and the old roles and apply the autoset roles to them
-        $requestAclsArray = $this->acl->mergeAutoSetRoles($requestAclsArray,$oldRoles);
+        $requestAclsArray = $this->acl->mergeAutoSetRoles($requestAclsArray, $oldRoles);
 
         $this->data->roles = implode(',', $requestAclsArray);
     }
