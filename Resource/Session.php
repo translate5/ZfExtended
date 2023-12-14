@@ -103,7 +103,7 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
         $resconf = $config->resources->ZfExtended_Resource_Session->toArray();
         $resconf['cookie_lifetime'] =
         $resconf['gc_maxlifetime'] =
-        $resconf['remember_me_seconds'] = $resconf['lifetime'];
+        $resconf['remember_me_seconds'] = $resconf['lifetime'] ?? null; // will use the default value when not set
 
         unset($resconf['lifetime']);
 

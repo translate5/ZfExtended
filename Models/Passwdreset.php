@@ -74,15 +74,23 @@ class ZfExtended_Models_Passwdreset extends ZfExtended_Models_Entity_Abstract {
         }
         return true;
   }
-  /**
-    * reset password
-    * @param string $login
-    * @return boolean
-    */
-    public function reset(string $login, string $origin) {
+
+    /**
+     * reset password
+     * @param string $login
+     * @param string $origin
+     * @return boolean
+     * @throws ReflectionException
+     * @throws Zend_Db_Statement_Exception
+     * @throws Zend_Exception
+     * @throws ZfExtended_Models_Entity_Exceptions_IntegrityConstraint
+     * @throws ZfExtended_Models_Entity_Exceptions_IntegrityDuplicateKey
+     * @throws ZfExtended_ValidateException
+     */
+    public function reset(string $login, string $origin): bool
+    {
         $session = new Zend_Session_Namespace();
-        $user = ZfExtended_Factory::get('ZfExtended_Models_User');
-        /* @var $user ZfExtended_Models_User */
+        $user = ZfExtended_Factory::get(ZfExtended_Models_User::class);
         try {
             $user->loadRow('login = ?', $login);
         } catch (ZfExtended_Models_Entity_NotFoundException $exc) {//catch the 404 thrown, if no user found
@@ -100,6 +108,7 @@ class ZfExtended_Models_Passwdreset extends ZfExtended_Models_Entity_Abstract {
         $this->setUserId($user->getId());
         $this->setResetHash($session->resetHash);
         $this->setExpiration(time()+1800);
+        $this->setInternalSessionUniqId(SessionInternalUniqueId::getInstance()->get());
 
         $this->validate();
         $this->save();
