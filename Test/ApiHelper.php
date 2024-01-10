@@ -954,6 +954,14 @@ class ZfExtended_Test_ApiHelper {
     }
 
     /**
+     * @return array
+     */
+    public function getAllowHttpStatusOnce()
+    {
+        return $this->allowHttpStatusOnce;
+    }
+
+    /**
      * Decodes a returned JSON answer from Translate5 REST API
      * @param Zend_Http_Response $resp
      * @param bool $isTreeData
