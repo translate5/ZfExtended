@@ -434,7 +434,7 @@ abstract class ZfExtended_Worker_Abstract {
 
 
     /**
-     * Update the progress for the current worker model with the given value (float between 0 ad 1)
+     * Update the progress for the current worker model with the given value (float between 0 and 1)
      *
      * @param float $progress
      * @throws ZfExtended_Models_Db_Exceptions_DeadLockHandler

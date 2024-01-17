@@ -24,7 +24,7 @@ END LICENSE AND COPYRIGHT
 
 /**
  * Contains the config handler for core config types
- * These are (see table definition): string | integer | boolean | list | map | absolutepath | float | markup | json | regex | regexlist
+ * These are (see table definition): string | integer | boolean | list | map | absolutepath | float | markup | json | regex | regexlist | xpath | xpathlist
  */
 class ZfExtended_DbConfig_Type_CoreTypes extends ZfExtended_DbConfig_Type_Abstract {
 
@@ -50,6 +50,10 @@ class ZfExtended_DbConfig_Type_CoreTypes extends ZfExtended_DbConfig_Type_Abstra
 
     const TYPE_REGEXLIST = 'regexlist';
 
+    const TYPE_XPATH = 'xpath';
+
+    const TYPE_XPATHLIST = 'xpathlist';
+
     /**
      * Retrieves the sanititzation-type for a config-type
      * Note, that the application therefore is responsible to sanitize REGEX & REGEXLIST types (what for Config-values is achieved with the validation via ::validateValue)
@@ -59,7 +63,10 @@ class ZfExtended_DbConfig_Type_CoreTypes extends ZfExtended_DbConfig_Type_Abstra
     public static function sanitizationType(string $configType) : string
     {
         return match ($configType) {
-            self::TYPE_REGEX, self::TYPE_REGEXLIST => ZfExtended_Sanitizer::UNSANITIZED,
+            self::TYPE_REGEX,
+            self::TYPE_REGEXLIST,
+            self::TYPE_XPATH,
+            self::TYPE_XPATHLIST => ZfExtended_Sanitizer::UNSANITIZED,
             self::TYPE_MARKUP => ZfExtended_Sanitizer::MARKUP,
             default => ZfExtended_Sanitizer::STRING,
         };
@@ -73,8 +80,15 @@ class ZfExtended_DbConfig_Type_CoreTypes extends ZfExtended_DbConfig_Type_Abstra
     public static function phpType(string $type): string
     {
         return match ($type) {
-            self::TYPE_LIST, self::TYPE_MAP, self::TYPE_REGEXLIST => 'array',
-            self::TYPE_ABSPATH, self::TYPE_JSON, self::TYPE_MARKUP, self::TYPE_REGEX => 'string',
+            self::TYPE_LIST,
+            self::TYPE_MAP,
+            self::TYPE_REGEXLIST,
+            self::TYPE_XPATHLIST => 'array',
+            self::TYPE_ABSPATH,
+            self::TYPE_JSON,
+            self::TYPE_MARKUP,
+            self::TYPE_REGEX,
+            self::TYPE_XPATH => 'string',
             default => $type,
         };
     }
@@ -150,6 +164,23 @@ class ZfExtended_DbConfig_Type_CoreTypes extends ZfExtended_DbConfig_Type_Abstra
                 }
                 return true;
 
+            case self::TYPE_XPATH:
+                if(!$this->validateXPath($newvalue)){
+                    $errorStr = "not a valid $type '$newvalue'";
+                    return false;
+                }
+                return true;
+
+            case self::TYPE_XPATHLIST:
+                $valueDecoded = $this->jsonDecode($newvalue, $errorStr);
+                foreach($valueDecoded as $xpath){
+                    if(!$this->validateXPath($xpath)){
+                        $errorStr = "not a valid $type '$xpath'";
+                        return false;
+                    }
+                }
+                return true;
+
             case self::TYPE_JSON:
                 if(json_decode($newvalue) === null){
                     $errorStr = "not a valid $type '$newvalue'";
@@ -173,7 +204,7 @@ class ZfExtended_DbConfig_Type_CoreTypes extends ZfExtended_DbConfig_Type_Abstra
         }
         $defaults = explode(',', $defaults);
         //since list is a core type, we can include the check here
-        if($config->getType() == self::TYPE_LIST || $config->getType() == self::TYPE_REGEXLIST) {
+        if($config->getType() == self::TYPE_LIST || $config->getType() == self::TYPE_REGEXLIST || $config->getType() == self::TYPE_XPATHLIST) {
             $value = json_decode($value);
             $diff = array_diff($value, $defaults);
             return empty($diff);
@@ -202,8 +233,9 @@ class ZfExtended_DbConfig_Type_CoreTypes extends ZfExtended_DbConfig_Type_Abstra
         $error = '';
         switch ($type) {
             case self::TYPE_LIST:
-            case self::TYPE_REGEXLIST:
             case self::TYPE_MAP:
+            case self::TYPE_REGEXLIST:
+            case self::TYPE_XPATHLIST:
                 return $this->jsonDecode($value, $error);
             case self::TYPE_ABSPATH:
                 return $this->convertFilepath($value);
@@ -256,5 +288,23 @@ class ZfExtended_DbConfig_Type_CoreTypes extends ZfExtended_DbConfig_Type_Abstra
         }
         //all others are relative, so we have to append the APPLICATION_PATH
         return APPLICATION_PATH.DIRECTORY_SEPARATOR.$path;
+    }
+
+    /**
+     * Checks the given XPath for syntactical correctness
+     * @param string $xpath
+     * @return bool
+     */
+    protected function validateXPath(string $xpath): bool
+    {
+        $domXpath = new DOMXPath(new DOMDocument);
+        // ugly: we need to replace namespaces in the XPath, otherwise we get warnings
+        // this is also used in the places, the XPath is used lipe Placeables
+        $xpath = preg_replace('~([a-zA-Z_]+):([a-zA-Z0-9_.\-]+)~', '\1-\2', $xpath);
+        try {
+            return ($domXpath->evaluate($xpath) !== false);
+        } catch(Throwable) {
+            return false;
+        }
     }
 }
