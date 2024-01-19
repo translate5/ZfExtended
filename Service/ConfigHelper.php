@@ -130,7 +130,8 @@ final class ConfigHelper
         return match ($configType) {
             CoreTypes::TYPE_LIST,
             CoreTypes::TYPE_MAP,
-            CoreTypes::TYPE_REGEXLIST => $value->toArray(),
+            CoreTypes::TYPE_REGEXLIST,
+            CoreTypes::TYPE_XPATHLIST => $value->toArray(),
             'notype' => $this->formatValue($value, $asArray),
             default => $this->asArray(CoreTypes::setPhpType($value, $configType), $asArray)
         };
