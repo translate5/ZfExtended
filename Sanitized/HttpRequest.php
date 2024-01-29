@@ -108,6 +108,49 @@ class ZfExtended_Sanitized_HttpRequest extends REST_Controller_Request_Http {
     }
 
     /**
+     * This method was overridden to solve the problem popping when
+     * setParam($key, $value) is called but do not take effect on value returned by further
+     * getParam($key) call because the value that was updated inside $this->_params
+     * is then overwritten by original value contained for that $key in $_GET or $_POST, if any.
+     * So, to fix that this method sets $value for the $key in $_GET and/or $_POST in addition
+     * to in $this->_params
+     *
+     * @param mixed $key
+     * @param mixed $value
+     * @return $this|ZfExtended_Sanitized_HttpRequest
+     */
+    public function setParam($key, $value) : self
+    {
+        // Sanitize value, if need
+        $value = ($key === 'data') ? $value : $this->sanitizeRequestValue($value);
+
+        // Call parent
+        parent::setParam($key, $value);
+
+        // Get param sources
+        $paramSources = $this->getParamSources();
+
+        // Update value in $_GET, if any
+        if (in_array('_GET', $paramSources)
+            && isset($_GET)
+            && is_array($_GET)
+            && array_key_exists($key, $_GET)) {
+            $_GET[$key] = $value;
+        }
+
+        // Update value in $_POST, if any
+        if (in_array('_POST', $paramSources)
+            && isset($_POST)
+            && is_array($_POST)
+            && array_key_exists($key, $_POST)){
+            $_POST[$key] = $value;
+        }
+
+        // Fluent interface
+        return $this;
+    }
+
+    /**
      * Retrieves a sanitized array of all parameters
      * @return array
      */
