@@ -127,7 +127,10 @@ class ZfExtended_Models_LoginLog extends ZfExtended_Models_Entity_Abstract
 
         $result = [];
         $data = $this->db->fetchAll($s)->toArray();
-        foreach($data as $row) {
+        foreach ($data as $row) {
+            if (!array_key_exists($row['day'], $result)) {
+                $result[$row['day']] = 0;
+            }
             $result[$row['day']]++;
         }
         ksort($result);
