@@ -536,7 +536,8 @@ abstract class ServiceAbstract
      */
     protected function isVersionSufficient(?string $foundVersion): bool
     {
-        return !empty($foundVersion) && version_compare($foundVersion, $this->requiredVersion) > -1;
+        return empty($this->requiredVersion)
+            || (!empty($foundVersion) && version_compare($foundVersion, $this->requiredVersion) > -1);
     }
 
     /**
