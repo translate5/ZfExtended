@@ -109,6 +109,15 @@ abstract class ServiceAbstract
     protected bool $mandatory = true;
 
     /**
+     * Represents the minimal required version the service must have
+     * This will be compared with PHPs version_compare
+     * All docker-containers generally must have a version-endpoint
+     * When set to null, unrestricted
+     * @var string|null
+     */
+    protected ?string $requiredVersion = null;
+
+    /**
      * Here configs can be defined that are used to fill the test-DB
      * Structure is [ 'runtimeOptions.plugins.pluginname.configName' => value ]
      * If value is NULL, it will be fetched from the application DB, otherwise the defined value is taken
@@ -491,5 +500,52 @@ abstract class ServiceAbstract
             return $seperator . ' ' . $title . ': ' . $items[0];
         }
         return '';
+    }
+
+    /**
+     * Can be used to validate the evaluated versions in the ::check against the required version
+     * @return bool
+     */
+    protected function checkFoundVersions(): bool
+    {
+        $passed = true;
+        $count = 0;
+        if ($this->requiredVersion !== null) {
+            foreach ($this->checkedVersions as $version) {
+                // maybe a version parsing is neccessary
+                $version = $this->extractServiceVersion((string)$version);
+                if (!$this->isVersionSufficient($version)) {
+                    $url = (count($this->checkedUrls) > $count) ? $this->checkedUrls[$count] : null;
+                    $error = ($url === null) ?
+                        'Service "' . $this->getName() . '"'
+                        : 'Service "' . $this->getName() . '" at url "' . $url . '"';
+                    $error .= ' has an insufficient version ' . $version . ', expected ' . $this->requiredVersion;
+                    $this->errors[] = $error;
+                    $passed = false;
+                    $count++;
+                }
+            }
+        }
+        return $passed;
+    }
+
+    /**
+     * Checks, if the found version for a service matches the requirements
+     * @param string|null
+     * @return bool
+     */
+    protected function isVersionSufficient(?string $foundVersion): bool
+    {
+        return !empty($foundVersion) && version_compare($foundVersion, $this->requiredVersion) > -1;
+    }
+
+    /**
+     * May be implemented to extract version from found version-string
+     * @param string $foundVersion
+     * @return string
+     */
+    protected function extractServiceVersion(string $foundVersion): string
+    {
+        return $foundVersion;
     }
 }
