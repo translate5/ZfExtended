@@ -182,9 +182,17 @@ class ErrorController extends ZfExtended_Controllers_Action
         }
         
         if($loggingEnabled){
-            if($isHttp404 || ($this->exception instanceof ZfExtended_Models_Entity_NotFoundException && $this->isRestRoute())){
+
+            $isNoAccess = $this->exception instanceof ZfExtended_NoAccessException
+                || $this->exception->getCode() == '423';
+
+            if($isNoAccess || $isHttp404 ||
+                ($this->exception instanceof ZfExtended_Models_Entity_NotFoundException && $this->isRestRoute()))
+            {
+
+                // Not found and no access exception will be logged with debug level
                 $this->logger->exception($this->exception, [
-                    'level' => ZfExtended_Logger::LEVEL_INFO,
+                    'level' => ZfExtended_Logger::LEVEL_DEBUG,
                     'eventCode' => 'E1019',
                 ]);
             }
