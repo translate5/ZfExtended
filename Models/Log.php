@@ -98,18 +98,35 @@ class ZfExtended_Models_Log extends ZfExtended_Models_Entity_Abstract {
     }
 
     /**
-     * Get all events created after the one having `id` equal to given $eventId
+     * Get all events created after the one having `id` equal to given $eventId, (optionally) having given $eventCode
      *
      * @param int $recordId
      * @param int $limit
+     * @param string|null $eventCode
      * @return array
      * @throws Zend_Db_Statement_Exception
      */
-    public function getAllAfter(int $recordId, int $limit = 0): array
+    public function getAllAfter(int $recordId, int $limit = 0, ?string $eventCode = null): array
     {
-        return $this->db->getAdapter()
-            ->query('SELECT * FROM `Zf_errorlog` WHERE `id` > ? ORDER BY `id`'
-                . ($limit ? " LIMIT $limit" : ''), $recordId)
-            ->fetchAll();
+        // Start preparing sql and args
+        $sql []= 'SELECT * FROM `Zf_errorlog` WHERE `id` > ?';
+        $arg []= $recordId;
+
+        // Respect $eventCode arg, if given
+        if ($eventCode) {
+            $sql []= 'AND `eventCode` = ?';
+            $arg []= $eventCode;
+        }
+
+        // Add ORDER BY clause
+        $sql []= 'ORDER BY `id`';
+
+        // Respect $limit arg, if given
+        if ($limit) {
+            $sql []= "LIMIT $limit";
+        }
+
+        // Run query and return results
+        return $this->db->getAdapter()->query(join(' ', $sql), $arg)->fetchAll();
     }
 }
