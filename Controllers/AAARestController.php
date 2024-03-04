@@ -60,7 +60,7 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller
     protected $response;
 
     /**
-     * @var array - request parameters and reults of request processing
+     * @var array|stdClass - request parameters and reults of request processing
      */
     protected $data = [];
     /**

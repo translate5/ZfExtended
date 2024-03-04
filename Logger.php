@@ -283,7 +283,7 @@ class ZfExtended_Logger {
 
     /**
      * Log the given exception
-     * @param Exception $exception
+     * @param Throwable $exception
      * @param array $eventOverride array to override the event generated from the exception
      * @param boolean $returnEvent if true given: return the created event instead processing it
      * @return ZfExtended_Logger_Event|null
