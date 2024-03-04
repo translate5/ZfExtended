@@ -27,6 +27,7 @@ namespace MittagQI\ZfExtended\Service;
 use Zend_Config;
 use Zend_Registry;
 use Zend_Exception;
+use ZfExtended_Exception;
 use ZfExtended_Models_SystemRequirement_Result;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
@@ -213,7 +214,7 @@ abstract class ServiceAbstract
 
     /**
      * Returns the mock endpoints/configs if configured and when API-testing and being mocked
-     * @return array
+     * @throws ZfExtended_Exception
      */
     final public function getMockConfigs(): array
     {
@@ -317,7 +318,9 @@ abstract class ServiceAbstract
         } else {
             $this->output($this->getError(), $io, 'caution');
         }
-        $this->hasWarnings() && $this->output($this->getWarning(), $io, 'warning');
+        if($this->hasWarnings()){
+            $this->output($this->getWarning(), $io, 'warning');
+        }
         if(!empty($this->badSummary)) {
             $this->output($this->getBadSummary(), $io, 'info');
         }
