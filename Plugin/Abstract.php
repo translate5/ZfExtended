@@ -489,11 +489,12 @@ abstract class ZfExtended_Plugin_Abstract
     /**
      * returns a list of files from plugins public directory. List is normally used as whitelist on file inclusion.
      * @param string $subdirectory optional, subdirectory to start in
-     * @param string $absolutePath optional, passed by reference to get the absolutePath from this method
+     * @param string|null $absolutePath optional, passed by reference to get the absolutePath from this method
      * @param array $config:  may holds further controller specific environment variables
-     * @return multitype:string
+     * @return string[]
      */
-    public function getPublicFiles($subdirectory='', & $absolutePath=null, array $config) {
+    public function getPublicFiles(string $subdirectory, ?string &$absolutePath, array $config): array
+    {
         $publicDirectory = $this->absolutePluginPath.'/public/'.$subdirectory;
         $absolutePath = $publicDirectory;
         $objects = new RecursiveIteratorIterator(
