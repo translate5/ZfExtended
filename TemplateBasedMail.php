@@ -63,6 +63,7 @@ class  ZfExtended_TemplateBasedMail {
     
     /**
      * @var integer
+     * @deprecated remove me and the corresponding config in favour of mail catcher
      */
     protected $_sendMailLocally = 0;
     
@@ -89,8 +90,10 @@ class  ZfExtended_TemplateBasedMail {
                 $this->_sendBcc = true;
             }
         }
-        catch (Exception $e) {
+        catch (Exception) {
+            //do nothing
         }
+
         if($initView){
             $this->initView();
         }
@@ -328,30 +331,28 @@ class  ZfExtended_TemplateBasedMail {
     }
 
     /**
-     * Setzt subject und body anhand des gesetzten Templates, wenn kein Template gesetzt ist, wird es automatisch ermittelt
-     * Das Subject wird entweder per setSubject gesetzt (Kompatibilität zur alten mail function)
-     * Alternativ kann das Subjet im direkt Template als Variable subject gesetzt werden
-     * Wird im Template zusätzlich die Variable textbody gesetzt, wird dieser Wert als Textmail genommen, und die Ausgabe des Templates als HTML Body
-     * Ist die Textbody Variable nicht vorhanden, wird die Template Ausgabe als Textbody verwendet
+     * @throws Zend_Exception
      */
-    public function setContentByTemplate() {
+    public function setContentByTemplate(): void
+    {
         $this->decideIfToThrowInitViewException();
-        if(empty($this->template)){
+
+        if (empty($this->template)) {
             $templatename = $this->detectTemplate();
-        }
-        else {
+        } else {
             $templatename = $this->template;
         }
+
         $body = $this->view->render($templatename);
-        $subject = $this->view->subject;
-        $textbody = $this->view->textbody;
-        if(empty($textbody)){
-            //text only Mail
-            $this->setContent($subject, $body);
-        }
-        else {
+        $subject = (string) $this->view->subject;
+        $textbody = (string) $this->view->textbody;
+
+        if (strlen($textbody) > 0) {
             //html Mail
             $this->setContent($subject, $textbody, $body);
+        } else {
+            //text only Mail
+            $this->setContent($subject, $body);
         }
     }
 

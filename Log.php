@@ -73,35 +73,19 @@ class  ZfExtended_Log extends ZfExtended_TemplateBasedMail {
             $this->_className .= ' on '.$_SERVER['HTTP_HOST'];
         }
     }
+
     /**
-     * Loggt eine Exception
-     *
-     * @param string message Kurzzusammenfassung des Fehlers - wird auch im Mailsubject verwendet
-     * @param string longMessage Alles, was Du dazu zu sagen hast | NULL (default)
+     * @param string message
+     * @param string|null $longMessage
+     * @deprecated
      */
-    public function logError(string $message,string $longMessage=NULL){
-        $viewRenderer = ZfExtended_Zendoverwrites_Controller_Action_HelperBroker::getStaticHelper('ViewRenderer');
-        $longMessage .= $this->getUrlLogMessage();
+    public function logError(string $message, string $longMessage = null): void
+    {
         $message = $this->addUserInfo($message);
-        error_log($this->_className.': '.$message.
-                "\r\n                       ".$longMessage);
+        error_log($this->_className . ': ' . $message .
+            "\r\n                       " . $longMessage);
         $this->sendMailDefault($message);
-        $this->sendMailMinidump($message,$longMessage);
-    }
-    /**
-     * Loggt eine Exception
-     *
-     * @param Exception
-     */
-    public function logException(Exception $exception){
-        $message = $this->addUserInfo($exception->getMessage());
-        $trace = $this->elog($exception);
-        $this->sendMailDefault((string) $exception);
-        $this->sendMailMinidump((string) $exception, $trace);
-        $prev = $exception->getPrevious();
-        if(! empty($prev)) { //FIXME this only if debugging enabled → da gabs doch schon ein flag???
-            $this->elog($prev);
-        }
+        $this->sendMailMinidump($message, $longMessage);
     }
     
     /**
@@ -115,19 +99,6 @@ class  ZfExtended_Log extends ZfExtended_TemplateBasedMail {
             $msg .= "\n".' current user: '.$auth->getLogin();
         }
         return $msg;
-    }
-    
-    /**
-     * error_logs the given exception
-     * @param Exception $e
-     * @return string returns the trace as string
-     */
-    protected function elog(Exception $e) {
-        $message = $e->getMessage();
-        $trace = $this->getUrlLogMessage();
-        error_log($this->_className.":\r\nException: ".$e->__toString());
-        
-        return $trace;
     }
     
     /**
@@ -153,27 +124,7 @@ class  ZfExtended_Log extends ZfExtended_TemplateBasedMail {
         $msg .= 'Server Data: '.print_r($_SERVER,1);
         $this->sendMail($this->_className.' - FATAL ERROR', $msg);
     }
-    
-    /**
-     * Holt auf Basis des views mit dem viewhelper getUrl die URL, wenn
-     * der view schon vorhanden ist. Dann inkl. ggf. vorhandener POST-Parameter. Ansonsten $_SERVER['REQUEST_URI']
-     *
-     * - Ergänzt URL um davor stehenden Infotext für das Log
-     *
-     * - Achtung: Die Namen von Passwort-Post-Felder müssen hier aufgenommen sein,
-     *   sonst werden passwörter ggf. als Klartext per Mail versandt im Fehlerfall
-     *
-     * @return string
-     */
-    public function getUrlLogMessage(){
-        $viewRenderer = ZfExtended_Zendoverwrites_Controller_Action_HelperBroker::getStaticHelper('ViewRenderer');
-        if(isset($viewRenderer->view)){
-            return "Aufgerufene URL inkl. ggf. vorhandener POST-Parameter als get-Parameter: \r\n".
-                    $viewRenderer->view->getUrl(array('password','passwd','passwdCheck'));
-        }
-        return "Aufgerufene URL - Rückgabe von _SERVER['REQUEST_URI']: \r\n".
-                $_SERVER['REQUEST_URI'];
-    }
+
     /**
      * Loggt 404-Fehler
      *

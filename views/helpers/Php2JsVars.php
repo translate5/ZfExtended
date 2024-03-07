@@ -124,19 +124,15 @@ class ZfExtended_View_Helper_Php2JsVars extends Zend_View_Helper_Abstract{
     }
 
     /**
-     * gibt die String Repräsentations diesen Helpers aus
-     * Geht davon aus, dass ein JS Namespace = Modulnamen bereits vorhanden ist!
      * @return string
+     * @throws Zend_Exception
      */
     public function  __toString() {
         try {
             $module = ucfirst(Zend_Controller_Front::getInstance()->getRequest()->getModuleName());
             return 'var '.$module.' = {data: '.Zend_Json::encode($this->data).'}';
-        } catch(Exception $e) {
-            $log = ZfExtended_Factory::get('ZfExtended_Log');
-            /* @var $log ZfExtended_Log */
-            $log->logError("Exception in JSON encoding, see next Exception message.");
-            $log->logException($e);
+        } catch(Throwable $e) {
+            Zend_Registry::get('logger')->exception($e);
             return "";
         }
     }

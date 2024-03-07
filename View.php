@@ -55,7 +55,6 @@ END LICENSE AND COPYRIGHT
  *
  * @method ZfExtended_View_Helper_PluginLocale PluginLocale()
  * @method ZfExtended_View_Helper_Php2JsVars Php2JsVars()
- * @method ZfExtended_View_Helper_GetUrl GetUrl()
  * @method ZfExtended_View_Helper_TemplateApply TemplateApply()
  * @method ZfExtended_View_Helper_MailEmployeeSalutation MailEmployeeSalutation()
  */

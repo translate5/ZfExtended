@@ -42,7 +42,6 @@ class ZfExtended_Models_Installer_Maintenance
     public function __construct() {
         $this->config = Zend_Registry::get('config');
         $this->db = Zend_Db::factory($this->config->resources->db);
-        
     }
 
     /**
@@ -60,7 +59,7 @@ class ZfExtended_Models_Installer_Maintenance
             $ip->setTrustedProxies(['proxy']);
             $ip->setUseProxy();
             $allowedIPs = $config->runtimeOptions->maintenance->allowedIPs->toArray() ?? [];
-            $allowedByIP = in_array($ip->getIpAddress() ?? null, $allowedIPs);
+            $allowedByIP = in_array($ip->getIpAddress() ?: null, $allowedIPs);
         } else {
             $allowedByIP = false;
         }
@@ -85,7 +84,13 @@ class ZfExtended_Models_Installer_Maintenance
 
     /**
      * returns the configured start date from DB, false if no entry found
-     * @return stdClass
+     * @return object{
+     *     'message': ?string,
+     *     'startDate': ?string,
+     *     'timeToNotify': ?string,
+     *     'timeToLoginLock': ?string,
+     *     'announcementMail': ?string
+     * }
      * @throws Zend_Db_Statement_Exception
      */
     protected function getConfFromDb(): stdClass
@@ -119,6 +124,13 @@ class ZfExtended_Models_Installer_Maintenance
     }
 
     /**
+     * @return object{
+     *      'message': ?string,
+     *      'startDate': ?string,
+     *      'timeToNotify': ?string,
+     *      'timeToLoginLock': ?string,
+     *      'announcementMail': ?string
+     * }
      * @throws Zend_Db_Statement_Exception
      */
     public function status(): stdClass
@@ -126,8 +138,26 @@ class ZfExtended_Models_Installer_Maintenance
         return $this->getConfFromDb();
     }
 
+    /**
+     * @throws Zend_Db_Statement_Exception
+     */
+    public function isActive(): bool {
+        $conf = $this->getConfFromDb();
+        $startTimeStamp = strtotime($conf->startDate);
+        $now = time();
+        return $startTimeStamp < $now;
+    }
 
-    
+    /**
+     * @throws Zend_Db_Statement_Exception
+     */
+    public function isNotified(): bool {
+        $conf = $this->getConfFromDb();
+        $startTimeStamp = strtotime($conf->startDate);
+        $now = time();
+        return $startTimeStamp - ($conf->timeToNotify*60) < $now;
+    }
+
     public function disable(): void
     {
         Zend_Registry::get('logger')->info('E1549', 'End maintenance mode');
@@ -145,12 +175,13 @@ class ZfExtended_Models_Installer_Maintenance
         $wq = new Queue();
         $wq->trigger();
     }
-    
+
     /**
      * sets the maintenance mode, returns false if timestamp can not be parsed
      * @param string $time
      * @param string $msg
      * @return bool
+     * @throws Zend_Exception
      */
     public function set(string $time, string $msg = ''): bool
     {
