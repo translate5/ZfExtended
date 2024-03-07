@@ -92,7 +92,8 @@ class ZfExtended_Models_SystemRequirement_Validator {
             $toRun = array_keys(self::$modules);
         } else {
             if (empty(self::$modules[$module])) {
-                throw new Exception('SystemRequirement Module '.$module.' not found. Available modules: '.print_r(self::$modules,1));
+                throw new Exception('SystemRequirement Module '.$module.' not found. Available modules: '.
+                    print_r(self::$modules, true));
             }
             $toRun = [$module];
             //if a module is given, this is forced, also in installation
