@@ -363,7 +363,7 @@ class ZfExtended_Models_Entity_ExcelExport {
      * Redirect output to a client's web browser (Excel)
      */
     public function sendDownload () {
-        $fileName = $this->getProperty('filename').date('-Y-d-m').'.xlsx';
+        $fileName = $this->getProperty('filename').date('-Y-m-d').'.xlsx';
         
         // XLSX Excel 2010 output
         $objWriter = \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($this->spreadsheet, 'Xlsx');
