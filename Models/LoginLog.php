@@ -24,7 +24,7 @@ END LICENSE AND COPYRIGHT
 
 /**
  * @method void setId(int $id)
- * @method integer getId()
+ * @method string getId()
  * @method void setCreated(string $date)
  * @method string getCreated()
  * @method void setLogin(string $login)

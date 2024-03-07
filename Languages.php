@@ -24,7 +24,7 @@ END LICENSE AND COPYRIGHT
 
 /**
  *
- * @method int getId()
+ * @method string getId()
  * @method void setId(integer $id)
  * @method string getLangName()
  * @method void setLangName(string $langName)
@@ -36,7 +36,7 @@ END LICENSE AND COPYRIGHT
  * @method void setIso3166Part1alpha2(string $lang)
  * @method string getSublanguage()
  * @method void setSublanguage(string $sublang)
- * @method int getRtl()
+ * @method string getRtl()
  * @method void setRtl(boolean $rtl)
  * @method string getIso6393()
  * @method void setIso6393(string $lang)

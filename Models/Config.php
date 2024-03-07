@@ -22,42 +22,36 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
-/**#@+
- * @author Marc Mittag
- * @package ZfExtended
- * @version 2.0
- *
- */
 /**
- * @method void setId() setId(int $id)
- * @method void setName() setName(string $name)
- * @method void setGuiName() setGuiName(string $guiName)
- * @method void setGuiGroup() setGroup(string $guiGroup)
- * @method void setConfirmed() setConfirmed(bool $confirmed)
- * @method void setModule() setModule(string $module)
- * @method void setCategory() setCategory(string $category)
- * @method void setValue() setValue(string $value)
- * @method void setDefault() setDefault(string $default)
- * @method void setDefaults() setDefaults(string $defaults) comma seperated values!
- * @method void setType() setType(string $type)
- * @method void setTypeClass() setTypeClass(string $typeClass)
- * @method void setDescription() setDescription(string $desc)
- * @method void setComment() setComment(string $comment)
+ * @method void setId(int $id)
+ * @method void setName(string $name)
+ * @method void setGuiName(string $guiName)
+ * @method void setGuiGroup(string $guiGroup)
+ * @method void setConfirmed(bool $confirmed)
+ * @method void setModule(string $module)
+ * @method void setCategory(string $category)
+ * @method void setValue(string $value)
+ * @method void setDefault(string $default)
+ * @method void setDefaults(string $defaults) comma seperated values!
+ * @method void setType(string $type)
+ * @method void setTypeClass(string $typeClass)
+ * @method void setDescription(string $desc)
+ * @method void setComment(string $comment)
  *
- * @method integer getId() getId()
- * @method string getName() getName()
- * @method string getGuiName() getGuiName()
- * @method string getGuiGroup() getGuiGroup()
- * @method boolean getConfirmed() getConfirmed()
- * @method string getModule() getModule()
- * @method string getCategory() getCategory()
- * @method string getValue() getValue()
- * @method string getDefault() getDefault()
- * @method string getDefaults() getDefaults()
- * @method string getType() getType()
- * @method string getTypeClass() getTypeClass()
- * @method string getDescription() getDescription()
- * @method string getComment() getComment()
+ * @method string getId()
+ * @method string getName()
+ * @method string getGuiName()
+ * @method string getGuiGroup()
+ * @method string getConfirmed()
+ * @method string getModule()
+ * @method string getCategory()
+ * @method string getValue()
+ * @method string getDefault()
+ * @method string getDefaults()
+ * @method string getType()
+ * @method string getTypeClass()
+ * @method string getDescription()
+ * @method string getComment()
  *
  * The conversion from DB Storage Format to Zend Config Format is done by ZfExtended_Resource_DbConfig
  */

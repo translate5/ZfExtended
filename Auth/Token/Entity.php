@@ -29,9 +29,9 @@ END LICENSE AND COPYRIGHT
 
 /**
  * @method void setId(int $id)
- * @method int getId()
+ * @method string getId()
  * @method void setUserId(int $userId)
- * @method int getUserId()
+ * @method string getUserId()
  * @method void setDescription(string $description)
  * @method string getDescription()
  * @method void setToken(string $token)
