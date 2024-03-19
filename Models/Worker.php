@@ -48,9 +48,9 @@ END LICENSE AND COPYRIGHT
  * @method string getResource()
  * @method string getSlot()
  * @method string getTaskGuid()
- * @method string getPid()
- * @method string getStarttime()
- * @method string getEndtime()
+ * @method integer getPid()
+ * @method string|null getStarttime()
+ * @method string|null getEndtime()
  * @method string getMaxRuntime()
  * @method string getHash()
  * @method string getMaxParallelProcesses()
@@ -105,6 +105,7 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract {
      * Loads first worker of a specific worker for a specific task
      * @param string $worker
      * @param string $taskGuid
+     * @param array $states
      * @return ZfExtended_Models_Worker
      * @throws ZfExtended_Models_Entity_NotFoundException
      */

@@ -488,32 +488,38 @@ abstract class ZfExtended_Plugin_Abstract
 
     /**
      * returns a list of files from plugins public directory. List is normally used as whitelist on file inclusion.
-     * @param string $subdirectory optional, subdirectory to start in
+     * @param string $subdirectory      optional, subdirectory to start in
      * @param string|null $absolutePath optional, passed by reference to get the absolutePath from this method
-     * @param array $config:  may holds further controller specific environment variables
+     * @param array $config             may hold further controller specific environment variables
      * @return string[]
      */
     public function getPublicFiles(string $subdirectory, ?string &$absolutePath, array $config): array
     {
-        $publicDirectory = $this->absolutePluginPath.'/public/'.$subdirectory;
+        $publicDirectory = $this->absolutePluginPath . '/public/' . $subdirectory;
         $absolutePath = $publicDirectory;
         $objects = new RecursiveIteratorIterator(
-            new RecursiveDirectoryIterator($publicDirectory, FilesystemIterator::SKIP_DOTS), RecursiveIteratorIterator::SELF_FIRST
+            new RecursiveDirectoryIterator(
+                $publicDirectory,
+                FilesystemIterator::SKIP_DOTS
+            ),
+            RecursiveIteratorIterator::SELF_FIRST
         );
         $result = array();
-        foreach($objects as $file) {
-            if($file->isFile()) {
-                $result[] = trim(str_replace(array($publicDirectory,'\\'), array('','/'), $file), '/');
+        foreach ($objects as $file) {
+            if ($file->isFile()) {
+                $result[] = trim(str_replace(array($publicDirectory, '\\'), array('', '/'), $file), '/');
             }
         }
         return $result;
     }
-    
+
     /**
-     * Return the plugin module name. The module name is parsed from the plugin class (each plugin class starts with the module name)
-     * @return mixed
+     * Return the plugin module name. The module name is parsed from
+     * the plugin class (each plugin class starts with the module name)
+     * @return string
      */
-    public function getModuleName() {
+    public function getModuleName(): string
+    {
         return current(explode('_', get_class($this)));
     }
 }

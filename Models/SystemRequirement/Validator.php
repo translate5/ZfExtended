@@ -82,7 +82,7 @@ class ZfExtended_Models_SystemRequirement_Validator {
     /**
      * Runs all or the given validation module
      * @param string|null $module
-     * @return array
+     * @return ZfExtended_Models_SystemRequirement_Result[]
      * @throws Exception
      */
     public function validate(string $module = null): array

@@ -466,12 +466,12 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract
      * If field key is provided, this lek_languages field will be used as key for each language in the return array.
      * If optional param $onlyName is sumbitted with TRUE, only the name without rfc5646 in brackets will be returned
      *
-     * @param string $field
+     * @param string $fieldKey
      * @param bool $onlyName
      * @return array
      * @throws Zend_Exception
      */
-    public function loadAllForDisplay(string $fieldKey = '', bool $onlyName = FALSE)
+    public function loadAllForDisplay(string $fieldKey = '', bool $onlyName = false): array
     {
         $translate = ZfExtended_Zendoverwrites_Translate::getInstance();
         $langs = $this->loadAll();
@@ -479,12 +479,13 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract
         foreach ($langs as $lang) {
             $name = $translate->_($lang['langName']);
             $key = empty($fieldKey) ? $name : $lang[$fieldKey];
-            $tempName = $name . (($onlyName !== TRUE) ? ' (' . $lang['rfc5646'] . ')' : '');
+            $tempName = $name . (($onlyName !== true) ? ' (' . $lang['rfc5646'] . ')' : '');
             $result[$key] = [$lang['id'], $tempName, $lang['rtl'], $lang['rfc5646'], $lang['iso3166Part1alpha2']];
         }
         ksort($result); //sort by name of language
         if (empty($result)) {
-            throw new Zend_Exception('No languages defined. Please use /docs/003fill-LEK-languages-after-editor-sql or define them otherwhise.');
+            throw new Zend_Exception('No languages defined. '.
+                'Please use /docs/003fill-LEK-languages-after-editor-sql or define them otherwhise.');
         }
         return empty($fieldKey) ? array_values($result) : $result;
     }

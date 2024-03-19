@@ -45,6 +45,8 @@ class ZfExtended_Acl extends Zend_Acl {
      */
     protected static $_instance = null;
 
+    private array $_allRules;
+
     /**
      * Singleton Instanz - Hole Acl-Instanz
      *

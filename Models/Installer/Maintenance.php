@@ -9,15 +9,15 @@ START LICENSE AND COPYRIGHT
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
 
  This file may be used under the terms of the GNU LESSER GENERAL PUBLIC LICENSE version 3
- as published by the Free Software Foundation and appearing in the file lgpl3-license.txt 
- included in the packaging of this file.  Please review the following information 
+ as published by the Free Software Foundation and appearing in the file lgpl3-license.txt
+ included in the packaging of this file.  Please review the following information
  to ensure the GNU LESSER GENERAL PUBLIC LICENSE version 3.0 requirements will be met:
 https://www.gnu.org/licenses/lgpl-3.0.txt
 
  @copyright  Marc Mittag, MittagQI - Quality Informatics
  @author     MittagQI - Quality Informatics
  @license    GNU LESSER GENERAL PUBLIC LICENSE version 3
-			 https://www.gnu.org/licenses/lgpl-3.0.txt
+             https://www.gnu.org/licenses/lgpl-3.0.txt
 
 END LICENSE AND COPYRIGHT
 */
@@ -32,20 +32,24 @@ class ZfExtended_Models_Installer_Maintenance
     /**
      * @var Zend_Config
      */
-    protected $config;
+    protected Zend_Config $config;
     
     /**
      * @var Zend_Db_Adapter_Abstract
      */
-    protected $db;
-    
+    protected Zend_Db_Adapter_Abstract $db;
+
+    /**
+     * @throws Zend_Exception
+     * @throws Zend_Db_Exception
+     */
     public function __construct() {
         $this->config = Zend_Registry::get('config');
         $this->db = Zend_Db::factory($this->config->resources->db);
-        
     }
 
     /**
+     * returns also true if maintenance is active
      * @throws Zend_Exception
      * @throws Exception
      */
@@ -60,7 +64,7 @@ class ZfExtended_Models_Installer_Maintenance
             $ip->setTrustedProxies(['proxy']);
             $ip->setUseProxy();
             $allowedIPs = $config->runtimeOptions->maintenance->allowedIPs->toArray() ?? [];
-            $allowedByIP = in_array($ip->getIpAddress() ?? null, $allowedIPs);
+            $allowedByIP = in_array($ip->getIpAddress() ?: null, $allowedIPs);
         } else {
             $allowedByIP = false;
         }
@@ -80,15 +84,21 @@ class ZfExtended_Models_Installer_Maintenance
         $time = $time - ($timeToLoginLock * 60);
         $date = date("Y-m-d H:i:s", $time);
 
-        return (new DateTime() >= new DateTime($date));
+        return new DateTime() >= new DateTime($date);
     }
 
     /**
      * returns the configured start date from DB, false if no entry found
-     * @return stdClass
+     * @return object{
+     *     'message': ?string,
+     *     'startDate': ?string,
+     *     'timeToNotify': ?string,
+     *     'timeToLoginLock': ?string,
+     *     'announcementMail': ?string
+     * }
      * @throws Zend_Db_Statement_Exception
      */
-    protected function getConfFromDb(): stdClass
+    protected function getConfFromDb(): object
     {
         $result = new stdClass();
         $result->message = null;
@@ -98,7 +108,7 @@ class ZfExtended_Models_Installer_Maintenance
         $result->announcementMail = null;
         
         $res = $this->db->query(
-            'SELECT name, value FROM `Zf_configuration` WHERE `name` like "runtimeOptions.maintenance.%"'
+            'SELECT name, value FROM `Zf_configuration` WHERE `name` like \'runtimeOptions.maintenance.%\''
         );
 
         $conf = $res->fetchAll();
@@ -119,15 +129,44 @@ class ZfExtended_Models_Installer_Maintenance
     }
 
     /**
+     * @return object{
+     *      'message': ?string,
+     *      'startDate': ?string,
+     *      'timeToNotify': ?string,
+     *      'timeToLoginLock': ?string,
+     *      'announcementMail': ?string
+     * }
      * @throws Zend_Db_Statement_Exception
      */
-    public function status(): stdClass
+    public function status(): object
     {
         return $this->getConfFromDb();
     }
 
+    /**
+     * @throws Zend_Db_Statement_Exception
+     */
+    public function isActive(): bool {
+        $conf = $this->getConfFromDb();
+        $startTimeStamp = strtotime($conf->startDate);
+        $now = time();
+        return $startTimeStamp && $startTimeStamp < $now;
+    }
 
-    
+    /**
+     * @throws Zend_Db_Statement_Exception
+     */
+    public function isNotified(): bool {
+        $conf = $this->getConfFromDb();
+        $startTimeStamp = strtotime($conf->startDate);
+        $now = time();
+        return $startTimeStamp && $startTimeStamp - ((int) $conf->timeToNotify * 60) < $now;
+    }
+
+    /**
+     * @throws ReflectionException
+     * @throws Zend_Exception
+     */
     public function disable(): void
     {
         Zend_Registry::get('logger')->info('E1549', 'End maintenance mode');
@@ -145,12 +184,13 @@ class ZfExtended_Models_Installer_Maintenance
         $wq = new Queue();
         $wq->trigger();
     }
-    
+
     /**
      * sets the maintenance mode, returns false if timestamp can not be parsed
      * @param string $time
      * @param string $msg
      * @return bool
+     * @throws Zend_Exception
      */
     public function set(string $time, string $msg = ''): bool
     {
@@ -185,7 +225,10 @@ class ZfExtended_Models_Installer_Maintenance
             $msg
         );
     }
-    
+
+    /**
+     * @throws ReflectionException
+     */
     public function announce($time, $msg = ''): array
     {
         $result = [
@@ -204,7 +247,8 @@ class ZfExtended_Models_Installer_Maintenance
         //fastest way to prevent that we spam our support mailbox TODO better solution
         $preventDuplicates = ['support@translate5.net'];
         if (empty($receiver)) {
-            $result['error'][] = 'No receiver groups/users set in runtimeOptions.maintenance.announcementMail, so no email sent!';
+            $result['error'][]
+                = 'No receiver groups/users set in runtimeOptions.maintenance.announcementMail, so no email sent!';
             return $result;
         }
         $receiver = explode(',', $receiver);
@@ -239,7 +283,8 @@ class ZfExtended_Models_Installer_Maintenance
             try {
                 $receivers[] = $user->loadByLogin($login)->toArray();
             } catch (ZfExtended_Models_Entity_NotFoundException) {
-                $result['warning'][] = "There is a non existent user '$login' in the runtimeOptions.maintenance.announcementMail configuration!";
+                $result['warning'][] = "There is a non existent user '".$login
+                    ."' in the runtimeOptions.maintenance.announcementMail configuration!";
             }
         }
         

@@ -55,11 +55,12 @@ class ZfExtended_ErrorCodeException extends ZfExtended_Exception {
     ];
     
     protected static $errorCodeDomainOverride = [];
-    
+
     /**
      * @param string $errorCode
      * @param array $extra
-     * @param Exception $previous
+     * @param Throwable|null $previous
+     * @phpstan-consistent-constructor
      */
     public function __construct($errorCode, array $extra = [], Throwable $previous = null) {
         $this->allErrorCodes = $this->mergeErrorCodes();

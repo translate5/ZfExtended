@@ -9,8 +9,8 @@ START LICENSE AND COPYRIGHT
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
 
  This file may be used under the terms of the GNU LESSER GENERAL PUBLIC LICENSE version 3
- as published by the Free Software Foundation and appearing in the file lgpl3-license.txt 
- included in the packaging of this file.  Please review the following information 
+ as published by the Free Software Foundation and appearing in the file lgpl3-license.txt
+ included in the packaging of this file.  Please review the following information
  to ensure the GNU LESSER GENERAL PUBLIC LICENSE version 3.0 requirements will be met:
 https://www.gnu.org/licenses/lgpl-3.0.txt
 
@@ -23,25 +23,34 @@ END LICENSE AND COPYRIGHT
 */
 
 /**
- * provides reusable functionality for exceptions, so that they can be used as exceptions transporting a translated response
+ * provides reusable functionality for exceptions, so that they can be
+ * used as exceptions transporting a translated response
  */
 trait ZfExtended_ResponseExceptionTrait {
 
     /**
      * Creates this exceptions as a response, that means:
-     * its an error that can be recovered by the user, therefore the user should receive information about the error in the Frontend.
-     * The exception level is set to debug, the given error messages must be given in german, since they are translated into the GUI language automatically
+     * its an error that can be recovered by the user, therefore the user should receive
+     *   information about the error in the Frontend.
+     * The exception level is set to debug, the given error messages must be given in german,
+     *   since they are translated into the GUI language automatically
      * The errorcode is fix to defined value in the exception
      *
-     * @param $errorCode
+     * @param string $errorCode
      * @param array $invalidFields
      * @param array $data
      * @param Exception|null $previous
      * @param array $extraData additional data which will not going to be translated
-     * @return static
+     * @return ZfExtended_ErrorCodeException
      * @throws Zend_Exception
      */
-    public static function createResponse($errorCode, array $invalidFields, array $data = [], Exception $previous = null, array $extraData = []) {
+    public static function createResponse(
+        string $errorCode,
+        array $invalidFields,
+        array $data = [],
+        Exception $previous = null,
+        array $extraData = []): ZfExtended_ErrorCodeException
+    {
         $t = ZfExtended_Zendoverwrites_Translate::getInstance();
         /* @var $t ZfExtended_Zendoverwrites_Translate */
         $logger = Zend_Registry::get('logger');
@@ -75,26 +84,32 @@ trait ZfExtended_ResponseExceptionTrait {
         if( !empty($extraData)){
             $data[self::EXTRA_DATA_FIELD] = $extraData;
         }
-        $e = new static($errorCode, $data, $previous);
+        $e = new self($errorCode, $data, $previous);
         $e->level = ZfExtended_Logger::LEVEL_DEBUG;
         return $e;
     }
-    
+
     /**
-     * This function creates a response exception, initialized with the data of a usual ErrorCodeException 
-     * This is useful in situations where the underlying code produces an error which can be handled in the frontend. 
+     * This function creates a response exception, initialized with the data of a usual ErrorCodeException
+     * This is useful in situations where the underlying code produces an error which can be handled in the frontend.
      *   This implies an answer to the GUI as response exception.
-     *   
+     *
      * @param ZfExtended_ErrorCodeException $previous
      * @param array $invalidFields
      * @param array $data optional, additional data.
      * @return ZfExtended_ErrorCodeException
+     * @throws Zend_Exception
      */
-    public static function createResponseFromOtherException(ZfExtended_ErrorCodeException $previous, array $invalidFields, array $data = []) {
-        static::addCodes([
+    public static function createResponseFromOtherException(
+        ZfExtended_ErrorCodeException $previous,
+        array $invalidFields,
+        array $data = []
+    ): ZfExtended_ErrorCodeException
+    {
+        self::addCodes([
             $previous->getErrorCode() => $previous->getMessage()
         ], $previous->getDomain());
         $data = array_merge($previous->getErrors(), $data);
-        return static::createResponse($previous->getErrorCode(), $invalidFields, $data, $previous);
+        return self::createResponse($previous->getErrorCode(), $invalidFields, $data, $previous);
     }
 }
