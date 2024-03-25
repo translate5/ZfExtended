@@ -146,10 +146,10 @@ class ZfExtended_Models_Installer_Maintenance
     /**
      * @throws Zend_Db_Statement_Exception
      */
-    public function isActive(): bool {
+    public function isActive(int $sinceSeconds = 0): bool {
         $conf = $this->getConfFromDb();
         $startTimeStamp = strtotime($conf->startDate);
-        $now = time();
+        $now = time() - $sinceSeconds;
         return $startTimeStamp && $startTimeStamp < $now;
     }
 

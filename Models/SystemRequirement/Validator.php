@@ -82,24 +82,30 @@ class ZfExtended_Models_SystemRequirement_Validator {
     /**
      * Runs all or the given validation module
      * @param string|null $module
+     * @param string[] $ignoredModules modules by name ignored for validation
      * @return ZfExtended_Models_SystemRequirement_Result[]
      * @throws Exception
      */
-    public function validate(string $module = null): array
+    public function validate(string $module = null, array $ignoredModules = []): array
     {
         $isInstallation = $this->installationBootstrapOnly;
+
         if (empty($module)) {
             $toRun = array_keys(self::$modules);
         } else {
             if (empty(self::$modules[$module])) {
-                throw new Exception('SystemRequirement Module '.$module.' not found. Available modules: '.
+                throw new Exception('SystemRequirement Module ' . $module . ' not found. Available modules: ' .
                     print_r(self::$modules, true));
             }
             $toRun = [$module];
             //if a module is given, this is forced, also in installation
             $isInstallation = false;
         }
+
         foreach ($toRun as $module) {
+            if (in_array($module, $ignoredModules)) {
+                continue;
+            }
             $moduleInstance = new self::$modules[$module];
             /* @var $moduleInstance ZfExtended_Models_SystemRequirement_Modules_Abstract */
             if ($isInstallation && !$moduleInstance->isInstallationBootstrap()) {
@@ -111,7 +117,7 @@ class ZfExtended_Models_SystemRequirement_Validator {
                 $this->results[$module] = $moduleInstance->validate();
             }
         }
-        
+
         return $this->results;
     }
     
