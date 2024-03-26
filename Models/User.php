@@ -178,10 +178,10 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract {
      * loads all users without the passwd field
      * with role $role
      * @param array $roles - acl roles
-     * @param integer $parentIdFilter - the parent id which the select should check
+     * @param int $parentIdFilter - the parent id which the select should check
      * @return array
      */
-    public function loadAllByRole(array $roles, $parentIdFilter = false) {
+    public function loadAllByRole(array $roles, int $parentIdFilter = -1) {
         $s = $this->_loadAll();
         $this->addByRoleSql($s, $roles, $parentIdFilter);
         return $this->loadFilterdCustom($s);
@@ -191,10 +191,10 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract {
      * loads all users without the passwd field
      * with role $role
      * @param array $roles - acl roles
-     * @param integer $parentIdFilter - the parent id which the select should check
-     * @return integer
+     * @param int $parentIdFilter - the parent id which the select should check
+     * @return int
      */
-    public function getTotalByRole(array $roles, $parentIdFilter = false) {
+    public function getTotalByRole(array $roles, int $parentIdFilter = -1) {
         $s = $this->_loadAll();
         $s->reset($s::COLUMNS);
         $s->reset($s::FROM);
@@ -204,30 +204,30 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract {
 
     /**
      * Adds a role selector and parent id filter to an exising user SELECT query
-     * @param Zend_Db_Select $s
-     * @param array $roles
-     * @param integer $parentIdFilter or false if no filter to be used
+     * @param Zend_Db_Select $select
+     * @param string[] $roles
+     * @param int $parentId -1 or 0 if no filtering shall be applied
      */
-    protected function addByRoleSql(&$s, array $roles, $parentIdFilter) {
+    protected function addByRoleSql(Zend_Db_Select $select, array $roles, int $parentId = -1): void
+    {
         if (empty($roles)) {
             //if there are no roles given, we may not find a user for them!
-            $s->where('false');
+            $select->where('0 = 1');
             return;
         }
         $adapter = $this->db->getAdapter();
-        $first = true;
+        // collect all role-likes into an array
+        $roleLikes = [];
         foreach ($roles as $role) {
-            $sLike = sprintf('roles like %s OR roles like %s OR roles like %s OR roles=%s',
-                $adapter->quote($role.',%'),
-                $adapter->quote('%,'.$role.',%'),
-                $adapter->quote('%,'.$role),
-                $adapter->quote($role)
-                );
-            $first ? $s->where($sLike) : $s->orWhere($sLike);
-            $first = false;
+            $roleLikes[] = 'roles LIKE ' . $adapter->quote($role . ',%');
+            $roleLikes[] = 'roles LIKE ' . $adapter->quote('%,' . $role . ',%');
+            $roleLikes[] = 'roles LIKE ' . $adapter->quote('%,' . $role);
+            $roleLikes[] = 'roles = ' . $adapter->quote($role);
         }
-        if($parentIdFilter !== false){
-            $s->where('parentIds like "%,'.$parentIdFilter.',%" OR id='.$adapter->quote($parentIdFilter));
+        // and add them to the select all at once to keep the precedence
+        $select->where(implode(' OR ', $roleLikes));
+        if ($parentId > 0) {
+            $select->where('parentIds LIKE "%,' . $parentId . ',%" OR id = ' . $adapter->quote($parentId));
         }
     }
 
