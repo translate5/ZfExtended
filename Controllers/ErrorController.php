@@ -183,8 +183,10 @@ class ErrorController extends ZfExtended_Controllers_Action
         
         if($loggingEnabled){
 
-            $isNoAccess = $this->exception instanceof ZfExtended_NoAccessException
-                || $this->exception->getCode() == '423';
+            $isNoAccess = (
+                $this->exception instanceof ZfExtended_ErrorCodeException
+                && $this->exception->getHttpReturnCode() == '423'
+                ) || $this->exception instanceof ZfExtended_NoAccessException;
 
             if($isNoAccess || $isHttp404 ||
                 ($this->exception instanceof ZfExtended_Models_Entity_NotFoundException && $this->isRestRoute()))
