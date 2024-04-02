@@ -662,4 +662,19 @@ class ZfExtended_Utils {
             }
         }
     }
+
+    /**
+     * Clean a string from non-breaking spaces and trim it
+     * @param string $text
+     * @return string
+     */
+    public static function cleanString(string $text): string
+    {
+        // Replace non-breaking spaces with regular spaces
+        $text = str_replace("\xc2\xa0", ' ', $text);
+        // Replace all whitespace characters with regular spaces
+        $text = preg_replace('/\s/', ' ', $text);
+        // Trim leading and trailing whitespaces
+        return trim($text);
+    }
 }
