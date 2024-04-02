@@ -33,6 +33,7 @@ echo json_encode([
     'message' => htmlspecialchars($this->message),
     'errorMessage' => htmlspecialchars($this->errorMessage),
     'httpStatus' => $this->httpStatus,
+    'errorCode' => $this->errorCode,
     'success' => $this->success,
 ]);
 unset($this->translate);
