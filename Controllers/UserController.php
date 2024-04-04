@@ -96,7 +96,7 @@ class ZfExtended_UserController extends ZfExtended_RestController {
     {
         //check if the user is allowed to see all users
         if($this->isAllowed(SystemResource::ID, SystemResource::SEE_ALL_USERS)){
-            $parentId = false;
+            $parentId = -1;
         } else {
             $parentId = ZfExtended_Authentication::getInstance()->getUserId();
         }
