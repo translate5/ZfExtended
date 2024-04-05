@@ -39,9 +39,10 @@ use MittagQI\ZfExtended\Session\SessionInternalUniqueId;
  * @method void setExpiration(int $expiration)
  * @method void setResetHash(string $resetHash)
  * @method void setInternalSessionUniqId(string $uniqueId)
- * @method integer getId()
- * @method integer getUserId()
- * @method integer getExpiration()
+ *
+ * @method string getId()
+ * @method string getUserId()
+ * @method string getExpiration()
  * @method string getResetHash()
  * @method string getInternalSessionUniqId()
  *

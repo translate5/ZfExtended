@@ -26,36 +26,35 @@ use MittagQI\ZfExtended\Acl\ConfigLevelResource;
 use MittagQI\ZfExtended\Acl\Roles;
 
 /**
- * @method void setId() setId(int $id)
- * @method void setUserGuid() setUserGuid(string $guid)
- * @method void setFirstName() setFirstName(string $name)
- * @method void setSurName() setSurName(string $name)
- * @method void setGender() setGender(string $gender)
- * @method void setLogin() setLogin(string $login)
- * @method void setEmail() setEmail(string $email)
- * @method void setPasswd() setPasswd(string $hash)
- * @method void setEditable() setEditable(bool $editable)
- * @method void setLocale() setLocale(string $locale)
- * @method void setParentIds() setParentIds(string $parentIds)
- * @method void setCustomers() setCustomers(string $customers)
- * @method void setOpenIdIssuer() setOpenIdIssuer(string $openIdIssuer)
- * @method void setOpenIdSubject() setOpenIdSubject(string $openIdSubject)
+ * @method void setId(int $id)
+ * @method void setUserGuid(string $guid)
+ * @method void setFirstName(string $name)
+ * @method void setSurName(string $name)
+ * @method void setGender(string $gender)
+ * @method void setLogin(string $login)
+ * @method void setEmail(string $email)
+ * @method void setPasswd(string $hash)
+ * @method void setEditable(bool $editable)
+ * @method void setLocale(string $locale)
+ * @method void setParentIds(string $parentIds)
+ * @method void setCustomers(string $customers)
+ * @method void setOpenIdIssuer(string $openIdIssuer)
+ * @method void setOpenIdSubject(string $openIdSubject)
  *
- * @method integer getId() getId()
- * @method string getUserGuid() getUserGuid()
- * @method string getFirstName() getFirstName()
- * @method string getSurName() getSurName()
- * @method string getGender() getGender()
- * @method string getLogin() getLogin()
- * @method string getEmail() getEmail()
- *                getRoles defined natively
- * @method string getPasswd() getPasswd()
- * @method bool getEditable() getEditable()
- * @method string getLocale() getLocale()
- * @method string getParentIds() getParentIds()
- * @method string getCustomers() getCustomers()
- * @method string getOpenIdIssuer() getOpenIdIssuer()
- * @method string getOpenIdSubject() getOpenIdSubject()
+ * @method string getId()
+ * @method string getUserGuid()
+ * @method string getFirstName()
+ * @method string getSurName()
+ * @method string getGender()
+ * @method string getLogin()
+ * @method string getEmail()
+ * @method string getPasswd()
+ * @method string getEditable()
+ * @method string getLocale()
+ * @method string getParentIds()
+ * @method string getCustomers()
+ * @method string getOpenIdIssuer()
+ * @method string getOpenIdSubject()
  */
 class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract {
 
@@ -179,10 +178,10 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract {
      * loads all users without the passwd field
      * with role $role
      * @param array $roles - acl roles
-     * @param integer $parentIdFilter - the parent id which the select should check
+     * @param int $parentIdFilter - the parent id which the select should check
      * @return array
      */
-    public function loadAllByRole(array $roles, $parentIdFilter = false) {
+    public function loadAllByRole(array $roles, int $parentIdFilter = -1) {
         $s = $this->_loadAll();
         $this->addByRoleSql($s, $roles, $parentIdFilter);
         return $this->loadFilterdCustom($s);
@@ -192,10 +191,10 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract {
      * loads all users without the passwd field
      * with role $role
      * @param array $roles - acl roles
-     * @param integer $parentIdFilter - the parent id which the select should check
-     * @return integer
+     * @param int $parentIdFilter - the parent id which the select should check
+     * @return int
      */
-    public function getTotalByRole(array $roles, $parentIdFilter = false) {
+    public function getTotalByRole(array $roles, int $parentIdFilter = -1) {
         $s = $this->_loadAll();
         $s->reset($s::COLUMNS);
         $s->reset($s::FROM);
@@ -205,30 +204,30 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract {
 
     /**
      * Adds a role selector and parent id filter to an exising user SELECT query
-     * @param Zend_Db_Select $s
-     * @param array $roles
-     * @param integer $parentIdFilter or false if no filter to be used
+     * @param Zend_Db_Select $select
+     * @param string[] $roles
+     * @param int $parentId -1 or 0 if no filtering shall be applied
      */
-    protected function addByRoleSql(&$s, array $roles, $parentIdFilter) {
+    protected function addByRoleSql(Zend_Db_Select $select, array $roles, int $parentId = -1): void
+    {
         if (empty($roles)) {
             //if there are no roles given, we may not find a user for them!
-            $s->where('false');
+            $select->where('0 = 1');
             return;
         }
         $adapter = $this->db->getAdapter();
-        $first = true;
+        // collect all role-likes into an array
+        $roleLikes = [];
         foreach ($roles as $role) {
-            $sLike = sprintf('roles like %s OR roles like %s OR roles like %s OR roles=%s',
-                $adapter->quote($role.',%'),
-                $adapter->quote('%,'.$role.',%'),
-                $adapter->quote('%,'.$role),
-                $adapter->quote($role)
-                );
-            $first ? $s->where($sLike) : $s->orWhere($sLike);
-            $first = false;
+            $roleLikes[] = 'roles LIKE ' . $adapter->quote($role . ',%');
+            $roleLikes[] = 'roles LIKE ' . $adapter->quote('%,' . $role . ',%');
+            $roleLikes[] = 'roles LIKE ' . $adapter->quote('%,' . $role);
+            $roleLikes[] = 'roles = ' . $adapter->quote($role);
         }
-        if($parentIdFilter !== false){
-            $s->where('parentIds like "%,'.$parentIdFilter.',%" OR id='.$adapter->quote($parentIdFilter));
+        // and add them to the select all at once to keep the precedence
+        $select->where(implode(' OR ', $roleLikes));
+        if ($parentId > 0) {
+            $select->where('parentIds LIKE "%,' . $parentId . ',%" OR id = ' . $adapter->quote($parentId));
         }
     }
 
