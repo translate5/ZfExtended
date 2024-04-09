@@ -73,7 +73,9 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract {
      */
     public static function customersToCustomerIds(string $customers): array
     {
-        return array_map('intval', explode(',', trim($customers, ',')));
+        $customerIds = array_map('intval', explode(',', trim($customers, ',')));
+        // clean up the array for empty values
+        return array_filter($customerIds);
     }
 
     /**
