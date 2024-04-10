@@ -3,7 +3,7 @@
 START LICENSE AND COPYRIGHT
 
  This file is part of ZfExtended library
- 
+
  Copyright (c) 2013 - 2021 Marc Mittag; MittagQI - Quality Informatics;  All rights reserved.
 
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
@@ -28,24 +28,23 @@ END LICENSE AND COPYRIGHT
  * @param string $gender (optional) If not set, it will use the gender of the currently logged-in employee.
  *                       If set, only the values 'm' and 'f' are allowed.
  * @return string Salutation
- *
  */
 class ZfExtended_View_Helper_MailEmployeeSalutation extends Zend_View_Helper_Abstract
 {
     public function mailEmployeeSalutation($gender = false)
     {
-        if(!$gender){
+        if (! $gender) {
             $gender = ZfExtended_Authentication::getInstance()->getUser()->getGender();
+        } elseif ($gender != 'f' && $gender != 'm' && $gender != 'n') {
+            throw new Zend_Exception('$gender hat den nicht erwarteten Wert ' . $gender, 0);
         }
-        elseif($gender !='f' && $gender!='m' && $gender!='n'){
-            throw new Zend_Exception('$gender hat den nicht erwarteten Wert '.$gender, 0);
-        }
-        if($gender == 'f'){
+        if ($gender == 'f') {
             return $this->view->translate->_('Sehr geehrte Frau');
         }
-        if($gender == 'm'){
+        if ($gender == 'm') {
             return $this->view->translate->_('Sehr geehrter Herr');
         }
+
         return $this->view->translate->_('Sehr geehrte(r)');
     }
 }

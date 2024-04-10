@@ -3,21 +3,21 @@
 START LICENSE AND COPYRIGHT
 
  This file is part of ZfExtended library
- 
+
  Copyright (c) 2013 - 2021 Marc Mittag; MittagQI - Quality Informatics;  All rights reserved.
 
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
 
  This file may be used under the terms of the GNU LESSER GENERAL PUBLIC LICENSE version 3
- as published by the Free Software Foundation and appearing in the file lgpl3-license.txt 
- included in the packaging of this file.  Please review the following information 
+ as published by the Free Software Foundation and appearing in the file lgpl3-license.txt
+ included in the packaging of this file.  Please review the following information
  to ensure the GNU LESSER GENERAL PUBLIC LICENSE version 3.0 requirements will be met:
 https://www.gnu.org/licenses/lgpl-3.0.txt
 
  @copyright  Marc Mittag, MittagQI - Quality Informatics
  @author     MittagQI - Quality Informatics
  @license    GNU LESSER GENERAL PUBLIC LICENSE version 3
-			 https://www.gnu.org/licenses/lgpl-3.0.txt
+             https://www.gnu.org/licenses/lgpl-3.0.txt
 
 END LICENSE AND COPYRIGHT
 */
@@ -36,18 +36,20 @@ END LICENSE AND COPYRIGHT
  * runtimeOptions.debug.core = 1
  * runtimeOptions.debug.core.YourSection = 1
  */
-class ZfExtended_Debug {
+class ZfExtended_Debug
+{
     /**
      * @var array
      */
-    protected static $profiler = array();
-    protected static $lap = array();
-    
+    protected static $profiler = [];
+
+    protected static $lap = [];
+
     /**
      * @var Zend_Config_Ini
      */
     protected static $config = null;
-    
+
     /**
      * compares the given debug level binary with the configured one for the given category and section
      * @param string $category
@@ -55,10 +57,11 @@ class ZfExtended_Debug {
      * @param int $level default is level 1
      * @return boolean
      */
-    public static function hasLevel($category, $section, $level = 1) {
+    public static function hasLevel($category, $section, $level = 1)
+    {
         return (self::getLevel($category, $section) & $level) !== 0;
     }
-    
+
     /**
      * returns the configured debug level for given category and key
      *
@@ -75,76 +78,81 @@ class ZfExtended_Debug {
      * @param string $section
      * @return integer
      */
-    public static function getLevel($category, $section) {
-        if(is_null(self::$config)) {
+    public static function getLevel($category, $section)
+    {
+        if (is_null(self::$config)) {
             self::$config = Zend_Registry::get('config');
         }
         $rop = self::$config->runtimeOptions;
-        $keys = array('debug', $category, $section);
-        
-        $walker = function($conf, $keys) use (&$walker) {
+        $keys = ['debug', $category, $section];
+
+        $walker = function ($conf, $keys) use (&$walker) {
             $key = array_shift($keys);
             $conf = $conf->$key;
-            if(empty($conf)) {
+            if (empty($conf)) {
                 return 0;
             }
-            if(! $conf instanceof Zend_Config) {
+            if (! $conf instanceof Zend_Config) {
                 return (int) $conf;
             }
+
             return $walker($conf, $keys);
         };
+
         return $walker($rop, $keys);
     }
-    
+
     /**
      * starts the profiler for given key, default is profiler
      * @param string $key
      */
-    public static function start($key = 'profiler'){
+    public static function start($key = 'profiler')
+    {
         self::$lap[$key] = 0;
         self::$profiler[$key] = microtime(true);
     }
-    
+
     /**
      * logs the laptime of the profiler to given key to the log
      * @param string $key
      */
-    public static function laptime($key = null) {
+    public static function laptime($key = null)
+    {
         $stop = microtime(true);
-        if(empty($key)) {
+        if (empty($key)) {
             $keys = array_keys(self::$profiler);
             $key = end($keys);
         }
         $start = self::$profiler[$key];
-        error_log(__CLASS__.' #'.$key.' laptime(#'.(self::$lap[$key]++).') (in s): '.($stop - $start));
+        error_log(__CLASS__ . ' #' . $key . ' laptime(#' . (self::$lap[$key]++) . ') (in s): ' . ($stop - $start));
     }
-    
+
     /**
      * stops the profiler for given key, or if empty for the key given on last start call
      * Key and elapsed time is written to error_log
      * @param string $key
      */
-    public static function stop($key = null){
+    public static function stop($key = null)
+    {
         $stop = microtime(true);
-        if(empty($key)) {
+        if (empty($key)) {
             $keys = array_keys(self::$profiler);
             $key = end($keys);
         }
         $start = self::$profiler[$key];
-        error_log(__CLASS__.' #'.$key.' duration (in s): '.($stop - $start));
+        error_log(__CLASS__ . ' #' . $key . ' duration (in s): ' . ($stop - $start));
         unset(self::$profiler[$key]);
     }
 
     /**
      * Creates a summary about the current application and returns it.
-     * @param bool $includeServices
-     * @return stdClass
      * @throws Zend_Exception
      */
     public static function applicationState(bool $includeServices = true): stdClass
     {
         $result = new stdClass();
         $downloader = ZfExtended_Factory::get('ZfExtended_Models_Installer_Downloader', [APPLICATION_ROOT]);
+
         /* @var $downloader ZfExtended_Models_Installer_Downloader */
         try {
             $result->isUptodate = -1;
@@ -157,14 +165,14 @@ class ZfExtended_Debug {
 
         if (ZfExtended_Utils::isDevelopment()) {
             $result->version = ZfExtended_Utils::VERSION_DEVELOPMENT;
-            $result->branch = exec('cd '.APPLICATION_ROOT.'; git status -bs | head -1');
+            $result->branch = exec('cd ' . APPLICATION_ROOT . '; git status -bs | head -1');
         } else {
             $result->version = ZfExtended_Utils::getAppVersion();
         }
 
         $mm = new ZfExtended_Models_Installer_Maintenance();
         $result->maintenance = $mm->status();
-        
+
         $dbUpdater = ZfExtended_Factory::get('ZfExtended_Models_Installer_DbUpdater');
         /* @var $dbUpdater ZfExtended_Models_Installer_DbUpdater */
         $dbUpdater->calculateChanges();
@@ -175,46 +183,48 @@ class ZfExtended_Debug {
         }
         $result->database->modCount = count($dbUpdater->getModifiedFiles());
         $result->database->isUptodate = $result->database->newCount === 0 && $result->database->modCount === 0;
-        
+
         $worker = ZfExtended_Factory::get('ZfExtended_Models_Worker');
         /* @var $worker ZfExtended_Models_Worker */
         $result->worker = $worker->getSummary();
-        
+
         $pm = Zend_Registry::get('PluginManager');
         /* @var $pm ZfExtended_Plugin_Manager */
         $result->pluginsLoaded = $pm->getLoaded();
 
-        if($includeServices) {
-            $events = ZfExtended_Factory::get('ZfExtended_EventManager', array(__CLASS__));
+        if ($includeServices) {
+            $events = ZfExtended_Factory::get('ZfExtended_EventManager', [__CLASS__]);
             /* @var $events ZfExtended_EventManager */
-            $events->trigger('applicationState', __CLASS__, array('applicationState' => $result));
+            $events->trigger('applicationState', __CLASS__, [
+                'applicationState' => $result,
+            ]);
 
             self::addLanguageResources($result);
         }
 
         return $result;
     }
-    
+
     /***
      * Add the available resources to the application state
      * @param stdClass $applicationState
      */
-    public static function addLanguageResources(&$applicationState) {
-        
+    public static function addLanguageResources(&$applicationState)
+    {
         $serviceManager = ZfExtended_Factory::get('editor_Services_Manager');
         /* @var $serviceManager editor_Services_Manager */
         $applicationState->languagesource = [];
         $resources = $serviceManager->getAllResources();
-        foreach($resources as $resource) {
+        foreach ($resources as $resource) {
             /* @var $resource editor_Models_LanguageResources_Resource */
             $obj = new stdClass();
             $obj->id = $resource->getId();
             $obj->name = $resource->getName();
             $obj->serviceType = $resource->getServiceType();
             $obj->serviceName = $resource->getService();
-            
+
             //FIXME implement a "ping" method in the reosurce class to ping the connection to the resource
-            
+
             $obj->url = $resource->getUrl();
             $applicationState->languagesource[] = $obj;
         }

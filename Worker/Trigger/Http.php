@@ -3,7 +3,7 @@
 START LICENSE AND COPYRIGHT
 
  This file is part of ZfExtended library
- 
+
  Copyright (c) 2013 - 2021 Marc Mittag; MittagQI - Quality Informatics;  All rights reserved.
 
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
@@ -17,7 +17,7 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
  @copyright  Marc Mittag, MittagQI - Quality Informatics
  @author     MittagQI - Quality Informatics
  @license    GNU LESSER GENERAL PUBLIC LICENSE version 3
-			 https://www.gnu.org/licenses/lgpl-3.0.txt
+             https://www.gnu.org/licenses/lgpl-3.0.txt
 
 END LICENSE AND COPYRIGHT
 */
@@ -36,15 +36,22 @@ use ZfExtended_Utils;
 
 class Http implements TriggerInterface
 {
-    const WORKER_HEADER = 'X-Translate5-Worker';
-    const WORKER_CHECK_IGNORE = 'cli-ignore';
+    public const WORKER_HEADER = 'X-Translate5-Worker';
+
+    public const WORKER_CHECK_IGNORE = 'cli-ignore';
 
     protected ZfExtended_Logger $log;
+
     private string $host = 'localhost'; //attention the port alone does not define if SSL is used or no by fsockopent!
+
     private int $port = 80;
+
     private string $path = '';
+
     private array $postParameters = [];
+
     private string $method = 'GET';
+
     private string $getParameters = '';
 
     /**
@@ -60,18 +67,16 @@ class Http implements TriggerInterface
      * Trigger worker with id = $id.
      * To run mutex-save, the current hash is needed
      *
-     * @param string $id
-     * @param string $hash
-     * @param string $worker
-     * @param string|null $taskGuid
-     * @return bool
      * @throws Zend_Exception
      */
     public function triggerWorker(string $id, string $hash, string $worker, ?string $taskGuid): bool
     {
         return $this->triggerUrl(
             APPLICATION_RUNDIR . '/editor/worker/' . $id,
-            ['state' => 'running', 'hash' => $hash],
+            [
+                'state' => 'running',
+                'hash' => $hash,
+            ],
             'PUT'
         );
     }
@@ -109,6 +114,7 @@ class Http implements TriggerInterface
                 'errorName' => $errstr,
                 'errorNumber' => $errno,
             ]);
+
             return false;
         }
 
@@ -127,7 +133,7 @@ class Http implements TriggerInterface
             $header .= $line;
             if (str_contains($line, "HTTP")) {
                 $infos = explode(' ', $line);
-                $state = (int)$infos[1];
+                $state = (int) $infos[1];
             }
             if (stripos($line, ZfExtended_Models_Worker::WORKER_SERVERID_HEADER) !== false) {
                 $infos = explode(' ', $line);
@@ -140,7 +146,7 @@ class Http implements TriggerInterface
 
         //if the other server does not send a server id, or an invalid server id,
         // the target server is not the current system!
-        if ($state != 503 && !$isServerIdEqual) {
+        if ($state != 503 && ! $isServerIdEqual) {
             $state = 999;
         }
 
@@ -158,6 +164,7 @@ class Http implements TriggerInterface
                 'host' => $host,
                 'port' => $this->port,
             ]);
+
             // if not (URL responds immediately with an empty result)
             // this means the called URL is not properly configured!
             // make a dedicated log entry, since the log below would be bogus for this situation
@@ -169,55 +176,51 @@ class Http implements TriggerInterface
             return true;
         }
         $this->logRequest($state, $method, $serverId, $postParameters, $host);
+
         return false;
     }
 
     /**
      * Initializes the worker URL parts
-     * @param string $path
-     * @param array $postParameters
-     * @param string $method
      * @return string the host which should be used by fsockopen
      * @throws Zend_Exception
      */
     private function triggerInit(string $path, array $postParameters = [], string $method = 'GET'): string
     {
-
         $url = ZfExtended_Application::createWorkerUrl($path);
         $urlParts = parse_url($url);
 
-        if (!empty($urlParts['host'])) {
+        if (! empty($urlParts['host'])) {
             $this->host = $urlParts['host'];
         }
         $host = $this->host;
 
-        if (!empty($urlParts['scheme']) && $urlParts['scheme'] === 'https') {
+        if (! empty($urlParts['scheme']) && $urlParts['scheme'] === 'https') {
             //fsockopen needs ssl:// scheme when using https
             $host = 'ssl://' . $host;
             $this->port = 443;
         }
-        if (!empty($urlParts['port'])) {
-            $this->port = (int)$urlParts['port'];
+        if (! empty($urlParts['port'])) {
+            $this->port = (int) $urlParts['port'];
         }
 
-        if (!empty($urlParts['path'])) {
+        if (! empty($urlParts['path'])) {
             $this->path = $urlParts['path'];
         }
 
-
-        if (!empty($postParameters)) {
+        if (! empty($postParameters)) {
             $this->postParameters = $postParameters;
         }
 
-        if (!empty($postParameters) && $method != 'PUT') {
+        if (! empty($postParameters) && $method != 'PUT') {
             $this->method = 'POST';
         }
 
-        if (!empty($method)) {
+        if (! empty($method)) {
             $this->method = $method;
         }
 
-        if (!empty($urlParts['query'])) {
+        if (! empty($urlParts['query'])) {
             $this->getParameters = '&' . $urlParts['query'];
         }
 
@@ -228,7 +231,6 @@ class Http implements TriggerInterface
     /**
      * Creates all headers needed for a worker-call
      * The worker-endpoints are not CSRF protected
-     * @return string
      */
     private function createHeader(): string
     {
@@ -249,7 +251,7 @@ class Http implements TriggerInterface
         if (ZfExtended_Debug::hasLevel('core', 'worker')) {
             $debug = 'PHPSTORM';
         }
-        if (!empty($debug)) {
+        if (! empty($debug)) {
             $out .= 'Cookie: XDEBUG_SESSION=' . $debug . "\r\n";
         }
         // we need to trigger correct environment for worker in API tests
@@ -280,22 +282,13 @@ class Http implements TriggerInterface
         return $out;
     }
 
-    /**
-     * @param int $state
-     * @param string $httpMethod
-     * @param string $serverId
-     * @param array $postParameters
-     * @param string $host
-     * @return void
-     */
     private function logRequest(
         int $state,
         string $httpMethod,
         string $serverId,
         array $postParameters,
         string $host
-    ): void
-    {
+    ): void {
         $code = 'E1074';
         $msg = 'Worker HTTP response state was not 2XX but {state}.';
         switch ($state) {
@@ -304,19 +297,23 @@ class Http implements TriggerInterface
                 // wanted behaviour due maintenance
                 $method = 'info';
                 $msg = 'Worker not started, maintenance is scheduled or in progress!';
+
                 break;
             case 500:
                 //since on a 500 the real exception was logged in the worker, we just log that here as debug info
                 $method = 'debug';
+
                 break;
             case 999:
                 //a 999 means we are requesting the wrong server!
                 $method = 'error';
                 $code = 'E1107';
                 $msg = 'Worker HTTP response was not successful, the worker system requests probably the wrong server!';
+
                 break;
             default:
                 $method = 'warn';
+
                 break;
         }
         $this->log->__call($method, [$code, $msg, [

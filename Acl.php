@@ -3,21 +3,21 @@
 START LICENSE AND COPYRIGHT
 
  This file is part of ZfExtended library
- 
+
  Copyright (c) 2013 - 2021 Marc Mittag; MittagQI - Quality Informatics;  All rights reserved.
 
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
 
  This file may be used under the terms of the GNU LESSER GENERAL PUBLIC LICENSE version 3
- as published by the Free Software Foundation and appearing in the file lgpl3-license.txt 
- included in the packaging of this file.  Please review the following information 
+ as published by the Free Software Foundation and appearing in the file lgpl3-license.txt
+ included in the packaging of this file.  Please review the following information
  to ensure the GNU LESSER GENERAL PUBLIC LICENSE version 3.0 requirements will be met:
 https://www.gnu.org/licenses/lgpl-3.0.txt
 
  @copyright  Marc Mittag, MittagQI - Quality Informatics
  @author     MittagQI - Quality Informatics
  @license    GNU LESSER GENERAL PUBLIC LICENSE version 3
-			 https://www.gnu.org/licenses/lgpl-3.0.txt
+             https://www.gnu.org/licenses/lgpl-3.0.txt
 
 END LICENSE AND COPYRIGHT
 */
@@ -33,11 +33,9 @@ use MittagQI\ZfExtended\Acl\SetAclRoleResource;
  *
  * - zu beziehen über $this->getInstance
  * - bezieht seine Definitionen aus der modulName/configs/aclConfig.ini
- *
- *
  */
-class ZfExtended_Acl extends Zend_Acl {
-
+class ZfExtended_Acl extends Zend_Acl
+{
     /**
      * Singleton Instanzen
      *
@@ -61,15 +59,16 @@ class ZfExtended_Acl extends Zend_Acl {
         if (null === self::$_instance || $init) {
             self::$_instance = new self();
         }
+
         return self::$_instance;
     }
+
     /**
      * Singleton Instanz auf NULL setzen, um sie neu initialiseren zu können
-     *
-     * @return void
      */
-    public static function reset() {
-        self::$_instance = NULL;
+    public static function reset()
+    {
+        self::$_instance = null;
     }
 
     /**
@@ -77,7 +76,8 @@ class ZfExtended_Acl extends Zend_Acl {
      * - must be used as singleton (getInstance())
      * - only allow rules are set, default is deny
      */
-    protected function __construct() {
+    protected function __construct()
+    {
         $db = ZfExtended_Factory::get(ZfExtended_Models_Db_AclRules::class);
 
         //currently we load the rules for all modules, if we ever need to differ,
@@ -89,16 +89,18 @@ class ZfExtended_Acl extends Zend_Acl {
         $this->addResources(array_unique(array_column($rules, 'resource')));
         $this->addRules($rules);
     }
-    
+
     /**
      * Return all roles, not only the ones from the current module
      * @return array
      */
-    public function getAllRoles() {
+    public function getAllRoles()
+    {
         $db = ZfExtended_Factory::get(ZfExtended_Models_Db_AclRules::class);
         $s = $db->select()
-        ->from($db->info($db::NAME), 'role')
-        ->distinct();
+            ->from($db->info($db::NAME), 'role')
+            ->distinct();
+
         return array_column($db->fetchAll($s)->toArray(), 'role');
     }
 
@@ -109,12 +111,14 @@ class ZfExtended_Acl extends Zend_Acl {
      * @return array
      * @throws Zend_Db_Table_Exception
      */
-    public function getResourceByRoles(string $resource, array $roles){
+    public function getResourceByRoles(string $resource, array $roles)
+    {
         $db = ZfExtended_Factory::get(ZfExtended_Models_Db_AclRules::class);
         $s = $db->select()
             ->from($db->info($db::NAME))
-            ->where('resource = ?',$resource)
-            ->where('role IN (?)',$roles);
+            ->where('resource = ?', $resource)
+            ->where('role IN (?)', $roles);
+
         return $db->fetchAll($s)->toArray();
     }
 
@@ -130,109 +134,112 @@ class ZfExtended_Acl extends Zend_Acl {
         $s = $db->select()
             ->from($db->info($db::NAME), 'module')
             ->where('resource = ?', Dispatcher::INITIAL_PAGE_RESOURCE)
-            ->where('role IN (?)',$roles)
+            ->where('role IN (?)', $roles)
             ->distinct();
+
         return array_column($db->fetchAll($s)->toArray(), 'module');
     }
 
-
-
     /**
      * Returns all roles having a specifc resource and privilege
-     * @param string $resource
-     * @param string $privilege
-     * @return array
      */
-    public function getRolesWith(string $resource, string $privilege): array {
+    public function getRolesWith(string $resource, string $privilege): array
+    {
         $allRoles = $this->getAllRoles();
         $result = [];
-        foreach($allRoles as $role) {
-            if($this->isAllowed($role, $resource, $privilege)){
+        foreach ($allRoles as $role) {
+            if ($this->isAllowed($role, $resource, $privilege)) {
                 $result[] = $role;
             }
         }
+
         return $result;
     }
 
     /**
      * checks if one of the passed roles allows the resource / privelege
      *
-     * @param  array     $roles
      * @param  Zend_Acl_Resource_Interface|string $resource
      * @param  string                             $privilege
      * @return boolean
      */
-    public function isInAllowedRoles(array $roles, $resource = null, $privilege = null){
+    public function isInAllowedRoles(array $roles, $resource = null, $privilege = null)
+    {
         $allowed = false;
-        foreach ($roles as $role){
+        foreach ($roles as $role) {
             try {
-                if($this->isAllowed($role,$resource,$privilege)){
+                if ($this->isAllowed($role, $resource, $privilege)) {
                     $allowed = true;
+
                     break;
                 }
             } catch (Zend_Acl_Role_Registry_Exception $exc) {
                 //if role is not registered because it is the role of a different module
             } catch (Zend_Acl_Exception $e) {
-                //if the resource is not registered access is false 
-                if(preg_match("/Resource '[^']*' not found/", $e->getMessage())) {
+                //if the resource is not registered access is false
+                if (preg_match("/Resource '[^']*' not found/", $e->getMessage())) {
                     return false;
                 }
+
                 throw $e;
             }
         }
+
         return $allowed;
     }
 
     /**
      * Checks if the configured rights were valid
      */
-    public function checkRights() {
-        if(!ZfExtended_Debug::hasLevel('core', 'acl')) {
+    public function checkRights()
+    {
+        if (! ZfExtended_Debug::hasLevel('core', 'acl')) {
             return;
         }
         $this->getControllers();
         $allowedResource = [Rights::ID, SetAclRoleResource::ID];
-        foreach($this->_allRules as $rule) {
-            if(in_array($rule['resource'], $allowedResource)) {
+        foreach ($this->_allRules as $rule) {
+            if (in_array($rule['resource'], $allowedResource)) {
                 continue;
             }
             $isAll = $rule['right'] == 'all';
             $isClass = class_exists($rule['resource'], true);
-            $isController = class_exists($rule['resource'].'Controller', true);
+            $isController = class_exists($rule['resource'] . 'Controller', true);
             //class_exists loads the class and isAll is set then its OK
-            if(($isClass || $isController) && $isAll) {
+            if (($isClass || $isController) && $isAll) {
                 continue;
             }
-            if(method_exists($rule['resource'].'Controller', $rule['right'].'Action')){
+            if (method_exists($rule['resource'] . 'Controller', $rule['right'] . 'Action')) {
                 continue;
             }
-            if(method_exists($rule['resource'], $rule['right'])){
+            if (method_exists($rule['resource'], $rule['right'])) {
                 continue;
             }
-        //FIXME den code umbauen so dass er auf die neuen Klassen und den manager prüft
-            error_log('The following ACL resource and privilege does not exist in the Application: '.$rule['resource'].'; '.$rule['right']);
+            //FIXME den code umbauen so dass er auf die neuen Klassen und den manager prüft
+            error_log('The following ACL resource and privilege does not exist in the Application: ' . $rule['resource'] . '; ' . $rule['right']);
         }
     }
 
     /**
      * Add the given rules to the internal ACL instance
-     * @param array $rules
      * @throws Zend_Exception
      */
-    protected function addRules(array $rules){
-        if(empty($rules)) {
+    protected function addRules(array $rules)
+    {
+        if (empty($rules)) {
             return;
         }
         $this->_allRules = $rules;
-        foreach($rules as $rule) {
+        foreach ($rules as $rule) {
             $role = $rule['role'];
             $right = $rule['right'];
             $resource = $rule['resource'];
             if ($right == 'all') {
-                if($resource == Rights::ID){
+                if ($resource == Rights::ID) {
                     throw new Zend_Exception('For the resource "frontend" the right "all" can not be used!');
                 }
                 $this->allow($role, $resource);
+
                 continue;
             }
             $this->allow($role, $resource, $right);
@@ -247,40 +254,41 @@ class ZfExtended_Acl extends Zend_Acl {
     public function getSetableRolesForRoles(array $roles): array
     {
         $setableRoles = [];
-        foreach($this->_allRules as $rule) {
-            if($rule['resource'] === SetAclRoleResource::ID
+        foreach ($this->_allRules as $rule) {
+            if ($rule['resource'] === SetAclRoleResource::ID
                 && in_array($rule['role'], $roles)
-                && !in_array($rule['right'], $setableRoles)){
+                && ! in_array($rule['right'], $setableRoles)) {
                 $setableRoles[] = $rule['right'];
             }
         }
+
         return $setableRoles;
     }
-    
+
     /**
      * Adds the resources to the internal ACL instance
-     * @param array $resources
      */
-    protected function addResources(array $resources){
+    protected function addResources(array $resources)
+    {
         foreach ($resources as $resource) {
             $this->addResource(new Zend_Acl_Resource($resource));
         }
     }
-    
+
     /**
      * Adds the roles to the internal ACL instance
-     * @param array $roles
      */
-    protected function addRoles(array $roles){
+    protected function addRoles(array $roles)
+    {
         foreach ($roles as $role) {
-            $const = 'ACL_ROLE_'.strtoupper($role);
-            if(!defined($const)) {
+            $const = 'ACL_ROLE_' . strtoupper($role);
+            if (! defined($const)) {
                 define($const, $role);
             }
             $this->addRole(new Zend_Acl_Role($role));
         }
     }
-    
+
     /**
      * Holt alle Controller aller Module
      *
@@ -288,30 +296,33 @@ class ZfExtended_Acl extends Zend_Acl {
      *
      * @return array array('moduleName'=>array('controllerName1','controllerName2',...),...)
      */
-    protected function getControllers (){
-        $controllers = array();
+    protected function getControllers()
+    {
+        $controllers = [];
         $module = Zend_Registry::get('module');
         $controllerDirs = Zend_Controller_Front::getInstance()->getControllerDirectory();
-        
+
         $this->includeController($controllerDirs[$module]);
-        foreach($controllerDirs as $mod => $dir) {
-            if(substr($mod, 0, 8) === '_plugins') {
+        foreach ($controllerDirs as $mod => $dir) {
+            if (substr($mod, 0, 8) === '_plugins') {
                 $this->includeController($dir);
             }
         }
-        
+
         foreach (get_declared_classes() as $class) {
-            if (is_subclass_of($class, 'Zend_Controller_Action') && preg_match("'Controller$'",$class)) {
+            if (is_subclass_of($class, 'Zend_Controller_Action') && preg_match("'Controller$'", $class)) {
                 $controllers[] = strtolower(substr($class, 0, strpos($class, "Controller")));
             }
         }
+
         return $controllers;
     }
-    
-    protected function includeController($path) {
-        $objects = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($path,FilesystemIterator::CURRENT_AS_FILEINFO|FilesystemIterator::SKIP_DOTS));
-        foreach($objects as $file => $object){
-            if (strstr($file.'#', "Controller.php#") !== false) {
+
+    protected function includeController($path)
+    {
+        $objects = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($path, FilesystemIterator::CURRENT_AS_FILEINFO | FilesystemIterator::SKIP_DOTS));
+        foreach ($objects as $file => $object) {
+            if (strstr($file . '#', "Controller.php#") !== false) {
                 include_once $file;
             }
         }
@@ -319,30 +330,28 @@ class ZfExtended_Acl extends Zend_Acl {
 
     /**
      * Returns a list of frontend privileges / rights to the given roles
-     * @param array $roles
-     * @return array
      * @throws Zend_Acl_Exception
      * @throws \MittagQI\Translate5\Test\Api\Exception
      */
-    public function getFrontendRights(array $roles): array {
+    public function getFrontendRights(array $roles): array
+    {
         $resources = ResourceManager::getBusinessLogicResources();
         $rights = [];
         foreach ($resources as $resource) {
             $rights = array_merge($rights, $this->getRightsToRolesAndResource($roles, $resource->getId()));
         }
+
         return $rights;
     }
 
     /**
      * returns the configured rights to a resource roles combination
-     * @param array $roles
-     * @param string $resource
-     * @return array
      * @throws Zend_Acl_Exception
      */
-    public function getRightsToRolesAndResource(array $roles, string $resource): array {
+    public function getRightsToRolesAndResource(array $roles, string $resource): array
+    {
         $result = [];
-        foreach($roles as $role) {
+        foreach ($roles as $role) {
             try {
                 $roleObject = $this->getRole($role);
             } catch (Zend_Acl_Role_Registry_Exception $exc) {
@@ -350,10 +359,11 @@ class ZfExtended_Acl extends Zend_Acl {
                 continue;
             }
             $res = $this->_getRules($this->get($resource), $roleObject);
-            if(!empty($res)) {
+            if (! empty($res)) {
                 $result = array_merge($result, array_keys($res['byPrivilegeId']));
             }
         }
+
         return array_values(array_unique($result));
     }
 
@@ -365,7 +375,8 @@ class ZfExtended_Acl extends Zend_Acl {
      * @param array $oldUserRoles
      * @return array
      */
-    public function mergeAutoSetRoles(array $newUserRoles, array $oldUserRoles) : array{
+    public function mergeAutoSetRoles(array $newUserRoles, array $oldUserRoles): array
+    {
         // get all auto set roles for the newUserRoles array
         $setAdditionally = $this->getRightsToRolesAndResource($newUserRoles, AutoSetRoleResource::ID);
 

@@ -3,7 +3,7 @@
 START LICENSE AND COPYRIGHT
 
  This file is part of ZfExtended library
- 
+
  Copyright (c) 2013 - 2021 Marc Mittag; MittagQI - Quality Informatics;  All rights reserved.
 
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
@@ -17,7 +17,7 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
  @copyright  Marc Mittag, MittagQI - Quality Informatics
  @author     MittagQI - Quality Informatics
  @license    GNU LESSER GENERAL PUBLIC LICENSE version 3
-			 https://www.gnu.org/licenses/lgpl-3.0.txt
+             https://www.gnu.org/licenses/lgpl-3.0.txt
 
 END LICENSE AND COPYRIGHT
 */
@@ -36,6 +36,7 @@ class Factory
     public static function create(): TriggerInterface
     {
         $config = Zend_Registry::get('config');
+
         return match ($config->runtimeOptions->worker->triggerType) {
             'process' => new Process(),
             default => new Http(),

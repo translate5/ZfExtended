@@ -41,63 +41,65 @@ $SCRIPT_IDENTIFIER = '040-TRANSLATE-3051-passwd-hash.php';
  * define database credential variables
  */
 $argc = count($argv);
-if(empty($this) || empty($argv) || $argc < 5 || $argc > 7) {
+if (empty($this) || empty($argv) || $argc < 5 || $argc > 7) {
     die("please dont call the script direct! Call it by using DBUpdater!\n\n");
 }
 
 $secret = null;
 $iniKey = 'runtimeOptions.authentication.secret';
-$defaultIni = APPLICATION_PATH.'/config/installation.ini';
-$dataIni = APPLICATION_ROOT.'/data/installation.ini';
+$defaultIni = APPLICATION_PATH . '/config/installation.ini';
+$dataIni = APPLICATION_ROOT . '/data/installation.ini';
 
 //check if the installer - or someone else - did already provide a secret in one of the main installation.ini files
-foreach([$defaultIni, $dataIni] as $ini) {
-    if(file_exists($ini)) {
+foreach ([$defaultIni, $dataIni] as $ini) {
+    if (file_exists($ini)) {
         $data = parse_ini_file($ini);
-        if(array_key_exists($iniKey, $data)) {
+        if (array_key_exists($iniKey, $data)) {
             $secret = trim($data[$iniKey]);
-            $this->output('Found a secret in ini '.$ini.' use the latest one if multiple found.');
+            $this->output('Found a secret in ini ' . $ini . ' use the latest one if multiple found.');
             // do not break here, since that reflects the overwrite / search order of the internal list of ini files
         }
     }
 }
 //if no secret found, create and set one
-if(empty($secret)) {
+if (empty($secret)) {
     $secret = bin2hex(random_bytes(32));
 
     $written = 0;
-    foreach([$dataIni, $defaultIni] as $ini) {
-        if(!file_exists($ini) || !is_writable($ini)) {
+    foreach ([$dataIni, $defaultIni] as $ini) {
+        if (! file_exists($ini) || ! is_writable($ini)) {
             continue;
         }
         $content[] = '';
         $content[] = '';
         $content[] = '; secret for encryption of the user passwords';
         $content[] = '; WHEN YOU CHANGE THAT ALL PASSWORDS WILL BE INVALID!';
-        $content[] = 'runtimeOptions.authentication.secret = '.$secret;
+        $content[] = 'runtimeOptions.authentication.secret = ' . $secret;
         $content[] = '';
         $written = file_put_contents($ini, join("\n", $content), FILE_APPEND);
 
-        $this->output('Added a new password secret to ini '.$ini);
+        $this->output('Added a new password secret to ini ' . $ini);
+
         break; // we write the data only once!
     }
 
     //if nothing was written, the script must fail!
-    if(! $written) {
-        throw new ZfExtended_Exception(__FILE__.': write new password hash secret to ini file '.$ini.' FAILED - stop migration script.');
+    if (! $written) {
+        throw new ZfExtended_Exception(__FILE__ . ': write new password hash secret to ini file ' . $ini . ' FAILED - stop migration script.');
     }
 }
 
 $user = ZfExtended_Factory::get(ZfExtended_Models_User::class);
 $result = $user->db->fetchAll();
 $auth = ZfExtended_Authentication::getInstance();
-foreach($result as $rowObject) {
+foreach ($result as $rowObject) {
     //null passwords or no md5 hashes are ignored (for reruns)
-    if(is_null($rowObject->passwd) || strlen($rowObject->passwd) > 32) {
+    if (is_null($rowObject->passwd) || strlen($rowObject->passwd) > 32) {
         continue;
     }
     $user->db->update([
-        'passwd' => $auth::COMPAT_PREFIX.$auth->encryptPassword($rowObject->passwd, $secret)
-    ], ['id = ?' => $rowObject->id]);
+        'passwd' => $auth::COMPAT_PREFIX . $auth->encryptPassword($rowObject->passwd, $secret),
+    ], [
+        'id = ?' => $rowObject->id,
+    ]);
 }
-

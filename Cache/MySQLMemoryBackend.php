@@ -3,21 +3,21 @@
 START LICENSE AND COPYRIGHT
 
  This file is part of ZfExtended library
- 
+
  Copyright (c) 2013 - 2021 Marc Mittag; MittagQI - Quality Informatics;  All rights reserved.
 
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
 
  This file may be used under the terms of the GNU LESSER GENERAL PUBLIC LICENSE version 3
- as published by the Free Software Foundation and appearing in the file lgpl3-license.txt 
- included in the packaging of this file.  Please review the following information 
+ as published by the Free Software Foundation and appearing in the file lgpl3-license.txt
+ included in the packaging of this file.  Please review the following information
  to ensure the GNU LESSER GENERAL PUBLIC LICENSE version 3.0 requirements will be met:
 https://www.gnu.org/licenses/lgpl-3.0.txt
 
  @copyright  Marc Mittag, MittagQI - Quality Informatics
  @author     MittagQI - Quality Informatics
  @license    GNU LESSER GENERAL PUBLIC LICENSE version 3
-			 https://www.gnu.org/licenses/lgpl-3.0.txt
+             https://www.gnu.org/licenses/lgpl-3.0.txt
 
 END LICENSE AND COPYRIGHT
 */
@@ -32,22 +32,21 @@ require_once 'Zend/Cache/Backend/Interface.php';
  */
 require_once 'Zend/Cache/Backend.php';
 
-/**
- */
 class ZfExtended_Cache_MySQLMemoryBackend extends Zend_Cache_Backend implements Zend_Cache_Backend_Interface
 {
-    const DATE_MYSQL = 'Y-m-d H:i:s';
+    public const DATE_MYSQL = 'Y-m-d H:i:s';
+
     /**
      * Available options
      * @var array Available options
      */
-    protected $_options = array(
-    );
+    protected $_options = [
+    ];
 
     /**
      * DB ressource
      *
-     * @var Zend_Db_Adapter_Abstract $db
+     * @var Zend_Db_Adapter_Abstract
      */
     private $db = null;
 
@@ -57,7 +56,7 @@ class ZfExtended_Cache_MySQLMemoryBackend extends Zend_Cache_Backend implements 
      * @param array $options Associative array of options
      * @throws Zend_Exception
      */
-    public function __construct(array $options = array())
+    public function __construct(array $options = [])
     {
         parent::__construct($options);
         $this->db = Zend_Registry::get('db');
@@ -74,7 +73,7 @@ class ZfExtended_Cache_MySQLMemoryBackend extends Zend_Cache_Backend implements 
     {
         $sql = 'SELECT `content` FROM `Zf_memcache` WHERE `id` = ?';
         $params = [$id];
-        if (!$doNotTestCacheValidity) {
+        if (! $doNotTestCacheValidity) {
             $sql = $sql . ' AND (`expire` = 0 OR `expire` > ? )';
             $params[] = date(self::DATE_MYSQL, time());
         }
@@ -83,6 +82,7 @@ class ZfExtended_Cache_MySQLMemoryBackend extends Zend_Cache_Backend implements 
         if ($row) {
             return $row->content;
         }
+
         return false;
     }
 
@@ -95,7 +95,8 @@ class ZfExtended_Cache_MySQLMemoryBackend extends Zend_Cache_Backend implements 
      * @param int $seconds
      * @return boolean
      */
-    public function updateIfOlderThen($id, $value, $seconds) {
+    public function updateIfOlderThen($id, $value, $seconds)
+    {
         $this->checkLength($id, $value);
         $now = time();
         $elapsed = date(self::DATE_MYSQL, $now - $seconds);
@@ -104,13 +105,13 @@ class ZfExtended_Cache_MySQLMemoryBackend extends Zend_Cache_Backend implements 
         $sql .= ' ON DUPLICATE KEY UPDATE `expire` = if(`lastModified` < ?, VALUES(`expire`), `expire`),';
         $sql .= ' `content` = if(`lastModified` < ?, VALUES(`content`), `content`)';
         $res = $this->db->query($sql, [$id, $value, $elapsed, $elapsed]);
-        if($res && $res->rowCount() > 0) {
+        if ($res && $res->rowCount() > 0) {
             return true;
         }
+
         return false;
     }
-    
-    
+
     /**
      * Test if a cache is available or not (for the given id)
      *
@@ -125,6 +126,7 @@ class ZfExtended_Cache_MySQLMemoryBackend extends Zend_Cache_Backend implements 
         if ($row) {
             return $row->lastModified;
         }
+
         return false;
     }
 
@@ -141,7 +143,7 @@ class ZfExtended_Cache_MySQLMemoryBackend extends Zend_Cache_Backend implements 
      * @throws Zend_Cache_Exception
      * @return boolean True if no problem
      */
-    public function save($data, $id, $tags = array(), $specificLifetime = false)
+    public function save($data, $id, $tags = [], $specificLifetime = false)
     {
         $this->checkLength($id, $data);
         $lifetime = $this->getLifetime($specificLifetime);
@@ -157,10 +159,12 @@ class ZfExtended_Cache_MySQLMemoryBackend extends Zend_Cache_Backend implements 
         $sql = 'INSERT INTO Zf_memcache (id, content, lastModified, expire) VALUES (?, ?, ?, ?)';
         $sql .= ' ON DUPLICATE KEY UPDATE `content` = VALUES(`content`), `lastModified` = VALUES(`lastModified`),`expire` = VALUES(`expire`)';
         $res = $this->db->query($sql, [$id, $data, $mktime, $expire]);
-        if (!$res) {
+        if (! $res) {
             $this->_log("ZfExtended_Cache_MySQLMemoryBackend::save() : impossible to store the cache id=$id");
+
             return false;
         }
+
         return $res;
     }
 
@@ -173,6 +177,7 @@ class ZfExtended_Cache_MySQLMemoryBackend extends Zend_Cache_Backend implements 
     public function remove($id)
     {
         $res = $this->db->query('DELETE FROM Zf_memcache WHERE id = ?', [$id]);
+
         return $res;
     }
 
@@ -193,9 +198,10 @@ class ZfExtended_Cache_MySQLMemoryBackend extends Zend_Cache_Backend implements 
      * @param  array  $tags Array of tags
      * @return boolean True if no problem
      */
-    public function clean($mode = Zend_Cache::CLEANING_MODE_ALL, $tags = array())
+    public function clean($mode = Zend_Cache::CLEANING_MODE_ALL, $tags = [])
     {
         $return = $this->_clean($mode);
+
         return $return;
     }
 
@@ -215,25 +221,26 @@ class ZfExtended_Cache_MySQLMemoryBackend extends Zend_Cache_Backend implements 
      */
     public function getCapabilities()
     {
-        return array(
+        return [
             'automatic_cleaning' => true,
             'tags' => false,
             'expired_read' => true,
             'priority' => false,
             'infinite_lifetime' => true,
-            'get_list' => false
-        );
+            'get_list' => false,
+        ];
     }
-    
+
     /**
      * Since MySQL engine memory is limited to varchar fields and is not able to use blobs
      *  we have to ensure the string length is not exceeding that limit to avoid cut off serialized strings.
      * @param string $id
      * @param string $data
      */
-    protected function checkLength($id, $data) {
-        if(strlen($data) > 4096) {
-            throw new Zend_Cache_Exception('Given data to id '.$id.' was to long for Zend_Cache backend mysql memory (max 4096 bytes)');
+    protected function checkLength($id, $data)
+    {
+        if (strlen($data) > 4096) {
+            throw new Zend_Cache_Exception('Given data to id ' . $id . ' was to long for Zend_Cache backend mysql memory (max 4096 bytes)');
         }
     }
 
@@ -257,22 +264,24 @@ class ZfExtended_Cache_MySQLMemoryBackend extends Zend_Cache_Backend implements 
             default:
                 break;
         }
+
         return false;
     }
-    
+
     /**
      * Returns all rows where the given idPart is in the id.
      * @param  string  $idPart Part of cache id
      * @return array|false
      */
-    public function getAllForPartOfId (string $idPart)
+    public function getAllForPartOfId(string $idPart)
     {
         $sql = 'SELECT * FROM `Zf_memcache` WHERE `id` LIKE ?';
-        $params = ['%'.$idPart.'%'];
+        $params = ['%' . $idPart . '%'];
         $res = $this->db->query($sql, $params);
-        if($res && $res->rowCount() > 0) {
+        if ($res && $res->rowCount() > 0) {
             return $res->fetchAll();
         }
+
         return false;
     }
 }

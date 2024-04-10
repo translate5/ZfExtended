@@ -3,7 +3,7 @@
 START LICENSE AND COPYRIGHT
 
  This file is part of ZfExtended library
- 
+
  Copyright (c) 2013 - 2021 Marc Mittag; MittagQI - Quality Informatics;  All rights reserved.
 
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
@@ -33,7 +33,6 @@ use ZfExtended_Models_Worker;
 
 class Queue
 {
-
     /**
      * @throws ReflectionException
      * @throws Zend_Exception
@@ -46,7 +45,7 @@ class Queue
         $trigger = WorkerTriggerFactory::create();
         foreach ($workerListQueued as $workerQueue) {
             $trigger->triggerWorker(
-                (string)$workerQueue['id'],
+                (string) $workerQueue['id'],
                 $workerQueue['hash'],
                 $workerQueue['worker'],
                 $workerQueue['taskGuid']

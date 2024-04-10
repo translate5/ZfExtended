@@ -17,12 +17,11 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
  @copyright  Marc Mittag, MittagQI - Quality Informatics
  @author     MittagQI - Quality Informatics
  @license    GNU LESSER GENERAL PUBLIC LICENSE version 3
-			 https://www.gnu.org/licenses/lgpl-3.0.txt
+             https://www.gnu.org/licenses/lgpl-3.0.txt
 
 END LICENSE AND COPYRIGHT
 */
 
-use MittagQI\ZfExtended\Session\SessionInternalUniqueId;
 use ZfExtended_Models_User as User;
 
 /**
@@ -31,46 +30,48 @@ use ZfExtended_Models_User as User;
  */
 final class ZfExtended_Authentication
 {
-    const LOGIN_STATUS_MAINTENANCE      = 'maintenance';
-    const LOGIN_STATUS_SUCCESS          = 'success';
-    const LOGIN_STATUS_AUTHENTICATED    = 'authenticated';
-    const LOGIN_STATUS_REQUIRED         = 'required';
-    const LOGIN_STATUS_OPENID           = 'openid';
+    public const LOGIN_STATUS_MAINTENANCE = 'maintenance';
 
-    const AUTH_ALLOWED                  = 1;
-    const AUTH_ALLOWED_LOAD             = 2;
-    const AUTH_DENY_NO_SESSION          = 3;
-    const AUTH_DENY_USER_NOT_FOUND      = 4;
+    public const LOGIN_STATUS_SUCCESS = 'success';
 
-    const APPLICATION_TOKEN_HEADER = 'Translate5AuthToken';
+    public const LOGIN_STATUS_AUTHENTICATED = 'authenticated';
+
+    public const LOGIN_STATUS_REQUIRED = 'required';
+
+    public const LOGIN_STATUS_OPENID = 'openid';
+
+    public const AUTH_ALLOWED = 1;
+
+    public const AUTH_ALLOWED_LOAD = 2;
+
+    public const AUTH_DENY_NO_SESSION = 3;
+
+    public const AUTH_DENY_USER_NOT_FOUND = 4;
+
+    public const APPLICATION_TOKEN_HEADER = 'Translate5AuthToken';
 
     //when updating from md5 to newer hash, the hashes containing old md5 hashes are marked with that prefix
-    const COMPAT_PREFIX = 'md5:';
+    public const COMPAT_PREFIX = 'md5:';
 
-    /**
-     * @var self|null
-     */
     private static ?self $_instance = null;
 
-    /**
-     * @return self
-     */
     public static function getInstance(): self
     {
         if (self::$_instance == null) {
             self::$_instance = new self();
         }
+
         return self::$_instance;
     }
 
     /**
      * Checks if the authenticated user was authenticated with an App-Token
      * TODO FIXME: this should be routed to ZfExtended_Authentication::getInstance()->isAuthenticatedByToken. Must be tested ...
-     * @return bool
      */
     public static function isAppTokenAuthenticated(): bool
     {
         $userSession = new Zend_Session_Namespace('user');
+
         return ($userSession->data?->isTokenAuth === true);
     }
 
@@ -104,7 +105,6 @@ final class ZfExtended_Authentication
      */
     private int $authStatus;
 
-
     private function __construct()
     {
         $this->algorithm = defined('PASSWORD_ARGON2ID') ? PASSWORD_ARGON2ID : PASSWORD_BCRYPT;
@@ -114,16 +114,12 @@ final class ZfExtended_Authentication
 
     /**
      * Checks in the session if a user is authenticated
-     * @return bool
      */
     public function isAuthenticated(): bool
     {
         return $this->authenticatedUser !== null;
     }
 
-    /**
-     * @return bool
-     */
     public function isAuthenticatedByToken(): bool
     {
         return $this->isTokenAuth;
@@ -131,7 +127,6 @@ final class ZfExtended_Authentication
 
     /**
      * Returns one of the constants ::AUTH_ALLOWED, ::AUTH_ALLOWED_LOAD, ::AUTH_DENY_NO_SESSION, ::AUTH_DENY_USER_NOT_FOUND
-     * @return int
      */
     public function getAuthStatus(): int
     {
@@ -153,32 +148,23 @@ final class ZfExtended_Authentication
 
     /**
      * Creates a secure password out of a plain one
-     * @param string $plainPassword
-     * @return string
      * @throws Zend_Exception
      */
     public function createSecurePassword(string $plainPassword): string
     {
         $secret = Zend_Registry::get('config')->runtimeOptions?->authentication?->secret ?? 'translate5';
+
         return $this->encryptPassword($plainPassword, $secret);
     }
 
     /**
      * Encrypting a plaintext password securely
-     * @param string $plainPassword
-     * @param string $secret
-     * @return string
      */
     public function encryptPassword(string $plainPassword, string $secret): string
     {
         return password_hash($this->addPepper($plainPassword, $secret), $this->algorithm);
     }
 
-    /**
-     * @param string $plainPassword
-     * @param string $secret
-     * @return string
-     */
     private function addPepper(string $plainPassword, string $secret): string
     {
         return hash_hmac('sha256', $plainPassword, $secret);
@@ -187,9 +173,6 @@ final class ZfExtended_Authentication
     /**
      * Check if the provided password is valid for login. In case the password is not valid, this will check if the
      * given password is valid application token
-     * @param string $login
-     * @param string $passwordOrToken
-     * @return bool
      * @throws Zend_Db_Statement_Exception
      * @throws Zend_Exception
      * @throws ZfExtended_Models_Entity_Exceptions_IntegrityConstraint
@@ -205,8 +188,10 @@ final class ZfExtended_Authentication
         if ($this->authenticateByToken($passwordOrToken)) {
             if ($login !== $this->authenticatedUser->getLogin()) {
                 $this->unsetAuthenticatedUser();
+
                 return false;
             }
+
             return true;
         }
 
@@ -215,15 +200,13 @@ final class ZfExtended_Authentication
 
     /**
      * returns true if the given $login and $password are valid so that it can be authenticated
-     * @param string $login
-     * @param string $password
      * @return bool false if password invalid or user not found
      * @throws Zend_Exception
      */
     public function authenticate(string $login, string $password): bool
     {
         $isOldPassword = false;
-        $valid = $this->loadUserAndValidate($login, function () use ($password, & $isOldPassword) {
+        $valid = $this->loadUserAndValidate($login, function () use ($password, &$isOldPassword) {
             // default to empty string in case the user does not have password
             $passwordHash = $this->authenticatingUser->getPasswd() ?? '';
             $isOldPassword = str_starts_with($passwordHash, self::COMPAT_PREFIX);
@@ -233,12 +216,14 @@ final class ZfExtended_Authentication
                 //old passwords have the old md5 hash encrypted inside
                 $password = md5($password);
             }
+
             return $this->isPasswordEqual($password, $passwordHash);
         });
         if ($valid && $isOldPassword) {
             $this->authenticatedUser->setPasswd($this->createSecurePassword($password));
             $this->authenticatedUser->save();
         }
+
         return $valid;
     }
 
@@ -251,12 +236,12 @@ final class ZfExtended_Authentication
     public function isPasswordEqual(string $password, string $passwordHash): bool
     {
         $secret = Zend_Registry::get('config')->runtimeOptions->authentication->secret;
+
         return password_verify($this->addPepper($password, $secret), $passwordHash);
     }
 
     /**
      * Authenticates the user given by login - does not check password!
-     * @param string $login
      * @return bool false if user could not be found
      */
     public function authenticateByLogin(string $login): bool
@@ -268,7 +253,6 @@ final class ZfExtended_Authentication
 
     /**
      * Authenticates the user given by login - does not check password!
-     * @param stdClass $sessionData
      * @return bool false if user could not be found
      */
     public function authenticateBySessionData(stdClass $sessionData): bool
@@ -280,21 +264,19 @@ final class ZfExtended_Authentication
 
     /**
      * Authenticates the user given by user instance - does not check password!
-     * @param ZfExtended_Models_User $user
      * @return bool false if user could not be found
      */
     public function authenticateUser(User $user): bool
     {
         if ($user->getId() > 0 && strlen($user->getLogin()) > 0) {
             $this->setAuthenticatedUser($user, true);
+
             return true;
         }
+
         return false;
     }
 
-    /**
-     * @return User|null
-     */
     public function getUser(): ?ZfExtended_Models_User
     {
         return $this->authenticatedUser;
@@ -302,7 +284,6 @@ final class ZfExtended_Authentication
 
     /**
      * Shorthand to retrieve the guid of the authenticated user
-     * @return string|null
      */
     public function getUserGuid(): ?string
     {
@@ -312,7 +293,6 @@ final class ZfExtended_Authentication
     /**
      * Shorthand to get the id of the authenticated user
      * For convenience "0" is returned if not authenticated to not destroy sql statements
-     * @return int
      */
     public function getUserId(): int
     {
@@ -335,9 +315,6 @@ final class ZfExtended_Authentication
 
     /**
      * The main API to check if the authenticated user is allowed to do stuff
-     * @param string $resource
-     * @param string $right
-     * @return bool
      */
     public function isUserAllowed(string $resource, string $right): bool
     {
@@ -356,8 +333,6 @@ final class ZfExtended_Authentication
     /**
      * Checks, if the user has a certain role
      * HINT: Checking access rights must be done with ACLs and not user roles, see ::isUserAllowed
-     * @param string $role
-     * @return bool
      */
     public function hasUserRole(string $role): bool
     {
@@ -367,11 +342,10 @@ final class ZfExtended_Authentication
     /**
      * Retrieves the anonymized data-object of the authenticated user
      * Mainly used to fill the session
-     * @return stdClass
      */
     public function getUserData(): stdClass
     {
-        if($this->authenticatedUser === null){
+        if ($this->authenticatedUser === null) {
             return new stdClass();
         }
         $data = $this->authenticatedUser->getDataObject();
@@ -389,17 +363,16 @@ final class ZfExtended_Authentication
         // TODO FIXME: why is that done ?
         foreach ($data as &$value) {
             if (is_numeric($value)) {
-                $value = (int)$value;
+                $value = (int) $value;
             }
         }
+
         return $data;
     }
 
     /**
      * Check and validate if the application token is provided as password. If it matches the provided user
      * and it is valid this will be valid authentication
-     * @param string $token
-     * @return bool
      */
     public function authenticateByToken(string $token): bool
     {
@@ -411,14 +384,16 @@ final class ZfExtended_Authentication
         }
 
         $tokenModel = ZfExtended_Factory::get(ZfExtended_Auth_Token_Entity::class);
+
         try {
             $user = ZfExtended_Factory::get(User::class);
             $tokenModel->load($parsedToken->getPrefix());
             $expires = $tokenModel->getExpires();
-            if (!empty($expires) && NOW_ISO > $expires) {
+            if (! empty($expires) && NOW_ISO > $expires) {
                 return false;
             }
             $user->load($tokenModel->getUserId());
+
             return $this->loadUserAndValidate(
                 $user->getLogin(),
                 function () use ($tokenModel, $parsedToken) {
@@ -426,7 +401,6 @@ final class ZfExtended_Authentication
                 },
                 true
             );
-
         } catch (ZfExtended_Models_Entity_NotFoundException) {
             return false;
         }
@@ -434,44 +408,41 @@ final class ZfExtended_Authentication
 
     /**
      * try to authenticate the user given by login, validated by given callback which must return bool
-     * @param string $login
-     * @param Closure $loginValidator
-     * @param bool $isLoginByAppToken
-     * @param bool $updateUserInSession
-     * @return bool
      */
     private function loadUserAndValidate(
         string $login,
         Closure $loginValidator,
         bool $isLoginByAppToken = false,
         bool $updateUserInSession = true
-    ): bool
-    {
+    ): bool {
         $this->isTokenAuth = false;
         $this->authenticatingUser = ZfExtended_Factory::get(User::class);
+
         try {
             $this->authenticatingUser->loadByLogin($login);
             if ($loginValidator()) {
                 $this->isTokenAuth = $isLoginByAppToken;
                 $this->setAuthenticatedUser($this->authenticatingUser, $updateUserInSession);
                 unset($this->authenticatingUser);
+
                 return true;
             }
             $this->unsetAuthenticatedUser();
+
             return false;
         } catch (ZfExtended_Models_Entity_NotFoundException) {
             $this->unsetAuthenticatedUser();
+
             return false;
         }
     }
 
     /**
      * tries to authenticate by user session
-     * @return int
      */
     private function authenticateBySession(): int
     {
-        if (!is_null($this->authenticatedUser)) {
+        if (! is_null($this->authenticatedUser)) {
             return self::AUTH_ALLOWED;
         }
 
@@ -488,11 +459,6 @@ final class ZfExtended_Authentication
         return self::AUTH_DENY_USER_NOT_FOUND;
     }
 
-    /**
-     * @param ZfExtended_Models_User $user
-     * @param bool $updateSessionData
-     * @return void
-     */
     private function setAuthenticatedUser(User $user, bool $updateSessionData): void
     {
         $this->authenticatedUser = $user;
@@ -503,9 +469,6 @@ final class ZfExtended_Authentication
         }
     }
 
-    /**
-     * @return void
-     */
     private function unsetAuthenticatedUser(): void
     {
         $this->authenticatedUser = null;

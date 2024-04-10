@@ -44,9 +44,11 @@ END LICENSE AND COPYRIGHT
 class ZfExtended_Auth_Token_Entity extends ZfExtended_Models_Entity_Abstract
 {
     protected $dbInstanceClass = "ZfExtended_Auth_Token_Db_Entity";
+
     protected $validatorInstanceClass = "ZfExtended_Auth_Token_Validator_Entity";
 
     protected array $publicColumns = ['token.id', 'description', 'created', 'expires'];
+
     /***
      * Create authentication token for given login and return the token
      *
@@ -77,6 +79,7 @@ class ZfExtended_Auth_Token_Entity extends ZfExtended_Models_Entity_Abstract
         //encrypt the token
         $this->setToken(ZfExtended_Authentication::getInstance()->createSecurePassword($token));
         $this->save();
+
         return $this->getId() . ZfExtended_Auth_Token_Token::TOKEN_SEPARATOR . $token;
     }
 
@@ -85,8 +88,12 @@ class ZfExtended_Auth_Token_Entity extends ZfExtended_Models_Entity_Abstract
         $s = $this->db
             ->select()
             ->setIntegrityCheck(false)
-            ->from(['token' => $this->db->info($this->db::NAME)], $this->publicColumns)
-            ->join(['users' => 'Zf_users'], 'users.id = token.userId', ['userGuid']);
+            ->from([
+                'token' => $this->db->info($this->db::NAME),
+            ], $this->publicColumns)
+            ->join([
+                'users' => 'Zf_users',
+            ], 'users.id = token.userId', ['userGuid']);
 
         return $this->loadFilterdCustom($s);
     }
@@ -96,8 +103,12 @@ class ZfExtended_Auth_Token_Entity extends ZfExtended_Models_Entity_Abstract
         $s = $this->db
             ->select()
             ->setIntegrityCheck(false)
-            ->from(['token' => $this->db->info($this->db::NAME)], $this->publicColumns)
-            ->join(['users' => 'Zf_users'], 'users.id = token.userId', ['users.id as user_id']);
+            ->from([
+                'token' => $this->db->info($this->db::NAME),
+            ], $this->publicColumns)
+            ->join([
+                'users' => 'Zf_users',
+            ], 'users.id = token.userId', ['users.id as user_id']);
 
         return $this->loadFilterdCustom($s);
     }

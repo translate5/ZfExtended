@@ -3,21 +3,21 @@
 START LICENSE AND COPYRIGHT
 
  This file is part of ZfExtended library
- 
+
  Copyright (c) 2013 - 2021 Marc Mittag; MittagQI - Quality Informatics;  All rights reserved.
 
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
 
  This file may be used under the terms of the GNU LESSER GENERAL PUBLIC LICENSE version 3
- as published by the Free Software Foundation and appearing in the file lgpl3-license.txt 
- included in the packaging of this file.  Please review the following information 
+ as published by the Free Software Foundation and appearing in the file lgpl3-license.txt
+ included in the packaging of this file.  Please review the following information
  to ensure the GNU LESSER GENERAL PUBLIC LICENSE version 3.0 requirements will be met:
 https://www.gnu.org/licenses/lgpl-3.0.txt
 
  @copyright  Marc Mittag, MittagQI - Quality Informatics
  @author     MittagQI - Quality Informatics
  @license    GNU LESSER GENERAL PUBLIC LICENSE version 3
-			 https://www.gnu.org/licenses/lgpl-3.0.txt
+             https://www.gnu.org/licenses/lgpl-3.0.txt
 
 END LICENSE AND COPYRIGHT
 */
@@ -25,16 +25,17 @@ END LICENSE AND COPYRIGHT
 use MittagQI\ZfExtended\CsrfProtection;
 
 /**
- *
  * @method ZfExtended_Sanitized_HttpRequest getRequest() getRequest()
  */
 abstract class ZfExtended_RestController extends Zend_Rest_Controller
 {
     use ZfExtended_Controllers_MaintenanceTrait;
 
-    const SET_DATA_WHITELIST = true;
-    const SET_DATA_BLACKLIST = false;
-    const ENTITY_VERSION_HEADER = 'Mqi-Entity-Version';
+    public const SET_DATA_WHITELIST = true;
+
+    public const SET_DATA_BLACKLIST = false;
+
+    public const ENTITY_VERSION_HEADER = 'Mqi-Entity-Version';
 
     /**
      * Class Name of the Entity Model
@@ -63,6 +64,7 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller
      * @var array|stdClass - request parameters and reults of request processing
      */
     protected $data = [];
+
     /**
      * maps cols which should be sorted to other cols in the table,
      * which then are used for the sorting process
@@ -73,6 +75,7 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller
      * @var array
      */
     protected $_sortColMap = [];
+
     /**
      * maps an incoming filter type to another filter for a certain type
      * @var array array($field => array(origType => newType))
@@ -109,7 +112,6 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller
      */
     protected $log = false;
 
-
     /**
      * @var ZfExtended_Acl
      */
@@ -132,10 +134,10 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller
      * @var bool
      */
     protected bool $decodePutAssociative = false;
+
     /**
      * a map to define special sanitizers for certain fields/keys of the sent data
      * the structure must be key => type whereas type is one of the constants of ZfExtended_Sanitizer
-     * @var array
      */
     protected array $dataSanitizationMap = [];
 
@@ -164,7 +166,7 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller
     {
         $this->_helper->viewRenderer->setNoRender(true);
         $this->_helper->layout->disableLayout();
-        $this->events = ZfExtended_Factory::get('ZfExtended_EventManager', array(get_class($this)));
+        $this->events = ZfExtended_Factory::get('ZfExtended_EventManager', [get_class($this)]);
         $this->restMessages = ZfExtended_Factory::get('ZfExtended_Models_Messages');
         Zend_Registry::set('rest_messages', $this->restMessages);
 
@@ -174,7 +176,7 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller
         //enable simple front end interaction with fatal errors
         register_shutdown_function(function () {
             $error = error_get_last();
-            if (!is_null($error) && ($error['type'] & FATAL_ERRORS_TO_HANDLE)) {
+            if (! is_null($error) && ($error['type'] & FATAL_ERRORS_TO_HANDLE)) {
                 ob_get_clean(); //to remove Internal Server Error headline
                 $res = new stdClass();
                 $res->errors = $error;
@@ -185,12 +187,12 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller
         $action = $this->_request->getActionName();
 
         // special handling of operations & batches: we use the operation param then as action so we can easily add CSRF exceptions for it if neccessary
-        if(($action === 'operation' || $action === 'batch') && $this->hasParam('operation')){
+        if (($action === 'operation' || $action === 'batch') && $this->hasParam('operation')) {
             $action = $this->getParam('operation');
         }
 
         // by default, all actions are protected against CSRF attacks
-        if(!in_array($action, $this->_unprotectedActions)){
+        if (! in_array($action, $this->_unprotectedActions)) {
             CsrfProtection::getInstance()->validateRequest($this->_request);
         }
     }
@@ -241,7 +243,7 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller
         $this->events->trigger($eventName, $this, [
             'entity' => $this->entity,
             'params' => $this->getAllParams(),
-            'controller' => $this
+            'controller' => $this,
         ]);
     }
 
@@ -261,9 +263,6 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller
         ]);
     }
 
-    /**
-     *
-     */
     public function processClientReferenceVersion()
     {
         $entity = $this->entity;
@@ -275,8 +274,8 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller
 
         $version = $this->_request->getHeader(self::ENTITY_VERSION_HEADER);
         if ($version === false) {
-            $data = get_object_vars((object)$this->data);
-            if (!isset($data[$entity::VERSION_FIELD])) {
+            $data = get_object_vars((object) $this->data);
+            if (! isset($data[$entity::VERSION_FIELD])) {
                 return; //no version is set either in header nor in given data
             }
             $version = $data[$entity::VERSION_FIELD];
@@ -289,7 +288,7 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller
      */
     protected function handleLimit()
     {
-        if (empty($this->entity) || !$this->entity instanceof ZfExtended_Models_Entity_Abstract) {
+        if (empty($this->entity) || ! $this->entity instanceof ZfExtended_Models_Entity_Abstract) {
             //instance without entity
             return;
         }
@@ -306,7 +305,7 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller
      */
     protected function prepareFilterAndSort()
     {
-        if (empty($this->entity) || !$this->entity instanceof ZfExtended_Models_Entity_Abstract) {
+        if (empty($this->entity) || ! $this->entity instanceof ZfExtended_Models_Entity_Abstract) {
             //instance without entity
             return;
         }
@@ -314,10 +313,10 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller
         //der Client Anfrage in welchem Format die Filter und Sortierungsinfos kommen.
         //Aktuell gibt es nur das ExtJS Format, sollte sich das je ändern, muss die Instanzieriungs Logik an dieser Stelle geändert
         //oder als "FilterFactory" in der abstrakten ZfExtended_Models_Filter Klasse implementiert werden
-        $filter = ZfExtended_Factory::get($this->filterClass, array(
+        $filter = ZfExtended_Factory::get($this->filterClass, [
             $this->entity,
-            $this->_getParam('filter')
-        ));
+            $this->_getParam('filter'),
+        ]);
 
         /* @var $filter ZfExtended_Models_Filter_ExtJs */
         if ($this->hasParam('defaultFilter')) {
@@ -343,17 +342,19 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller
         //@todo Ausgabe Type anders festlegen, siehe http://www.codeinchaos.com/post/3107629294/restful-services-with-zend-framework-part-1
         // Davon ist auch die __toString Methode von ZfExtended_Models_Entity_Abstract betroffen, welche aktuell zum JSON Export genutzt wird
         // Es muss aber die Möglichkeit gegeben sein, die Ausgabe Möglichkeite zu forcen, da z.B. die Daten bereits als JSON vorliegen
-        $this->getResponse()->setHeader('Content-Type', 'application/json', TRUE);
+        $this->getResponse()->setHeader('Content-Type', 'application/json', true);
         $this->view->clearVars();
+
         try {
             parent::dispatch($action);
         }
-            //this is the only useful place in processing REST request to translate
-            //the entityVersion DB exception to an 409 conflict exception
+        //this is the only useful place in processing REST request to translate
+        //the entityVersion DB exception to an 409 conflict exception
         catch (Zend_Db_Statement_Exception $e) {
             ZfExtended_VersionConflictException::logAndThrow($e);
         } catch (ZfExtended_BadGateway $e) {
             $this->handleException($e);
+
             return;
         }
 
@@ -376,17 +377,20 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller
             $this->entity->validate();
             $this->additionalValidations();
             //new event here to invoke to the controller validation call
-            $this->events->trigger('onValidate', $this, array('entity' => $this->entity));
+            $this->events->trigger('onValidate', $this, [
+                'entity' => $this->entity,
+            ]);
+
             return $this->wasValid = true;
         } catch (ZfExtended_ValidateException $e) {
             $this->handleValidateException($e);
         }
+
         return $this->wasValid = false;
     }
 
     /**
      * handles a ZfExtended_ValidateException
-     * @param ZfExtended_ValidateException $e
      * @deprecated should be obsolete if new error loggin refactoring is done
      */
     protected function handleValidateException(ZfExtended_ValidateException $e)
@@ -398,7 +402,6 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller
 
     /**
      * handles a general ZfExtended_Exception
-     * @param ZfExtended_Exception $e
      * @deprecated should be obsolete if new error loggin refactoring is done
      */
     protected function handleException(ZfExtended_Exception $e)
@@ -424,7 +427,7 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller
 
         //ExtJS does not parse the HTTP Status well on file uploads.
         // In this case we deliver the status as additional information
-        if (!empty($_FILES)) {
+        if (! empty($_FILES)) {
             $this->view->httpStatus = $httpStatus;
         }
 
@@ -456,15 +459,14 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller
      *   )
      * )
      *
-     * @param array $zendErrors
      * @return array
      */
     protected function transformErrors(array $zendErrors)
     {
-        $result = array();
+        $result = [];
         foreach ($zendErrors as $id => $oneField) {
-            if (!is_array($oneField)) {
-                $oneField = array($oneField);
+            if (! is_array($oneField)) {
+                $oneField = [$oneField];
             }
             foreach ($oneField as $oneMsg) {
                 $error = new stdClass();
@@ -473,6 +475,7 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller
                 $result[] = $error;
             }
         }
+
         return $result;
     }
 
@@ -517,9 +520,6 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller
         }
     }
 
-    /**
-     * @return void
-     */
     protected function decodePutData()
     {
         $this->data = $this->getRequest()->getData($this->decodePutAssociative, $this->dataSanitizationMap);
@@ -537,28 +537,32 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller
     /**
      * sets the entity data out of given post / put data.
      * - setzt für in _sortColMap gesetzten Spalten den übergebenen Wert für beide Spalten
-     * @param array $reject list of fieldnames to ignore
      * @param bool $mode defines if given fields are a black (false) or a whitelist (true)
      */
     protected function setDataInEntity(array $fields = null, $mode = self::SET_DATA_BLACKLIST)
     {
         settype($fields, 'array');
-        $this->events->trigger('beforeSetDataInEntity', $this, array('entity' => $this->entity, 'data' => $this->data));
+        $this->events->trigger('beforeSetDataInEntity', $this, [
+            'entity' => $this->entity,
+            'data' => $this->data,
+        ]);
         foreach ($this->data as $key => $value) {
             $hasField = in_array($key, $fields);
             $modeWl = $mode === self::SET_DATA_WHITELIST;
-            $whiteListed = !$modeWl || $hasField && $modeWl;
+            $whiteListed = ! $modeWl || $hasField && $modeWl;
             $blackListed = $hasField && $mode === self::SET_DATA_BLACKLIST;
-            if ($this->entity->hasField($key) && $whiteListed && !$blackListed) {
-                $this->entity->__call('set' . ucfirst($key), array($value));
+            if ($this->entity->hasField($key) && $whiteListed && ! $blackListed) {
+                $this->entity->__call('set' . ucfirst($key), [$value]);
                 if (isset($this->_sortColMap[$key]) && is_string($this->_sortColMap[$key])) {
                     $toSort = $this->_sortColMap[$key];
                     $value = $this->entity->truncateLength($toSort, $value);
-                    $this->entity->__call('set' . ucfirst($toSort), array($value));
+                    $this->entity->__call('set' . ucfirst($toSort), [$value]);
                 }
             }
         }
-        $this->events->trigger('afterSetDataInEntity', $this, array('entity' => $this->entity));
+        $this->events->trigger('afterSetDataInEntity', $this, [
+            'entity' => $this->entity,
+        ]);
     }
 
     /**
@@ -606,6 +610,7 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller
     {
         $e = new ZfExtended_BadMethodCallException(__CLASS__ . '->head not implemented yet');
         $e->setLogging(false); //in future ZfExtended_Log::LEVEL_INFO
+
         throw $e;
     }
 
@@ -617,6 +622,7 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller
     {
         $e = new ZfExtended_BadMethodCallException(__CLASS__ . '->options not implemented yet');
         $e->setLogging(false); //in future ZfExtended_Log::LEVEL_INFO
+
         throw $e;
     }
 
@@ -633,7 +639,8 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller
      * Operations extend the REST world about function calls on a given REST entity.
      * Therefore a fooOperation function must exist in the controller or exist as event binding later on.
      */
-    public function operationAction(){
+    public function operationAction()
+    {
         $this->getAction();
         $this->dispatchOperation('Operation');
     }
@@ -662,24 +669,22 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller
         $response = $this->events->trigger($action, $this, [
             'entity' => $this->entity,
             'params' => $this->getAllParams(),
-            'controller' => $this
+            'controller' => $this,
         ]);
-        if ($response->isEmpty() && !$hasPlainMethod) {
+        if ($response->isEmpty() && ! $hasPlainMethod) {
             unset($this->view->rows);
-            throw new ZfExtended_NotFoundException($type.' not supported');
+
+            throw new ZfExtended_NotFoundException($type . ' not supported');
         }
     }
 
     /**
      * Checks ACL access to given resource and right and throws no access if needed
-     * @param string $resource
-     * @param string $right
-     * @param string $resourceName
      * @throws ZfExtended_NoAccessException
      */
     protected function checkAccess(string $resource, string $right, string $resourceName): void
     {
-        if (!$this->isAllowed($resource, $right)) {
+        if (! $this->isAllowed($resource, $right)) {
             throw new ZfExtended_NoAccessException('Access to ' . $resourceName . ' not permitted');
         }
     }
@@ -689,18 +694,20 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller
      * @param string $field
      * @return mixed|null
      */
-    protected function getDataField(string $field){
-        if( empty($this->data)){
+    protected function getDataField(string $field)
+    {
+        if (empty($this->data)) {
             return null;
         }
 
-        if( is_array($this->data) && isset($this->data[$field])){
+        if (is_array($this->data) && isset($this->data[$field])) {
             return $this->data[$field];
         }
 
-        if( is_object($this->data) && isset($this->data->$field)){
+        if (is_object($this->data) && isset($this->data->$field)) {
             return $this->data->$field;
         }
+
         return null;
     }
 }

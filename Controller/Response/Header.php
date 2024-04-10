@@ -21,7 +21,7 @@ START LICENSE AND COPYRIGHT
  @copyright  Marc Mittag, MittagQI - Quality Informatics
  @author     MittagQI - Quality Informatics
  @license    GNU AFFERO GENERAL PUBLIC LICENSE version 3 with plugin-execption
-			 http://www.gnu.org/licenses/agpl.html http://www.translate5.net/plugin-exception.txt
+             http://www.gnu.org/licenses/agpl.html http://www.translate5.net/plugin-exception.txt
 
 END LICENSE AND COPYRIGHT
 */
@@ -37,11 +37,6 @@ class Header
 {
     /**
      * Sends the neccessary Headers to download a file
-     * @param string|null $fileName
-     * @param string|null $contentType
-     * @param string|null $cacheControl
-     * @param int $contentLength
-     * @param array $additionalHeaders: assoc array, $headerName => $headerValue
      */
     public static function sendDownload(string $fileName = null, ?string $contentType = 'text/xml', ?string $cacheControl = 'no-cache', int $contentLength = -1, array $additionalHeaders = [])
     {
@@ -57,36 +52,32 @@ class Header
         if ($cacheControl !== null) {
             header('Cache-Control: ' . $cacheControl);
         }
-        if($contentLength > -1){
-            header('Content-Length: '.$contentLength);
+        if ($contentLength > -1) {
+            header('Content-Length: ' . $contentLength);
         }
-        foreach ($additionalHeaders as $name => $value){
+        foreach ($additionalHeaders as $name => $value) {
             header($name . ': ' . $value);
         }
     }
 
     /**
      * Sends headers to pseudo-stream a video
-     * @param string $extension
-     * @param string|null $httpStatus
-     * @param string|null $contentRange
-     * @param int $contentLength
      */
     public static function pseudoStreamVideo(string $extension, string $httpStatus = null, string $contentRange = null, int $contentLength = -1)
     {
         // CORS header
         Cors::sendResponseHeader();
-        if($httpStatus != null){
-            header('HTTP/1.1 '.$httpStatus);
+        if ($httpStatus != null) {
+            header('HTTP/1.1 ' . $httpStatus);
         }
         header('Content-type: video/' . $extension);
         // header("Accept-Ranges: 0-$contentLength");
         header('Accept-Ranges: bytes');
-        if($contentRange != null){
-            header('Content-Range: '.$contentRange);
+        if ($contentRange != null) {
+            header('Content-Range: ' . $contentRange);
         }
-        if($contentLength > -1){
-            header('Content-Length: '.$contentLength);
+        if ($contentLength > -1) {
+            header('Content-Length: ' . $contentLength);
         }
     }
 }

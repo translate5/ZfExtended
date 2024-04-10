@@ -3,21 +3,21 @@
 START LICENSE AND COPYRIGHT
 
  This file is part of ZfExtended library
- 
+
  Copyright (c) 2013 - 2021 Marc Mittag; MittagQI - Quality Informatics;  All rights reserved.
 
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
 
  This file may be used under the terms of the GNU LESSER GENERAL PUBLIC LICENSE version 3
- as published by the Free Software Foundation and appearing in the file lgpl3-license.txt 
- included in the packaging of this file.  Please review the following information 
+ as published by the Free Software Foundation and appearing in the file lgpl3-license.txt
+ included in the packaging of this file.  Please review the following information
  to ensure the GNU LESSER GENERAL PUBLIC LICENSE version 3.0 requirements will be met:
 https://www.gnu.org/licenses/lgpl-3.0.txt
 
  @copyright  Marc Mittag, MittagQI - Quality Informatics
  @author     MittagQI - Quality Informatics
  @license    GNU LESSER GENERAL PUBLIC LICENSE version 3
-			 https://www.gnu.org/licenses/lgpl-3.0.txt
+             https://www.gnu.org/licenses/lgpl-3.0.txt
 
 END LICENSE AND COPYRIGHT
 */
@@ -34,9 +34,12 @@ END LICENSE AND COPYRIGHT
  *
  * @return string JS
  */
-class ZfExtended_View_Helper_Php2JsVars extends Zend_View_Helper_Abstract{
+class ZfExtended_View_Helper_Php2JsVars extends Zend_View_Helper_Abstract
+{
     protected $data;
-    public function __construct() {
+
+    public function __construct()
+    {
         $this->data = new stdClass();
     }
 
@@ -47,15 +50,16 @@ class ZfExtended_View_Helper_Php2JsVars extends Zend_View_Helper_Abstract{
      * @param mixed $name string oder array oder object
      * @param mixed $data
      */
-    public function set($name, $data) {
-        if(is_string($name)){
-            $name = explode('.',$name);
+    public function set($name, $data)
+    {
+        if (is_string($name)) {
+            $name = explode('.', $name);
         }
 
-        if($data instanceof Zend_Config) {
+        if ($data instanceof Zend_Config) {
             $data = $data->toArray();
         }
-        
+
         //Das letzte Element bezeichnet den Wert selbst,
         // wird daher nicht ins create mit einbezogen
         $nameOfValue = array_pop($name);
@@ -64,8 +68,6 @@ class ZfExtended_View_Helper_Php2JsVars extends Zend_View_Helper_Abstract{
 
     /**
      * sets multiple values given as assoc array
-     * @param array $values
-     * @return void
      */
     public function setMultiple(array $values): void
     {
@@ -80,26 +82,28 @@ class ZfExtended_View_Helper_Php2JsVars extends Zend_View_Helper_Abstract{
      * @throws Zend_Exception
      * @return stdClass
      */
-    public function create($name){
-        if(is_string($name)){
-            $name = explode('.',$name);
+    public function create($name)
+    {
+        if (is_string($name)) {
+            $name = explode('.', $name);
         }
         $debugInfo = 'Php2JsVars->data';
         // root Element für die Rekursion
         $target = $this->data;
-        foreach($name as $attribute) {
-            $debugInfo .= '->'.$attribute;
+        foreach ($name as $attribute) {
+            $debugInfo .= '->' . $attribute;
             // neuen Objekt Knoten erzeugen
-            if(!isset($target->{$attribute})){
+            if (! isset($target->{$attribute})) {
                 $target->{$attribute} = new stdClass();
             }
             // Falls es Objekt Knoten bereits gab, und dieser kein Objekt ist: Exception
-            elseif(! $target->{$attribute} instanceof stdClass){
-                throw new Zend_Exception('Ist KEINE Instanz von stdClass: '.$debugInfo);
+            elseif (! $target->{$attribute} instanceof stdClass) {
+                throw new Zend_Exception('Ist KEINE Instanz von stdClass: ' . $debugInfo);
             }
             //Rekursions Root neu setzen
             $target = $target->{$attribute};
         }
+
         return $target;
     }
 
@@ -108,10 +112,12 @@ class ZfExtended_View_Helper_Php2JsVars extends Zend_View_Helper_Abstract{
      * @param string $name
      * @return mixed
      */
-    public function get($name) {
-        if(isset($this->data->{$name})){
+    public function get($name)
+    {
+        if (isset($this->data->{$name})) {
             return $this->data->{$name};
         }
+
         return $this->data->{$name} = new stdClass();
     }
 
@@ -119,7 +125,8 @@ class ZfExtended_View_Helper_Php2JsVars extends Zend_View_Helper_Abstract{
      * Helper Aufruf
      * @return ZfExtended_View_Helper_Php2JsVars
      */
-    public function php2JsVars(){
+    public function php2JsVars()
+    {
         return $this;
     }
 
@@ -127,12 +134,15 @@ class ZfExtended_View_Helper_Php2JsVars extends Zend_View_Helper_Abstract{
      * @return string
      * @throws Zend_Exception
      */
-    public function  __toString() {
+    public function __toString()
+    {
         try {
             $module = ucfirst(Zend_Controller_Front::getInstance()->getRequest()->getModuleName());
-            return 'var '.$module.' = {data: '.Zend_Json::encode($this->data).'}';
-        } catch(Throwable $e) {
+
+            return 'var ' . $module . ' = {data: ' . Zend_Json::encode($this->data) . '}';
+        } catch (Throwable $e) {
             Zend_Registry::get('logger')->exception($e);
+
             return "";
         }
     }

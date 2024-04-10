@@ -3,21 +3,21 @@
 START LICENSE AND COPYRIGHT
 
  This file is part of ZfExtended library
- 
+
  Copyright (c) 2013 - 2021 Marc Mittag; MittagQI - Quality Informatics;  All rights reserved.
 
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
 
  This file may be used under the terms of the GNU LESSER GENERAL PUBLIC LICENSE version 3
- as published by the Free Software Foundation and appearing in the file lgpl3-license.txt 
- included in the packaging of this file.  Please review the following information 
+ as published by the Free Software Foundation and appearing in the file lgpl3-license.txt
+ included in the packaging of this file.  Please review the following information
  to ensure the GNU LESSER GENERAL PUBLIC LICENSE version 3.0 requirements will be met:
 https://www.gnu.org/licenses/lgpl-3.0.txt
 
  @copyright  Marc Mittag, MittagQI - Quality Informatics
  @author     MittagQI - Quality Informatics
  @license    GNU LESSER GENERAL PUBLIC LICENSE version 3
-			 https://www.gnu.org/licenses/lgpl-3.0.txt
+             https://www.gnu.org/licenses/lgpl-3.0.txt
 
 END LICENSE AND COPYRIGHT
 */
@@ -35,25 +35,26 @@ END LICENSE AND COPYRIGHT
  * ZfExtended_Utils::function()
  *
  * from everywhere in the application.
- *
  */
-class ZfExtended_Utils {
-
-    const VERSION_DEVELOPMENT = 'development';
-
+class ZfExtended_Utils
+{
+    public const VERSION_DEVELOPMENT = 'development';
 
     /***
      * Convert the input date to mysql accepted date time format (Y-m-d H:i:s)
      * @param string $date
      * @return false|string
      */
-    public static function toMysqlDateTime(string $date){
+    public static function toMysqlDateTime(string $date)
+    {
         $timestamp = strtotime($date);
-        if(empty($timestamp)){
+        if (empty($timestamp)) {
             return $date;
         }
-        return date("Y-m-d H:i:s",$timestamp);
+
+        return date("Y-m-d H:i:s", $timestamp);
     }
+
     /**
      * returns an value / array of values found by the xpath similar path.
      * Currently supported only:
@@ -78,58 +79,60 @@ class ZfExtended_Utils {
      * @param mixed $root
      * @param string|array $path / separated string or array which contains the single elements
      */
-    public static function xpath($root, $path) {
-        if(empty($path)) {
+    public static function xpath($root, $path)
+    {
+        if (empty($path)) {
             return $root;
         }
-        if(is_string($path)) {
+        if (is_string($path)) {
             $path = explode('/', $path);
         }
-        if(empty($root)) {
+        if (empty($root)) {
             return null;
         }
         $current = array_shift($path);
         $matches = null;
-        if(preg_match('/^([^\[]+)\[([0-9]+)\]$/', $current, $matches)) {
+        if (preg_match('/^([^\[]+)\[([0-9]+)\]$/', $current, $matches)) {
             //since here we assume an array as next step
             $current = $matches[1];
             array_unshift($path, $matches[2]);
         }
-        if(is_object($root)) {
-            if(property_exists($root, $current)) {
+        if (is_object($root)) {
+            if (property_exists($root, $current)) {
                 return self::xpath($root->$current, $path);
             }
+
             //error_log($current.' # '.print_r($root,1));
             return null;
         }
-        if(is_array($root)) {
-            if(array_key_exists($current, $root)) {
+        if (is_array($root)) {
+            if (array_key_exists($current, $root)) {
                 return self::xpath($root[$current], $path);
             }
             $result = [];
-            foreach($root as $item) {
+            foreach ($root as $item) {
                 $result[] = self::xpath($item, $path);
             }
+
             return $result;
         }
+
         return $root;
     }
 
     /**
      * Get an array of all class-constants-names from class $className which begin with $prefix.
      *
-     * @param string $className
-     * @param string $praefix
-     *
      * @return array of constants-names (key) and its values (value)
      */
-    public static function getConstants(string $className, string $praefix) {
-        $constants = array();
+    public static function getConstants(string $className, string $praefix)
+    {
+        $constants = [];
 
         $reflectionClass = new ReflectionClass($className);
         $classConstants = $reflectionClass->getConstants();
 
-        foreach($classConstants as $key => $value) {
+        foreach ($classConstants as $key => $value) {
             if (strpos($key, $praefix) === 0) {
                 $constants[$key] = $value;
             }
@@ -140,33 +143,32 @@ class ZfExtended_Utils {
 
     /**
      * Does a recursive copy of the given directory. Optionally a extension blacklist prevents files with the given extension(s) to be copied
-     * @param string $sourceDir
-     * @param string $destinationDir
-     * @param array|null $extensionBlacklist: optional: if set, files with the given extensions will not be copied
      */
-    public static function recursiveCopy(string $sourceDir, string $destinationDir, ?array $extensionBlacklist = null) {
+    public static function recursiveCopy(string $sourceDir, string $destinationDir, ?array $extensionBlacklist = null)
+    {
         $dir = opendir($sourceDir);
-        if(!file_exists($destinationDir)) {
-            if (!mkdir($destinationDir) && !is_dir($destinationDir)) {
+        if (! file_exists($destinationDir)) {
+            if (! mkdir($destinationDir) && ! is_dir($destinationDir)) {
                 throw new \RuntimeException(sprintf('Directory "%s" was not created', $destinationDir));
             }
         }
-        while(false !== ( $file = readdir($dir)) ) {
+        while (false !== ($file = readdir($dir))) {
             if ($file == '.' || $file == '..') {
                 continue;
             }
             // SBE:BUGFIX: prevent endless-loop if destinationDir is inside sourceDir
-            if ($sourceDir.DIRECTORY_SEPARATOR.$file == $destinationDir) {
+            if ($sourceDir . DIRECTORY_SEPARATOR . $file == $destinationDir) {
                 continue;
             }
-            
-            if (is_dir($sourceDir.DIRECTORY_SEPARATOR.$file)) {
+
+            if (is_dir($sourceDir . DIRECTORY_SEPARATOR . $file)) {
                 self::recursiveCopy(
-                    $sourceDir.DIRECTORY_SEPARATOR.$file,
-                    $destinationDir.DIRECTORY_SEPARATOR.$file,
-                    $extensionBlacklist);
-            } elseif($extensionBlacklist === null || !in_array(pathinfo($file, PATHINFO_EXTENSION), $extensionBlacklist)){
-                copy($sourceDir.DIRECTORY_SEPARATOR.$file, $destinationDir.DIRECTORY_SEPARATOR.$file);
+                    $sourceDir . DIRECTORY_SEPARATOR . $file,
+                    $destinationDir . DIRECTORY_SEPARATOR . $file,
+                    $extensionBlacklist
+                );
+            } elseif ($extensionBlacklist === null || ! in_array(pathinfo($file, PATHINFO_EXTENSION), $extensionBlacklist)) {
+                copy($sourceDir . DIRECTORY_SEPARATOR . $file, $destinationDir . DIRECTORY_SEPARATOR . $file);
             }
         }
         closedir($dir);
@@ -177,19 +179,17 @@ class ZfExtended_Utils {
      * the given extension. If a whitelist is given, no directories will be deleted. If a blacklist is given,
      * only empty directories will be deleted. Returns, if the passed directory was deleted.
      * HINT: Symlinks will not be deleted!
-     * @param string $directory
      * @param array|null $extensionWhitelist if set, only files of the given extensions are deleted.
      * This also prevents deleting any directories including the passed one
      * @param bool $whitelistIsBlacklist if set, the extension whitelist will be treated as blacklist leaving out
      * the defined extensions. This prevents the deletion of only those dirs, that are not empty therefore
-     * @param bool $doDeletePassedDirectory: if not set, the passed directory will not be removed, just it's contents
-     * @return bool
      */
     public static function recursiveDelete(
         string $directory,
         ?array $extensionWhitelist = null,
         bool $whitelistIsBlacklist = false,
-        bool $doDeletePassedDirectory = true): bool {
+        bool $doDeletePassedDirectory = true
+    ): bool {
         $iterator = new DirectoryIterator($directory);
         $dirIsEmpty = true; // we need to know for deleting $directory
         foreach ($iterator as $fileinfo) { /* @var DirectoryIterator $fileinfo */
@@ -197,26 +197,27 @@ class ZfExtended_Utils {
                 continue;
             }
             if ($fileinfo->isDir()) {
-                if(!self::recursiveDelete(
-                    $directory.DIRECTORY_SEPARATOR.$fileinfo->getFilename(),
+                if (! self::recursiveDelete(
+                    $directory . DIRECTORY_SEPARATOR . $fileinfo->getFilename(),
                     $extensionWhitelist,
                     $whitelistIsBlacklist,
                     $doDeletePassedDirectory
-                )){
+                )) {
                     $dirIsEmpty = false;
                 }
-            } elseif(
+            } elseif (
                 $fileinfo->isFile() &&
                 static::recursiveDoDeleteExtension(
                     $fileinfo->getExtension(),
                     $extensionWhitelist,
                     $whitelistIsBlacklist
-                )){
+                )) {
                 try {
-                    unlink($directory.DIRECTORY_SEPARATOR.$fileinfo->getFilename());
-                } catch (Exception $e){
-                    error_log('ZfExtended_Utils::recursiveDelete: Could not delete file ' .
-                        $directory.DIRECTORY_SEPARATOR.$fileinfo->getFilename() . ': ' . $e->getMessage()
+                    unlink($directory . DIRECTORY_SEPARATOR . $fileinfo->getFilename());
+                } catch (Exception $e) {
+                    error_log(
+                        'ZfExtended_Utils::recursiveDelete: Could not delete file ' .
+                        $directory . DIRECTORY_SEPARATOR . $fileinfo->getFilename() . ': ' . $e->getMessage()
                     );
                     $dirIsEmpty = false;
                 }
@@ -224,33 +225,32 @@ class ZfExtended_Utils {
                 $dirIsEmpty = false;
             }
         }
-        if($extensionWhitelist === null && $dirIsEmpty && $doDeletePassedDirectory){
+        if ($extensionWhitelist === null && $dirIsEmpty && $doDeletePassedDirectory) {
             //FIXME try catch ist nur eine übergangslösung!!!
             try {
-                if(rmdir($directory)){
+                if (rmdir($directory)) {
                     return true;
                 }
-            } catch (Exception $e){
-                error_log('ZfExtended_Utils::recursiveDelete: Could not delete file ' .
+            } catch (Exception $e) {
+                error_log(
+                    'ZfExtended_Utils::recursiveDelete: Could not delete file ' .
                     $directory . DIRECTORY_SEPARATOR . ': ' . $e->getMessage()
                 );
             }
         }
+
         return false;
     }
 
     /**
      * Helper for ::recursiveDelete to evaluate the black/whitelist param
-     * @param string $extension
-     * @param array|null $extensionWhitelist
-     * @param bool $whitelistIsBlacklist
-     * @return bool
      */
-    private static function recursiveDoDeleteExtension(string $extension, ?array $extensionWhitelist, bool $whitelistIsBlacklist): bool {
-        if($extensionWhitelist === null){
+    private static function recursiveDoDeleteExtension(string $extension, ?array $extensionWhitelist, bool $whitelistIsBlacklist): bool
+    {
+        if ($extensionWhitelist === null) {
             return true;
-        } else if($whitelistIsBlacklist){
-            return !in_array($extension, $extensionWhitelist);
+        } elseif ($whitelistIsBlacklist) {
+            return ! in_array($extension, $extensionWhitelist);
         } else {
             return in_array($extension, $extensionWhitelist);
         }
@@ -258,28 +258,28 @@ class ZfExtended_Utils {
 
     /**
      * cleans the filenames in zip containers up
-     * @param SplFileInfo $zipFile
      * @param string $prefixToRemove must be a directory inside the zip!
      */
-    public static function cleanZipPaths(SplFileInfo $zipFile, $prefixToRemove) {
+    public static function cleanZipPaths(SplFileInfo $zipFile, $prefixToRemove)
+    {
         $removalLength = mb_strlen($prefixToRemove);
         $zip = new ZipArchive();
         $zip->open($zipFile);
         $i = 0;
         while (true) {
             $name = $zip->getNameIndex($i);
-            if($name === false) {
+            if ($name === false) {
                 break;
             }
-            if(mb_strpos($name, $prefixToRemove) !== 0) {
+            if (mb_strpos($name, $prefixToRemove) !== 0) {
                 $i++;
+
                 continue;
             }
             $newFileName = mb_substr($name, $removalLength + 1);
-            if(empty($newFileName)) {
+            if (empty($newFileName)) {
                 $zip->deleteIndex($i); //we remove the empty directory which is stripped via prefixToRemove
-            }
-            else {
+            } else {
                 $zip->renameIndex($i, $newFileName); //remove also the next / or \
             }
             $i++;
@@ -289,23 +289,25 @@ class ZfExtended_Utils {
 
     /**
      * encodes the given utf8 filepath to the configured runtimeOptions.fileSystemEncoding
-     * @param string $path
      * @return string $path
      * @see ZfExtended_Utils::filesystemEncode
      */
-    public static function filesystemEncode (string $path) {
+    public static function filesystemEncode(string $path)
+    {
         $config = Zend_Registry::get('config');
+
         return iconv('UTF-8', $config->runtimeOptions->fileSystemEncoding, $path);
     }
 
     /**
      * decodes the given filepath in the configured runtimeOptions.fileSystemEncoding to utf8
-     * @param string $path
      * @return string $path
      * @see ZfExtended_Utils::filesystemDecode
      */
-    public static function filesystemDecode (string $path) {
+    public static function filesystemDecode(string $path)
+    {
         $config = Zend_Registry::get('config');
+
         return iconv($config->runtimeOptions->fileSystemEncoding, 'UTF-8', $path);
     }
 
@@ -313,27 +315,29 @@ class ZfExtended_Utils {
      * FIXME let the value come from a on deploy auto generated php file instead of reading the text version file
      * returns the application version
      * @param string $versionContent Optional, parses the version from thegiven text string
-     * @return string
      */
-    public static function getAppVersion(string $versionContent = null): string {
-        $versionFile = APPLICATION_PATH.'/../version';
+    public static function getAppVersion(string $versionContent = null): string
+    {
+        $versionFile = APPLICATION_PATH . '/../version';
         $regex = '/MAJOR_VER=([0-9]+)\s*MINOR_VER=([0-9]+).*\s*BUILD=([0-9]+[a-z]?).*/';
         $matches = null;
-        if(empty($versionContent) && file_exists($versionFile)) {
+        if (empty($versionContent) && file_exists($versionFile)) {
             $versionContent = file_get_contents($versionFile);
         }
-        if(!empty($versionContent) && preg_match($regex, $versionContent, $matches)) {
+        if (! empty($versionContent) && preg_match($regex, $versionContent, $matches)) {
             array_shift($matches);
+
             return join('.', $matches);
         }
+
         return self::VERSION_DEVELOPMENT;
     }
 
     /**
      * returns if the installation is a development installation
-     * @return bool
      */
-    public static function isDevelopment(): bool {
+    public static function isDevelopment(): bool
+    {
         return self::getAppVersion() === self::VERSION_DEVELOPMENT;
     }
 
@@ -343,18 +347,20 @@ class ZfExtended_Utils {
      * @param string $encoding
      * @return string
      */
-    public static function mb_ucfirst($string, $encoding='UTF-8'){
+    public static function mb_ucfirst($string, $encoding = 'UTF-8')
+    {
         $strlen = mb_strlen($string, $encoding);
         $firstChar = mb_substr($string, 0, 1, $encoding);
         $then = mb_substr($string, 1, $strlen - 1, $encoding);
+
         return mb_strtoupper($firstChar, $encoding) . $then;
     }
 
     /**
      * returns an hash unique for the current installation, based on IP Adress and used DB
-     * @param string $salt
      */
-    public static function installationHash(string $salt = '') {
+    public static function installationHash(string $salt = '')
+    {
         $db = Zend_Db_Table::getDefaultAdapter();
         $c = $db->getConfig();
         //FIXME on cluster installations this would fail, since hostname is different for the different web servers.
@@ -362,14 +368,15 @@ class ZfExtended_Utils {
         // addition: it depends on the use case: for worker:queue locking that would be ok,
         // so that queue can be triggered on each node
         $host = gethostname();
-        return md5($salt.$host.$c['host'].$c['username'].$c['dbname']);
+
+        return md5($salt . $host . $c['host'] . $c['username'] . $c['dbname']);
     }
 
     /**
      * creates a real UUID (v4)
-     * @return string
      */
-    public static function uuid(): string {
+    public static function uuid(): string
+    {
         $rand = random_bytes(16);
 
         //see https://stackoverflow.com/a/15875555/1749200
@@ -385,7 +392,8 @@ class ZfExtended_Utils {
      * @return string $guid
      * @throws Exception
      */
-    public static function guid(bool $addBrackets = false): string {
+    public static function guid(bool $addBrackets = false): string
+    {
         $validator = new ZfExtended_Validate_Guid();
         switch (true) {
             //some intallations are using md5 formatted UUIDs
@@ -394,29 +402,31 @@ class ZfExtended_Utils {
                 //the default GUID format:
             case $validator->isValid('{C1D11C25-45D2-11D0-B0E2-201801180001}'):
             default:
-                if ($addBrackets){
+                if ($addBrackets) {
                     return '{' . self::uuid() . '}';
                 }
+
                 return self::uuid();
         }
     }
-    
+
     /***
      * Remove byte order mark from string
      * @param string $text
      * @return string
      */
-    public static function remove_utf8_bom(string $text):string{
-        $bom = pack('H*','EFBBBF');
+    public static function remove_utf8_bom(string $text): string
+    {
+        $bom = pack('H*', 'EFBBBF');
+
         return preg_replace("/^$bom/", '', $text);
     }
 
     /**
      * returns true if a string is empty (respects 0 casting problems, so a 0 string is not empty here)
-     * @param string|null $mixed
-     * @return bool
      */
-    public static function emptyString(?string $mixed): bool {
+    public static function emptyString(?string $mixed): bool
+    {
         return is_null($mixed) || $mixed === '';
     }
 
@@ -427,22 +437,22 @@ class ZfExtended_Utils {
      * @param string $path
      * @return string
      */
-    public static function addNumberIfExist(string $filename,string $path): string
+    public static function addNumberIfExist(string $filename, string $path): string
     {
-        $actual_name = pathinfo($filename,PATHINFO_FILENAME);
+        $actual_name = pathinfo($filename, PATHINFO_FILENAME);
         $original_name = $actual_name;
         $extension = pathinfo($filename, PATHINFO_EXTENSION);
 
-        if(!str_ends_with($path,DIRECTORY_SEPARATOR)){
-            $path = $path.DIRECTORY_SEPARATOR;
+        if (! str_ends_with($path, DIRECTORY_SEPARATOR)) {
+            $path = $path . DIRECTORY_SEPARATOR;
         }
         $i = 1;
-        while(file_exists($path.$actual_name.".".$extension))
-        {
-            $actual_name = $original_name.'('.$i.')';
-            $filename = $actual_name.".".$extension;
+        while (file_exists($path . $actual_name . "." . $extension)) {
+            $actual_name = $original_name . '(' . $i . ')';
+            $filename = $actual_name . "." . $extension;
             $i++;
         }
+
         return $filename;
     }
 
@@ -453,7 +463,7 @@ class ZfExtended_Utils {
      */
     public static function getFileExtension(string $fileName): string
     {
-        return pathinfo($fileName,PATHINFO_EXTENSION);
+        return pathinfo($fileName, PATHINFO_EXTENSION);
     }
 
     /***
@@ -468,15 +478,15 @@ class ZfExtended_Utils {
                 (128 <= $ord && $ord <= 159) || // C1 control characters
                 $ord == 0x2028 || $ord == 0x2029 // Unicode newlines
             ) {
-                $term =  str_replace($ch,'',$term);
+                $term = str_replace($ch, '', $term);
             }
         }
+
         return (string) $term;
     }
 
     /**
      * returns true if request is accepting JSON, needed in early bootstrapping where no Zend Methods are usable
-     * @return bool
      */
     public static function requestAcceptsJson(): bool
     {
@@ -485,7 +495,8 @@ class ZfExtended_Utils {
             return false;
         }
         $headers = array_change_key_case($headers, CASE_LOWER);
-        return !empty($headers['accept']) && stripos($headers['accept'], 'json');
+
+        return ! empty($headers['accept']) && stripos($headers['accept'], 'json');
     }
 
     /***
@@ -496,14 +507,13 @@ class ZfExtended_Utils {
      */
     public static function isArrayEqual(array $a, array $b): bool
     {
-        return (count($a) === count($b) && !array_diff($a, $b));
+        return (count($a) === count($b) && ! array_diff($a, $b));
     }
 
     /**
      * returns true if the request was made with SSL.
      *  Our internal config server.protocol can not be used here,
      *  since the config resource is loaded after the session resource
-     * @return bool
      */
     public static function isHttpsRequest(): bool
     {
@@ -525,8 +535,6 @@ class ZfExtended_Utils {
 
     /**
      * Concatenates multiple pathes to one path like some/path/pf/parts taking into account the parts already may start or end with "/"
-     * @param string|null ...$pathes
-     * @return string
      */
     public static function combinePathes(?string ...$pathes): string
     {
@@ -542,14 +550,15 @@ class ZfExtended_Utils {
                 // add part
                 $lastIsSlash = str_ends_with($path, '/');
                 if (trim($path, '/') !== '') {
-                    if ($combined !== '' && !str_ends_with($combined, '/')) {
+                    if ($combined !== '' && ! str_ends_with($combined, '/')) {
                         $combined .= '/';
                     }
                     $combined .= trim($path, '/');
                 }
             }
         }
-        return ($lastIsSlash && $combined !== '' && !str_ends_with($combined, '/')) ? $combined . '/' : $combined;
+
+        return ($lastIsSlash && $combined !== '' && ! str_ends_with($combined, '/')) ? $combined . '/' : $combined;
     }
 
     /**
@@ -558,14 +567,15 @@ class ZfExtended_Utils {
      * or from browser,
      * or from fallbackLocale-config
      *
-     * @param string|null $desiredLocale
-     * @return string
      * @throws Zend_Exception
      */
-    public static function getLocale(?string $desiredLocale = '') : string {
-
+    public static function getLocale(?string $desiredLocale = ''): string
+    {
         // Get [localeCode => localeName] pairs for valid locales
-        $available = ['en' => true, 'de' => true];
+        $available = [
+            'en' => true,
+            'de' => true,
+        ];
         /*$available = ZfExtended_Zendoverwrites_Translate
             ::getInstance()
             ->getAvailableTranslations();*/
@@ -584,20 +594,20 @@ class ZfExtended_Utils {
         $fallback = $rop->translation->fallbackLocale;
 
         // If fallback is not available - then use first among available
-        if (!isset($available[$fallback])) {
+        if (! isset($available[$fallback])) {
             $fallback = key($available);
         }
 
         // If app locate is set
         if ($appLocale = $rop->translation->applicationLocale) {
-
             // If it's valid - use that
             if (Zend_Locale::isLocale($appLocale) && isset($available[$appLocale])) {
                 return $appLocale;
 
-            // Else - report that and use fallback
+                // Else - report that and use fallback
             } else {
                 error_log('Configured runtimeOptions.translation.applicationLocale is no valid locale, using ' . $fallback);
+
                 return $fallback;
             }
         }
@@ -608,33 +618,28 @@ class ZfExtended_Utils {
 
     /**
      * Converts an integer-column value from the database either to an integer or null
-     * @param mixed $dbInt
-     * @return int|null
      */
     public static function parseDbInt(mixed $dbInt): ?int
     {
-        if(is_null($dbInt)){
+        if (is_null($dbInt)) {
             return null;
         }
-        if(is_int($dbInt)){
+        if (is_int($dbInt)) {
             return $dbInt;
         }
+
         return intval($dbInt);
     }
 
     /**
      * Adds a Condition to a Zend select, that ditinguishes between "IN" and "=" depending on the count
      * The column argument is expected to be fully qualified if neccessary like "table.column"
-     * @param Zend_Db_Table_Select $select
-     * @param array $values
-     * @param string $column
-     * @return void
      */
     public static function addArrayCondition(Zend_Db_Table_Select $select, array $values, string $column): void
     {
         if (count($values) > 1) {
             $select->where($column . ' IN (?)', $values);
-        } else if (count($values) === 1) {
+        } elseif (count($values) === 1) {
             $select->where($column . ' = ?', $values[0]);
         } else {
             $select->where('1 = 0');
@@ -647,16 +652,17 @@ class ZfExtended_Utils {
      * gets locale from browser
      * @return string
      */
-    protected static function getLocaleFromBrowser() {
+    protected static function getLocaleFromBrowser()
+    {
         $config = Zend_Registry::get('config');
         $localeObj = new Zend_Locale();
         $userPrefLangs = array_keys($localeObj->getBrowser());
-        if(count($userPrefLangs)>0){
+        if (count($userPrefLangs) > 0) {
             //Prüfe, ob für jede locale, ob eine xliff-Datei vorhanden ist - wenn nicht fallback
-            foreach($userPrefLangs as $testLocale){
+            foreach ($userPrefLangs as $testLocale) {
                 $testLocaleObj = new Zend_Locale($testLocale);
                 $testLang = $testLocaleObj->getLanguage();
-                if(file_exists($config->runtimeOptions->dir->locales.DIRECTORY_SEPARATOR.$testLang.'.xliff')){
+                if (file_exists($config->runtimeOptions->dir->locales . DIRECTORY_SEPARATOR . $testLang . '.xliff')) {
                     return $testLang;
                 }
             }
@@ -665,8 +671,6 @@ class ZfExtended_Utils {
 
     /**
      * Clean a string from non-breaking spaces and trim it
-     * @param string $text
-     * @return string
      */
     public static function cleanString(string $text): string
     {
@@ -674,6 +678,7 @@ class ZfExtended_Utils {
         $text = str_replace("\xc2\xa0", ' ', $text);
         // Replace all whitespace characters with regular spaces
         $text = preg_replace('/\s/', ' ', $text);
+
         // Trim leading and trailing whitespaces
         return trim($text);
     }

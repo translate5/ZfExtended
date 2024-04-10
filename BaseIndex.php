@@ -3,21 +3,21 @@
 START LICENSE AND COPYRIGHT
 
  This file is part of ZfExtended library
- 
+
  Copyright (c) 2013 - 2021 Marc Mittag; MittagQI - Quality Informatics;  All rights reserved.
 
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
 
  This file may be used under the terms of the GNU LESSER GENERAL PUBLIC LICENSE version 3
- as published by the Free Software Foundation and appearing in the file lgpl3-license.txt 
- included in the packaging of this file.  Please review the following information 
+ as published by the Free Software Foundation and appearing in the file lgpl3-license.txt
+ included in the packaging of this file.  Please review the following information
  to ensure the GNU LESSER GENERAL PUBLIC LICENSE version 3.0 requirements will be met:
 https://www.gnu.org/licenses/lgpl-3.0.txt
 
  @copyright  Marc Mittag, MittagQI - Quality Informatics
  @author     MittagQI - Quality Informatics
  @license    GNU LESSER GENERAL PUBLIC LICENSE version 3
-			 https://www.gnu.org/licenses/lgpl-3.0.txt
+             https://www.gnu.org/licenses/lgpl-3.0.txt
 
 END LICENSE AND COPYRIGHT
 */
@@ -30,29 +30,28 @@ const FATAL_ERRORS_TO_HANDLE = E_ERROR | E_PARSE | E_CORE_ERROR | E_COMPILE_ERRO
 /**
  * Standard Inhalt der index.php gekapselt
  */
-class ZfExtended_BaseIndex {
-
+class ZfExtended_BaseIndex
+{
     /**
      * A collection of constants which define the Environment
      * The Environment references the sections in the ini-files
      * For API-test, there can be a second environment "test", which holds an own database-name
      * There can be API-tests working on the test-environment/db or the normal application environment
      */
+    public const ENVIRONMENT_APP = 'application';
 
-    const ENVIRONMENT_APP = 'application';
+    public const ENVIRONMENT_DATA = 'data';
 
-    const ENVIRONMENT_DATA = 'data';
-    const ENVIRONMENT_TEST = 'test';
-    const ENVIRONMENT_TESTDATA = 'testdata';
+    public const ENVIRONMENT_TEST = 'test';
 
-    const ORIGIN_TEST = 't5test';
+    public const ENVIRONMENT_TESTDATA = 'testdata';
 
-    const ORIGIN_APPTEST = 't5apptest';
+    public const ORIGIN_TEST = 't5test';
 
-    /**
-     * @var string 
-     */
+    public const ORIGIN_APPTEST = 't5apptest';
+
     protected string $currentModule = 'default';
+
     /**
      * singleton instance
      */
@@ -63,7 +62,7 @@ class ZfExtended_BaseIndex {
      * @var boolean
      */
     public static bool $addMaintenanceConfig = false;
-    
+
     /**
      * Konstruktor enthält alles, was normaler Weise die index.php enthält
      *
@@ -73,29 +72,28 @@ class ZfExtended_BaseIndex {
      * sowie den Algorithmus zur Einbindung der application.ini-Dateien auf
      * verschiedenen Ebenen, wie dies im Kopf der application.ini selbst
      * dokumentiert ist
-     *
-     *
      */
-    protected function  __construct($indexpath) {
+    protected function __construct($indexpath)
+    {
         if (version_compare(PHP_VERSION, '8.0', '<')) {
-            $msg = array('Please use PHP version ~ 8.0!');
+            $msg = ['Please use PHP version ~ 8.0!'];
             if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
                 $msg[] = 'Please update your xampp package manually or reinstall Translate5 with the latest windows installer from https://www.translate5.net';
                 $msg[] = 'Warning: Reinstallation can lead to data loss! Please contact support@translate5.net when you need assistance in data conversion!';
             }
             die(join("<br>\n", $msg));
         }
-        
-        if(!mb_internal_encoding("UTF-8")){
+
+        if (! mb_internal_encoding("UTF-8")) {
             throw new Exception('mb_internal_encoding("UTF-8") could not be set!');
         }
         //set the locales to the ones configured by env variables, see TRANSLATE-2992
         setlocale(LC_ALL, '');
-        if(!defined('APPLICATION_ROOT')) {
-            define('APPLICATION_ROOT', realpath(dirname($indexpath) . DIRECTORY_SEPARATOR.'..'));
+        if (! defined('APPLICATION_ROOT')) {
+            define('APPLICATION_ROOT', realpath(dirname($indexpath) . DIRECTORY_SEPARATOR . '..'));
         }
         $appData = APPLICATION_ROOT . DIRECTORY_SEPARATOR . self::ENVIRONMENT_DATA;
-        defined('APPLICATION_PATH') || define('APPLICATION_PATH', APPLICATION_ROOT . DIRECTORY_SEPARATOR.'application');
+        defined('APPLICATION_PATH') || define('APPLICATION_PATH', APPLICATION_ROOT . DIRECTORY_SEPARATOR . 'application');
 
         // Define application environment from Request-Origin for API-tests: this is only allowed if installation
         // is set-up as test installation. Therefore we have to parse installation.ini manually
@@ -103,7 +101,7 @@ class ZfExtended_BaseIndex {
             && ($_SERVER['HTTP_ORIGIN'] === self::ORIGIN_TEST
                 || $_SERVER['HTTP_ORIGIN'] === self::ORIGIN_APPTEST)) {
             // we have to check if the installation is allowed to switch the environment - security!
-            $iniVars = parse_ini_file(APPLICATION_PATH.'/config/installation.ini');
+            $iniVars = parse_ini_file(APPLICATION_PATH . '/config/installation.ini');
             if ($iniVars !== false
                 && array_key_exists('testSettings.testsAllowed', $iniVars)
                 && $iniVars['testSettings.testsAllowed'] === '1') {
@@ -125,46 +123,44 @@ class ZfExtended_BaseIndex {
     }
 
     /**
-     * @return ZfExtended_BaseIndex
      * @throws Exception
      */
-    public static function getInstance(): ZfExtended_BaseIndex {
+    public static function getInstance(): ZfExtended_BaseIndex
+    {
         if (null === self::$_instance) {
             self::$_instance = new self($_SERVER['SCRIPT_FILENAME']);
         }
+
         return self::$_instance;
     }
 
     /**
      * (re-)initializes important registry values
      *
-     * @param Zend_Application_Bootstrap_Bootstrap $bootstrap
-     * @return void
      * @throws Zend_Application_Bootstrap_Exception
      */
     public function initRegistry(Zend_Application_Bootstrap_Bootstrap $bootstrap): void
     {
         Zend_Registry::set('bootstrap', $bootstrap);
         $bootstrap->bootstrap('frontController');
-        
+
         $front = $bootstrap->getResource('frontController');
-        Zend_Registry::set('frontController',$front );
-        
+        Zend_Registry::set('frontController', $front);
+
         $config = new Zend_Config($bootstrap->getOptions());
         Zend_Registry::set('config', $config);
 
         $bootstrap->bootstrap('db');
-        Zend_Registry::set('db',$bootstrap->getResource('db'));
+        Zend_Registry::set('db', $bootstrap->getResource('db'));
 
         $bootstrap->bootstrap('cachemanager');
         $cache = $bootstrap->getResource('cachemanager')->getCache('zfExtended');
         Zend_Registry::set('cache', $cache);
-        Zend_Registry::set('module',$this->currentModule );
+        Zend_Registry::set('module', $this->currentModule);
     }
 
     /**
      * start the application
-     * @return void
      * @throws Zend_Application_Exception
      */
     public function startApplication(): void
@@ -172,79 +168,78 @@ class ZfExtended_BaseIndex {
         try {
             $app = $this->initApplication();
             $app->bootstrap()->run();
-        }
-        catch(Zend_Db_Adapter_Exception $e) {
+        } catch (Zend_Db_Adapter_Exception $e) {
             $this->handleDatabaseDown($e);
         }
     }
 
     /**
-     * @return Zend_Application|ZfExtended_Application
      * @throws Zend_Application_Exception
      */
     public function initApplication(): Zend_Application|ZfExtended_Application
     {
         //include optional composer vendor autoloader
-        if(file_exists(APPLICATION_ROOT.'/vendor/autoload.php')) {
-            require_once APPLICATION_ROOT.'/vendor/autoload.php';
+        if (file_exists(APPLICATION_ROOT . '/vendor/autoload.php')) {
+            require_once APPLICATION_ROOT . '/vendor/autoload.php';
         }
-        
+
         require_once 'Zend/Loader/Autoloader.php';
         Zend_Loader_Autoloader::getInstance()->setFallbackAutoloader(true);
         /** Zend_Application */
-        require_once __DIR__.'/Application.php';
+        require_once __DIR__ . '/Application.php';
         ZfExtended_Application::setConfigParserOptions([
-            'scannerMode' => INI_SCANNER_TYPED
+            'scannerMode' => INI_SCANNER_TYPED,
         ]);
-        $application = new ZfExtended_Application( APPLICATION_ENV,[
-            'config' => $this->getApplicationInis()
+        $application = new ZfExtended_Application(APPLICATION_ENV, [
+            'config' => $this->getApplicationInis(),
         ]);
         $this->initAdditionalConstants();
 
         // set the available modules
-        defined('APPLICATION_MODULES') || define('APPLICATION_MODULES', array_filter($application->getOption('modules')['order'], function($module){
-            return is_dir(APPLICATION_PATH .'/modules/'.$module);
+        defined('APPLICATION_MODULES') || define('APPLICATION_MODULES', array_filter($application->getOption('modules')['order'], function ($module) {
+            return is_dir(APPLICATION_PATH . '/modules/' . $module);
         }));
 
         // for each available module, call the module specific function. This will register the module as applet
-        foreach (APPLICATION_MODULES as $module){
-            require_once $module.'/Bootstrap.php';
-            $class = ucfirst($module).'_Bootstrap';
-            if(method_exists($class,'initModuleSpecific')){
+        foreach (APPLICATION_MODULES as $module) {
+            require_once $module . '/Bootstrap.php';
+            $class = ucfirst($module) . '_Bootstrap';
+            if (method_exists($class, 'initModuleSpecific')) {
                 $class::initModuleSpecific();
             }
         }
+
         return $application;
     }
 
     /**
      * gets paths to all libs. Later ones should overwrite previous ones  (therefore reverse order than in application.ini)
      * @deprecated
-     * @return array
      */
     public function getModulePaths(): array
     {
         $paths = [];
         foreach (APPLICATION_MODULES as $module) {
-            $paths[] = realpath(APPLICATION_PATH .DIRECTORY_SEPARATOR.'modules'.DIRECTORY_SEPARATOR.$module);
+            $paths[] = realpath(APPLICATION_PATH . DIRECTORY_SEPARATOR . 'modules' . DIRECTORY_SEPARATOR . $module);
         }
+
         return $paths;
     }
 
     /**
      * gets paths to all libs. Later ones should overwrite previous ones  (therefore reverse order than in application.ini)
-     * @return array
      * @throws Zend_Exception
      */
     public function getLibPaths(): array
     {
         $config = Zend_Registry::get('config');
-        $paths = array();
+        $paths = [];
         $libs = array_reverse($config->runtimeOptions->libraries->order->toArray());
         foreach ($libs as $lib) {
-            $paths[] = realpath(APPLICATION_PATH .DIRECTORY_SEPARATOR.'..'.
-                    DIRECTORY_SEPARATOR.'library'.DIRECTORY_SEPARATOR.$lib);
+            $paths[] = realpath(APPLICATION_PATH . DIRECTORY_SEPARATOR . '..' .
+                    DIRECTORY_SEPARATOR . 'library' . DIRECTORY_SEPARATOR . $lib);
         }
+
         return $paths;
     }
 
@@ -258,31 +253,30 @@ class ZfExtended_BaseIndex {
      *   set module, but keeps those of the old module, which are not present in
      *   the new one
      *
-     *
-     * @param string $module
      * @param bool $withAcl default true, enables resetting the ACLs, false to prevent this
      * @return string the old module
      * @throws Zend_Exception
      */
     public function setModule(string $module, bool $withAcl = true): string
     {
-        if(!is_dir(APPLICATION_PATH.'/modules/'.  $module)){
-            throw new Zend_Exception('The module-directory '.APPLICATION_PATH.
-                    '/modules/'.  $module.' does not exist.');
+        if (! is_dir(APPLICATION_PATH . '/modules/' . $module)) {
+            throw new Zend_Exception('The module-directory ' . APPLICATION_PATH .
+                    '/modules/' . $module . ' does not exist.');
         }
-        if(!class_exists('Zend_Registry')){
+        if (! class_exists('Zend_Registry')) {
             throw new Zend_Exception('application not started yet - Zend_Registry does not exist!');
         }
         $oldModule = $this->currentModule;
         $this->currentModule = $module;
         $bootstrap = Zend_Registry::get('bootstrap');
         $bootstrap->getApplication()->setOptions([
-            'config'=> $this->getApplicationInis()
+            'config' => $this->getApplicationInis(),
         ]);
         $bootstrap->setOptions($bootstrap->getApplication()->getOptions());
         $this->initRegistry($bootstrap);
         //update the loaded ACLs:
         $withAcl && ZfExtended_Acl::getInstance(true);
+
         return $oldModule;
     }
 
@@ -290,7 +284,6 @@ class ZfExtended_BaseIndex {
      * adds the options of the passed module-name
      * - options already set stay as they are and do not get overridden
      *
-     * @param string $module
      * @throws Zend_Application_Bootstrap_Exception
      * @throws Zend_Exception
      */
@@ -300,7 +293,7 @@ class ZfExtended_BaseIndex {
         $oldOptions = $bootstrap->getApplication()->getOptions();
         $this->setModule($module, false);
         $newOptions = $bootstrap->getApplication()->getOptions();
-        $options = $bootstrap->getApplication()->mergeOptions($newOptions,$oldOptions);
+        $options = $bootstrap->getApplication()->mergeOptions($newOptions, $oldOptions);
         $bootstrap->getApplication()->setOptions($options);
         $bootstrap->setOptions($bootstrap->getApplication()->getOptions());
         $this->initRegistry($bootstrap);
@@ -308,27 +301,28 @@ class ZfExtended_BaseIndex {
 
     /**
      * defines the current module
-     * @return string
      */
-    private function getCurrentModule(): string {
+    private function getCurrentModule(): string
+    {
         $module = 'default';
-        $path = APPLICATION_PATH.'/modules/';
-        $allModules = array_filter(scandir($path), function($module) use ($path) {
-            return !str_starts_with($module, '.') && is_dir($path.$module);
+        $path = APPLICATION_PATH . '/modules/';
+        $allModules = array_filter(scandir($path), function ($module) use ($path) {
+            return ! str_starts_with($module, '.') && is_dir($path . $module);
         });
         $runDirParts = explode('/', APPLICATION_RUNDIR);
         $uriParts = explode('/', $_SERVER['REQUEST_URI']);
-        
+
         do {
             $uriPart = array_shift($uriParts);
             $runDirPart = array_shift($runDirParts);
-        } while($uriPart === $runDirPart);
-        
-        if(in_array($uriPart, $allModules)){
+        } while ($uriPart === $runDirPart);
+
+        if (in_array($uriPart, $allModules)) {
             $module = $uriPart;
         }
-        
-        define('APPLICATION_MODULE',  $module);
+
+        define('APPLICATION_MODULE', $module);
+
         return $module;
     }
 
@@ -339,25 +333,25 @@ class ZfExtended_BaseIndex {
     {
         $applicationInis = [
             //the main configuration file:
-            APPLICATION_PATH.'/config/application.ini',
+            APPLICATION_PATH . '/config/application.ini',
             //the main configuration file of a module, provided by the module:
-            APPLICATION_PATH.'/modules/'.$this->currentModule.'/configs/module.ini',
+            APPLICATION_PATH . '/modules/' . $this->currentModule . '/configs/module.ini',
             //the application configuration file of a module, provided by the application, can overwrite module settings:
-            APPLICATION_PATH.'/config/'.$this->currentModule.'.ini',
+            APPLICATION_PATH . '/config/' . $this->currentModule . '.ini',
         ];
 
-        if(self::$addMaintenanceConfig) {
+        if (self::$addMaintenanceConfig) {
             //this additional config file is loaded when running the CLI configuration / maintenance scripts.
-            $applicationInis[] = APPLICATION_PATH.'/config/maintenance.ini';
+            $applicationInis[] = APPLICATION_PATH . '/config/maintenance.ini';
         }
 
         //a customized configuration file for the local installation:
-        $applicationInis[] = APPLICATION_PATH.'/config/installation.ini';
+        $applicationInis[] = APPLICATION_PATH . '/config/installation.ini';
         //for installations with read only/shared code base only the data directory is usable for the instance, so we have to load optionally the installation.ini from there
-        $applicationInis[] = APPLICATION_ROOT.'/data/installation.ini';
+        $applicationInis[] = APPLICATION_ROOT . '/data/installation.ini';
         //a customized configuration file for the local installation, called only for a specific module:
         // this feature is currently not documented!
-        $applicationInis[] = APPLICATION_PATH.'/config/installation-'.$this->currentModule.'.ini';
+        $applicationInis[] = APPLICATION_PATH . '/config/installation-' . $this->currentModule . '.ini';
 
         return array_filter($applicationInis, function ($iniFile) {
             return file_exists($iniFile);
@@ -373,10 +367,6 @@ class ZfExtended_BaseIndex {
         defined('NOW_ISO') || define('NOW_ISO', date('Y-m-d H:i:s', $_SERVER['REQUEST_TIME']));
     }
 
-    /**
-     * @param Exception|Zend_Db_Adapter_Exception $e
-     * @return void
-     */
     private function handleDatabaseDown(Exception|Zend_Db_Adapter_Exception $e): void
     {
         error_log($e);

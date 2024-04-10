@@ -3,21 +3,21 @@
 START LICENSE AND COPYRIGHT
 
  This file is part of ZfExtended library
- 
+
  Copyright (c) 2013 - 2021 Marc Mittag; MittagQI - Quality Informatics;  All rights reserved.
 
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
 
  This file may be used under the terms of the GNU LESSER GENERAL PUBLIC LICENSE version 3
- as published by the Free Software Foundation and appearing in the file lgpl3-license.txt 
- included in the packaging of this file.  Please review the following information 
+ as published by the Free Software Foundation and appearing in the file lgpl3-license.txt
+ included in the packaging of this file.  Please review the following information
  to ensure the GNU LESSER GENERAL PUBLIC LICENSE version 3.0 requirements will be met:
 https://www.gnu.org/licenses/lgpl-3.0.txt
 
  @copyright  Marc Mittag, MittagQI - Quality Informatics
  @author     MittagQI - Quality Informatics
  @license    GNU LESSER GENERAL PUBLIC LICENSE version 3
-			 https://www.gnu.org/licenses/lgpl-3.0.txt
+             https://www.gnu.org/licenses/lgpl-3.0.txt
 
 END LICENSE AND COPYRIGHT
 */
@@ -35,49 +35,28 @@ use ZfExtended_Zendoverwrites_Http_Exception_InvalidResponse as InvalidResponse;
  */
 class JsonResponse
 {
-    const VALID_STATES = [200, 201, 204];
+    public const VALID_STATES = [200, 201, 204];
 
-    /**
-     * @var mixed
-     */
     protected mixed $data;
 
     protected ?stdClass $error = null;
 
-    /**
-     * @var Zend_Http_Response
-     */
     protected Zend_Http_Response $response;
 
-    /**
-     * @var string
-     */
     protected string $url;
 
-    /**
-     * @var string
-     */
     protected string $method;
 
-    /**
-     * @return bool
-     */
     public function hasError(): bool
     {
-        return !is_null($this->error);
+        return ! is_null($this->error);
     }
 
-    /**
-     * @return stdClass|null
-     */
     public function getError(): ?stdClass
     {
         return $this->error;
     }
 
-    /**
-     * @return Zend_Http_Response
-     */
     public function getResponse(): Zend_Http_Response
     {
         return $this->response;
@@ -85,7 +64,6 @@ class JsonResponse
 
     /**
      * Convenience API
-     * @return string|null
      */
     public function getResponseBody(): ?string
     {
@@ -94,7 +72,6 @@ class JsonResponse
 
     /**
      * Convenience API
-     * @return string|null
      */
     public function getRawResponseBody(): ?string
     {
@@ -103,7 +80,6 @@ class JsonResponse
 
     /**
      * Convenience API
-     * @return int
      */
     public function getStatus(): int
     {
@@ -112,7 +88,6 @@ class JsonResponse
 
     /**
      * Convenience API
-     * @return bool
      */
     public function isStatusValid(): bool
     {
@@ -121,16 +96,12 @@ class JsonResponse
 
     /**
      * Checks wether the result is not Empty. Empty means only an empty response-string was sent
-     * @return bool
      */
     public function isEmpty(): bool
     {
-        return !$this->hasData() || $this->data === '';
+        return ! $this->hasData() || $this->data === '';
     }
 
-    /**
-     * @return mixed
-     */
     public function getData(): mixed
     {
         return $this->data;
@@ -140,7 +111,6 @@ class JsonResponse
      * Retrieves if data was received
      * This may not be the case when errors occured
      * To check for empty result, use isEmpty
-     * @return bool
      */
     public function hasData(): bool
     {
@@ -149,7 +119,6 @@ class JsonResponse
 
     /**
      * Retrieves if the retrieved data is an object
-     * @return bool
      */
     public function hasDataObject(): bool
     {
@@ -158,7 +127,6 @@ class JsonResponse
 
     /**
      * Retrieves if the retrieved data is an array
-     * @return bool
      */
     public function hasDataArray(): bool
     {
@@ -168,7 +136,8 @@ class JsonResponse
     /**
      * @throws InvalidResponse
      */
-    public function __construct(Zend_Http_Response $response, string $uri, string $method) {
+    public function __construct(Zend_Http_Response $response, string $uri, string $method)
+    {
         $this->url = $uri;
         $this->method = $method;
         $this->processResponse($response);
@@ -176,7 +145,6 @@ class JsonResponse
 
     /**
      * parses and processes the response of OpenTM2, and handles the errors
-     * @param Zend_Http_Response $response
      * @throws InvalidResponse
      */
     protected function processResponse(Zend_Http_Response $response): void
@@ -189,7 +157,7 @@ class JsonResponse
         // FIXME check for returned content type
 
         //check for HTTP State (REST errors)
-        if (!$this->isStatusValid()) {
+        if (! $this->isStatusValid()) {
             $this->error = $this->createError();
         }
 
@@ -197,6 +165,7 @@ class JsonResponse
         // We cast any empty response to an empty string
         if ($responseBody === null || $responseBody === '') {
             $this->data = '';
+
             return;
         }
 
@@ -227,23 +196,24 @@ class JsonResponse
         if ($lastJsonError != JSON_ERROR_NONE) {
             $errorExtra['errorMsg'] = json_last_error_msg();
             $errorExtra['rawanswer'] = $responseBody;
+
             throw new InvalidResponse('E1510', $errorExtra);
         }
     }
-    
+
     /**
      * Creates an error for the Response
      * Caution: Even creates an Error, when the request was successful
-     * @return stdClass
      */
     public function createError(): stdClass
     {
         $error = new stdClass();
         $error->url = $this->url;
         $error->method = $this->method;
-        $error->type = 'HTTP '.$this->response->getStatus();
+        $error->type = 'HTTP ' . $this->response->getStatus();
         $error->body = $this->response->getBody();
         $error->error = $this->response->getStatus(); //is normally overwritten later
+
         return $error;
     }
 }

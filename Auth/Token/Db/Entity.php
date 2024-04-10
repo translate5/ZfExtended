@@ -1,4 +1,5 @@
-<?php 
+<?php
+
 /*
 START LICENSE AND COPYRIGHT
 
@@ -27,7 +28,9 @@ START LICENSE AND COPYRIGHT
 END LICENSE AND COPYRIGHT
 */
 
-class ZfExtended_Auth_Token_Db_Entity extends Zend_Db_Table_Abstract {
-    protected $_name  = "Zf_authentication_token";
+class ZfExtended_Auth_Token_Db_Entity extends Zend_Db_Table_Abstract
+{
+    protected $_name = "Zf_authentication_token";
+
     public $_primary = "id";
 }

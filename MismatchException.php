@@ -3,21 +3,21 @@
 START LICENSE AND COPYRIGHT
 
  This file is part of ZfExtended library
- 
+
  Copyright (c) 2013 - 2021 Marc Mittag; MittagQI - Quality Informatics;  All rights reserved.
 
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
 
  This file may be used under the terms of the GNU LESSER GENERAL PUBLIC LICENSE version 3
- as published by the Free Software Foundation and appearing in the file lgpl3-license.txt 
- included in the packaging of this file.  Please review the following information 
+ as published by the Free Software Foundation and appearing in the file lgpl3-license.txt
+ included in the packaging of this file.  Please review the following information
  to ensure the GNU LESSER GENERAL PUBLIC LICENSE version 3.0 requirements will be met:
 https://www.gnu.org/licenses/lgpl-3.0.txt
 
  @copyright  Marc Mittag, MittagQI - Quality Informatics
  @author     MittagQI - Quality Informatics
  @license    GNU LESSER GENERAL PUBLIC LICENSE version 3
-			 https://www.gnu.org/licenses/lgpl-3.0.txt
+             https://www.gnu.org/licenses/lgpl-3.0.txt
 
 END LICENSE AND COPYRIGHT
 */
@@ -32,7 +32,8 @@ use ZfExtended_ResponseExceptionTrait;
 /**
  * Since no access is mostly an ACL misconfiguration we leave logging enabled.
  */
-class MismatchException extends ZfExtended_ErrorCodeException {
+class MismatchException extends ZfExtended_ErrorCodeException
+{
     use ZfExtended_ResponseExceptionTrait;
 
     /**
@@ -46,9 +47,6 @@ class MismatchException extends ZfExtended_ErrorCodeException {
      */
     protected $level = ZfExtended_Logger::LEVEL_INFO;
 
-    /**
-     * @var array
-     */
     protected static array $localErrorCodes = [
         'E2000' => 'Param "{0}" - is not given',                                           // REQ
         'E2001' => 'Value "{0}" of param "{1}" - is in invalid format',                    // REX
@@ -65,18 +63,14 @@ class MismatchException extends ZfExtended_ErrorCodeException {
 
     /**
      * Overridden to use custom message if given
-     * @param $errorCode
-     * @param array $extra
-     * @param Exception|null $previous
      */
-    public function __construct($errorCode, array $extra = [], Exception $previous = null) {
-
+    public function __construct($errorCode, array $extra = [], Exception $previous = null)
+    {
         // Call parent
         parent::__construct($errorCode, $extra, $previous);
 
         // If custom message is given
         if ($extra['custom'] ?? 0) {
-
             // Get that
             $msg = $extra['custom'];
 
@@ -87,9 +81,8 @@ class MismatchException extends ZfExtended_ErrorCodeException {
 
         // If message have placeholders like {0}, {1}, {2} etc
         if (preg_match('~{([0-9])}~', $msg)) {
-
             // Replace those with values from $extra arg
-            $msg = preg_replace_callback('~{([0-9])}~', fn($m) => $extra[$m[1]] ?? $m[1], $msg);
+            $msg = preg_replace_callback('~{([0-9])}~', fn ($m) => $extra[$m[1]] ?? $m[1], $msg);
         }
 
         // Spoof msg

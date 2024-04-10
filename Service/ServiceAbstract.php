@@ -3,33 +3,33 @@
 START LICENSE AND COPYRIGHT
 
  This file is part of ZfExtended library
- 
+
  Copyright (c) 2013 - 2021 Marc Mittag; MittagQI - Quality Informatics;  All rights reserved.
 
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
 
  This file may be used under the terms of the GNU LESSER GENERAL PUBLIC LICENSE version 3
- as published by the Free Software Foundation and appearing in the file lgpl3-license.txt 
- included in the packaging of this file.  Please review the following information 
+ as published by the Free Software Foundation and appearing in the file lgpl3-license.txt
+ included in the packaging of this file.  Please review the following information
  to ensure the GNU LESSER GENERAL PUBLIC LICENSE version 3.0 requirements will be met:
 https://www.gnu.org/licenses/lgpl-3.0.txt
 
  @copyright  Marc Mittag, MittagQI - Quality Informatics
  @author     MittagQI - Quality Informatics
  @license    GNU LESSER GENERAL PUBLIC LICENSE version 3
-			 https://www.gnu.org/licenses/lgpl-3.0.txt
+             https://www.gnu.org/licenses/lgpl-3.0.txt
 
 END LICENSE AND COPYRIGHT
 */
 
 namespace MittagQI\ZfExtended\Service;
 
+use Symfony\Component\Console\Style\SymfonyStyle;
 use Zend_Config;
-use Zend_Registry;
 use Zend_Exception;
+use Zend_Registry;
 use ZfExtended_Exception;
 use ZfExtended_Models_SystemRequirement_Result;
-use Symfony\Component\Console\Style\SymfonyStyle;
 
 /**
  * Represents a general Service used by a plugin or the base application
@@ -39,11 +39,10 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  */
 abstract class ServiceAbstract
 {
-    const DO_DEBUG = false;
+    public const DO_DEBUG = false;
 
     /**
      * The name is defined as array-key in a plugins $services prop and must be UNIQUE across all plugins and the base services
-     * @var string
      */
     protected string $name;
 
@@ -79,24 +78,18 @@ abstract class ServiceAbstract
 
     /**
      * Represents the global config
-     * @var Zend_Config
      */
     protected Zend_Config $config;
 
     /**
      * An accessor-helper to retrieve config values from the set config
-     * @var ConfigHelper
      */
     protected ConfigHelper $configHelper;
 
-    /**
-     * @var string|null
-     */
     protected ?string $pluginName = null;
 
     /**
      * Defines, if the service can be located
-     * @var bool
      */
     protected bool $locatable = true;
 
@@ -105,7 +98,6 @@ abstract class ServiceAbstract
      * Mandatory services will create an error in the check-result if the check failes,
      * a configurable service will not create an error if the configuration is empty
      * Note that services of non-configured plugins will not be checked of course despite being mandatory
-     * @var bool
      */
     protected bool $mandatory = true;
 
@@ -114,7 +106,6 @@ abstract class ServiceAbstract
      * This will be compared with PHPs version_compare
      * All docker-containers generally must have a version-endpoint
      * When set to null, unrestricted
-     * @var string|null
      */
     protected ?string $requiredVersion = null;
 
@@ -122,7 +113,6 @@ abstract class ServiceAbstract
      * Here configs can be defined that are used to fill the test-DB
      * Structure is [ 'runtimeOptions.plugins.pluginname.configName' => value ]
      * If value is NULL, it will be fetched from the application DB, otherwise the defined value is taken
-     * @var array
      */
     protected array $testConfigs = [];
 
@@ -131,26 +121,22 @@ abstract class ServiceAbstract
      * These Configs will be used instead of the really configured ones UNLESS the service is completely configured
      * In this case the real configs will be used (to be able to test REAL endpoints)
      * Structure is [ 'runtimeOptions.plugins.pluginname.configName' => value ]
-     * @var array
      */
     protected array $mockConfigs = [];
 
     /**
      * If set, for the UNIT and API tests the mock-configuration is always used
      * Otherwise the configs from the DB or installation.ini are used if they are complete
-     * @var bool
      */
     protected bool $alwaysMockForTests = false;
 
     /**
      * Holds the info if this is a plugin or global service
-     * @var bool
      */
     private bool $isPlugin;
 
     /**
      * Set on instantiation to flag if we are using mock-configs
-     * @var bool
      */
     private bool $isMocked;
 
@@ -168,17 +154,11 @@ abstract class ServiceAbstract
         $this->setConfig($config ?? Zend_Registry::get('config'));
     }
 
-    /**
-     * @return string
-     */
     public function getName(): string
     {
         return $this->name;
     }
 
-    /**
-     * @return bool
-     */
     final public function isPluginService(): bool
     {
         return $this->isPlugin;
@@ -186,24 +166,17 @@ abstract class ServiceAbstract
 
     /**
      * Retrieves if the service is currently being mocked
-     * @return bool
      */
     final public function isMockedService(): bool
     {
         return $this->isMocked;
     }
 
-    /**
-     * @return bool
-     */
     public function canBeLocated(): bool
     {
         return $this->locatable;
     }
 
-    /**
-     * @return string|null
-     */
     public function getPluginName(): ?string
     {
         return $this->pluginName;
@@ -211,13 +184,13 @@ abstract class ServiceAbstract
 
     /**
      * See ::$testConfigs for the structure of the returned array
-     * @return array
      */
     final public function getTestConfigs(): array
     {
-        if(!empty($this->mockConfigs)){
+        if (! empty($this->mockConfigs)) {
             return array_merge($this->testConfigs, $this->mockConfigs);
         }
+
         return $this->testConfigs;
     }
 
@@ -228,14 +201,16 @@ abstract class ServiceAbstract
     final public function getMockConfigs(): array
     {
         // retrieve mock-config only, if in API or UNIT tests and no real config can be found
-        if($this->isMocked){
+        if ($this->isMocked) {
             $mockConfigs = [];
             // we want the real values used (there can be transformations on the values)
-            foreach(array_keys($this->mockConfigs) as $name) {
+            foreach (array_keys($this->mockConfigs) as $name) {
                 $mockConfigs[$name] = $this->configHelper->getValue($name);
             }
+
             return $mockConfigs;
         }
+
         return [];
     }
 
@@ -243,19 +218,17 @@ abstract class ServiceAbstract
      * Since Services are usually instantiated with the global config
      *  for task or customer specific configs it might be neccessary to change the used config later on
      * Keep in mind that this must be a full config-tree and not a e.g. plugin-subset
-     * @param Zend_Config $config
-     * @return void
      */
     final public function setConfig(Zend_Config $config): void
     {
         $this->config = $config;
         $this->configHelper = new ConfigHelper($config);
         // mock the service in case of API/UNIT tests and no proper config exists or we should always mocks
-        if(!empty($this->mockConfigs)
+        if (! empty($this->mockConfigs)
             && ((defined('APPLICATION_APITEST') && APPLICATION_APITEST)
                 || (defined('APPLICATION_UNITTEST') && APPLICATION_UNITTEST))
-            && ($this->alwaysMockForTests || !$this->hasConfigurations(array_keys($this->mockConfigs)))
-        ){
+            && ($this->alwaysMockForTests || ! $this->hasConfigurations(array_keys($this->mockConfigs)))
+        ) {
             // mocks cannot be added on instantiation as they check the config ...
             $this->configHelper->setValues($this->mockConfigs);
             $this->isMocked = true;
@@ -268,29 +241,27 @@ abstract class ServiceAbstract
      * Checks, if the service is set up properly and everything works.
      * This will generate the errors/success messages that are accessible after calling this
      * Must be implemented for each service
-     * @return bool
      */
     public function check(): bool
     {
         $this->errors[] = 'Service "' . $this->getName() . '" is not implemented';
+
         return false;
     }
 
     /**
      * Evaluates, if a service may should be skipped for checks
      * This can be used to exclude services based on config-dependent decisions
-     * @return bool
      */
     public function isCheckSkipped(): bool
     {
-        return !$this->isProperlySetup();
+        return ! $this->isProperlySetup();
     }
 
     /**
      * Main API to check, if a service is properly configured
      * and all other dependencies there may be are resolved
      * This API must not make HTTP requests !!
-     * @return bool
      */
     public function isProperlySetup(): bool
     {
@@ -299,38 +270,37 @@ abstract class ServiceAbstract
 
     /**
      * Creates a result in the system-check style
-     * @return ZfExtended_Models_SystemRequirement_Result
      */
     public function systemCheck(): ZfExtended_Models_SystemRequirement_Result
     {
         $result = new ZfExtended_Models_SystemRequirement_Result();
         $result->id = $this->name;
-        if (!$this->check()) {
+        if (! $this->check()) {
             $result->warning = $this->warnings;
             $result->error = $this->errors;
             $result->badSummary = $this->badSummary;
         }
         $result->name = $this->getDescription() . $this->getCheckedDetail(', ', 'version', $this->checkedVersions);
+
         return $result;
     }
 
     /**
      * outputs a simple check in the Symfony Command style
-     * @param SymfonyStyle $io
      */
     public function serviceCheck(SymfonyStyle $io): void
     {
         if ($this->isCheckSkipped()) {
             $this->output($this->getIrrelevant(), $io, 'info');
-        } else if ($this->check()) {
+        } elseif ($this->check()) {
             $this->output($this->getSuccess(), $io, 'success');
         } else {
             $this->output($this->getError(), $io, 'caution');
         }
-        if($this->hasWarnings()){
+        if ($this->hasWarnings()) {
             $this->output($this->getWarning(), $io, 'warning');
         }
-        if(!empty($this->badSummary)) {
+        if (! empty($this->badSummary)) {
             $this->output($this->getBadSummary(), $io, 'info');
         }
     }
@@ -339,36 +309,28 @@ abstract class ServiceAbstract
      * Sets the Service up in the context of an symfony Command
      * Usually the port and host of the service are defined in the class (the host equals the http:// + our name)
      * For special situations or for pooled services, these values can be passed as params
-     * @param SymfonyStyle $io
-     * @param mixed $url
-     * @param bool $doSave
      * @param array $config : optional to inject further dependencies
-     * @return bool
      */
     public function locate(SymfonyStyle $io, mixed $url, bool $doSave = false, array $config = []): bool
     {
         $this->output('TO BE IMPLEMENTED IN ' . get_class($this), $io, 'error');
+
         return false;
     }
 
     /**
      * Administrative message if the service is not set up properly
      * This must specify what exactly does not work in case of complex services
-     * @param string $seperator
-     * @return string
      */
     public function getError(string $seperator = "\n"): string
     {
-        return
-            $this->createServiceMsg('is not properly working:', $seperator)
+        return $this->createServiceMsg('is not properly working:', $seperator)
             . $seperator . $seperator
             . implode($seperator, $this->errors);
     }
 
     /**
      * Administrative message if the service is set up properly
-     * @param string $seperator
-     * @return string
      */
     public function getSuccess(string $seperator = "\n"): string
     {
@@ -377,13 +339,10 @@ abstract class ServiceAbstract
 
     /**
      * Administrative message if an optional service is not set up properly
-     * @param string $seperator
-     * @return string
      */
     public function getWarning(string $seperator = "\n"): string
     {
-        return
-            $this->getDescription()
+        return $this->getDescription()
             . ' has warnings:'
             . $seperator . $seperator
             . implode($seperator, $this->warnings);
@@ -391,8 +350,7 @@ abstract class ServiceAbstract
 
     public function getBadSummary(string $seperator = "\n"): string
     {
-        return
-            $this->getDescription()
+        return $this->getDescription()
             . ' advices to fix:'
             . $seperator . $seperator
             . implode($seperator, $this->badSummary);
@@ -400,70 +358,68 @@ abstract class ServiceAbstract
 
     public function hasWarnings(): bool
     {
-        return !empty($this->warnings);
+        return ! empty($this->warnings);
     }
 
     public function hasErrors(): bool
     {
-        return !empty($this->errors);
+        return ! empty($this->errors);
     }
 
     /**
      * Checks if the given config-names are set in the current configuration
      * @param string[] $configNames
-     * @return bool
      */
     public function hasConfigurations(array $configNames): bool
     {
-        foreach($configNames as $configName){
-            if(!$this->configHelper->hasValue($configName)){
+        foreach ($configNames as $configName) {
+            if (! $this->configHelper->hasValue($configName)) {
                 return false;
             }
         }
+
         return true;
     }
 
     /**
      * Administrative message if the service is set up properly
-     * @return string
      */
     public function getIrrelevant(): string
     {
         return $this->getDescription() . ' is not relevant for the current configuration.';
     }
 
-    public function createServiceMsg(string $msg, string $seperator, bool $withUrls=true, bool $withVersions=true): string
+    public function createServiceMsg(string $msg, string $seperator, bool $withUrls = true, bool $withVersions = true): string
     {
         $text = $this->getDescription();
-        if(!empty($msg)){
+        if (! empty($msg)) {
             $text .= ' ' . $msg;
         }
-        if($withUrls){
+        if ($withUrls) {
             $text .= $this->getCheckedDetail($seperator, 'Url', $this->checkedUrls);
         }
-        if($withVersions){
+        if ($withVersions) {
             $text .= $this->getCheckedDetail($seperator, 'Version', $this->checkedVersions);
         }
+
         return $text;
     }
 
     /**
      * An administrative short description of the service
-     * @return string
      */
     public function getDescription(): string
     {
         $description = 'Service "' . $this->getName() . '"';
-        if($this->isPlugin){
+        if ($this->isPlugin) {
             $description .= ', plugin "' . $this->pluginName . '"';
         }
+
         return $description;
     }
 
     /**
      * Helper to generate output for commands or debugging
-     * @param string $msg
-     * @param SymfonyStyle|null $io
      * @param string $ioMethod : can be 'note' | 'writeln' | 'success' | 'warning' | 'error' | 'caution'
      */
     public function output(string $msg, SymfonyStyle $io = null, string $ioMethod = 'note'): void
@@ -476,12 +432,10 @@ abstract class ServiceAbstract
 
     /**
      * Helper to add url & version for generating the description
-     * @param string $url
-     * @param string|null $version
      */
     protected function addCheckResult(string $url, string $version = null): void
     {
-        if (!in_array($url, $this->checkedUrls)) {
+        if (! in_array($url, $this->checkedUrls)) {
             $this->checkedUrls[] = $url;
             $this->checkedVersions[] = empty($version) ? 'unknown' : $version;
         }
@@ -489,10 +443,6 @@ abstract class ServiceAbstract
 
     /**
      * Helper to create message-details
-     * @param string $seperator
-     * @param string $title
-     * @param array $items
-     * @return string
      */
     protected function getCheckedDetail(string $seperator, string $title, array $items): string
     {
@@ -502,12 +452,12 @@ abstract class ServiceAbstract
         if (count($items) === 1) {
             return $seperator . ' ' . $title . ': ' . $items[0];
         }
+
         return '';
     }
 
     /**
      * Can be used to validate the evaluated versions in the ::check against the required version
-     * @return bool
      */
     protected function checkFoundVersions(): bool
     {
@@ -516,8 +466,8 @@ abstract class ServiceAbstract
         if ($this->requiredVersion !== null) {
             foreach ($this->checkedVersions as $version) {
                 // maybe a version parsing is neccessary
-                $version = $this->extractServiceVersion((string)$version);
-                if (!$this->isVersionSufficient($version)) {
+                $version = $this->extractServiceVersion((string) $version);
+                if (! $this->isVersionSufficient($version)) {
                     $url = (count($this->checkedUrls) > $count) ? $this->checkedUrls[$count] : null;
                     $error = ($url === null) ?
                         'Service "' . $this->getName() . '"'
@@ -529,24 +479,22 @@ abstract class ServiceAbstract
                 }
             }
         }
+
         return $passed;
     }
 
     /**
      * Checks, if the found version for a service matches the requirements
      * @param string|null
-     * @return bool
      */
     protected function isVersionSufficient(?string $foundVersion): bool
     {
         return empty($this->requiredVersion)
-            || (!empty($foundVersion) && version_compare($foundVersion, $this->requiredVersion) > -1);
+            || (! empty($foundVersion) && version_compare($foundVersion, $this->requiredVersion) > -1);
     }
 
     /**
      * May be implemented to extract version from found version-string
-     * @param string $foundVersion
-     * @return string
      */
     protected function extractServiceVersion(string $foundVersion): string
     {

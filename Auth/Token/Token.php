@@ -29,7 +29,7 @@ END LICENSE AND COPYRIGHT
 
 class ZfExtended_Auth_Token_Token
 {
-    const TOKEN_LENGTH = 36;
+    public const TOKEN_LENGTH = 36;
 
     public const DEFAULT_TOKEN_DESCRIPTION = 'Default';
 
@@ -44,26 +44,26 @@ class ZfExtended_Auth_Token_Token
      */
     public function __construct(string $token)
     {
-        $tokenParts = explode(self::TOKEN_SEPARATOR,$token);
+        $tokenParts = explode(self::TOKEN_SEPARATOR, $token);
 
         $this->token = '';
         $this->prefix = null;
 
-        if( empty($tokenParts) || count($tokenParts) !== 2){
+        if (empty($tokenParts) || count($tokenParts) !== 2) {
             return;
         }
         $this->token = $tokenParts[1] ?? '';
         // validate the site of the token
-        if(!preg_match('/[a-zA-Z0-9]{'.self::TOKEN_LENGTH.'}/', $this->token)){
+        if (! preg_match('/[a-zA-Z0-9]{' . self::TOKEN_LENGTH . '}/', $this->token)) {
             $this->token = '';
             $this->prefix = null;
+
             return;
         }
         $this->prefix = $tokenParts[0] ?? null;
     }
 
     /**
-     * @return string
      * @throws Exception
      */
     public static function generateAuthToken(): string
@@ -74,20 +74,15 @@ class ZfExtended_Auth_Token_Token
             $bytes = random_bytes($size);
             $string .= substr(str_replace(['/', '+', '='], '', base64_encode($bytes)), 0, $size);
         }
+
         return $string;
     }
 
-    /**
-     * @return string
-     */
     public function getToken(): string
     {
         return $this->token;
     }
 
-    /**
-     * @return int|null
-     */
     public function getPrefix(): ?int
     {
         return $this->prefix;

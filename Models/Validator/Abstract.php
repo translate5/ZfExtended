@@ -3,21 +3,21 @@
 START LICENSE AND COPYRIGHT
 
  This file is part of ZfExtended library
- 
+
  Copyright (c) 2013 - 2021 Marc Mittag; MittagQI - Quality Informatics;  All rights reserved.
 
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
 
  This file may be used under the terms of the GNU LESSER GENERAL PUBLIC LICENSE version 3
- as published by the Free Software Foundation and appearing in the file lgpl3-license.txt 
- included in the packaging of this file.  Please review the following information 
+ as published by the Free Software Foundation and appearing in the file lgpl3-license.txt
+ included in the packaging of this file.  Please review the following information
  to ensure the GNU LESSER GENERAL PUBLIC LICENSE version 3.0 requirements will be met:
 https://www.gnu.org/licenses/lgpl-3.0.txt
 
  @copyright  Marc Mittag, MittagQI - Quality Informatics
  @author     MittagQI - Quality Informatics
  @license    GNU LESSER GENERAL PUBLIC LICENSE version 3
-			 https://www.gnu.org/licenses/lgpl-3.0.txt
+             https://www.gnu.org/licenses/lgpl-3.0.txt
 
 END LICENSE AND COPYRIGHT
 */
@@ -27,17 +27,19 @@ abstract class ZfExtended_Models_Validator_Abstract
     /**
      * @var array of Zend_Validate_Interface
      */
-    protected $validators = array();
-    protected $customValidators = array();
-    protected $dontValidateList = array();
+    protected $validators = [];
+
+    protected $customValidators = [];
+
+    protected $dontValidateList = [];
 
     /**
      * Liste mit Feldnamen bei denen null als gültiger Wert erlaubt ist.
      * @var array
      */
-    protected $nullAllowed = array();
+    protected $nullAllowed = [];
 
-    protected $messages = array();
+    protected $messages = [];
 
     /**
      * A reference to the entity it self
@@ -54,7 +56,6 @@ abstract class ZfExtended_Models_Validator_Abstract
 
     /**
      * create the validator, add a reference to the entity (the data of the entity is NOT used for validation, just to have a reference!)
-     * @param ZfExtended_Models_Entity_Abstract $entity
      */
     public function __construct(ZfExtended_Models_Entity_Abstract $entity)
     {
@@ -68,7 +69,6 @@ abstract class ZfExtended_Models_Validator_Abstract
 
     /**
      * validates the given assoc array against the defined Validators
-     * @param array $data
      * @return boolean
      */
     public function isValid(array $data)
@@ -82,6 +82,7 @@ abstract class ZfExtended_Models_Validator_Abstract
             $isValid = $this->validateField($field, $value) && $isValid;
             $isValid = $this->walkCustomValidators($field, $value) && $isValid;
         }
+
         return $isValid;
     }
 
@@ -131,11 +132,13 @@ abstract class ZfExtended_Models_Validator_Abstract
         }
         if (isset($this->validators[$field])) {
             $result = $this->validators[$field]->isValid($value);
-            if (!$result) {
+            if (! $result) {
                 $this->messages[$field] = $this->validators[$field]->getMessages();
             }
+
             return $result;
         }
+
         return true;
     }
 
@@ -154,26 +157,25 @@ abstract class ZfExtended_Models_Validator_Abstract
         foreach ($this->customValidators[$field] as $method) {
             $result = $method($value) && $result;
         }
+
         return $result;
     }
 
     /**
      * adds a custom validation Function (Closure). Must return boolean. First Parameter is the Value. Multiple Validators are allowed
      * @param string $fieldname
-     * @param Closure $validationFunction
      * @param bool $allowNull optional allows null as valid value
      */
     public function addValidatorCustom($fieldname, Closure $validationFunction, $allowNull = false)
     {
         settype($this->customValidators[$fieldname], 'array');
         $this->customValidators[$fieldname][] = $validationFunction;
-        $this->nullAllowed[$fieldname] = (boolean)$allowNull;
+        $this->nullAllowed[$fieldname] = (bool) $allowNull;
     }
 
     /**
      * Adds a Validator based on Zend_Validate_Interface
      * @param string $fieldname
-     * @param Zend_Validate_Interface $validator
      * @throws Zend_Exception
      */
     public function addValidatorInstance($fieldname, Zend_Validate_Interface $validator)
@@ -186,8 +188,6 @@ abstract class ZfExtended_Models_Validator_Abstract
 
     /**
      * Adds a Validator, internally creates a Zend_Validator based on $type
-     * @param string $fieldname
-     * @param string $type
      * @param array $parameters optional Construction Parameters
      * @param bool $allowNull optional allows null as valid value
      * @throws Zend_Exception
@@ -195,7 +195,7 @@ abstract class ZfExtended_Models_Validator_Abstract
     public function addValidator(string $fieldname, string $type, array $parameters = [], bool $allowNull = false)
     {
         $this->addValidatorInstance($fieldname, $this->validatorFactory($type, $parameters));
-        $this->nullAllowed[$fieldname] = (boolean)$allowNull;
+        $this->nullAllowed[$fieldname] = (bool) $allowNull;
     }
 
     /**
@@ -214,19 +214,20 @@ abstract class ZfExtended_Models_Validator_Abstract
      * @return Zend_Validate_Interface
      * @todo improve class searching/autoloading
      */
-    public function validatorFactory($name, array $parameters = array())
+    public function validatorFactory($name, array $parameters = [])
     {
         $internalValidators = [
             'uuid' => 'ZfExtended_Validate_Uuid',
             'guid' => 'ZfExtended_Validate_Guid',
             'boolean' => 'ZfExtended_Validate_Boolean',
-            'md5' => 'ZfExtended_Validate_Md5'
+            'md5' => 'ZfExtended_Validate_Md5',
         ];
         if (isset($internalValidators[$name])) {
             $class = $internalValidators[$name];
         } else {
             $class = 'Zend_Validate_' . ucfirst($name);
         }
+
         return ZfExtended_Factory::get($class, array_values($parameters));
     }
 }

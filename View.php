@@ -17,7 +17,7 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
  @copyright  Marc Mittag, MittagQI - Quality Informatics
  @author     MittagQI - Quality Informatics
  @license    GNU LESSER GENERAL PUBLIC LICENSE version 3
-			 https://www.gnu.org/licenses/lgpl-3.0.txt
+             https://www.gnu.org/licenses/lgpl-3.0.txt
 
 END LICENSE AND COPYRIGHT
 */
@@ -58,8 +58,8 @@ END LICENSE AND COPYRIGHT
  * @method ZfExtended_View_Helper_TemplateApply TemplateApply()
  * @method ZfExtended_View_Helper_MailEmployeeSalutation MailEmployeeSalutation()
  */
-class ZfExtended_View extends Zend_View implements Zend_View_Interface {
-
+class ZfExtended_View extends Zend_View implements Zend_View_Interface
+{
     /**
      * @var Zend_Db_Table_Select[]
      * @see ZfExtended_Models_Entity_Abstract::loadAll, ZfExtended_RestController::indexAction and override
@@ -71,5 +71,4 @@ class ZfExtended_View extends Zend_View implements Zend_View_Interface {
      * @var int - total amount of rows for a given sql statement
      */
     public int $total;
-
 }

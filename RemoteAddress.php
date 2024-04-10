@@ -3,21 +3,21 @@
 START LICENSE AND COPYRIGHT
 
  This file is part of ZfExtended library
- 
+
  Copyright (c) 2013 - 2021 Marc Mittag; MittagQI - Quality Informatics;  All rights reserved.
 
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
 
  This file may be used under the terms of the GNU LESSER GENERAL PUBLIC LICENSE version 3
- as published by the Free Software Foundation and appearing in the file lgpl3-license.txt 
- included in the packaging of this file.  Please review the following information 
+ as published by the Free Software Foundation and appearing in the file lgpl3-license.txt
+ included in the packaging of this file.  Please review the following information
  to ensure the GNU LESSER GENERAL PUBLIC LICENSE version 3.0 requirements will be met:
 https://www.gnu.org/licenses/lgpl-3.0.txt
 
  @copyright  Marc Mittag, MittagQI - Quality Informatics
  @author     MittagQI - Quality Informatics
  @license    GNU LESSER GENERAL PUBLIC LICENSE version 3
-			 https://www.gnu.org/licenses/lgpl-3.0.txt
+             https://www.gnu.org/licenses/lgpl-3.0.txt
 
 END LICENSE AND COPYRIGHT
 */
@@ -26,8 +26,8 @@ END LICENSE AND COPYRIGHT
  * https://github.com/zendframework/zend-http for the canonical source repository
  * Functionality for determining client IP address.
  */
-class ZfExtended_RemoteAddress {
-    
+class ZfExtended_RemoteAddress
+{
     /**
      * Whether to use proxy addresses or not.
      *
@@ -39,21 +39,21 @@ class ZfExtended_RemoteAddress {
      * @var bool
      */
     protected $useProxy = false;
-    
+
     /**
      * List of trusted proxy IP addresses
      *
      * @var array
      */
     protected $trustedProxies = [];
-    
+
     /**
      * HTTP header to introspect for proxies
      *
      * @var string
      */
     protected $proxyHeader = 'HTTP_X_FORWARDED_FOR';
-    
+
     /**
      * Changes proxy handling setting.
      *
@@ -66,9 +66,10 @@ class ZfExtended_RemoteAddress {
     public function setUseProxy($useProxy = true)
     {
         $this->useProxy = $useProxy;
+
         return $this;
     }
-    
+
     /**
      * Checks proxy handling setting.
      *
@@ -78,19 +79,19 @@ class ZfExtended_RemoteAddress {
     {
         return $this->useProxy;
     }
-    
+
     /**
      * Set list of trusted proxy addresses
      *
-     * @param  array $trustedProxies
      * @return $this
      */
     public function setTrustedProxies(array $trustedProxies)
     {
         $this->trustedProxies = array_map('gethostbyname', $trustedProxies);
+
         return $this;
     }
-    
+
     /**
      * Set the header to introspect for proxy IPs
      *
@@ -100,9 +101,10 @@ class ZfExtended_RemoteAddress {
     public function setProxyHeader($header = 'X-Forwarded-For')
     {
         $this->proxyHeader = $this->normalizeProxyHeader($header);
+
         return $this;
     }
-    
+
     /**
      * Returns client IP address.
      *
@@ -114,15 +116,15 @@ class ZfExtended_RemoteAddress {
         if ($ip) {
             return $ip;
         }
-        
+
         // direct IP address
         if (isset($_SERVER['REMOTE_ADDR'])) {
             return $_SERVER['REMOTE_ADDR'];
         }
-        
+
         return '';
     }
-    
+
     /**
      * Attempt to get the IP address for a proxied client
      *
@@ -133,10 +135,10 @@ class ZfExtended_RemoteAddress {
     {
         if (! $this->useProxy
             || (isset($_SERVER['REMOTE_ADDR']) && ! in_array($_SERVER['REMOTE_ADDR'], $this->trustedProxies))
-            ) {
-                return false;
-            }
-            
+        ) {
+            return false;
+        }
+
         $header = $this->proxyHeader;
         if (! isset($_SERVER[$header]) || empty($_SERVER[$header])) {
             return false;
@@ -157,11 +159,11 @@ class ZfExtended_RemoteAddress {
         // Since we've removed any known, trusted proxy servers, the right-most
         // address represents the first IP we do not know about -- i.e., we do
         // not know if it is a proxy server, or a client. As such, we treat it
-            // as the originating IP.
-            // @see http://en.wikipedia.org/wiki/X-Forwarded-For
+        // as the originating IP.
+        // @see http://en.wikipedia.org/wiki/X-Forwarded-For
         return array_pop($ips);
     }
-    
+
     /**
      * Normalize a header string
      *
@@ -178,6 +180,7 @@ class ZfExtended_RemoteAddress {
         if (0 !== strpos($header, 'HTTP_')) {
             $header = 'HTTP_' . $header;
         }
+
         return $header;
     }
 }

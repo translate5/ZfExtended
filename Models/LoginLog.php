@@ -3,7 +3,7 @@
 START LICENSE AND COPYRIGHT
 
  This file is part of ZfExtended library
- 
+
  Copyright (c) 2013 - 2021 Marc Mittag; MittagQI - Quality Informatics;  All rights reserved.
 
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
@@ -38,17 +38,17 @@ END LICENSE AND COPYRIGHT
  */
 class ZfExtended_Models_LoginLog extends ZfExtended_Models_Entity_Abstract
 {
-
     public const LOGIN_SUCCESS = 'success';
+
     public const LOGIN_FAILED = 'failed';
+
     public const LOGIN_OPENID = 'openid';
+
     public const GROUP_COUNT = 1000;
 
     protected $dbInstanceClass = 'ZfExtended_Models_Db_LoginLog';
 
     /**
-     * @param ZfExtended_Authentication $auth
-     * @param string $way
      * @throws Zend_Db_Statement_Exception
      * @throws ZfExtended_Models_Entity_Exceptions_IntegrityConstraint
      * @throws ZfExtended_Models_Entity_Exceptions_IntegrityDuplicateKey
@@ -68,8 +68,6 @@ class ZfExtended_Models_LoginLog extends ZfExtended_Models_Entity_Abstract
     }
 
     /**
-     * @param string $way
-     * @return ZfExtended_Models_LoginLog
      * @throws ReflectionException
      */
     public static function createLog(string $way): ZfExtended_Models_LoginLog
@@ -78,12 +76,11 @@ class ZfExtended_Models_LoginLog extends ZfExtended_Models_Entity_Abstract
         /* @var $log ZfExtended_Models_LoginLog */
         $log->setCreated(NOW_ISO);
         $log->setWay($way);
+
         return $log;
     }
 
     /**
-     * @param string $login
-     * @param string $way
      * @throws Zend_Db_Statement_Exception
      * @throws ZfExtended_Models_Entity_Exceptions_IntegrityConstraint
      * @throws ZfExtended_Models_Entity_Exceptions_IntegrityDuplicateKey
@@ -99,9 +96,6 @@ class ZfExtended_Models_LoginLog extends ZfExtended_Models_Entity_Abstract
 
     /**
      * loads the login log from latest to oldest, amount limited to the limit parameter
-     * @param string $userGuid
-     * @param int $limit
-     * @return array
      */
     public function loadByUserGuid(string $userGuid, int $limit): array
     {
@@ -109,26 +103,28 @@ class ZfExtended_Models_LoginLog extends ZfExtended_Models_Entity_Abstract
             ->where('userGuid = ?', $userGuid)
             ->order('id DESC')
             ->limit($limit);
+
         return $this->db->fetchAll($s)->toArray();
     }
 
     /**
      * Loads the last 100 log entries, and group them by day.
      * Consider the last 100 log entries only for performance reasons, so that PK can be used
-     * @return array
      * @throws Zend_Db_Table_Exception
      */
     public function loadLastGrouped(): array
     {
         $s = $this->db->select()
-            ->from($this->db->info($this->db::NAME), ['day' => 'date(created)'])
+            ->from($this->db->info($this->db::NAME), [
+                'day' => 'date(created)',
+            ])
             ->order('id DESC')
             ->limit(self::GROUP_COUNT);
 
         $result = [];
         $data = $this->db->fetchAll($s)->toArray();
         foreach ($data as $row) {
-            if (!array_key_exists($row['day'], $result)) {
+            if (! array_key_exists($row['day'], $result)) {
                 $result[$row['day']] = 0;
             }
             $result[$row['day']]++;
