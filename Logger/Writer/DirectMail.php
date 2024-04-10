@@ -3,7 +3,7 @@
 START LICENSE AND COPYRIGHT
 
  This file is part of ZfExtended library
- 
+
  Copyright (c) 2013 - 2021 Marc Mittag; MittagQI - Quality Informatics;  All rights reserved.
 
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
@@ -17,19 +17,16 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
  @copyright  Marc Mittag, MittagQI - Quality Informatics
  @author     MittagQI - Quality Informatics
  @license    GNU LESSER GENERAL PUBLIC LICENSE version 3
-			 https://www.gnu.org/licenses/lgpl-3.0.txt
+             https://www.gnu.org/licenses/lgpl-3.0.txt
 
 END LICENSE AND COPYRIGHT
 */
 
-/**
- */
 class ZfExtended_Logger_Writer_DirectMail extends ZfExtended_Logger_Writer_Abstract
 {
     protected Zend_Config $config;
 
     /**
-     * {@inheritDoc}
      * @throws Zend_Mail_Exception
      * @see ZfExtended_Logger_Writer_Abstract::write()
      */
@@ -41,11 +38,11 @@ class ZfExtended_Logger_Writer_DirectMail extends ZfExtended_Logger_Writer_Abstr
 
         $subject = preg_replace('#^https?://#', '', ($event->httpHost ?? '')) . ': ';
         $subject .= $event->levelName . ' in ' . $event->domain . ': ';
-        if (!empty($event->eventCode)) {
+        if (! empty($event->eventCode)) {
             $subject .= $event->eventCode . ' - ';
         }
         $subject .= $event->message;
-        $subject = substr($subject, 0, 254);//limited length of 254, the whole message is in the body
+        $subject = substr($subject, 0, 254); //limited length of 254, the whole message is in the body
 
         $mail = new ZfExtended_Mailer('utf-8');
         $mail->addTo($this->options['receiver']);
@@ -65,7 +62,7 @@ class ZfExtended_Logger_Writer_DirectMail extends ZfExtended_Logger_Writer_Abstr
         $mailEvent->extra = null;
         $mail->setBodyText($mailEvent);
         $mail->setBodyHtml($mailEvent->toHtml());
-        if (!empty($mailEvent->extraFlat)) {
+        if (! empty($mailEvent->extraFlat)) {
             $mail->createAttachment(
                 print_r($mailEvent->extraFlat, 1),
                 'text/plain',
@@ -96,15 +93,13 @@ class ZfExtended_Logger_Writer_DirectMail extends ZfExtended_Logger_Writer_Abstr
                 __CLASS__ . ': Missing option receiver or sender and no defaultFrom is defined!'
             );
         }
-
     }
 
     /**
-     * {@inheritDoc}
      * @see ZfExtended_Logger_Writer_Abstract::isEnabled()
      */
     public function isEnabled(): bool
     {
-        return !$this->config->runtimeOptions->sendMailDisabled;
+        return ! $this->config->runtimeOptions->sendMailDisabled;
     }
 }

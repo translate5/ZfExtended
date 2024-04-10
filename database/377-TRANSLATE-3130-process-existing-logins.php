@@ -22,7 +22,7 @@ START LICENSE AND COPYRIGHT
  @copyright  Marc Mittag, MittagQI - Quality Informatics
  @author     MittagQI - Quality Informatics
  @license    GNU AFFERO GENERAL PUBLIC LICENSE version 3 with plugin-execption
-			 http://www.gnu.org/licenses/agpl.html http://www.translate5.net/plugin-exception.txt
+             http://www.gnu.org/licenses/agpl.html http://www.translate5.net/plugin-exception.txt
 
 END LICENSE AND COPYRIGHT
 */
@@ -37,7 +37,7 @@ set_time_limit(0);
 $SCRIPT_IDENTIFIER = '377-TRANSLATE-3130-process-existing-logins.php';
 
 $argc = count($argv);
-if(empty($this) || empty($argv) || $argc < 5 || $argc > 7) {
+if (empty($this) || empty($argv) || $argc < 5 || $argc > 7) {
     die("please dont call the script direct! Call it by using DBUpdater!\n\n");
 }
 
@@ -45,12 +45,12 @@ $db = Zend_Db_Table::getDefaultAdapter();
 
 $users = $db->query("SELECT `id`, `login`, `email` FROM `Zf_users` WHERE `login` LIKE '% %'")->fetchAll();
 
-$userModel =  ZfExtended_Factory::get(ZfExtended_Models_User::class);
+$userModel = ZfExtended_Factory::get(ZfExtended_Models_User::class);
 
 if (count($users) === 0) {
     $this->output('Nothing to process.');
 } else {
-    foreach($users as $userData) {
+    foreach ($users as $userData) {
         $newLogin = trim($userData['login']);
         $newLogin = str_replace(' ', '_', $newLogin);
 

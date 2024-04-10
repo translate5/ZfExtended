@@ -3,7 +3,7 @@
 START LICENSE AND COPYRIGHT
 
  This file is part of ZfExtended library
- 
+
  Copyright (c) 2013 - 2021 Marc Mittag; MittagQI - Quality Informatics;  All rights reserved.
 
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
@@ -17,17 +17,15 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
  @copyright  Marc Mittag, MittagQI - Quality Informatics
  @author     MittagQI - Quality Informatics
  @license    GNU LESSER GENERAL PUBLIC LICENSE version 3
-			 https://www.gnu.org/licenses/lgpl-3.0.txt
+             https://www.gnu.org/licenses/lgpl-3.0.txt
 
 END LICENSE AND COPYRIGHT
 */
 
-/**
- */
 class ZfExtended_Logger_Writer_Database extends ZfExtended_Logger_Writer_Abstract
 {
-
     protected string $insertedId;
+
     protected array $insertedData;
 
     public function write(ZfExtended_Logger_Event $event): void
@@ -56,14 +54,14 @@ class ZfExtended_Logger_Writer_Database extends ZfExtended_Logger_Writer_Abstrac
             'url',
             'method',
             'userLogin',
-            'userGuid'
+            'userGuid',
         ];
 
         $data = [];
         foreach ($directlyFromEvent as $key) {
             $data[$key] = $event->$key;
         }
-        if (!empty($event->exception)) {
+        if (! empty($event->exception)) {
             $data['message'] = get_class($event->exception) . ': ' . $data['message'];
         }
 
@@ -73,13 +71,13 @@ class ZfExtended_Logger_Writer_Database extends ZfExtended_Logger_Writer_Abstrac
         $data['duplicateHash'] = $event->duplicationHash;
 
         //we track previous exceptions seperate in the DB if possible
-        if (!empty($event->previous)) {
+        if (! empty($event->previous)) {
             if ($event->previous instanceof ZfExtended_Logger_Event) {
                 $this->write($event->previous);
                 $event->extra['_previous_exception_id'] = '#' . $this->insertedId;
             } elseif ($event->previous instanceof Exception) {
                 $event = clone $event;
-                $event->extra['_previous_exception'] = (string)$event->previous;
+                $event->extra['_previous_exception'] = (string) $event->previous;
             }
         }
 

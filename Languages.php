@@ -3,27 +3,26 @@
 START LICENSE AND COPYRIGHT
 
  This file is part of ZfExtended library
- 
+
  Copyright (c) 2013 - 2021 Marc Mittag; MittagQI - Quality Informatics;  All rights reserved.
 
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
 
  This file may be used under the terms of the GNU LESSER GENERAL PUBLIC LICENSE version 3
- as published by the Free Software Foundation and appearing in the file lgpl3-license.txt 
- included in the packaging of this file.  Please review the following information 
+ as published by the Free Software Foundation and appearing in the file lgpl3-license.txt
+ included in the packaging of this file.  Please review the following information
  to ensure the GNU LESSER GENERAL PUBLIC LICENSE version 3.0 requirements will be met:
 https://www.gnu.org/licenses/lgpl-3.0.txt
 
  @copyright  Marc Mittag, MittagQI - Quality Informatics
  @author     MittagQI - Quality Informatics
  @license    GNU LESSER GENERAL PUBLIC LICENSE version 3
-			 https://www.gnu.org/licenses/lgpl-3.0.txt
+             https://www.gnu.org/licenses/lgpl-3.0.txt
 
 END LICENSE AND COPYRIGHT
 */
 
 /**
- *
  * @method string getId()
  * @method void setId(integer $id)
  * @method string getLangName()
@@ -43,21 +42,21 @@ END LICENSE AND COPYRIGHT
  */
 abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract
 {
-
     /**
      * Retrieves the primary language of a RFC 5646 language (e.g. "en" from "en-GB")
-     * @param string $rfc5646
-     * @return string
      */
     public static function primaryCodeByRfc5646(string $rfc5646): string
     {
         $parts = explode('-', $rfc5646);
+
         return strtolower($parts[0]);
     }
 
-    const LANG_TYPE_ID = 'id';
-    const LANG_TYPE_RFC5646 = 'rfc5646';
-    const LANG_TYPE_LCID = 'lcid';
+    public const LANG_TYPE_ID = 'id';
+
+    public const LANG_TYPE_RFC5646 = 'rfc5646';
+
+    public const LANG_TYPE_LCID = 'lcid';
 
     /**
      * @var Zend_Cache_Core
@@ -67,12 +66,13 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract
     public function __construct()
     {
         parent::__construct();
-        $this->memCache = Zend_Cache::factory('Core', new ZfExtended_Cache_MySQLMemoryBackend(), ['automatic_serialization' => true]);
+        $this->memCache = Zend_Cache::factory('Core', new ZfExtended_Cache_MySQLMemoryBackend(), [
+            'automatic_serialization' => true,
+        ]);
     }
 
     /**
      * Gets the major RFC5646 language (e.g. "en", "ja", ...)
-     * @return string
      */
     public function getMajorRfc5646(): string
     {
@@ -111,7 +111,6 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract
 
     /**
      * loads the languages by the given DB ID's
-     * @param mixed $id 's
      * @return array | null
      */
     public function loadByIds($ids)
@@ -121,7 +120,6 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract
 
     /**
      * Load languages by rfc values
-     * @param array $rfc
      * @return array
      */
     public function loadByRfc(array $rfc)
@@ -132,6 +130,7 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract
         if (empty($retval)) {
             return [];
         }
+
         return $retval;
     }
 
@@ -154,11 +153,11 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract
         if (empty($this->row)) {
             $this->notFound('#by' . ucfirst($field), $lang);
         }
+
         return $this->row;
     }
 
     /**
-     * @param mixed $lang
      * @param string $field
      * @return array | null
      */
@@ -176,6 +175,7 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract
         if (empty($retval)) {
             $this->notFound('#by' . ucfirst($field), $langs);
         }
+
         return $retval;
     }
 
@@ -193,18 +193,20 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract
     public function getAvailableLanguages()
     {
         $langs = $this->loadAll();
-        $result = array();
+        $result = [];
         foreach ($langs as $lang) {
             $name = $lang['langName'];
-            $result[$name] = array(
+            $result[$name] = [
                 'id' => $lang['id'],
                 'value' => $lang['rfc5646'],
-                'text' => $name . ' (' . $lang['rfc5646'] . ')');
+                'text' => $name . ' (' . $lang['rfc5646'] . ')',
+            ];
         }
         ksort($result); //sort by name of language
         if (empty($result)) {
             throw new Zend_Exception('No languages defined. Please use /docs/003fill-LEK-languages-after-editor-sql or define them otherwhise.');
         }
+
         return array_values($result);
     }
 
@@ -216,6 +218,7 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract
     public function getLangId($lang, $type = self::LANG_TYPE_RFC5646)
     {
         $this->loadLang($lang, $type);
+
         return $this->getId();
     }
 
@@ -227,6 +230,7 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract
     public function getLangIdByLcid($lcid)
     {
         $this->loadByLcid($lcid);
+
         return $this->getId();
     }
 
@@ -238,6 +242,7 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract
     public function getLangIdByRfc5646($lang)
     {
         $this->loadByRfc5646($lang);
+
         return $this->getId();
     }
 
@@ -249,6 +254,7 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract
     public function getSublanguageByRfc5646($lang)
     {
         $this->loadByRfc5646($lang);
+
         return $this->getSublanguage();
     }
 
@@ -272,6 +278,7 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract
     public function getIso3166Part1alpha2ByRfc5646($lang)
     {
         $this->loadByRfc5646($lang);
+
         return $this->getIso3166Part1alpha2();
     }
 
@@ -305,13 +312,13 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract
         if (is_int($lang)) {
             return self::LANG_TYPE_LCID;
         }
+
         return self::LANG_TYPE_RFC5646;
     }
 
     /**
      * Reorders a RFC5646 language list based to the order given in $preordered (ex. de-De,fr-fr,it,mk ...)
      * @param array $languages
-     * @param array $preorderd
      * @return array
      */
     public function orderLanguages($languages, array $preorderd)
@@ -321,7 +328,7 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract
         }
         foreach ($preorderd as $lng) {
             $oldIndex = array_search($lng, array_column($languages, 'value'));
-            if (!$oldIndex) {
+            if (! $oldIndex) {
                 continue;
             }
             $newIndex = array_search($lng, $preorderd);
@@ -329,6 +336,7 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract
             $languages[$newIndex] = $languages[$oldIndex];
             $languages[$oldIndex] = $tmp;
         }
+
         return $languages;
     }
 
@@ -340,6 +348,7 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract
     public function loadLangRfc5646($langId)
     {
         $this->loadById($langId);
+
         return $this->getRfc5646();
     }
 
@@ -362,6 +371,7 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract
         if (empty($retval)) {
             return [];
         }
+
         return $retval;
     }
 
@@ -380,7 +390,6 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract
      * @param int $id
      * @param string $field the field to be returned
      * @param boolean $includeMajor include major language when fuzzy matching for sub-languages (no effect on querying major itself!)
-     * @return array
      * @throws Zend_Cache_Exception
      */
     public function getFuzzyLanguages($id, string $field = 'id', bool $includeMajor = false): array
@@ -397,7 +406,7 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract
             $result = [$this->get($field)];
             if ($includeMajor) {
                 $major = $this->findMajorLanguage($rfc);
-                if (!empty($major)) {
+                if (! empty($major)) {
                     $result[] = $major[$field];
                 }
             }
@@ -406,24 +415,22 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract
             $result = array_column($this->findLanguageGroup($rfc), $field);
         }
         $this->memCache->save($result, $cacheId);
+
         return $result;
     }
 
     /**
      * Search languages by given search string.
      * The search will provide any match on rfc5646 field.
-     *
-     * @param string $searchString
-     * @param array $fields
-     * @return array
      */
     public function search(string $searchString, array $fields = []): array
     {
         $s = $this->db->select();
-        if (!empty($fields)) {
+        if (! empty($fields)) {
             $s->from($this->tableName, $fields);
         }
         $s->where('lower(rfc5646) LIKE lower(?)', '%' . $searchString . '%');
+
         return $this->db->fetchAll($s)->toArray();
     }
 
@@ -431,15 +438,12 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract
      * Load all languages where the return array will be with $key(lek_languages field) as key
      * and $value(lek_languages field) as value
      *
-     * @param string $key
-     * @param string $value
      * @param bool $lowercase : lowercase key and value
-     * @return array
      */
     public function loadAllKeyValueCustom(string $key, string $value, bool $lowercase = false): array
     {
         $keyValuePairs = [];
-        if (!isset($key) || !isset($value)) {
+        if (! isset($key) || ! isset($value)) {
             return $keyValuePairs;
         }
         $languages = $this->loadAll();
@@ -450,6 +454,7 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract
                 $keyValuePairs[$l[$key]] = $l[$value];
             }
         }
+
         return $keyValuePairs;
     }
 
@@ -466,9 +471,6 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract
      * If field key is provided, this lek_languages field will be used as key for each language in the return array.
      * If optional param $onlyName is sumbitted with TRUE, only the name without rfc5646 in brackets will be returned
      *
-     * @param string $fieldKey
-     * @param bool $onlyName
-     * @return array
      * @throws Zend_Exception
      */
     public function loadAllForDisplay(string $fieldKey = '', bool $onlyName = false): array
@@ -484,16 +486,16 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract
         }
         ksort($result); //sort by name of language
         if (empty($result)) {
-            throw new Zend_Exception('No languages defined. '.
+            throw new Zend_Exception('No languages defined. ' .
                 'Please use /docs/003fill-LEK-languages-after-editor-sql or define them otherwhise.');
         }
+
         return empty($fieldKey) ? array_values($result) : $result;
     }
 
     /**
      * Find mayor language by given sub langauge.
      * Ex: "de-CH" will find "de"
-     * @param string $rfcSub
      * @return array
      */
     public function findMajorLanguage(string $rfcSub)
@@ -501,6 +503,7 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract
         $rfcSub = explode('-', $rfcSub);
         $rfcSub = $rfcSub[0];
         $mayor = $this->loadByRfc([$rfcSub]);
+
         return empty($mayor) ? [] : reset($mayor);
     }
 }

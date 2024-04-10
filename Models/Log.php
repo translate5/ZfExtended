@@ -3,21 +3,21 @@
 START LICENSE AND COPYRIGHT
 
  This file is part of ZfExtended library
- 
+
  Copyright (c) 2013 - 2021 Marc Mittag; MittagQI - Quality Informatics;  All rights reserved.
 
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
 
  This file may be used under the terms of the GNU LESSER GENERAL PUBLIC LICENSE version 3
- as published by the Free Software Foundation and appearing in the file lgpl3-license.txt 
- included in the packaging of this file.  Please review the following information 
+ as published by the Free Software Foundation and appearing in the file lgpl3-license.txt
+ included in the packaging of this file.  Please review the following information
  to ensure the GNU LESSER GENERAL PUBLIC LICENSE version 3.0 requirements will be met:
 https://www.gnu.org/licenses/lgpl-3.0.txt
 
  @copyright  Marc Mittag, MittagQI - Quality Informatics
  @author     MittagQI - Quality Informatics
  @license    GNU LESSER GENERAL PUBLIC LICENSE version 3
-			 https://www.gnu.org/licenses/lgpl-3.0.txt
+             https://www.gnu.org/licenses/lgpl-3.0.txt
 
 END LICENSE AND COPYRIGHT
 */
@@ -69,61 +69,57 @@ END LICENSE AND COPYRIGHT
  * @method string getUserLogin()
  * @method string getUserGuid()
  */
-class ZfExtended_Models_Log extends ZfExtended_Models_Entity_Abstract {
+class ZfExtended_Models_Log extends ZfExtended_Models_Entity_Abstract
+{
     protected $dbInstanceClass = 'ZfExtended_Models_Db_ErrorLog';
-  
+
     /**
      * loads all tasks of the given tasktype that are associated to a specific user as PM
-     * @param string $pmGuid
-     * @param string $tasktype
      * @return array
      */
-    public function loadListByNamePart(string $name) {
+    public function loadListByNamePart(string $name)
+    {
         $s = $this->db->select()
-          ->where('name like ?', '%'.$name.'%')
-          ->order('name ASC');
+            ->where('name like ?', '%' . $name . '%')
+            ->order('name ASC');
+
         return parent::loadFilterdCustom($s);
     }
 
     /**
      * Deletes the log entries older as the given amount of weeks.
-     * @param int $weeks
      * @return int The number of rows deleted.
      */
     public function purgeOlderAs(int $weeks): int
     {
         return $this->db->delete([
-            'created < NOW() - INTERVAL ? WEEK' => $weeks
+            'created < NOW() - INTERVAL ? WEEK' => $weeks,
         ]);
     }
 
     /**
      * Get all events created after the one having `id` equal to given $eventId, (optionally) having given $eventCode
      *
-     * @param int $recordId
-     * @param int $limit
-     * @param string|null $eventCode
-     * @return array
      * @throws Zend_Db_Statement_Exception
      */
     public function getAllAfter(int $recordId, int $limit = 0, ?string $eventCode = null): array
     {
         // Start preparing sql and args
-        $sql []= 'SELECT * FROM `Zf_errorlog` WHERE `id` > ?';
-        $arg []= $recordId;
+        $sql[] = 'SELECT * FROM `Zf_errorlog` WHERE `id` > ?';
+        $arg[] = $recordId;
 
         // Respect $eventCode arg, if given
         if ($eventCode) {
-            $sql []= 'AND `eventCode` = ?';
-            $arg []= $eventCode;
+            $sql[] = 'AND `eventCode` = ?';
+            $arg[] = $eventCode;
         }
 
         // Add ORDER BY clause
-        $sql []= 'ORDER BY `id`';
+        $sql[] = 'ORDER BY `id`';
 
         // Respect $limit arg, if given
         if ($limit) {
-            $sql []= "LIMIT $limit";
+            $sql[] = "LIMIT $limit";
         }
 
         // Run query and return results

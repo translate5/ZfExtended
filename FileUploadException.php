@@ -3,38 +3,37 @@
 START LICENSE AND COPYRIGHT
 
  This file is part of ZfExtended library
- 
+
  Copyright (c) 2013 - 2021 Marc Mittag; MittagQI - Quality Informatics;  All rights reserved.
 
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
 
  This file may be used under the terms of the GNU LESSER GENERAL PUBLIC LICENSE version 3
- as published by the Free Software Foundation and appearing in the file lgpl3-license.txt 
- included in the packaging of this file.  Please review the following information 
+ as published by the Free Software Foundation and appearing in the file lgpl3-license.txt
+ included in the packaging of this file.  Please review the following information
  to ensure the GNU LESSER GENERAL PUBLIC LICENSE version 3.0 requirements will be met:
 https://www.gnu.org/licenses/lgpl-3.0.txt
 
  @copyright  Marc Mittag, MittagQI - Quality Informatics
  @author     MittagQI - Quality Informatics
  @license    GNU LESSER GENERAL PUBLIC LICENSE version 3
-			 https://www.gnu.org/licenses/lgpl-3.0.txt
+             https://www.gnu.org/licenses/lgpl-3.0.txt
 
 END LICENSE AND COPYRIGHT
 */
 
-/**
- * 
- */
-class ZfExtended_FileUploadException extends ZfExtended_UnprocessableEntity {
+class ZfExtended_FileUploadException extends ZfExtended_UnprocessableEntity
+{
     //Since such errors are mainly intresting for the uploading user, we just log it as debug
     protected $level = ZfExtended_Logger::LEVEL_INFO;
-    
+
     /**
-     * returns a german error message to the given file upload error code 
+     * returns a german error message to the given file upload error code
      * TODO currently not used by the excption itself.
      * @param int $errorNr
      */
-    public static function getUploadErrorMessage($errorNr) {
+    public static function getUploadErrorMessage($errorNr)
+    {
         switch ($errorNr) {
             case UPLOAD_ERR_OK:
                 return 'Es liegt kein Fehler vor, die Datei wurde erfolgreich hochgeladen.';

@@ -3,7 +3,7 @@
 START LICENSE AND COPYRIGHT
 
  This file is part of ZfExtended library
- 
+
  Copyright (c) 2013 - 2021 Marc Mittag; MittagQI - Quality Informatics;  All rights reserved.
 
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
@@ -17,7 +17,7 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
  @copyright  Marc Mittag, MittagQI - Quality Informatics
  @author     MittagQI - Quality Informatics
  @license    GNU LESSER GENERAL PUBLIC LICENSE version 3
-			 https://www.gnu.org/licenses/lgpl-3.0.txt
+             https://www.gnu.org/licenses/lgpl-3.0.txt
 
 END LICENSE AND COPYRIGHT
 */
@@ -29,8 +29,8 @@ END LICENSE AND COPYRIGHT
  */
 class ZfExtended_Logger_Writer_ChromeLogger extends ZfExtended_Logger_Writer_Abstract
 {
-
     protected static array $rows = [];
+
     protected static bool $registered = false;
 
     public function __construct($options)
@@ -39,6 +39,7 @@ class ZfExtended_Logger_Writer_ChromeLogger extends ZfExtended_Logger_Writer_Abs
         if (self::$registered) {
             return;
         }
+
         try {
             $front = Zend_Controller_Front::getInstance();
             $front->registerPlugin(new ZfExtended_Logger_Writer_ChromeLoggerControllerPlugin());
@@ -72,8 +73,7 @@ class ZfExtended_Logger_Writer_ChromeLogger extends ZfExtended_Logger_Writer_Abs
             default => '',
         };
         $trace = $event->file . ' (' . $event->line . ')';
-        $row = [$event->message, $event->eventCode, $event->extra,];
+        $row = [$event->message, $event->eventCode, $event->extra];
         self::$rows[] = [$row, $trace, $type];
     }
-
 }

@@ -1,4 +1,5 @@
-<?php 
+<?php
+
 /*
 START LICENSE AND COPYRIGHT
 
@@ -27,14 +28,18 @@ START LICENSE AND COPYRIGHT
 END LICENSE AND COPYRIGHT
 */
 
-class ZfExtended_Auth_Token_Validator_Entity extends ZfExtended_Models_Validator_Abstract {
-
-    protected function defineValidators() {
+class ZfExtended_Auth_Token_Validator_Entity extends ZfExtended_Models_Validator_Abstract
+{
+    protected function defineValidators()
+    {
         $this->addValidator("id", "int");
         $this->addValidator("userId", "int");
-        $this->addValidator("description","stringLength");
-        $this->addValidator("token","stringLength", array("min" => 1, "max" => 2048));
-        $this->addValidator("created","stringLength");
-        $this->addValidator("expires","stringLength");
+        $this->addValidator("description", "stringLength");
+        $this->addValidator("token", "stringLength", [
+            "min" => 1,
+            "max" => 2048,
+        ]);
+        $this->addValidator("created", "stringLength");
+        $this->addValidator("expires", "stringLength");
     }
 }

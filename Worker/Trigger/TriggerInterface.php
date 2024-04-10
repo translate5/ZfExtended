@@ -3,7 +3,7 @@
 START LICENSE AND COPYRIGHT
 
  This file is part of ZfExtended library
- 
+
  Copyright (c) 2013 - 2021 Marc Mittag; MittagQI - Quality Informatics;  All rights reserved.
 
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
@@ -32,10 +32,6 @@ interface TriggerInterface
      * To run mutex-save, the current hash is needed
      *
      * @param string $id numeric id
-     * @param string $hash
-     * @param string $worker
-     * @param string|null $taskGuid
-     * @return bool
      */
     public function triggerWorker(string $id, string $hash, string $worker, ?string $taskGuid): bool;
 

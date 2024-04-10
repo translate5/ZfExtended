@@ -3,21 +3,21 @@
 START LICENSE AND COPYRIGHT
 
  This file is part of ZfExtended library
- 
+
  Copyright (c) 2013 - 2021 Marc Mittag; MittagQI - Quality Informatics;  All rights reserved.
 
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
 
  This file may be used under the terms of the GNU LESSER GENERAL PUBLIC LICENSE version 3
- as published by the Free Software Foundation and appearing in the file lgpl3-license.txt 
- included in the packaging of this file.  Please review the following information 
+ as published by the Free Software Foundation and appearing in the file lgpl3-license.txt
+ included in the packaging of this file.  Please review the following information
  to ensure the GNU LESSER GENERAL PUBLIC LICENSE version 3.0 requirements will be met:
 https://www.gnu.org/licenses/lgpl-3.0.txt
 
  @copyright  Marc Mittag, MittagQI - Quality Informatics
  @author     MittagQI - Quality Informatics
  @license    GNU LESSER GENERAL PUBLIC LICENSE version 3
-			 https://www.gnu.org/licenses/lgpl-3.0.txt
+             https://www.gnu.org/licenses/lgpl-3.0.txt
 
 END LICENSE AND COPYRIGHT
 */
@@ -29,15 +29,9 @@ END LICENSE AND COPYRIGHT
  *
  */
 
-/**
- * 
- */
-class ZfExtended_Diff {
-
+class ZfExtended_Diff
+{
     /**
-     * 
-     * @param array $old
-     * @param array $new
      * @return array diff-array in simplediff-syntax - simplediff itself is not used any more
      * example for return:
      * array(117) {
@@ -86,31 +80,46 @@ class ZfExtended_Diff {
      *   }
      * }
      */
-    public function process(array $old, array $new) {
-        $diff = new Horde_Text_Diff('auto', array(array_values($old), array_values($new)));
-        
-        $return = array();
+    public function process(array $old, array $new)
+    {
+        $diff = new Horde_Text_Diff('auto', [array_values($old), array_values($new)]);
+
+        $return = [];
         $diffs = $diff->getDiff();
-       
+
         foreach ($diffs as $edit) {
             switch (get_class($edit)) {
-            case 'Horde_Text_Diff_Op_Copy':
-                $return = array_merge($return, $edit->orig);
-                break;
+                case 'Horde_Text_Diff_Op_Copy':
+                    $return = array_merge($return, $edit->orig);
 
-            case 'Horde_Text_Diff_Op_Add':
-                $return[] = array('i' => $edit->final,'d'=>array());
-                break;
+                    break;
 
-            case 'Horde_Text_Diff_Op_Delete':
-                $return[] = array('i' => array(),'d'=>$edit->orig);
-                break;
+                case 'Horde_Text_Diff_Op_Add':
+                    $return[] = [
+                        'i' => $edit->final,
+                        'd' => [],
+                    ];
 
-            case 'Horde_Text_Diff_Op_Change':
-                $return[] = array('i' => $edit->final,'d'=>$edit->orig);
-                break;
+                    break;
+
+                case 'Horde_Text_Diff_Op_Delete':
+                    $return[] = [
+                        'i' => [],
+                        'd' => $edit->orig,
+                    ];
+
+                    break;
+
+                case 'Horde_Text_Diff_Op_Change':
+                    $return[] = [
+                        'i' => $edit->final,
+                        'd' => $edit->orig,
+                    ];
+
+                    break;
             }
         }
+
         return $return;
     }
 }

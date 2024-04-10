@@ -3,21 +3,21 @@
 START LICENSE AND COPYRIGHT
 
  This file is part of ZfExtended library
- 
+
  Copyright (c) 2013 - 2021 Marc Mittag; MittagQI - Quality Informatics;  All rights reserved.
 
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
 
  This file may be used under the terms of the GNU LESSER GENERAL PUBLIC LICENSE version 3
- as published by the Free Software Foundation and appearing in the file lgpl3-license.txt 
- included in the packaging of this file.  Please review the following information 
+ as published by the Free Software Foundation and appearing in the file lgpl3-license.txt
+ included in the packaging of this file.  Please review the following information
  to ensure the GNU LESSER GENERAL PUBLIC LICENSE version 3.0 requirements will be met:
 https://www.gnu.org/licenses/lgpl-3.0.txt
 
  @copyright  Marc Mittag, MittagQI - Quality Informatics
  @author     MittagQI - Quality Informatics
  @license    GNU LESSER GENERAL PUBLIC LICENSE version 3
-			 https://www.gnu.org/licenses/lgpl-3.0.txt
+             https://www.gnu.org/licenses/lgpl-3.0.txt
 
 END LICENSE AND COPYRIGHT
 */
@@ -31,18 +31,21 @@ END LICENSE AND COPYRIGHT
 /**
  * creates all helper paths
  */
-class ZfExtended_Resource_AddHelper extends Zend_Application_Resource_ResourceAbstract {
+class ZfExtended_Resource_AddHelper extends Zend_Application_Resource_ResourceAbstract
+{
     public function init()
     {
-        $cache = Zend_Cache::factory('Core', new ZfExtended_Cache_MySQLMemoryBackend(), ['automatic_serialization' => true]);
+        $cache = Zend_Cache::factory('Core', new ZfExtended_Cache_MySQLMemoryBackend(), [
+            'automatic_serialization' => true,
+        ]);
         /* @var $cache Zend_Cache_Core */
-        $cacheKey = 'helper_paths_'.APPLICATION_MODULE;
+        $cacheKey = 'helper_paths_' . APPLICATION_MODULE;
         $paths = $cache->load($cacheKey);
-        if($paths === false) {
+        if ($paths === false) {
             $paths = $this->generatePaths();
             $cache->save($paths, $cacheKey);
         }
-        foreach($paths as $prefix => $path){
+        foreach ($paths as $prefix => $path) {
             ZfExtended_Zendoverwrites_Controller_Action_HelperBroker::addPath($path, $prefix);
         }
     }
@@ -50,17 +53,17 @@ class ZfExtended_Resource_AddHelper extends Zend_Application_Resource_ResourceAb
     /**
      * Generiert die Prefix und Pfad Kombinationen
      */
-    protected function generatePaths() {
+    protected function generatePaths()
+    {
         $paths = [];
-        
-        if(APPLICATION_MODULE === "default"){
+
+        if (APPLICATION_MODULE === "default") {
             $modulePrefix = '';
-        }
-        else {
-            $modulePrefix = ucfirst(APPLICATION_MODULE).'_';
+        } else {
+            $modulePrefix = ucfirst(APPLICATION_MODULE) . '_';
         }
 
-        $modulesBase = APPLICATION_PATH .'/modules/'.APPLICATION_MODULE;
+        $modulesBase = APPLICATION_PATH . '/modules/' . APPLICATION_MODULE;
         $c_h = 'Controller_Helper_';
         $c_h_path = '/Controllers/helpers';
         $v_h = 'View_Helper_';
@@ -68,20 +71,20 @@ class ZfExtended_Resource_AddHelper extends Zend_Application_Resource_ResourceAb
 
         //Kunden Module Controller Helper
         //Module Controller Helper
-        $paths[$modulePrefix.$c_h] = $modulesBase.$c_h_path;
+        $paths[$modulePrefix . $c_h] = $modulesBase . $c_h_path;
         //Kunden Module View Helper
         //Module View Helper
-        $paths[$modulePrefix.$v_h] = $modulesBase.$v_h_path;
+        $paths[$modulePrefix . $v_h] = $modulesBase . $v_h_path;
 
         //Es folgen die Controller und View Helper Pfade der einzelnen Libs,
         $config = Zend_Registry::get('config');
         $libs = array_reverse($config->runtimeOptions->libraries->order->toArray());
         foreach ($libs as $lib) {
-            $libPrefix = ucfirst($lib).'_';
-            $paths[$libPrefix.$c_h] = APPLICATION_PATH .'/../library/'.$lib.$c_h_path;
-            $paths[$libPrefix.$v_h] = APPLICATION_PATH .'/../library/'.$lib.$v_h_path;
+            $libPrefix = ucfirst($lib) . '_';
+            $paths[$libPrefix . $c_h] = APPLICATION_PATH . '/../library/' . $lib . $c_h_path;
+            $paths[$libPrefix . $v_h] = APPLICATION_PATH . '/../library/' . $lib . $v_h_path;
         }
-        
+
         return array_filter($paths, 'is_dir');
     }
 }

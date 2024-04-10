@@ -3,7 +3,7 @@
 START LICENSE AND COPYRIGHT
 
  This file is part of translate5
- 
+
  Copyright (c) 2013 - 2021 Marc Mittag; MittagQI - Quality Informatics;  All rights reserved.
 
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
@@ -13,19 +13,20 @@ START LICENSE AND COPYRIGHT
  included in the packaging of this file.  Please review the following information
  to ensure the GNU AFFERO GENERAL PUBLIC LICENSE version 3 requirements will be met:
  http://www.gnu.org/licenses/agpl.html
-  
+
  There is a plugin exception available for use with this release of translate5 for
  translate5: Please see http://www.translate5.net/plugin-exception.txt or
  plugin-exception.txt in the root folder of translate5.
-  
+
  @copyright  Marc Mittag, MittagQI - Quality Informatics
  @author     MittagQI - Quality Informatics
  @license    GNU AFFERO GENERAL PUBLIC LICENSE version 3 with plugin-execption
-			 http://www.gnu.org/licenses/agpl.html http://www.translate5.net/plugin-exception.txt
+             http://www.gnu.org/licenses/agpl.html http://www.translate5.net/plugin-exception.txt
 
 END LICENSE AND COPYRIGHT
 */
 declare(strict_types=1);
+
 namespace MittagQI\ZfExtended\Acl;
 
 use MittagQI\Translate5\Test\Api\Exception;
@@ -33,7 +34,8 @@ use MittagQI\Translate5\Test\Api\Exception;
 /**
  * Holds all available resource definitions
  */
-class ResourceManager {
+class ResourceManager
+{
     /**
      * @var array<string, bool>
      */
@@ -45,9 +47,7 @@ class ResourceManager {
     ];
 
     /**
-     * @param string $classname
      * @param bool $internal internal rights are not delivered into the UI for usage there
-     * @return void
      */
     public static function registerResource(string $classname, bool $internal = false): void
     {
@@ -61,7 +61,7 @@ class ResourceManager {
     public static function getBusinessLogicResources(): array
     {
         $result = [];
-        foreach(self::$resourceDefinitions as $cls => $internal) {
+        foreach (self::$resourceDefinitions as $cls => $internal) {
             if ($internal === true) {
                 continue;
             }
@@ -73,6 +73,7 @@ class ResourceManager {
             }
             $result[] = $resource;
         }
+
         return $result;
     }
 
@@ -84,19 +85,19 @@ class ResourceManager {
     {
         $rightCount = 0;
         $result = [];
-        foreach(self::$resourceDefinitions as $cls => $internal) {
-                /* @var AbstractResource $resource */
-                if (method_exists($cls, 'getInstance')) {
-                    $resource = $cls::getInstance();
-                } else {
-                    $resource = new $cls;
-                }
-                $rights = $resource->getRights();
-                $rightCount += count($rights);
-                $result = array_merge($result, $rights);
+        foreach (self::$resourceDefinitions as $cls => $internal) {
+            /* @var AbstractResource $resource */
+            if (method_exists($cls, 'getInstance')) {
+                $resource = $cls::getInstance();
+            } else {
+                $resource = new $cls();
+            }
+            $rights = $resource->getRights();
+            $rightCount += count($rights);
+            $result = array_merge($result, $rights);
         }
 
-        if($rightCount !== count($result)) {
+        if ($rightCount !== count($result)) {
             //FIXME currently the right names must be unique in the application.
             // So we should bring als the resource ID into the UI to solve that
             throw new Exception('Non unique rights used!');

@@ -3,7 +3,7 @@
 START LICENSE AND COPYRIGHT
 
  This file is part of ZfExtended library
- 
+
  Copyright (c) 2013 - 2021 Marc Mittag; MittagQI - Quality Informatics;  All rights reserved.
 
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
@@ -17,7 +17,7 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
  @copyright  Marc Mittag, MittagQI - Quality Informatics
  @author     MittagQI - Quality Informatics
  @license    GNU LESSER GENERAL PUBLIC LICENSE version 3
-			 https://www.gnu.org/licenses/lgpl-3.0.txt
+             https://www.gnu.org/licenses/lgpl-3.0.txt
 
 END LICENSE AND COPYRIGHT
 */
@@ -44,17 +44,15 @@ class JsonClient extends ZfExtended_Zendoverwrites_Http_Client
     }
 
     /**
-     * @param string $method
-     * @param mixed|null $data
-     * @return JsonResponse
      * @throws Zend_Http_Client_Exception
      * @throws ZfExtended_Zendoverwrites_Http_Exception_InvalidResponse
      */
     public function requestJson(string $method = Zend_Http_Client::GET, mixed $data = null): JsonResponse
     {
-        if (!is_null($data)) {
+        if (! is_null($data)) {
             $this->setRawData(json_encode($data), 'application/json');
         }
+
         return new JsonResponse($this->request($method), $this->getUri(true), $method);
     }
 }

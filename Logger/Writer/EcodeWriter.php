@@ -3,7 +3,7 @@
 START LICENSE AND COPYRIGHT
 
  This file is part of ZfExtended library
- 
+
  Copyright (c) 2013 - 2021 Marc Mittag; MittagQI - Quality Informatics;  All rights reserved.
 
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
@@ -17,23 +17,20 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
  @copyright  Marc Mittag, MittagQI - Quality Informatics
  @author     MittagQI - Quality Informatics
  @license    GNU LESSER GENERAL PUBLIC LICENSE version 3
-			 https://www.gnu.org/licenses/lgpl-3.0.txt
+             https://www.gnu.org/licenses/lgpl-3.0.txt
 
 END LICENSE AND COPYRIGHT
 */
 
-/**
- */
 class ZfExtended_Logger_Writer_EcodeWriter extends ZfExtended_Logger_Writer_Abstract
 {
-
-    const ECODE_FILE = APPLICATION_ROOT . '/docs/ERRORCODES.md';
+    public const ECODE_FILE = APPLICATION_ROOT . '/docs/ERRORCODES.md';
 
     //E0000, E1027 and E9999 are multipurpose codes,
     // so therefore they are ignored and are not added/updated to/in the docu
-    const MULTI_PURPOSE_CODES = [
+    public const MULTI_PURPOSE_CODES = [
         'E0000', // Code used for multi purposes: Mostly for debug messages below level warn,
-                 // where no fixed message is needed.
+        // where no fixed message is needed.
         'E9999', // Default code used for old error messages, which are not converted yet to the new error code system.
         'E1019', // HTTP Status 404
         'E1027', // PHP Fatal Error
@@ -63,6 +60,7 @@ class ZfExtended_Logger_Writer_EcodeWriter extends ZfExtended_Logger_Writer_Abst
             if (str_contains($line, $linkKey)) {
                 $replace = true;
                 $lastEcodeLine = $idx;
+
                 break;
             }
             if (preg_match('~<a id="(E\d{4})"></a>E\d{4}~', $line)) {
@@ -72,26 +70,23 @@ class ZfExtended_Logger_Writer_EcodeWriter extends ZfExtended_Logger_Writer_Abst
 
         if ($replace) {
             $result = $this->getReplaceMessage($event, $ecodes[$lastEcodeLine]);
-            if (!is_null($result)) {
+            if (! is_null($result)) {
                 /** @var array $ecodes */
                 $ecodes[$lastEcodeLine] = $result;
             }
         }
         //if a new one, or nothing replaced above, then we just insert a new row.
-        if (!$replace || is_null($result)) {
+        if (! $replace || is_null($result)) {
             //insert after last found ecode a new one
             array_splice($ecodes, $lastEcodeLine + 1, 0, [$this->getNewEcodeLine($event)]);
         }
-        if (!file_put_contents(self::ECODE_FILE, join('', $ecodes))) {
+        if (! file_put_contents(self::ECODE_FILE, join('', $ecodes))) {
             error_log('Could not save ' . self::ECODE_FILE);
         }
     }
 
     /**
      * returns the replaced line or null if nothing could be replaced
-     * @param ZfExtended_Logger_Event $event
-     * @param string $line
-     * @return string|null
      */
     private function getReplaceMessage(ZfExtended_Logger_Event $event, string $line): ?string
     {
@@ -100,6 +95,7 @@ class ZfExtended_Logger_Writer_EcodeWriter extends ZfExtended_Logger_Writer_Abst
             pattern: '~(\s*\|\s*<a id="E\d{4}"></a>E\d{4}\s*\|[^|]+\|)([^|]+)(.*$)~',
             callback: function (array $matches) use ($event) {
                 $finalLength = mb_strlen($matches[2]);
+
                 return $matches[1] . str_pad(' ' . $event->messageRaw, $finalLength) . $matches[3];
             },
             subject: $line,
@@ -109,13 +105,12 @@ class ZfExtended_Logger_Writer_EcodeWriter extends ZfExtended_Logger_Writer_Abst
         if ($count > 0) {
             return $result;
         }
+
         return null;
     }
 
     /**
      * returns a new line for the event code MD file
-     * @param ZfExtended_Logger_Event $event
-     * @return string
      */
     private function getNewEcodeLine(ZfExtended_Logger_Event $event): string
     {

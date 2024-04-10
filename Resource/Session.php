@@ -3,7 +3,7 @@
 START LICENSE AND COPYRIGHT
 
  This file is part of ZfExtended library
- 
+
  Copyright (c) 2013 - 2021 Marc Mittag; MittagQI - Quality Informatics;  All rights reserved.
 
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
@@ -43,14 +43,15 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
      * we introduce a delay that is acceptable, meaning this delay may is deducted from the global session-lifetime
      * to reduce the neccessary updates on these tables. A delay of 5 sec reduces the DB-writes from 13 to 5
      */
-    const TIMESTAMP_UPDATE_DELAY = 5;
+    public const TIMESTAMP_UPDATE_DELAY = 5;
+
     /**
      * @var array config Konfiguration der Parameter für die DB-Sessioninitialisierung
      * TODO FIXME: why a combined primary-key )?? see also ZfExtended_Models_Db_Session
      */
     private array $sessionConfig = [
-        'name'              => 'session', //table name as per Zend_Db_Table
-        'primary'           => [
+        'name' => 'session', //table name as per Zend_Db_Table
+        'primary' => [
             'session_id',   //the sessionID given by PHP
             'name',         //session name
         ],
@@ -60,25 +61,23 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
             'sessionId', //first column of the primary key is of the sessionID
             'sessionName', //second column of the primary key is the session name
         ],
-        'modifiedColumn'    => 'modified',     //time the session should expire
-        'dataColumn'        => 'session_data', //serialized data
-        'lifetimeColumn'    => 'lifetime',     //end of life for a specific record
+        'modifiedColumn' => 'modified',     //time the session should expire
+        'dataColumn' => 'session_data', //serialized data
+        'lifetimeColumn' => 'lifetime',     //end of life for a specific record
     ];
 
     /**
      * Evaluates if a session timestamp needs to be updated in the DB
-     * @param int|null $dbTimestamp
-     * @param int|null $newTimestamp
-     * @return bool
      */
     public static function doUpdateTimestamp(?int $dbTimestamp, ?int $newTimestamp): bool
     {
-        if($dbTimestamp === $newTimestamp){
+        if ($dbTimestamp === $newTimestamp) {
             return false;
         }
-        if(is_null($dbTimestamp) || is_null($newTimestamp)){
+        if (is_null($dbTimestamp) || is_null($newTimestamp)) {
             return true;
         }
+
         return $dbTimestamp < ($newTimestamp - self::TIMESTAMP_UPDATE_DELAY);
     }
 
@@ -115,9 +114,9 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
         } else {
             $resconf['cookie_samesite'] = 'Lax';
         }
-        
+
         //we may set the options only, if unitTests are disabled (used to mask CLI usage)
-        if (!Zend_Session::$_unitTestEnabled) {
+        if (! Zend_Session::$_unitTestEnabled) {
             Zend_Session::setOptions($resconf);
         }
 
@@ -133,7 +132,7 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
 
         $this->handleAuthToken();
     }
-    
+
     private function reload(): void
     {
         Zend_Session::writeClose();
@@ -141,17 +140,16 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
         $url = explode('?', $url);
         $url = rtrim($url[0], '/');
         //preserve a redirect parameter if existing
-        if (!empty($_REQUEST['redirect'])) {
-            $url .= '?redirect='.$_REQUEST['redirect'];
+        if (! empty($_REQUEST['redirect'])) {
+            $url .= '?redirect=' . $_REQUEST['redirect'];
         }
-        header('Location: '.$url);
+        header('Location: ' . $url);
         exit;
     }
 
     /**
      * returns the session_id to be used when a valid sessionToken was provided
      *
-     * @return void
      * @throws Zend_Db_Statement_Exception
      * @throws Zend_Exception
      * @throws Zend_Session_Exception
@@ -162,31 +160,33 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
      */
     private function handleSessionToken(): void
     {
-        if (empty($_REQUEST['sessionToken']) || !preg_match('/[a-zA-Z0-9]{32}/', $_REQUEST['sessionToken'])) {
+        if (empty($_REQUEST['sessionToken']) || ! preg_match('/[a-zA-Z0-9]{32}/', $_REQUEST['sessionToken'])) {
             return;
         }
 
-        if (!ZfExtended_Utils::isHttpsRequest() && !defined('APPLICATION_APITEST')) {
+        if (! ZfExtended_Utils::isHttpsRequest() && ! defined('APPLICATION_APITEST')) {
             //without HTTPS we have to use samesite = LAX which then prevents the proper functionality of this feature,
             // therefore we just disable sessionToken auth in that case
             throw new ZfExtended_NotAuthenticatedException(
                 'Due to Cookie restrictions this feature can only be used with HTTPS enabled!'
             );
         }
-        
+
         $sessionDb = new ZfExtended_Models_Db_Session();
-        $row = $sessionDb->fetchRow(['authToken = ?' => $_REQUEST['sessionToken']]);
-        
+        $row = $sessionDb->fetchRow([
+            'authToken = ?' => $_REQUEST['sessionToken'],
+        ]);
+
         /* @var ZfExtended_Logger $sysLog */
         $sysLog = Zend_Registry::get('logger');
 
         if (empty($row) || empty($row->session_id)) {
             // delete invalid row
-            if(!empty($row)){
+            if (! empty($row)) {
                 $row->delete();
             }
             $sysLog->warn('E1332', 'Authentication: No matching sessionToken found in DB: {token}', [
-                'token' => $_REQUEST['sessionToken']
+                'token' => $_REQUEST['sessionToken'],
             ]);
             $this->reload(); //making exit
         }
@@ -195,14 +195,14 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
 
         $auth = ZfExtended_Authentication::getInstance();
         $sessionDb->updateAuthToken($row->session_id, $auth->getUserId() ?: null);
-        
+
         //since we have no user instance here, we create the success log by hand
         $loginLog = ZfExtended_Models_LoginLog::createLog("sessionToken");
         $loginLog->setLogin($auth->getLogin());
         $loginLog->setUserGuid($auth->getUserGuid());
         $loginLog->setStatus($loginLog::LOGIN_SUCCESS);
         $loginLog->save();
-        
+
         $sysLog->debug('E1332', 'Authentication: Spawning session for sessionToken {token} and user {login}', [
             'token' => $_REQUEST['sessionToken'],
             'login' => $auth->getLogin(),
@@ -215,7 +215,6 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
 
     /**
      * Handle authentication via app token
-     * @return void
      * @throws Zend_Exception
      */
     private function handleAuthToken(): void
@@ -230,6 +229,7 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
 
         if ($auth->authenticateByToken($tokenParam)) {
             ZfExtended_Models_LoginLog::addSuccess($auth, "authtoken");
+
             return;
         }
 
@@ -240,7 +240,7 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
         header('HTTP/1.1 401 Unauthorized', true, 401);
         if (ZfExtended_Utils::requestAcceptsJson()) {
             die('{"success": false, "httpStatus": 401, "errorMessage": '
-                .'"<b>Fatal: Authentication Token: The token is not valid</b>"}');
+                . '"<b>Fatal: Authentication Token: The token is not valid</b>"}');
         } else {
             die('Authentication Token: The token is not valid!');
         }
@@ -248,7 +248,6 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
 
     /**
      * returns the app token header in a normalized way
-     * @return string|null
      */
     private function getFromHeader(): ?string
     {
@@ -262,6 +261,7 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
         if (array_key_exists($key, $headers)) {
             return $headers[$key];
         }
+
         return null;
     }
 }

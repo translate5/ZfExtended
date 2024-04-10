@@ -3,7 +3,7 @@
 START LICENSE AND COPYRIGHT
 
  This file is part of ZfExtended library
- 
+
  Copyright (c) 2013 - 2021 Marc Mittag; MittagQI - Quality Informatics;  All rights reserved.
 
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
@@ -26,11 +26,11 @@ declare(strict_types=1);
 
 namespace MittagQI\ZfExtended\Worker\Trigger;
 
+use Symfony\Component\Lock\LockFactory;
+use Symfony\Component\Lock\Store\FlockStore;
 use Zend_Exception;
 use Zend_Registry;
 use ZfExtended_Debug;
-use Symfony\Component\Lock\LockFactory;
-use Symfony\Component\Lock\Store\FlockStore;
 
 class Process implements TriggerInterface
 {
@@ -38,11 +38,6 @@ class Process implements TriggerInterface
      * Trigger worker with id = $id.
      * To run mutex-save, the current hash is needed
      *
-     * @param string $id
-     * @param string $hash
-     * @param string $worker
-     * @param string|null $taskGuid
-     * @return bool
      * @throws Zend_Exception
      */
     public function triggerWorker(string $id, string $hash, string $worker, ?string $taskGuid): bool
@@ -53,6 +48,7 @@ class Process implements TriggerInterface
             array_unshift($workerId, $dbName);
         }
         $this->exec('worker:run ' . $id . ' -n --porcelain --debug="' . join(':', $workerId) . '"');
+
         return true;
     }
 
@@ -81,6 +77,7 @@ class Process implements TriggerInterface
             $this->exec('worker:queue -n --porcelain');
             $lock->release();
         }
+
         return true;
     }
 }

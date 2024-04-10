@@ -13,7 +13,6 @@ use Exception;
  */
 class SessionInternalUniqueId
 {
-
     private string $internalId;
 
     private static ?SessionInternalUniqueId $instance = null;
@@ -24,6 +23,7 @@ class SessionInternalUniqueId
             self::$instance = new self();
             self::$instance->generate();
         }
+
         return self::$instance;
     }
 
@@ -48,5 +48,4 @@ class SessionInternalUniqueId
     {
         return $this->internalId;
     }
-
 }
