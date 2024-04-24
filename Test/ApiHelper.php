@@ -615,6 +615,11 @@ class ZfExtended_Test_ApiHelper
      */
     public function getAbsFilePath(string $relativePath, bool $addTestClassFolder = false)
     {
+        // Fix Windows paths problem
+        if (PHP_OS_FAMILY == 'Windows') {
+            $relativePath = preg_replace('~^[A-Z]+:~', '', $relativePath);
+            $relativePath = str_replace('\\', '/', $relativePath);
+        }
         // the file may already is an absolute path
         if (str_starts_with($relativePath, '/')) {
             return $relativePath;
