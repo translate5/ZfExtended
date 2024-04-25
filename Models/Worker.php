@@ -526,26 +526,6 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
         ]);
     }
 
-    public function cleanGarbage()
-    {
-        // first clean all 'archived' worker (state=done and endtim older than 1 HOUR)
-        $where = [];
-        $where[] = $this->db->getAdapter()->quoteInto('state = ?', self::STATE_DONE);
-        $where[] = $this->db->getAdapter()->quoteInto('endtime < ?', new Zend_Db_Expr('NOW() - INTERVAL 2 HOUR'));
-        $this->reduceDeadlocks();
-        $this->db->delete($where);
-
-        // TODO: do something with all crashed worker (maxRuntime expired)
-        // TODO: do something with all worker marked with 'defunct'
-        return;
-        //$sql = $this->db->select()->where('maxRuntime < NOW()');
-        //$rows = $this->db->fetchAll($sql);
-
-        //foreach ($rows as $row) {
-        //    $row->delete();
-        //}
-    }
-
     /**
      * Removes all workers for the given task
      */
@@ -625,21 +605,37 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
     }
 
     /**
-     * Sets all remaining scheduled and waiting workers of that worker group (same parent (or the parent itself) and same taskGuid) to defunct
-     * @param array $exludedWorkers optional, contains the worker classes which should be ignored in setting them to defunc
+     * Sets all remaining scheduled and waiting workers of that worker group
+     * (same parent (or the parent itself) and same taskGuid) to defunct
+     * @param array $exludedWorkers contains the worker classes which should be ignored in setting them to defunct
      * @param bool $includeRunning includes also the running state to be defunct
      * @param bool $taskguidOnly TODO move taskGuid out of ZfExtended!
+     * @throws Zend_Db_Exception
+     * @throws Zend_Exception
      * @throws ZfExtended_Models_Db_Exceptions_DeadLockHandler
      */
-    public function defuncRemainingOfGroup(array $exludedWorkers = [], bool $includeRunning = false, bool $taskguidOnly = false)
+    public function defuncRemainingOfGroup(
+        array $exludedWorkers = [],
+        bool $includeRunning = false,
+        bool $taskguidOnly = false,
+    ): void
     {
         $this->retryOnDeadlock(function () use ($exludedWorkers, $includeRunning, $taskguidOnly) {
             $byGroup = $workerExclude = '';
-            $params = [$this->getTaskGuid()];
+
+            if (is_null($this->getTaskGuid())) {
+                $params = [];
+                $taskGuidSql = 'taskGuid is null';
+            } else {
+                $params = [$this->getTaskGuid()];
+                $taskGuidSql = 'taskGuid = ?';
+            }
+
             if (! empty($exludedWorkers)) {
                 //adapter->query can not handle arrays directlym so use plain string concat
                 $workerExclude = $this->db->getAdapter()->quoteInto(' AND worker NOT IN (?)', $exludedWorkers);
             }
+
             $this->reduceDeadlocks();
             $affectedStates = [self::STATE_WAITING, self::STATE_SCHEDULED, self::STATE_PREPARE];
             if ($includeRunning) {
@@ -653,7 +649,7 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
             }
             $stateInclude = $this->db->getAdapter()->quoteInto(' AND state IN (?)', $affectedStates);
             $this->db->getAdapter()->query('UPDATE Zf_worker SET state = \'' . self::STATE_DEFUNCT . '\'
-                WHERE taskGuid = ? ' . $byGroup . $stateInclude . $workerExclude, $params);
+                WHERE ' . $taskGuidSql . $byGroup . $stateInclude . $workerExclude, $params);
         });
     }
 

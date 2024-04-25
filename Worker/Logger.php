@@ -21,40 +21,38 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 
 END LICENSE AND COPYRIGHT
 */
+declare(strict_types=1);
 
-/**
- * This class provides a garbage cleaning for the worker table.
- * Currently this is invoked by Import Process
- *
- * Be careful: This class is not used in worker_dependencies !
- */
-class ZfExtended_Worker_GarbageCleaner extends ZfExtended_Worker_Abstract
+namespace MittagQI\ZfExtended\Worker;
+
+use DateTimeInterface;
+use ZfExtended_Models_Worker;
+
+class Logger
 {
-    /**
-     * (non-PHPdoc)
-     * @see ZfExtended_Worker_Abstract::validateParameters()
-     */
-    protected function validateParameters($parameters = [])
+    private static ?self $instance = null;
+
+    protected function __construct()
     {
-        return true;
+        // just beeing protected
+    }
+
+    public static function getInstance(): self
+    {
+        if (is_null(self::$instance)) {
+            self::$instance = new self();
+        }
+        return self::$instance;
     }
 
     /**
-     * Only one garbage cleaner may run at a time
-     * (non-PHPdoc)
-     * @see ZfExtended_Worker_Abstract::getMaxParallelProcesses()
      */
-    protected function getMaxParallelProcesses(): int
+    public function log(ZfExtended_Models_Worker $worker, string $type, bool $full = false): void
     {
-        return 1;
-    }
-
-    /**
-     * (non-PHPdoc)
-     * @see ZfExtended_Worker_Abstract::work()
-     */
-    public function work()
-    {
-        return $this->workerModel->cleanGarbage();
+        $msg = date('Y-m-d H:i:s.u P').' '.$type . ' ' . $worker->getId() . ' ' . $worker->getWorker();
+        if ($full) {
+            $msg .= ' data: ' . json_encode($worker->getDataObject());
+        }
+        error_log($msg.PHP_EOL, 3, APPLICATION_DATA . '/logs/worker.log');
     }
 }
