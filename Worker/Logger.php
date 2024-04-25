@@ -49,10 +49,13 @@ class Logger
      */
     public function log(ZfExtended_Models_Worker $worker, string $type, bool $full = false): void
     {
-        $msg = date('Y-m-d H:i:s.u P').' '.$type . ' ' . $worker->getId() . ' ' . $worker->getWorker();
+        $msg = (new \DateTime())->format('Y-m-d H:i:s.u P').
+            ' '.$type . ' ' . $worker->getId() . ' ' . $worker->getWorker();
+
         if ($full) {
             $msg .= ' data: ' . json_encode($worker->getDataObject());
         }
+
         error_log($msg.PHP_EOL, 3, APPLICATION_DATA . '/logs/worker.log');
     }
 }
