@@ -644,6 +644,16 @@ class ZfExtended_Test_ApiHelper
     }
 
     /**
+     * Loads the file contents of a file with data to be compared.
+     * @param string $file
+     * @return mixed
+     */
+    public function getFileContentRaw(string $file): mixed
+    {
+        return file_get_contents($this->getFile($file));
+    }
+
+    /**
      * returns the content of the given filename in a given ZIP, in filename * and ? may be used. If it mathces multiple files the first one is returned.
      * @param string $pathToZip absolute file system path to zip file
      * @param string $pathToFileInZip relative path to file inside of zip (uses glob to evaluate * ? etc pp. returns the first file if matched multiple files!)
