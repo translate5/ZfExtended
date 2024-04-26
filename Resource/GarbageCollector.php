@@ -22,6 +22,8 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
+use MittagQI\ZfExtended\Worker\Cleaner;
+
 /**
  * This resource bundles recurring jobs for cleaning up stuff in the application
  */
@@ -123,13 +125,9 @@ class ZfExtended_Resource_GarbageCollector extends Zend_Application_Resource_Res
         return true;
     }
 
-    /**
-     * Cleans up worker-stuff ... not yet implemented
-     */
-    protected function cleanUpWorker()
+    protected function cleanUpWorker(): void
     {
-        //still using old clean up invocation for the done workers....
-        //FIXME what should be implemented here is a clean up for defunct workers!
+        Cleaner::clean();
     }
 
     /**

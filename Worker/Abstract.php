@@ -22,6 +22,8 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
+use \MittagQI\ZfExtended\Worker\Logger;
+
 /**
  * Abstract worker class, providing base worker functionality. The work to be done is implemented / triggered in the extending classes of this one.
  * All other functionality reacting on the worker run is encapsulated in the behaviour classes
@@ -296,7 +298,7 @@ abstract class ZfExtended_Worker_Abstract
         $sleep = 1;
         $starttime = time();
         $wm = $this->workerModel;
-        $this->logit('is blocking!');
+        Logger::getInstance()->log($this->workerModel, 'blocking');
         do {
             sleep($sleep);
             $runtime = time() - $starttime;
@@ -333,14 +335,19 @@ abstract class ZfExtended_Worker_Abstract
     /**
      * Mutex save worker-run. Before this function can be called, the worker must be queued with $this->queue();
      * @return boolean true if $this->work() runs without errors
+     * @throws Throwable
+     * @throws ZfExtended_Exception
      */
     public function runQueued()
     {
         $this->checkIsInitCalled();
+
         if (! $this->workerModel->isMutexAccess()) {
             return false;
         }
+
         $result = $this->_run();
+
         $this->wakeUpAndStartNextWorkers();
 
         if (! empty($this->workerException)) {
@@ -372,7 +379,7 @@ abstract class ZfExtended_Worker_Abstract
 
         // checks before parent workers before running
         if (! $this->behaviour->checkParentDefunc()) {
-            $this->logit(' set to defunct by parent!');
+            Logger::getInstance()->log($this->workerModel, 'defunc by parent');
 
             return false;
         }
@@ -381,17 +388,24 @@ abstract class ZfExtended_Worker_Abstract
         //Dazu: checke im Model ob von außerhalb ein Hash mitgegeben wurde, wenn nein, setze ihn auf 0, damit der checkMutex (der implizit den Hash checkt) kracht.
 
         if ($this->behaviour->isMaintenanceScheduled()) {
+            Logger::getInstance()->log($this->workerModel, 'maintenance');
             return false;
         }
 
         if (! $this->workerModel->setRunning($this->onlyOncePerTask)) {
             //the worker can not set to state run, so don't perform the work
-            return false; //FIXME what is this result used for?
+            Logger::getInstance()->log($this->workerModel, 'not running');
+
+            // beeing here means that setRunning might be getting deadlocks, might producing endless worker loops.
+            // To prevent / reduce that, we wait just some time here before starting next workers later on
+            sleep(5);
+
+            return false;
         }
         //reload, to get running state and timestamps
         $this->workerModel->load($this->workerModel->getId());
 
-        $this->logit('set to running!');
+        Logger::getInstance()->log($this->workerModel, 'running');
 
         try {
             $this->events->trigger('beforeWork', $this, [
@@ -407,14 +421,17 @@ abstract class ZfExtended_Worker_Abstract
             $this->workerModel->setEndtime(new Zend_Db_Expr('NOW()'));
             $this->finishedWorker = clone $this->workerModel;
             if (! $this->saveWorkerDeadlockProof()) {
+                Logger::getInstance()->log($this->workerModel, 'missing worker');
                 return false;
             }
+            Logger::getInstance()->log($this->workerModel, ZfExtended_Models_Worker::STATE_DONE);
             $this->onProgressUpdated($progressDone);
         } catch (Throwable $workException) {
             $this->reconnectDb();
             $result = false;
             $this->workerModel->setState(ZfExtended_Models_Worker::STATE_DEFUNCT);
             $this->saveWorkerDeadlockProof();
+            Logger::getInstance()->log($this->workerModel, ZfExtended_Models_Worker::STATE_DEFUNCT);
             $this->finishedWorker = clone $this->workerModel;
             $this->handleWorkerException($workException);
         }
@@ -545,7 +562,7 @@ abstract class ZfExtended_Worker_Abstract
             $this->workerModel->setState($state);
         }
         $this->workerModel->save();
-        $this->logit('queued with state ' . $this->workerModel->getState());
+        Logger::getInstance()->log($this->workerModel, 'queue', true);
     }
 
     /**
@@ -564,19 +581,6 @@ abstract class ZfExtended_Worker_Abstract
         $this->workerModel->setParameters($parameters);
         $this->workerModel->setHash(bin2hex(random_bytes(32)));
         $this->workerModel->setBlockingType($this->blockingType);
-    }
-
-    protected function logit($msg)
-    {
-        if (ZfExtended_Debug::hasLevel('core', 'worker')) {
-            if (! empty($this->workerModel)) {
-                $msg = 'Worker ' . $this->workerModel->getWorker() . ' (' . $this->workerModel->getId() . '): ' . $msg;
-            }
-            if (ZfExtended_Debug::hasLevel('core', 'worker', 2)) {
-                $msg .= "\n" . '    by ' . $_SERVER['REQUEST_URI'];
-            }
-            error_log($msg);
-        }
     }
 
     private function logWorkerUsage(): void
