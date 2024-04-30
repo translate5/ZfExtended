@@ -64,7 +64,9 @@ class ZfExtended_Logger_Writer_Database extends ZfExtended_Logger_Writer_Abstrac
         if (! empty($event->exception)) {
             $data['message'] = get_class($event->exception) . ': ' . $data['message'];
         }
-
+        if ($testName = $_SERVER['HTTP_X_TRANSLATE5_TESTNAME'] ?? '') {
+            $data['message'] = "$testName: {$data['message']}";
+        }
         $data['message'] = mb_substr($data['message'], 0, 512);
         $data['last'] = NOW_ISO;
         $data['duplicates'] = 0;
