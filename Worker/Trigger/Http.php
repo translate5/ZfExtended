@@ -38,6 +38,8 @@ class Http implements TriggerInterface
 {
     public const WORKER_HEADER = 'X-Translate5-Worker';
 
+    public const TESTNAME_HEADER = 'X-Translate5-Testname';
+
     public const WORKER_CHECK_IGNORE = 'cli-ignore';
 
     protected ZfExtended_Logger $log;
@@ -246,6 +248,9 @@ class Http implements TriggerInterface
         }
         if (isset($_SERVER['XDEBUG_CONFIG'])) {
             $debug = $_SERVER['XDEBUG_CONFIG'];
+        }
+        if (isset($_SERVER['HTTP_X_TRANSLATE5_TESTNAME'])) {
+            $out .= self::TESTNAME_HEADER . ': '. $_SERVER['HTTP_X_TRANSLATE5_TESTNAME'] . "\r\n"; // this is translate5-specific !!!
         }
         //forced debug by config
         if (ZfExtended_Debug::hasLevel('core', 'worker')) {
