@@ -78,7 +78,7 @@ abstract class ZfExtended_Models_Entity_Abstract
 
     /**
      * the Validator Instance
-     * @var string
+     * @var ZfExtended_Models_Validator_Abstract
      */
     protected $validator;
 
