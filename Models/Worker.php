@@ -375,11 +375,11 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
             $sql = 'UPDATE `Zf_worker` w1 LEFT OUTER JOIN `Zf_worker` w2';
             $sql .= ' ON w1.`taskGuid` = w2.`taskGuid` AND w1.`worker` = w2.`worker` AND w2.`state` = "' . self::STATE_RUNNING . '" AND w1.`id` != w2.`id`';
             $sql .= $sets('`w1`.');
-            $sql .= ' WHERE w2.id IS NULL AND w1.id = ? AND w1.state != "' . self::STATE_RUNNING . '"';
+            $sql .= ' WHERE w2.id IS NULL AND w1.id = ? AND w1.state = "' . self::STATE_WAITING . '"';
         } else {
             $sql = 'UPDATE `Zf_worker`';
             $sql .= $sets('');
-            $sql .= ' WHERE id = ? AND state != "' . self::STATE_RUNNING . '"';
+            $sql .= ' WHERE id = ? AND state = "' . self::STATE_WAITING . '"';
         }
 
         $values = [$this->getId()];
