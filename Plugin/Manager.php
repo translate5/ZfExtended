@@ -57,18 +57,25 @@ class ZfExtended_Plugin_Manager
 
     protected $allFrontendControllers = [];
 
+    private array $activePlugins = [];
+
+    public function __construct()
+    {
+        $config = Zend_Registry::get('config');
+        if (! isset($config->runtimeOptions->plugins)) {
+            return;
+        }
+
+        $this->activePlugins = array_unique($config->runtimeOptions->plugins->active->toArray());
+    }
+
     /**
      * returns a list of active plugins according to the config
      * @throws Zend_Exception
      */
     public function getActive(): array
     {
-        $config = Zend_Registry::get('config');
-        if (! isset($config->runtimeOptions->plugins)) {
-            return [];
-        }
-
-        return array_unique($config->runtimeOptions->plugins->active->toArray());
+        return $this->activePlugins;
     }
 
     /**
@@ -115,6 +122,8 @@ class ZfExtended_Plugin_Manager
         }
         $config->setValue(json_encode(array_unique(array_values($active))));
         $config->save();
+
+        $this->activePlugins = $active;
 
         return true;
     }
