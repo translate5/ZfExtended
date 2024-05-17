@@ -41,6 +41,7 @@ class ResourceManager
      */
     private static array $resourceDefinitions = [
         ConfigLevelResource::class => true,
+        ConfigRestrictionResource::class => true,
         AutoSetRoleResource::class => true,
         SetAclRoleResource::class => true,
         SystemResource::class => false,

@@ -26,8 +26,6 @@ declare(strict_types=1);
 
 namespace MittagQI\ZfExtended\Worker\Trigger;
 
-use Symfony\Component\Lock\LockFactory;
-use Symfony\Component\Lock\Store\FlockStore;
 use Zend_Exception;
 use Zend_Registry;
 use ZfExtended_Debug;
@@ -70,13 +68,7 @@ class Process implements TriggerInterface
 
     public function triggerQueue(): bool
     {
-        //FIXME use SemaphoreStore if sysvsem is installed!
-        $factory = new LockFactory(new FlockStore());
-        $lock = $factory->createLock(\ZfExtended_Utils::installationHash());
-        if ($lock->acquire()) {
-            $this->exec('worker:queue -n --porcelain');
-            $lock->release();
-        }
+        $this->exec('worker:queue -n --porcelain');
 
         return true;
     }
