@@ -27,6 +27,11 @@ namespace MittagQI\ZfExtended\Worker;
 
 use MittagQI\ZfExtended\Worker\Trigger\Factory as WorkerTriggerFactory;
 use ReflectionException;
+use Symfony\Component\Lock\LockFactory;
+use Symfony\Component\Lock\LockInterface;
+use Symfony\Component\Lock\SharedLockInterface;
+use Symfony\Component\Lock\Store\FlockStore;
+use Symfony\Component\Lock\Store\SemaphoreStore;
 use Zend_Exception;
 use ZfExtended_Factory;
 use ZfExtended_Models_Worker;
@@ -34,16 +39,30 @@ use ZfExtended_Models_Worker;
 class Queue
 {
     /**
+     * ensures that queue is triggered only once
+     */
+    private LockInterface|SharedLockInterface $lock;
+
+    public function __construct()
+    {
+        $factory = new LockFactory(extension_loaded('sysvsem') ? new SemaphoreStore() : new FlockStore());
+        $this->lock = $factory->createLock(\ZfExtended_Utils::installationHash());
+    }
+
+    /**
      * @throws ReflectionException
      * @throws Zend_Exception
+     * @return bool returns true if any ready to run workers found
      */
-    public function process(): void
+    public function process(): bool
     {
         $workerModel = ZfExtended_Factory::get(ZfExtended_Models_Worker::class);
         $workerListQueued = $workerModel->getListQueued();
 
+        $result = false;
         $trigger = WorkerTriggerFactory::create();
         foreach ($workerListQueued as $workerQueue) {
+            $result = true;
             $trigger->triggerWorker(
                 (string) $workerQueue['id'],
                 $workerQueue['hash'],
@@ -51,6 +70,8 @@ class Queue
                 $workerQueue['taskGuid']
             );
         }
+
+        return $result;
     }
 
     /**
@@ -63,6 +84,19 @@ class Queue
         $worker = ZfExtended_Factory::get(ZfExtended_Models_Worker::class);
         $worker->wakeupScheduled();
 
-        WorkerTriggerFactory::create()->triggerQueue();
+        if ($this->lockAcquire()) {
+            WorkerTriggerFactory::create()->triggerQueue();
+            $this->lockRelease();
+        }
+    }
+
+    public function lockAcquire(): bool
+    {
+        return $this->lock->acquire();
+    }
+
+    public function lockRelease(): void
+    {
+        $this->lock->release();
     }
 }
