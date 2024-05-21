@@ -110,22 +110,15 @@ class ZfExtended_Zend_Mail_Transport_MSGraph extends \Zend_Mail_Transport_Abstra
             return $body;
         }
 
-        $content = [];
-        $separator = PHP_EOL;
-        $bodyType = new BodyType(BodyType::TEXT);
-
-        if (false !== $mail->getBodyText()) {
-            $content[] = $mail->getBodyText()->getRawContent();
-        }
-
         if (false !== $mail->getBodyHtml()) {
-            $content[] = $mail->getBodyHtml()->getRawContent();
-            $separator = '<br>';
-            $bodyType = new BodyType(BodyType::HTML);
+            $body->setContent($mail->getBodyHtml()->getRawContent());
+            $body->setContentType(new BodyType(BodyType::HTML));
+
+            return $body;
         }
 
-        $body->setContent(implode($separator, $content));
-        $body->setContentType($bodyType);
+        $body->setContent($mail->getBodyText()->getRawContent());
+        $body->setContentType(new BodyType(BodyType::TEXT));
 
         return $body;
     }
