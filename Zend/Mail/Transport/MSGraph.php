@@ -14,23 +14,24 @@ use Microsoft\Kiota\Authentication\Oauth\ClientCredentialContext;
 class ZfExtended_Zend_Mail_Transport_MSGraph extends \Zend_Mail_Transport_Abstract
 {
     private string $email;
+
     private GraphServiceClient $graphServiceClient;
 
     public function __construct(array $config = [])
     {
-        if (!isset($config['email'])) {
+        if (! isset($config['email'])) {
             throw new InvalidArgumentException("Please provide login email in \$config['email']");
         }
 
-        if (!isset($config['clientId'])) {
+        if (! isset($config['clientId'])) {
             throw new InvalidArgumentException("Please provide oauth2 access token in \$config['clientId']");
         }
 
-        if (!isset($config['tenantId'])) {
+        if (! isset($config['tenantId'])) {
             throw new InvalidArgumentException("Please provide oauth2 access token in \$config['tenantId']");
         }
 
-        if (!isset($config['clientSecret'])) {
+        if (! isset($config['clientSecret'])) {
             throw new InvalidArgumentException("Please provide oauth2 access token in \$config['clientSecret']");
         }
 
@@ -44,16 +45,16 @@ class ZfExtended_Zend_Mail_Transport_MSGraph extends \Zend_Mail_Transport_Abstra
         $this->graphServiceClient = new GraphServiceClient($tokenRequestContext);
     }
 
-    protected function _sendMail()
+    public function send(Zend_Mail $mail): void
     {
         // Extract sender and recipients
         $sender = new EmailAddress();
-        $sender->setAddress($this->_mail->getFrom());
+        $sender->setAddress($mail->getFrom());
         $fromRecipient = new Recipient();
         $fromRecipient->setEmailAddress($sender);
 
         $recipients = [];
-        foreach ($this->_mail->getRecipients() as $recipient) {
+        foreach ($mail->getRecipients() as $recipient) {
             $recipientAddress = new EmailAddress();
             $recipientAddress->setAddress($recipient);
             $recipientObject = new Recipient();
@@ -65,7 +66,7 @@ class ZfExtended_Zend_Mail_Transport_MSGraph extends \Zend_Mail_Transport_Abstra
         $attachments = [];
 
         /** @var \Zend_Mime_Part $attachment */
-        foreach ($this->_mail->getParts() as $attachment) {
+        foreach ($mail->getParts() as $attachment) {
             if (Zend_Mime::TYPE_OCTETSTREAM !== $attachment->type) {
                 continue;
             }
@@ -81,12 +82,12 @@ class ZfExtended_Zend_Mail_Transport_MSGraph extends \Zend_Mail_Transport_Abstra
         }
 
         $message = new Message();
-        $message->setSubject($this->_mail->getSubject());
+        $message->setSubject($mail->getSubject());
         $message->setFrom($fromRecipient);
         $message->setToRecipients($recipients);
-        $message->setBody($this->getBody());
+        $message->setBody($this->getBody($mail));
 
-        if (!empty($attachments)) {
+        if (! empty($attachments)) {
             $message->setAttachments($attachments);
         }
 
@@ -101,24 +102,29 @@ class ZfExtended_Zend_Mail_Transport_MSGraph extends \Zend_Mail_Transport_Abstra
             ->wait();
     }
 
-    private function getBody(): ItemBody
+    private function getBody(Zend_Mail $mail): ItemBody
     {
         $body = new ItemBody();
 
-        if (!$this->_mail->getBodyText() && !$this->_mail->getBodyHtml()) {
+        if (! $mail->getBodyText() && ! $mail->getBodyHtml()) {
             return $body;
         }
 
-        if ($this->_mail->getBodyText()) {
-            $body->setContent($this->_mail->getBodyText()->getRawContent());
-            $body->setContentType(new BodyType(BodyType::TEXT));
+        if (false !== $mail->getBodyHtml()) {
+            $body->setContent($mail->getBodyHtml()->getRawContent());
+            $body->setContentType(new BodyType(BodyType::HTML));
 
             return $body;
         }
 
-        $body->setContent($this->_mail->getBodyHtml()->getRawContent());
-        $body->setContentType(new BodyType(BodyType::HTML));
+        $body->setContent($mail->getBodyText()->getRawContent());
+        $body->setContentType(new BodyType(BodyType::TEXT));
 
         return $body;
+    }
+
+    protected function _sendMail(): void
+    {
+        // nothing to do here
     }
 }
