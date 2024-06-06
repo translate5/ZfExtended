@@ -122,7 +122,7 @@ final class CsrfProtection
     {
         if (self::ACTIVE) {
             // Crucial: if a request was initiated with an app-token, CSRF protection must be inactive
-            return ! ZfExtended_Authentication::isAppTokenAuthenticated();
+            return ! ZfExtended_Authentication::getInstance()->isAuthenticatedByToken();
         }
 
         return false;
