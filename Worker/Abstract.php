@@ -22,7 +22,7 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
-use \MittagQI\ZfExtended\Worker\Logger;
+use MittagQI\ZfExtended\Worker\Logger;
 
 /**
  * Abstract worker class, providing base worker functionality. The work to be done is implemented / triggered in the extending classes of this one.
@@ -308,7 +308,7 @@ abstract class ZfExtended_Worker_Abstract
                 $sleep = $sleep * 2; //should result in a max of 64 seconds
             }
 
-            $wm->load($wm->getId());
+            $wm->load((int) $wm->getId());
             $state = $wm->getState();
             switch ($state) {
                 case $wm::STATE_DEFUNCT:
@@ -389,6 +389,7 @@ abstract class ZfExtended_Worker_Abstract
 
         if ($this->behaviour->isMaintenanceScheduled()) {
             Logger::getInstance()->log($this->workerModel, 'maintenance');
+
             return false;
         }
 
@@ -403,9 +404,9 @@ abstract class ZfExtended_Worker_Abstract
             return false;
         }
         //reload, to get running state and timestamps
-        $this->workerModel->load($this->workerModel->getId());
+        $this->workerModel->load((int) $this->workerModel->getId());
 
-        Logger::getInstance()->log($this->workerModel, 'running');
+        Logger::getInstance()->log($this->workerModel, $this->workerModel::STATE_RUNNING);
 
         try {
             $this->events->trigger('beforeWork', $this, [
@@ -422,6 +423,7 @@ abstract class ZfExtended_Worker_Abstract
             $this->finishedWorker = clone $this->workerModel;
             if (! $this->saveWorkerDeadlockProof()) {
                 Logger::getInstance()->log($this->workerModel, 'missing worker');
+
                 return false;
             }
             Logger::getInstance()->log($this->workerModel, ZfExtended_Models_Worker::STATE_DONE);
@@ -435,7 +437,7 @@ abstract class ZfExtended_Worker_Abstract
             $this->finishedWorker = clone $this->workerModel;
             $this->handleWorkerException($workException);
         }
-        $this->workerModel->load($this->workerModel->getId());
+        $this->workerModel->load((int) $this->workerModel->getId());
         $this->logWorkerUsage();
 
         return $result;
@@ -515,7 +517,7 @@ abstract class ZfExtended_Worker_Abstract
 
     protected function wakeUpAndStartNextWorkers()
     {
-        $this->behaviour->wakeUpAndStartNextWorkers($this->workerModel);
+        $this->behaviour->wakeUpAndStartNextWorkers();
     }
 
     /**

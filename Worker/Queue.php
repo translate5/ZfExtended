@@ -35,6 +35,7 @@ use Symfony\Component\Lock\Store\SemaphoreStore;
 use Zend_Exception;
 use ZfExtended_Factory;
 use ZfExtended_Models_Worker;
+use ZfExtended_Utils;
 
 class Queue
 {
@@ -46,7 +47,7 @@ class Queue
     public function __construct()
     {
         $factory = new LockFactory(extension_loaded('sysvsem') ? new SemaphoreStore() : new FlockStore());
-        $this->lock = $factory->createLock(\ZfExtended_Utils::installationHash());
+        $this->lock = $factory->createLock(ZfExtended_Utils::installationHash());
     }
 
     /**
@@ -57,6 +58,7 @@ class Queue
     public function process(): bool
     {
         $workerModel = ZfExtended_Factory::get(ZfExtended_Models_Worker::class);
+        $workerModel->wakeupScheduled();
         $workerListQueued = $workerModel->getListQueued();
 
         $result = false;
@@ -66,8 +68,6 @@ class Queue
             $trigger->triggerWorker(
                 (string) $workerQueue['id'],
                 $workerQueue['hash'],
-                $workerQueue['worker'],
-                $workerQueue['taskGuid']
             );
         }
 
@@ -76,23 +76,28 @@ class Queue
 
     /**
      * trigger application-wide worker-queue
-     * @throws ReflectionException
      * @throws Zend_Exception
      */
     public function trigger(): void
     {
-        $worker = ZfExtended_Factory::get(ZfExtended_Models_Worker::class);
-        $worker->wakeupScheduled();
-
-        if ($this->lockAcquire()) {
+        if (! $this->isRunning()) {
             WorkerTriggerFactory::create()->triggerQueue();
-            $this->lockRelease();
         }
     }
 
     public function lockAcquire(): bool
     {
         return $this->lock->acquire();
+    }
+
+    public function isRunning(): bool
+    {
+        // isAquired works only in the same process, so for IPC we need the following construction
+        if($this->lock->acquire()) {
+            $this->lock->release(); //if we got the lock it was not locked before so we remove it
+            return false;
+        }
+        return true;
     }
 
     public function lockRelease(): void

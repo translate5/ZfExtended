@@ -47,7 +47,7 @@ END LICENSE AND COPYRIGHT
  * @method string getWorker()
  * @method string getResource()
  * @method string getSlot()
- * @method string getTaskGuid()
+ * @method null|string getTaskGuid()
  * @method integer getPid()
  * @method null|string getStarttime()
  * @method null|string getEndtime()
@@ -339,10 +339,15 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
      * If it is a direct run (empty ID) the worker will be started always,
      *  regardless of already existing workers with the same taskGuid
      *
-     * @var boolean default true
      * @return boolean true if task was set to running
+     * @throws Zend_Db_Exception
+     * @throws Zend_Db_Statement_Exception
+     * @throws Zend_Exception
+     * @throws ZfExtended_Models_Db_Exceptions_DeadLockHandler
+     * @throws ZfExtended_Models_Entity_Exceptions_IntegrityConstraint
+     * @throws ZfExtended_Models_Entity_Exceptions_IntegrityDuplicateKey
      */
-    public function setRunning($oncePerTaskGuid = true)
+    public function setRunning(bool $oncePerTaskGuid = true): bool
     {
         $data = [
             'state' => self::STATE_RUNNING,
@@ -618,8 +623,7 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
         array $exludedWorkers = [],
         bool $includeRunning = false,
         bool $taskguidOnly = false,
-    ): void
-    {
+    ): void {
         $this->retryOnDeadlock(function () use ($exludedWorkers, $includeRunning, $taskguidOnly) {
             $byGroup = $workerExclude = '';
 

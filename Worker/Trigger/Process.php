@@ -26,6 +26,7 @@ declare(strict_types=1);
 
 namespace MittagQI\ZfExtended\Worker\Trigger;
 
+use MittagQI\ZfExtended\Worker\Queue;
 use Zend_Exception;
 use Zend_Registry;
 use ZfExtended_Debug;
@@ -38,14 +39,9 @@ class Process implements TriggerInterface
      *
      * @throws Zend_Exception
      */
-    public function triggerWorker(string $id, string $hash, string $worker, ?string $taskGuid): bool
+    public function triggerWorker(string $id, string $hash): bool
     {
-        $workerId = [$worker, $taskGuid];
-        $dbName = Zend_Registry::get('config')->resources->db->params->dbname;
-        if ($dbName != 'translate5') { //we ignore default tables in debugging
-            array_unshift($workerId, $dbName);
-        }
-        $this->exec('worker:run ' . $id . ' -n --porcelain --debug="' . join(':', $workerId) . '"');
+        $this->exec('worker:run ' . $id . ' -n --porcelain');
 
         return true;
     }
@@ -68,7 +64,11 @@ class Process implements TriggerInterface
 
     public function triggerQueue(): bool
     {
-        $this->exec('worker:queue -n --porcelain');
+        $workerQueue = \ZfExtended_Factory::get(Queue::class);
+
+        if (! $workerQueue->isRunning()) {
+            $this->exec('worker:queue -n --porcelain');
+        }
 
         return true;
     }

@@ -38,8 +38,8 @@ class Factory
         $config = Zend_Registry::get('config');
 
         return match ($config->runtimeOptions->worker->triggerType) {
-            'process' => new Process(),
-            default => new Http(),
+            'http' => new Http(),
+            default => new Process(),
         };
     }
 }
