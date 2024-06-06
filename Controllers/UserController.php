@@ -81,6 +81,8 @@ class ZfExtended_UserController extends ZfExtended_RestController
         foreach ($this->view->rows as $index => $user) {
             if ($user['id'] !== $authenticatedUser->getId()
                 && $user['editable'] === '1'
+                && ! empty($user['roles'])
+                && $user['roles'] !== ','
                 && ! empty(array_diff(explode(',', $user['roles']), $editableRoles))) {
                 $this->view->rows[$index]['editable'] = '0';
             }
@@ -395,7 +397,7 @@ class ZfExtended_UserController extends ZfExtended_RestController
     {
         if (isset($this->data->passwd)) {
             //convention for passwd being reset;
-            if ($this->data->passwd === '' || is_null($this->data->passwd)) {
+            if (empty($this->data->passwd)) {
                 $this->data->passwd = null;
             } else {
                 $this->data->passwd = ZfExtended_Authentication::getInstance()->createSecurePassword($this->data->passwd);
