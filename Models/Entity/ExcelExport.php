@@ -282,17 +282,12 @@ class ZfExtended_Models_Entity_ExcelExport
     /**
      * Set field to date field format in excel output
      * Also sets a callback function to format field value as required
-     *
-     * @param string $field
      */
-    public function setFieldTypeDate($field)
+    public function setFieldTypeDate(string $field): void
     {
         // for date fields the following callback must be set
-        $stringToDate = function ($string) {
-            $date = strtotime($string);
-            $date = \PhpOffice\PhpSpreadsheet\Shared\Date::PHPToExcel($date, true);
-
-            return $date;
+        $stringToDate = function ($date) {
+            return \PhpOffice\PhpSpreadsheet\Shared\Date::PHPToExcel($date);
         };
 
         $this->setCallback($field, $stringToDate);
