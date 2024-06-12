@@ -81,12 +81,6 @@ final class ZfExtended_Authentication
     private array $authenticatedRoles;
 
     /**
-     * If set, the user was authenticated using an app-token
-     * This steers if the CSRF-protection is active
-     */
-    private bool $isTokenAuth = false;
-
-    /**
      * The to be used algorithm
      */
     private string $algorithm;
@@ -113,7 +107,9 @@ final class ZfExtended_Authentication
 
     public function isAuthenticatedByToken(): bool
     {
-        return $this->isTokenAuth;
+        $userSession = new Zend_Session_Namespace('user');
+
+        return $userSession->data?->isTokenAuth ?? false;
     }
 
     /**
@@ -344,7 +340,6 @@ final class ZfExtended_Authentication
         $data->userName = $this->authenticatedUser->getUserName();
         $data->loginTimeStamp = $_SERVER['REQUEST_TIME'];
         $data->passwd = '********'; // We don't need and don't want the PW hash in the session
-        $data->isTokenAuth = $this->isTokenAuth;
         $data->isClientRestricted = $this->authenticatedUser->isClientRestricted();
         $data->restrictedClientIds = $this->authenticatedUser->getRestrictedClientIds();
         // unset OAuth stuff
@@ -412,14 +407,12 @@ final class ZfExtended_Authentication
         bool $isLoginByAppToken = false,
         bool $updateUserInSession = true
     ): bool {
-        $this->isTokenAuth = false;
         $this->authenticatingUser = ZfExtended_Factory::get(User::class);
 
         try {
             $this->authenticatingUser->loadByLogin($login);
             if ($loginValidator()) {
-                $this->isTokenAuth = $isLoginByAppToken;
-                $this->setAuthenticatedUser($this->authenticatingUser, $updateUserInSession);
+                $this->setAuthenticatedUser($this->authenticatingUser, $updateUserInSession, $isLoginByAppToken);
                 unset($this->authenticatingUser);
 
                 return true;
@@ -463,13 +456,14 @@ final class ZfExtended_Authentication
         return self::AUTH_DENY_USER_NOT_FOUND;
     }
 
-    private function setAuthenticatedUser(User $user, bool $updateSessionData): void
+    private function setAuthenticatedUser(User $user, bool $updateSessionData, bool $isLoginByAppToken = false): void
     {
         $this->authenticatedUser = $user;
         $this->authenticatedRoles = array_values(array_unique(array_merge($user->getRoles(), ['basic', 'noRights'])));
         if ($updateSessionData) {
             $userSession = new Zend_Session_Namespace('user');
             $userSession->data = $this->getUserData();
+            $userSession->data->isTokenAuth = $isLoginByAppToken;
         }
     }
 
@@ -477,7 +471,6 @@ final class ZfExtended_Authentication
     {
         $this->authenticatedUser = null;
         $this->authenticatedRoles = ['noRights'];
-        $this->isTokenAuth = false;
         $this->usedToken = null;
         $this->authStatus = 0;
     }
