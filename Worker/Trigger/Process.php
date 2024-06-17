@@ -58,8 +58,15 @@ class Process implements TriggerInterface
         if ($debug) {
             $cmd .= 'XDEBUG_MODE=debug XDEBUG_SESSION=1 PHP_IDE_CONFIG="serverName=default_upstream" ';
         }
-        $cmd .= 'nohup ./translate5.sh ' . $workerCmd . ' >/dev/null 2>&1 &';
-        exec($cmd);
+
+        // Prepare command and start service
+        if (preg_match('~WIN~', PHP_OS)) {
+            $cmd .= "translate5.bat $workerCmd >NUL 2>&1";
+            pclose(popen($cmd, "r"));
+        } else {
+            $cmd .= 'nohup ./translate5.sh ' . $workerCmd . ' >/dev/null 2>&1 &';
+            exec($cmd);
+        }
     }
 
     public function triggerQueue(): bool
