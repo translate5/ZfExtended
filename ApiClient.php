@@ -63,7 +63,7 @@ class ZfExtended_ApiClient extends Zend_Http_Client
         }
 
         //by default use the session cookie
-        $authCookieName = Zend_Session::getOptions('name');
+        $authCookieName = Zend_Registry::get('config')->resources->ZfExtended_Resource_Session->name;
         if ($authorizationCookie === null) {
             if (! array_key_exists($authCookieName, $_COOKIE)) {
                 throw new ZfExtended_Exception('ZfExtended_ApiClient: Authorization Cookie is not set.');

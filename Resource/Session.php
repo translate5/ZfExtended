@@ -137,8 +137,7 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
     {
         Zend_Session::writeClose();
         $url = $_SERVER['REQUEST_URI'];
-        $url = explode('?', $url);
-        $url = rtrim($url[0], '/');
+        $url = explode('?', $url)[0];
         //preserve a redirect parameter if existing
         if (! empty($_REQUEST['redirect'])) {
             $url .= '?redirect=' . $_REQUEST['redirect'];

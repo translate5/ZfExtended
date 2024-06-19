@@ -31,7 +31,7 @@ END LICENSE AND COPYRIGHT
  * @method void setWorker(string $phpClassName)
  * @method void setResource(string $resource)
  * @method void setSlot(string $slotName)
- * @method void setTaskGuid(string $taskGuid)
+ * @method void setTaskGuid(string|null $taskGuid)
  * @method void setPid(int $pid)
  * @method void setStarttime(string|null $starttime)
  * @method void setEndtime(string|null $endtime)
