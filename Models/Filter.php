@@ -148,17 +148,15 @@ abstract class ZfExtended_Models_Filter
     /***
      * Return all filters as object array
      */
-    public function getFilters()
+    public function getFilters(): array
     {
         return $this->filter;
     }
 
     /**
-     * Remouves filter by filter name ($filter->field)
-     * @param filterName
-     * @return boolean
+     * Removes filter by filter name ($filter->field)
      */
-    public function deleteFilter($filterName)
+    public function deleteFilter(string $filterName): bool
     {
         //checking for a specific filtered field
         foreach ($this->filter as $index => $filter) {
@@ -177,7 +175,6 @@ abstract class ZfExtended_Models_Filter
         $key = array_search($sortName, array_column($this->sort, 'property'));
 
         if ($key !== false) {
-            
             unset($this->sort[$key]);
 
             $this->sort = array_values($this->sort);
@@ -200,9 +197,8 @@ abstract class ZfExtended_Models_Filter
 
     /**
      * returns the current sort
-     * @return multitype:
      */
-    public function getSort()
+    public function getSort(): array
     {
         return $this->sort;
     }
@@ -397,12 +393,10 @@ abstract class ZfExtended_Models_Filter
 
     /**
      * mappt einen gegebenen String auf sein Mapping in $this->_sortColMap, so vorhanden
-     * @param string sortKey
-     * @return string sortKey
      */
-    public function mapSort(string $sortKey)
+    public function mapSort(mixed $sortKey): string
     {
-        $origSortkey = $sortKey;
+        $origSorter = $sortKey;
         if (isset($this->_sortColMap[$sortKey])) {
             $sortKey = $this->_sortColMap[$sortKey];
         }
@@ -412,8 +406,8 @@ abstract class ZfExtended_Models_Filter
 
             return $sortKey->getTable() . '.' . $sortKey->getSearchfield();
         }
-        if (isset($this->fieldTableMap[$origSortkey])) {
-            return $this->fieldTableMap[$origSortkey] . '.' . $sortKey;
+        if (isset($this->fieldTableMap[$origSorter])) {
+            return $this->fieldTableMap[$origSorter] . '.' . $sortKey;
         }
         $defaultTable = empty($this->defaultTable) ? '' : $this->defaultTable . '.';
 

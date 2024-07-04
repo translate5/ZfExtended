@@ -7,13 +7,12 @@ namespace MittagQI\ZfExtended\Models\Filter;
  */
 class FilterValidator implements ValidatorInterface
 {
-
     public function validate(string $field, array $allowedFields, array $fieldMappings): bool
     {
-        if(isset($fieldMappings[$field]))
-        {
+        if (isset($fieldMappings[$field])) {
             $field = $fieldMappings[$field];
         }
+
         return in_array($field, $allowedFields);
     }
 }
