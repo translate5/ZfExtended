@@ -134,8 +134,10 @@ abstract class ZfExtended_Models_Filter
      * Adds an additional filter in internal defined (ext4) format <BR/>
      * Ext4 Filter Object Example: <BR/>
      * {<BR/>
-     *   <b>type:</b> &emsp;numeric | boolean | string | notInList | list| numeric| numeric | numeric | numeric | numeric <BR/>
-     *   <b>comparison:</b>   eq    |    =    | like   | notInList |  in |   eq   |   gt    |   gteq  |    lt   |  lteq   <BR/>
+     *   <b>type:</b> &emsp;numeric | boolean | string | notInList | list| numeric| numeric | numeric | numeric |
+     * numeric <BR/>
+     *   <b>comparison:</b>   eq    |    =    | like   | notInList |  in |   eq   |   gt    |   gteq  |    lt   |  lteq
+     *   <BR/>
      * }
      */
     public function addFilter(stdClass $filter)
@@ -165,6 +167,22 @@ abstract class ZfExtended_Models_Filter
 
                 return true;
             }
+        }
+
+        return false;
+    }
+
+    public function deleteSort(string $sortName): bool
+    {
+        $key = array_search($sortName, array_column($this->sort, 'property'));
+
+        if ($key !== false) {
+            
+            unset($this->sort[$key]);
+
+            $this->sort = array_values($this->sort);
+
+            return true;
         }
 
         return false;
@@ -323,7 +341,8 @@ abstract class ZfExtended_Models_Filter
     /**
      * returns true if filter info is given
      * @param string $fieldName optional, if given checks if a filter for the given original fieldName is set
-     * @param object $foundFilter optional, is a reference, will be populated with the found filter (if a name was given)
+     * @param object $foundFilter optional, is a reference, will be populated with the found filter (if a name was
+     *     given)
      * @return boolean
      */
     public function hasFilter($fieldName = false, &$foundFilter = null)
@@ -347,7 +366,8 @@ abstract class ZfExtended_Models_Filter
      * adds a field to the sortlist
      * @param string $field
      * @param bool $desc [optional] per default sort ASC, if true here sort DESC
-     * @param bool $prepend [optional] per default add field to the end of fieldlist to sort after. set to true to prepend the field to the beginning of the list
+     * @param bool $prepend [optional] per default add field to the end of fieldlist to sort after. set to true to
+     *     prepend the field to the beginning of the list
      */
     public function addSort($field, $desc = false, $prepend = false)
     {
