@@ -30,7 +30,7 @@ namespace MittagQI\ZfExtended\Tools;
 
 use Zend_Registry;
 
-class Markup
+final class Markup
 {
     /**
      * @var string
@@ -42,6 +42,11 @@ class Markup
      * @var string
      */
     public const COMMENT_PATTERN = '~(<!--.*-->)~';
+
+    /**
+     * @var string
+     */
+    public const IMAGE_PATTERN = '~<img[^>]*>~';
 
     /**
      * Evaluates if a text contains Markup
@@ -64,9 +69,20 @@ class Markup
         return self::$strictEscapingUsed;
     }
 
+    /**
+     * Detect if a string contains any tags
+     */
     public static function isMarkup(string $text): bool
     {
-        return (strip_tags($text) != $text);
+        return (strip_tags($text) !== $text);
+    }
+
+    /**
+     * Small Helper to not duplicate code
+     */
+    public static function isEmpty(?string $text): bool
+    {
+        return ($text === null || $text === '');
     }
 
     /**
@@ -93,36 +109,15 @@ class Markup
      */
     public static function escape(string $markup): string
     {
-        // first we need to escape comments as they would be destroyed by the next step otherwise
-        $parts = preg_split(self::COMMENT_PATTERN . 'Us', $markup, -1, PREG_SPLIT_NO_EMPTY | PREG_SPLIT_DELIM_CAPTURE);
-        $result = '';
-        foreach ($parts as $part) {
-            if (preg_match(self::COMMENT_PATTERN . 's', $part) === 1) {
-                $result .= $part;
-            } else {
-                $result .= self::escapePureMarkup($part);
-            }
-        }
-
-        return $result;
+        return self::escapeMarkup($markup, false);
     }
 
     /**
-     * Escapes Markup that is expected to contain no comments
+     * Escapes markup by re-escaping it
      */
-    private static function escapePureMarkup(string $markup): string
+    public static function reEscape(string $markup): string
     {
-        $parts = preg_split(self::PATTERN . 'U', $markup, -1, PREG_SPLIT_NO_EMPTY | PREG_SPLIT_DELIM_CAPTURE);
-        $result = '';
-        foreach ($parts as $part) {
-            if (preg_match(self::PATTERN, $part) === 1) {
-                $result .= $part;
-            } else {
-                $result .= self::escapeText($part);
-            }
-        }
-
-        return $result;
+        return self::escapeMarkup($markup, true);
     }
 
     /**
@@ -146,38 +141,110 @@ class Markup
     }
 
     /**
-     * Unescapes markup escaped with ::escape
-     * Be aware that this may creates invalid Markup !
-     */
-    private static function unescapePureMarkup(string $markup): string
-    {
-        $parts = preg_split(self::PATTERN . 'U', $markup, -1, PREG_SPLIT_NO_EMPTY | PREG_SPLIT_DELIM_CAPTURE);
-        $result = '';
-        foreach ($parts as $part) {
-            if (preg_match(self::PATTERN, $part) === 1) {
-                $result .= $part;
-            } else {
-                $result .= self::unescapeText($part);
-            }
-        }
-
-        return $result;
-    }
-
-    /**
      * Escapes text to XML conformity that is known to contain no tags
      */
-    public static function escapeText(string $textWithoutTags): string
+    public static function escapeText(?string $textWithoutTags): string
     {
-        return htmlspecialchars($textWithoutTags, ENT_XML1 | ENT_COMPAT, null, false);
+        if (self::isEmpty($textWithoutTags)) {
+            return '';
+        }
+
+        return htmlspecialchars($textWithoutTags, ENT_XML1 | ENT_COMPAT | ENT_SUBSTITUTE, null, false);
     }
 
     /**
      * Unescapes text that was escaped with our ::escape API
      */
-    public static function unescapeText(string $text): string
+    public static function unescapeText(?string $text): string
     {
+        if (self::isEmpty($text)) {
+            return '';
+        }
+
         return htmlspecialchars_decode($text, ENT_XML1 | ENT_COMPAT);
+    }
+
+    /**
+     * Escapes text by re-escaping it
+     */
+    public static function reEscapeText(?string $text): string
+    {
+        if (self::isEmpty($text)) {
+            return '';
+        }
+
+        return htmlspecialchars(
+            htmlspecialchars_decode($text, ENT_XML1 | ENT_QUOTES),
+            ENT_XML1 | ENT_QUOTES | ENT_SUBSTITUTE
+        );
+    }
+
+    /**
+     * Escapes a string for use in as attribute-value in a HTML/XML tag
+     * @param bool $escapeWhitespace : if given, whitespace-chars, which shall not show up in attributes, are also
+     *     escaped
+     */
+    public static function escapeForAttribute(?string $value, bool $escapeWhitespace = true): string
+    {
+        if (self::isEmpty($value)) {
+            return '';
+        }
+        // we encode double here
+        $escaped = htmlspecialchars($value, ENT_XML1 | ENT_COMPAT | ENT_SUBSTITUTE, null, true);
+
+        // if wanted with "toxic" whitespace chars
+        return ($escapeWhitespace) ? self::whitespaceToEntities($escaped) : $escaped;
+    }
+
+    /**
+     * Unescapes a string that was escaped with ::escapeForAttribute
+     * @param bool $unescapeWhitespace : if given, whitespace-chars, which shall not show up in attributes, are also
+     *     un-escaped
+     */
+    public static function unescapeFromAttribute(?string $value, bool $unescapeWhitespace = true): string
+    {
+        if (self::isEmpty($value)) {
+            return '';
+        }
+        $unescaped = ($unescapeWhitespace) ? self::entitiesToWhitespace($value) : $value;
+
+        return htmlspecialchars_decode($unescaped, ENT_XML1 | ENT_COMPAT);
+    }
+
+    /**
+     * Escapes text but leaves any Quotes untouched
+     */
+    public static function escapeNoQuotes(?string $text): string
+    {
+        if (self::isEmpty($text)) {
+            return '';
+        }
+
+        return htmlspecialchars($text, ENT_XML1 | ENT_SUBSTITUTE, null, false);
+    }
+
+    /**
+     * Escapes text with single and double quotes
+     */
+    public static function escapeAllQuotes(?string $text): string
+    {
+        if (self::isEmpty($text)) {
+            return '';
+        }
+
+        return htmlspecialchars($text, ENT_XML1 | ENT_QUOTES | ENT_SUBSTITUTE, null, false);
+    }
+
+    /**
+     * Un-Escapes text with single and double quotes
+     */
+    public static function unescapeAllQuotes(?string $text): string
+    {
+        if (self::isEmpty($text)) {
+            return '';
+        }
+
+        return htmlspecialchars_decode($text, ENT_XML1 | ENT_QUOTES);
     }
 
     public static function strip(string $markup, string $newline = "\n"): string
@@ -185,6 +252,11 @@ class Markup
         $markup = self::breaksToNewlines($markup, $newline);
 
         return strip_tags($markup);
+    }
+
+    public static function stripImages(string $markup): string
+    {
+        return preg_replace(self::IMAGE_PATTERN . 'U', '', $markup);
     }
 
     public static function breaksToNewlines(string $markup, string $newline = "\n"): string
@@ -202,7 +274,7 @@ class Markup
 
     /**
      * Protects tags with special t5 tags like '<t5tag17/>'
-     * This protection can help avoiding problems with texts / characters in attributes or with inalid nestings since
+     * This protection can help avoiding problems with texts / characters in attributes or with invalid nestings since
      * the returned text just contains simple single tags The non-tag will be escaped and unescaped when reverting back
      * The protected markup is accessibe via $protectionResult->markup
      */
@@ -267,5 +339,79 @@ class Markup
         }
 
         return $result;
+    }
+
+    /**
+     * Internal API to unify escape/re-escape
+     * Protects comments that may be in the markup
+     */
+    public static function escapeMarkup(string $markup, bool $reEscape = false): string
+    {
+        // first we need to escape comments as they would be destroyed by the next step otherwise
+        $parts = preg_split(self::COMMENT_PATTERN . 'Us', $markup, -1, PREG_SPLIT_NO_EMPTY | PREG_SPLIT_DELIM_CAPTURE);
+        $result = '';
+        foreach ($parts as $part) {
+            if (preg_match(self::COMMENT_PATTERN . 's', $part) === 1) {
+                $result .= $part;
+            } else {
+                $result .= self::escapePureMarkup($part, $reEscape);
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * Escapes Markup that is expected to contain no comments
+     * Optionally can be used to re-escape
+     */
+    private static function escapePureMarkup(string $markup, bool $reEscape = false): string
+    {
+        $parts = preg_split(self::PATTERN . 'U', $markup, -1, PREG_SPLIT_NO_EMPTY | PREG_SPLIT_DELIM_CAPTURE);
+        $result = '';
+        foreach ($parts as $part) {
+            if (preg_match(self::PATTERN, $part) === 1) {
+                $result .= $part;
+            } else {
+                $result .= ($reEscape) ? self::reEscapeText($part) : self::escapeText($part);
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * Unescapes markup escaped with ::escape
+     * Be aware that this may create invalid Markup !
+     */
+    private static function unescapePureMarkup(string $markup): string
+    {
+        $parts = preg_split(self::PATTERN . 'U', $markup, -1, PREG_SPLIT_NO_EMPTY | PREG_SPLIT_DELIM_CAPTURE);
+        $result = '';
+        foreach ($parts as $part) {
+            if (preg_match(self::PATTERN, $part) === 1) {
+                $result .= $part;
+            } else {
+                $result .= self::unescapeText($part);
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * Prepares whitespace for the use in XML/HTML-Attributes
+     */
+    private static function whitespaceToEntities(string $text): string
+    {
+        return str_replace(["\r", "\n", "\t"], ['&#13;', '&#10;', '&#9;'], $text);
+    }
+
+    /**
+     * Re-converts whitespace from an XML/HTML-Attributes
+     */
+    private static function entitiesToWhitespace(string $text): string
+    {
+        return str_replace(['&#13;', '&#10;', '&#9;'], ["\r", "\n", "\t"], $text);
     }
 }

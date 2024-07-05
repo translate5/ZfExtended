@@ -162,20 +162,20 @@ final class ZfExtended_Sanitizer
         }
 
         if (null === $exceptionRegex) {
-            return htmlspecialchars($content);
+            return Markup::escapeAllQuotes($content);
         }
 
         $hasInternalTags = false !== preg_match_all($exceptionRegex, $content, $tags, PREG_SET_ORDER);
 
         if (!$hasInternalTags) {
-            return htmlspecialchars($content);
+            return Markup::escapeAllQuotes($content);
         }
 
         $textParts = preg_split($exceptionRegex, $content);
 
         $result = '';
         foreach ($textParts as $i => $part) {
-            $result .= htmlspecialchars($part, ENT_COMPAT, null, false);
+            $result .= Markup::escapeText($part);
 
             if (isset($tags[$i])) {
                 $result .= $tags[$i][0];
