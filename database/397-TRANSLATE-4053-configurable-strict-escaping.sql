@@ -26,4 +26,4 @@
 -- */
 
 INSERT INTO `Zf_configuration` (`name`, `confirmed`, `module`, `category`, `value`, `default`, `defaults`, `type`, `description`, `level`, `guiName`, `guiGroup`, `comment`)
-VALUES ('runtimeOptions.segment.useStrictEscaping', '1', 'editor', 'segment', '0', '0', '', 'boolean', 'When active, it is attempted to use strict escaping for the segment markup', 1, 'System setup: General', 'Strict escaping is attempted', '');
+VALUES ('runtimeOptions.segment.useStrictEscaping', '1', 'editor', 'segment', '0', '0', '', 'boolean', 'Experimental Feature: When active, it is attempted to use strict escaping for the segment markup', 1, 'System setup: General', 'Strict escaping is attempted (experimental)', '');
