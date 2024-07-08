@@ -113,9 +113,9 @@ final class Markup
     }
 
     /**
-     * Escapes markup by re-escaping it
+     * Escapes markup for importing it as segments
      */
-    public static function reEscape(string $markup): string
+    public static function escapeForImport(string $markup): string
     {
         return self::escapeMarkup($markup, true);
     }
@@ -165,18 +165,18 @@ final class Markup
     }
 
     /**
-     * Escapes text by re-escaping it
+     * Escapes text for Importing it as segment
      */
-    public static function reEscapeText(?string $text): string
+    public static function escapeTextForImport(?string $textWithoutTags): string
     {
-        if (self::isEmpty($text)) {
+        if (self::isEmpty($textWithoutTags)) {
             return '';
         }
+        // when importing, we want to avoid double-encoding of entities, that's why we use ENT_XHTML here ...
+        $text = htmlspecialchars($textWithoutTags, ENT_XHTML | ENT_COMPAT | ENT_SUBSTITUTE, null, false);
 
-        return htmlspecialchars(
-            htmlspecialchars_decode($text, ENT_XML1 | ENT_QUOTES),
-            ENT_XML1 | ENT_QUOTES | ENT_SUBSTITUTE
-        );
+        // we revert any escaping done to numbered entities
+        return preg_replace('~&amp;#([0-9]{2,4});~', '&#$1;', $text);
     }
 
     /**
@@ -345,7 +345,7 @@ final class Markup
      * Internal API to unify escape/re-escape
      * Protects comments that may be in the markup
      */
-    public static function escapeMarkup(string $markup, bool $reEscape = false): string
+    private static function escapeMarkup(string $markup, bool $forImport): string
     {
         // first we need to escape comments as they would be destroyed by the next step otherwise
         $parts = preg_split(self::COMMENT_PATTERN . 'Us', $markup, -1, PREG_SPLIT_NO_EMPTY | PREG_SPLIT_DELIM_CAPTURE);
@@ -354,7 +354,7 @@ final class Markup
             if (preg_match(self::COMMENT_PATTERN . 's', $part) === 1) {
                 $result .= $part;
             } else {
-                $result .= self::escapePureMarkup($part, $reEscape);
+                $result .= self::escapePureMarkup($part, $forImport);
             }
         }
 
@@ -365,7 +365,7 @@ final class Markup
      * Escapes Markup that is expected to contain no comments
      * Optionally can be used to re-escape
      */
-    private static function escapePureMarkup(string $markup, bool $reEscape = false): string
+    private static function escapePureMarkup(string $markup, bool $forImport): string
     {
         $parts = preg_split(self::PATTERN . 'U', $markup, -1, PREG_SPLIT_NO_EMPTY | PREG_SPLIT_DELIM_CAPTURE);
         $result = '';
@@ -373,7 +373,11 @@ final class Markup
             if (preg_match(self::PATTERN, $part) === 1) {
                 $result .= $part;
             } else {
-                $result .= ($reEscape) ? self::reEscapeText($part) : self::escapeText($part);
+                if ($forImport) {
+                    $result .= self::escapeTextForImport($part);
+                } else {
+                    $result .= self::escapeText($part);
+                }
             }
         }
 
