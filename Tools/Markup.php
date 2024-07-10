@@ -62,7 +62,7 @@ final class Markup
 
     /**
      * works only if ungreedy !
-     * @var string. 'U'
+     * @var string
      */
     public const COMMENT_PATTERN = '~(<!--.*-->)~';
 
