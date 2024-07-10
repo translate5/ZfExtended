@@ -220,7 +220,8 @@ class ZfExtended_Plugin_Manager
             return empty($this->pluginInstances[$key]) ? null : $this->pluginInstances[$key];
         }
 
-        //if some one ever traps here: search key ordered by "_" in the plugin class list (or implement something like a search tree)
+        //if some one ever traps here: search key ordered by "_" in the plugin class list
+        // (or implement something like a search tree)
         // Multiple Plugin Classes found to key
         throw new ZfExtended_Plugin_Exception('E1234', [
             'key' => $key,
@@ -341,7 +342,8 @@ class ZfExtended_Plugin_Manager
     {
         $plugins = $this->getAvailable();
         $active = [];
-        foreach ($plugins as $plugin => $cls) {
+        foreach ($plugins as $cls) {
+            /* @var \ZfExtended_Plugin_Abstract $cls */
             if ($cls::isNeededForTests()) {
                 $active[] = $cls;
             }
