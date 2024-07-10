@@ -405,7 +405,9 @@ final class Markup
             } else {
                 // when escaping for import, we escape all '>' in attribute-values first
                 // otherwise, the escaping-regex may fails
-                $part = self::preEscapeTagAttributes($part);
+                if($forImport){
+                    $part = self::preEscapeTagAttributes($part);
+                }
                 $result .= self::escapePureMarkup($part, $forImport);
             }
         }
