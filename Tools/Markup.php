@@ -375,7 +375,7 @@ final class Markup
     }
 
     /**
-     * Escapes all attripute-values in the given tag-string
+     * Escapes all attribute-values in the given tag-string
      */
     private static function preEscapeAttributeVals(string $tagMarkup): string
     {
