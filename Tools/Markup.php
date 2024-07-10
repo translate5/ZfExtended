@@ -34,12 +34,35 @@ final class Markup
 {
     /**
      * @var string
+     * Detects Tags in a Markup string. Does expect the tags not to contain ">",
+     * so the attribute-values need to be pre-escaped with ::preEscapeTagsWithAttributes
+     * TODO FIXME: per spec any alphanumeric char is allowed for tag-names.
+     * See: https://www.w3.org/TR/2008/REC-xml-20081126/#sec-common-syn
+     * In reality though, we never had that ...
      */
-    public const PATTERN = '~(</{0,1}[a-zA-Z][^>]*/{0,1}>)~';
+    public const PATTERN = '~(</{0,1}[a-zA-Z_][^>]*/{0,1}>)~';
+
+    /**
+     * @var string
+     * finds tags with attributes. Used to pre-escape attribute-values
+     * TODO FIXME: per spec any alphanumeric char is allowed for tag-names.
+     * See: https://www.w3.org/TR/2008/REC-xml-20081126/#sec-common-syn
+     * In reality though, we never had that ...
+     */
+    public const TAG_WITH_ATTRIBUTE_PATTERN = '~<[a-zA-Z_][^>]*([a-zA-Z_][^">]+\s*=\s*"[^"]+"|[a-zA-Z_][^\'>]+\s*=\s*\'[^\']+\')+[^<]*>~';
+
+    /**
+     * @var string
+     * finds attributes within a tag
+     * TODO FIXME: per spec any alphanumeric char is allowed for tag-names.
+     * See: https://www.w3.org/TR/2008/REC-xml-20081126/#sec-common-syn
+     * In reality though, we never had that ...
+     */
+    public const ATTRIBUTE_IN_TAG_PATTERN = '([a-zA-Z_][^">= ]+\s*=\s*"([^"]+)"|[a-zA-Z_][^\'>= ]+\s*=\s*\'([^\']+)\')';
 
     /**
      * works only if ungreedy !
-     * @var string
+     * @var string. 'U'
      */
     public const COMMENT_PATTERN = '~(<!--.*-->)~';
 
@@ -342,6 +365,32 @@ final class Markup
     }
 
     /**
+     * Escapes all attribute-values of any tags in the given markup string
+     */
+    public static function preEscapeTagAttributes(string $markup): string
+    {
+        return preg_replace_callback(self::TAG_WITH_ATTRIBUTE_PATTERN, function ($matches) {
+            return self::preEscapeAttributeVals($matches[0]);
+        }, $markup);
+    }
+
+    /**
+     * Escapes all attripute-values in the given tag-string
+     */
+    private static function preEscapeAttributeVals(string $tagMarkup): string
+    {
+        return preg_replace_callback(self::ATTRIBUTE_IN_TAG_PATTERN, function ($matches) {
+            $name = trim(explode('=', $matches[0])[0]);
+            $quote = substr($matches[0], -1, 1);
+            $value = $matches[count($matches) - 1];
+
+            // return the attribute-val with only the '>' escaped.
+            // For convenience, we remove any whitespace around the "="
+            return $name . '=' . $quote . str_replace('>', '&gt;', $value) . $quote;
+        }, $tagMarkup);
+    }
+
+    /**
      * Internal API to unify escape/re-escape
      * Protects comments that may be in the markup
      */
@@ -354,6 +403,9 @@ final class Markup
             if (preg_match(self::COMMENT_PATTERN . 's', $part) === 1) {
                 $result .= $part;
             } else {
+                // when escaping for import, we escape all '>' in attribute-values first
+                // otherwise, the escaping-regex may fails
+                $part = self::preEscapeTagAttributes($part);
                 $result .= self::escapePureMarkup($part, $forImport);
             }
         }
@@ -371,8 +423,13 @@ final class Markup
         $result = '';
         foreach ($parts as $part) {
             if (preg_match(self::PATTERN, $part) === 1) {
+                // a tag stays untouched
+                $result .= $part;
+            } else if(str_starts_with(trim($part), '<![CDATA[') && str_ends_with(trim($part), ']]>')) {
+                // also a CDATA section will not be altered
                 $result .= $part;
             } else {
+                // normal content must be escaped
                 if ($forImport) {
                     $result .= self::escapeTextForImport($part);
                 } else {
