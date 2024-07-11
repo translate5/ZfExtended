@@ -28,6 +28,8 @@ END LICENSE AND COPYRIGHT
 
 namespace MittagQI\ZfExtended\Tools;
 
+use stdClass;
+use Zend_Exception;
 use Zend_Registry;
 
 final class Markup
@@ -61,10 +63,25 @@ final class Markup
     public const ATTRIBUTE_IN_TAG_PATTERN = '([a-zA-Z_][^">= ]+\s*=\s*"([^"]+)"|[a-zA-Z_][^\'>= ]+\s*=\s*\'([^\']+)\')';
 
     /**
-     * works only if ungreedy !
+     * Pattern to find CDATA sections OR Comment sections
+     * works only if ungreedy & multiline !
+     * @var string
+     */
+    public const COMMENT_CDATA_PATTERN = '~(<!\[CDATA\[.*\]\]>|<!--.*-->)~';
+
+    /**
+     * Pattern to find comments
+     * works only if ungreedy & multiline !
      * @var string
      */
     public const COMMENT_PATTERN = '~(<!--.*-->)~';
+
+    /**
+     * Pattern to find CDATA sections
+     * works only if ungreedy & multiline !
+     * @var string
+     */
+    public const CDATA_PATTERN = '~(<!\[CDATA\[.*\]\]>)~';
 
     /**
      * @var string
@@ -80,7 +97,7 @@ final class Markup
 
     /**
      * The central function that defines, if we use strict escaping (">" always escaped in text-content) or not
-     * @throws \Zend_Exception
+     * @throws Zend_Exception
      */
     public static function useStrictEscaping(): bool
     {
@@ -150,10 +167,10 @@ final class Markup
     public static function unescape(string $markup): string
     {
         // first we need to unescape comments as they would be destroyed by the next step otherwise
-        $parts = preg_split(self::COMMENT_PATTERN . 'Us', $markup, -1, PREG_SPLIT_NO_EMPTY | PREG_SPLIT_DELIM_CAPTURE);
+        $parts = self::splitComentsAndCdataSections($markup);
         $result = '';
         foreach ($parts as $part) {
-            if (preg_match(self::COMMENT_PATTERN . 's', $part) === 1) {
+            if (self::isCommentOrCdataSection($part)) {
                 $result .= $part;
             } else {
                 $result .= self::unescapePureMarkup($part);
@@ -300,10 +317,11 @@ final class Markup
      * This protection can help avoiding problems with texts / characters in attributes or with invalid nestings since
      * the returned text just contains simple single tags The non-tag will be escaped and unescaped when reverting back
      * The protected markup is accessibe via $protectionResult->markup
+     * Note, that this API does not take CDATA-sections into account!
      */
-    public static function protectTags(string $markup): \stdClass
+    public static function protectTags(string $markup): stdClass
     {
-        $result = new \stdClass();
+        $result = new stdClass();
         $result->map = [];
         $result->markup = '';
         // first, replace Comments
@@ -342,9 +360,9 @@ final class Markup
     }
 
     /**
-     * @param \stdClass $protectionResult : must be what ::protectTags returns
+     * @param stdClass $protectionResult : must be what ::protectTags returns
      */
-    public static function unprotectTags(string $tagProtectedMarkup, \stdClass $protectionResult): string
+    public static function unprotectTags(string $tagProtectedMarkup, stdClass $protectionResult): string
     {
         $parts = preg_split(
             self::PATTERN . 'U',
@@ -396,16 +414,18 @@ final class Markup
      */
     private static function escapeMarkup(string $markup, bool $forImport): string
     {
-        // first we need to escape comments as they would be destroyed by the next step otherwise
-        $parts = preg_split(self::COMMENT_PATTERN . 'Us', $markup, -1, PREG_SPLIT_NO_EMPTY | PREG_SPLIT_DELIM_CAPTURE);
+        // first we need to separate comments & cdata sections as they would be harmed by the next steps otherwise
+        $parts = self::splitComentsAndCdataSections($markup);
         $result = '';
         foreach ($parts as $part) {
-            if (preg_match(self::COMMENT_PATTERN . 's', $part) === 1) {
+            if (self::isCommentOrCdataSection($part)) {
+                // comments & cdata will just be passed
                 $result .= $part;
             } else {
                 // when escaping for import, we escape all '>' in attribute-values first
-                // otherwise, the escaping-regex may fails
-                if($forImport){
+                // otherwise, the escaping-regex may fails.
+                // this will change the tag-markup
+                if ($forImport) {
                     $part = self::preEscapeTagAttributes($part);
                 }
                 $result .= self::escapePureMarkup($part, $forImport);
@@ -413,6 +433,29 @@ final class Markup
         }
 
         return $result;
+    }
+
+    /**
+     * Splits a markup-string into parts where Comments and CDATA-sections are separated
+     * @return string[]
+     */
+    private static function splitComentsAndCdataSections(string $markup): array
+    {
+        return preg_split(
+            self::COMMENT_CDATA_PATTERN . 'Us',
+            $markup,
+            -1,
+            PREG_SPLIT_NO_EMPTY | PREG_SPLIT_DELIM_CAPTURE
+        );
+    }
+
+    /**
+     * Helper to detect comments / cdata-sections
+     */
+    private static function isCommentOrCdataSection(string $markup): bool
+    {
+        return preg_match(self::COMMENT_PATTERN . 's', trim($markup)) === 1 ||
+            preg_match(self::CDATA_PATTERN . 's', trim($markup)) === 1;
     }
 
     /**
@@ -426,9 +469,6 @@ final class Markup
         foreach ($parts as $part) {
             if (preg_match(self::PATTERN, $part) === 1) {
                 // a tag stays untouched
-                $result .= $part;
-            } else if(str_starts_with(trim($part), '<![CDATA[') && str_ends_with(trim($part), ']]>')) {
-                // also a CDATA section will not be altered
                 $result .= $part;
             } else {
                 // normal content must be escaped
