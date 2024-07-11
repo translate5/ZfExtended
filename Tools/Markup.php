@@ -389,7 +389,7 @@ final class Markup
      * Internal API to unify escape/re-escape
      * Protects comments that may be in the markup
      */
-    private static function escapeMarkup(string $markup, bool $strict): string
+    private static function escapeMarkup(string $markup, bool $forImport): string
     {
         // first we need to separate comments & cdata sections as they would be harmed by the next steps otherwise
         $parts = self::splitComentsAndCdataSections($markup);
@@ -402,10 +402,10 @@ final class Markup
                 // when escaping for import, we escape all '>' in attribute-values first
                 // otherwise, the escaping-regex may fails.
                 // this will change the tag-markup
-                if ($strict) {
+                if ($forImport) {
                     $part = self::preEscapeTagAttributes($part);
                 }
-                $result .= self::escapePureMarkup($part, $strict);
+                $result .= self::escapePureMarkup($part, $forImport);
             }
         }
 
@@ -439,7 +439,7 @@ final class Markup
      * Escapes Markup that is expected to contain no comments
      * Optionally can be used to re-escape
      */
-    private static function escapePureMarkup(string $markup, bool $strict): string
+    private static function escapePureMarkup(string $markup, bool $forImport): string
     {
         $parts = preg_split(self::PATTERN . 'U', $markup, -1, PREG_SPLIT_NO_EMPTY | PREG_SPLIT_DELIM_CAPTURE);
         $result = '';
@@ -449,7 +449,7 @@ final class Markup
                 $result .= $part;
             } else {
                 // normal content must be escaped
-                if ($strict) {
+                if ($forImport) {
                     $result .= self::escapeImportText($part);
                 } else {
                     $result .= self::escapeText($part);
