@@ -146,6 +146,7 @@ final class Markup
     /**
      * escapes markup, leaves the tags and comments alive but escape any text inbetween to XML standards
      * Obviously this expect the markup to be valid...
+     * Note, that this API potentially creates invalid markup if there are non-escaped ">" in tag-attributes
      */
     public static function escape(string $markup): string
     {
@@ -155,7 +156,7 @@ final class Markup
     /**
      * Escapes markup for importing it as segments
      */
-    public static function escapeForImport(string $markup): string
+    public static function escapeStrict(string $markup): string
     {
         return self::escapeMarkup($markup, true);
     }
@@ -205,14 +206,14 @@ final class Markup
     }
 
     /**
-     * Escapes text for Importing it as segment
+     * Escapes text in a strict manner, so all ">" are escaped
      */
-    public static function escapeTextForImport(?string $textWithoutTags): string
+    public static function escapeTextStrict(?string $textWithoutTags): string
     {
         if (self::isEmpty($textWithoutTags)) {
             return '';
         }
-        // when importing, we want to avoid double-encoding of entities, that's why we use ENT_XHTML here ...
+        // when strict escaping, we want to avoid double-encoding of entities, that's why we use ENT_XHTML here ...
         $text = htmlspecialchars($textWithoutTags, ENT_XHTML | ENT_COMPAT | ENT_SUBSTITUTE, null, false);
 
         // we revert any escaping done to numbered entities
@@ -383,36 +384,10 @@ final class Markup
     }
 
     /**
-     * Escapes all attribute-values of any tags in the given markup string
-     */
-    public static function preEscapeTagAttributes(string $markup): string
-    {
-        return preg_replace_callback(self::TAG_WITH_ATTRIBUTE_PATTERN, function ($matches) {
-            return self::preEscapeAttributeVals($matches[0]);
-        }, $markup);
-    }
-
-    /**
-     * Escapes all attribute-values in the given tag-string
-     */
-    private static function preEscapeAttributeVals(string $tagMarkup): string
-    {
-        return preg_replace_callback(self::ATTRIBUTE_IN_TAG_PATTERN, function ($matches) {
-            $name = trim(explode('=', $matches[0])[0]);
-            $quote = substr($matches[0], -1, 1);
-            $value = $matches[count($matches) - 1];
-
-            // return the attribute-val with only the '>' escaped.
-            // For convenience, we remove any whitespace around the "="
-            return $name . '=' . $quote . str_replace('>', '&gt;', $value) . $quote;
-        }, $tagMarkup);
-    }
-
-    /**
      * Internal API to unify escape/re-escape
      * Protects comments that may be in the markup
      */
-    private static function escapeMarkup(string $markup, bool $forImport): string
+    private static function escapeMarkup(string $markup, bool $strict): string
     {
         // first we need to separate comments & cdata sections as they would be harmed by the next steps otherwise
         $parts = self::splitComentsAndCdataSections($markup);
@@ -425,10 +400,10 @@ final class Markup
                 // when escaping for import, we escape all '>' in attribute-values first
                 // otherwise, the escaping-regex may fails.
                 // this will change the tag-markup
-                if ($forImport) {
+                if ($strict) {
                     $part = self::preEscapeTagAttributes($part);
                 }
-                $result .= self::escapePureMarkup($part, $forImport);
+                $result .= self::escapePureMarkup($part, $strict);
             }
         }
 
@@ -462,7 +437,7 @@ final class Markup
      * Escapes Markup that is expected to contain no comments
      * Optionally can be used to re-escape
      */
-    private static function escapePureMarkup(string $markup, bool $forImport): string
+    private static function escapePureMarkup(string $markup, bool $strict): string
     {
         $parts = preg_split(self::PATTERN . 'U', $markup, -1, PREG_SPLIT_NO_EMPTY | PREG_SPLIT_DELIM_CAPTURE);
         $result = '';
@@ -472,8 +447,8 @@ final class Markup
                 $result .= $part;
             } else {
                 // normal content must be escaped
-                if ($forImport) {
-                    $result .= self::escapeTextForImport($part);
+                if ($strict) {
+                    $result .= self::escapeTextStrict($part);
                 } else {
                     $result .= self::escapeText($part);
                 }
@@ -481,6 +456,32 @@ final class Markup
         }
 
         return $result;
+    }
+
+    /**
+     * Escapes all attribute-values of any tags in the given markup string
+     */
+    public static function preEscapeTagAttributes(string $markup): string
+    {
+        return preg_replace_callback(self::TAG_WITH_ATTRIBUTE_PATTERN, function ($matches) {
+            return self::preEscapeAttributeVals($matches[0]);
+        }, $markup);
+    }
+
+    /**
+     * Escapes all attribute-values in the given tag-string
+     */
+    private static function preEscapeAttributeVals(string $tagMarkup): string
+    {
+        return preg_replace_callback(self::ATTRIBUTE_IN_TAG_PATTERN, function ($matches) {
+            $name = trim(explode('=', $matches[0])[0]);
+            $quote = substr($matches[0], -1, 1);
+            $value = $matches[count($matches) - 1];
+
+            // return the attribute-val with only the '>' escaped.
+            // For convenience, we remove any whitespace around the "="
+            return $name . '=' . $quote . str_replace('>', '&gt;', $value) . $quote;
+        }, $tagMarkup);
     }
 
     /**
