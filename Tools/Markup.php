@@ -145,7 +145,7 @@ final class Markup
 
     /**
      * escapes markup, leaves the tags and comments alive but escape any text inbetween to XML standards
-     * Obviously this expect the markup to be valid...
+     * Obviously this expect the markup to be valid and the tag-attributes strictly escaped
      * Note, that this API potentially creates invalid markup if there are non-escaped ">" in tag-attributes
      */
     public static function escape(string $markup): string
@@ -155,8 +155,10 @@ final class Markup
 
     /**
      * Escapes markup for importing it as segments
+     * This will cope with non-strict escaped attributes
+     * Do never use on already imported segments / DB-contents as this may alters the tags
      */
-    public static function escapeStrict(string $markup): string
+    public static function escapeImport(string $markup): string
     {
         return self::escapeMarkup($markup, true);
     }
@@ -206,9 +208,9 @@ final class Markup
     }
 
     /**
-     * Escapes text in a strict manner, so all ">" are escaped
+     * Escapes import text, where we do not now the standard of escaping (strict, non-strict, XML, HTML5, XHTML)
      */
-    public static function escapeTextStrict(?string $textWithoutTags): string
+    public static function escapeImportText(?string $textWithoutTags): string
     {
         if (self::isEmpty($textWithoutTags)) {
             return '';
@@ -448,7 +450,7 @@ final class Markup
             } else {
                 // normal content must be escaped
                 if ($strict) {
-                    $result .= self::escapeTextStrict($part);
+                    $result .= self::escapeImportText($part);
                 } else {
                     $result .= self::escapeText($part);
                 }
