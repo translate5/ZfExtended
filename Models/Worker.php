@@ -40,6 +40,8 @@ END LICENSE AND COPYRIGHT
  * @method void setMaxParallelProcesses(int $maxParallelProcesses)
  * @method void setBlockingType(string $blockingType)
  * @method void setProgress(float $progress)
+ * @method void setDelayedUntil(int $until)
+ * @method void setDelays(int $numDelays)
  *
  * @method string getId()
  * @method string getParentId()
@@ -56,28 +58,60 @@ END LICENSE AND COPYRIGHT
  * @method string getMaxParallelProcesses()
  * @method string getBlockingType()
  * @method string getProgress()
+ * @method string getDelayedUntil()
+ * @method string getDelays()
  */
 class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
 {
     use ZfExtended_Models_Db_DeadLockHandlerTrait;
 
     /**
-     * This constant values define the different worker-states
+     * the worker is added to the worker table, but is not ready to run (for example some other workers are
+     * still missing in the worker table) call schedulePrepared to mark the prepared workers of a taskGuid
+     * or worker group to be scheduled
      * @var string
      */
-    public const STATE_PREPARE = 'prepare';    // the worker is added to the worker table, but is not ready to run
+    public const STATE_PREPARE = 'prepare';
 
-    // (for example some other workers are still missing in the worker table)
-    // call schedulePrepared to mark the prepared workers of a taskGuid or worker group to be scheduled
-    public const STATE_SCHEDULED = 'scheduled';  // scheduled workers may be set to waiting by wakeupScheduled but keep the order as defined in worker dependencies
+    /**
+     * scheduled workers may be set to waiting by wakeupScheduled but keep the order as defined in worker dependencies
+     * @var string
+     */
+    public const STATE_SCHEDULED = 'scheduled';
 
-    public const STATE_WAITING = 'waiting';    // waiting workers are ready to run, and may be started (set to running) in parallel, restricted by maxRunProcesses and slot / resource blocking mechanisms
+    /**
+     * waiting workers are ready to run, and may be started (set to running) in parallel,
+     * restricted by maxRunProcesses and slot / resource blocking mechanisms
+     * @var string
+     */
+    public const STATE_WAITING = 'waiting';
 
-    public const STATE_RUNNING = 'running';    // the worker is running
+    /**
+     * the worker is running
+     * @var string
+     */
+    public const STATE_RUNNING = 'running';
 
-    public const STATE_DEFUNCT = 'defunct';    // the worker (or a sub worker) crashed
+    /**
+     * the worker (or a sub worker) crashed
+     * @var string
+     */
+    public const STATE_DEFUNCT = 'defunct';
 
-    public const STATE_DONE = 'done';       // the worker has successfully finished its work
+    /**
+     * the worker has successfully finished its work
+     * @var string
+     */
+    public const STATE_DONE = 'done';
+
+    /**
+     * The worker is waiting for a (external) service to be available again. In this state, the worker-process is
+     * set to scheduled by a cron service after the given delay-time.
+     * The delay-time is set by the worker itself and after a max number of retries an exception is thrown
+     * (leading to an erroneus task)
+     * @var string
+     */
+    public const STATE_DELAYED = 'delayed';     //
 
     public const WORKER_SERVERID_HEADER = 'X-Translate5-Worker-Serverid';
 
@@ -146,6 +180,8 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
      */
     public function loadByState(string $state, string $worker = null, string $taskGuid = null): array
     {
+        $rows = null;
+
         try {
             $s = $this->db->select()
                 ->where('state = ?', $state)
@@ -159,10 +195,8 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
             $rows = $this->db->fetchAll($s);
         } catch (Exception $e) {
             $this->notFound('NotFound after other Error', $e);
-
-            return [];
         }
-        if ($rows->count() > 0) {
+        if ($rows !== null && $rows->count() > 0) {
             return $rows->toArray();
         }
 
@@ -180,12 +214,19 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
     public function findWorkerContext(string $taskGuid)
     {
         $s = $this->db->select()
-            ->where('state IN (?)', [self::STATE_RUNNING, self::STATE_PREPARE, self::STATE_SCHEDULED, self::STATE_DONE])
+            ->where('state IN (?)', [
+                self::STATE_RUNNING,
+                self::STATE_PREPARE,
+                self::STATE_SCHEDULED,
+                self::STATE_DELAYED,
+                self::STATE_DONE,
+            ])
             ->where('taskGuid = ?', $taskGuid)
             ->order([
                 new Zend_Db_Expr('state="' . self::STATE_RUNNING . '" desc'),
                 new Zend_Db_Expr('state="' . self::STATE_PREPARE . '" desc'),
                 new Zend_Db_Expr('state="' . self::STATE_SCHEDULED . '" desc'),
+                new Zend_Db_Expr('state="' . self::STATE_DELAYED . '" desc'),
                 new Zend_Db_Expr('state="' . self::STATE_DONE . '" desc'),
             ])->limit(1);
         $result = $this->db->fetchAll($s)->toArray();
@@ -262,7 +303,8 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
                                     '" . self::STATE_WAITING . "',
                                     '" . self::STATE_RUNNING . "',
                                     '" . self::STATE_SCHEDULED . "',
-                                    '" . self::STATE_PREPARE . "'
+                                    '" . self::STATE_PREPARE . "',
+                                    '" . self::STATE_DELAYED . "'
                                 )
                                 AND ws2.id = w.id)
                         )
@@ -294,10 +336,11 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
         if (empty($parentId)) {
             $parentId = $this->getId();
         }
-        $bindings = [self::STATE_SCHEDULED, self::STATE_PREPARE, $parentId, $parentId];
-        $sql = 'UPDATE `Zf_worker` SET `state` = ? ';
-        $sql .= 'WHERE `state` = ? ';
+
+        $sql = 'UPDATE `Zf_worker` SET `state` = \'' . self::STATE_SCHEDULED . '\' ';
+        $sql .= 'WHERE `state` = \'' . self::STATE_PREPARE . '\' ';
         $sql .= 'AND (`id` = ? OR `parentId` = ?) ';
+        $bindings = [$parentId, $parentId];
         if (! empty($taskGuid)) {
             $sql .= 'AND taskGuid = ? ';
             $bindings[] = $taskGuid;
@@ -407,8 +450,19 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
     public function setRemainingToDone()
     {
         // set unfinished workers to done
-        $bindings = [self::STATE_DONE, $this->getTaskGuid(), $this->getWorker(), $this->getId(), self::STATE_PREPARE, self::STATE_SCHEDULED, self::STATE_WAITING, self::STATE_RUNNING];
-        $sql = 'UPDATE `Zf_worker` SET `state` = ?  WHERE `taskGuid` = ? AND `worker` = ? AND `id` != ? AND `state` IN (?, ?, ?, ?)';
+        $sql =
+            'UPDATE `Zf_worker` SET `state` = \'' . self::STATE_DONE . '\' ' .
+            'WHERE `taskGuid` = ? ' .
+            'AND `worker` = ? ' .
+            'AND `id` != ? ' .
+            'AND `state` IN (' .
+                '"' . self::STATE_PREPARE . '",' .
+                '"' . self::STATE_SCHEDULED . '",' .
+                '"' . self::STATE_WAITING . '",' .
+                '"' . self::STATE_RUNNING . '",' .
+                '"' . self::STATE_DELAYED . '"' .
+            ')';
+        $bindings = [$this->getTaskGuid(), $this->getWorker(), $this->getId()];
         $this->retryOnDeadlock(function () use ($sql, $bindings) {
             return $this->db->getAdapter()->query($sql, $bindings);
         }, true);
@@ -503,7 +557,7 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
             ->from($db->info($db::NAME), ['slot', 'COUNT(*) AS count'])
             ->where('resource = ?', $resourceName)
             ->where('worker = ?', $this->getWorker())
-            ->where('state IN (?)', [self::STATE_WAITING, self::STATE_RUNNING])
+            ->where('state IN (?)', [self::STATE_WAITING, self::STATE_RUNNING, self::STATE_DELAYED])
             ->group(['resource', 'slot'])
             ->order('count ASC');
 
@@ -561,6 +615,7 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
             self::STATE_SCHEDULED => 0,
             self::STATE_WAITING => 0,
             self::STATE_RUNNING => 0,
+            self::STATE_DELAYED => 0,
             self::STATE_DEFUNCT => 0,
             self::STATE_DONE => 0,
         ];
@@ -572,7 +627,7 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
     }
 
     /**
-     * Retrieves a unique list of all wirkers not in the state "done"
+     * Retrieves a unique list of all workers not in the state "done"
      */
     public function getRemainingWorkerInfo(): array
     {
@@ -580,6 +635,7 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
             self::STATE_SCHEDULED,
             self::STATE_WAITING,
             self::STATE_RUNNING,
+            self::STATE_DELAYED,
             self::STATE_DEFUNCT,
         ];
         $select = $this->db->select()->where('state IN (?)', $states);
@@ -644,7 +700,7 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
             }
 
             $this->reduceDeadlocks();
-            $affectedStates = [self::STATE_WAITING, self::STATE_SCHEDULED, self::STATE_PREPARE];
+            $affectedStates = [self::STATE_WAITING, self::STATE_SCHEDULED, self::STATE_PREPARE, self::STATE_DELAYED];
             if ($includeRunning) {
                 $affectedStates[] = self::STATE_RUNNING;
             }
@@ -655,8 +711,11 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
                 $params[] = $this->getParentId();
             }
             $stateInclude = $this->db->getAdapter()->quoteInto(' AND state IN (?)', $affectedStates);
-            $this->db->getAdapter()->query('UPDATE Zf_worker SET state = \'' . self::STATE_DEFUNCT . '\'
-                WHERE ' . $taskGuidSql . $byGroup . $stateInclude . $workerExclude, $params);
+            $this->db->getAdapter()->query(
+                'UPDATE Zf_worker SET state = \'' . self::STATE_DEFUNCT . '\' ' .
+                'WHERE ' . $taskGuidSql . $byGroup . $stateInclude . $workerExclude,
+                $params
+            );
         });
     }
 
@@ -670,6 +729,7 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
                 self::STATE_RUNNING,
                 self::STATE_WAITING,
                 self::STATE_SCHEDULED,
+                self::STATE_DELAYED,
                 self::STATE_PREPARE,
             ])
             ->where('taskGuid = ?', $taskGuid)

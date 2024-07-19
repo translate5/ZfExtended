@@ -22,6 +22,7 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
+use MittagQI\ZfExtended\Worker\Exception\MaxDelaysException;
 use MittagQI\ZfExtended\Worker\Logger;
 
 /**
@@ -45,6 +46,21 @@ abstract class ZfExtended_Worker_Abstract
      * @var string
      */
     public const BLOCK_GLOBAL = 'global';
+
+    /**
+     * Defines the max. amount a worker can be delayed (re-scheduled after a waiting time)
+     * in case e.g. of a non-responding service
+     * @var int
+     */
+    public const MAX_DELAYS = 5;
+
+    /**
+     * Defines the default waiting-time for a worker (seconds) when the worker is in state "delayed"
+     * in case e.g. of a non-responding service.
+     * The delay increases with every delay that already happened, this behaviour can be overwritten in ::calculateDelay
+     * @var int
+     */
+    public const DELAY_TIME = 30;
 
     /**
      * @var ZfExtended_Models_Worker
@@ -267,19 +283,17 @@ abstract class ZfExtended_Worker_Abstract
      * waits until the worker with the given ID is done
      *  defunct will trigger an exception
      * @param Closure $filter optional filter with the loaded ZfExtended_Models_Worker as parameter, must return true to wait for the model or false to not.
-     * @return boolean true if something found to wait on, false if not
      */
     public function waitFor(string $taskGuid, Closure $filter = null)
     {
-        $wm = $this->workerModel = ZfExtended_Factory::get('ZfExtended_Models_Worker');
-        /* @var $wm ZfExtended_Models_Worker */
+        $wm = $this->workerModel = ZfExtended_Factory::get(ZfExtended_Models_Worker::class);
 
         //set a default filter if nothing given
         is_null($filter) && $filter = function () {
             return true;
         };
 
-        //TODO: getting the class name this way is not factory overwrite aware:
+        // TODO: getting the class name this way is not factory overwrite aware:
         if ($wm->loadLatestOpen(get_class($this), $taskGuid) && $filter($wm)) {
             $this->setBlocking();
             $this->emulateBlocking();
@@ -416,18 +430,9 @@ abstract class ZfExtended_Worker_Abstract
             // do the actual work
             $result = $this->work();
 
-            $progressDone = $this->calculateProgressDone();
-            $this->workerModel->setState(ZfExtended_Models_Worker::STATE_DONE);
-            $this->workerModel->setProgress($progressDone);
-            $this->workerModel->setEndtime(new Zend_Db_Expr('NOW()'));
-            $this->finishedWorker = clone $this->workerModel;
-            if (! $this->saveWorkerDeadlockProof()) {
-                Logger::getInstance()->log($this->workerModel, 'missing worker');
-
+            if (! $this->setDone()) {
                 return false;
             }
-            Logger::getInstance()->log($this->workerModel, ZfExtended_Models_Worker::STATE_DONE);
-            $this->onProgressUpdated($progressDone);
         } catch (Throwable $workException) {
             $this->reconnectDb();
             $result = false;
@@ -484,6 +489,89 @@ abstract class ZfExtended_Worker_Abstract
     protected function calculateProgressDone(): float
     {
         return 1;
+    }
+
+    /**
+     * Calculates the min. delay-time a worker with a non-responding service will wait for the next attempt
+     */
+    protected function calculateDelay(): int
+    {
+        return ((int) $this->workerModel->getDelays()) * static::DELAY_TIME;
+    }
+
+    /**
+     * Is called when the num of max delays for a non-responding/malfunctioning service is exceeded
+     * @throws MaxDelaysException
+     */
+    protected function onTooManyDelays(string $serviceName, string $workerName = null): void
+    {
+        throw new MaxDelaysException('E1613', [
+            'worker' => $workerName ?? get_class($this),
+            'service' => $serviceName,
+        ]);
+    }
+
+    /**
+     * Can be used to execute code to clean up stuff when a worker is set to delayed
+     * The process immediately ends after this call
+     */
+    protected function onDelayed(string $serviceName): void
+    {
+    }
+
+    /**
+     * Set the worker to state delayed. In this case, the worker is re-scheduled after a certain waiting-time
+     * @throws MaxDelaysException
+     */
+    final protected function setDelayed(string $serviceName, string $workerName = null): void
+    {
+        $numDelays = (int) $this->workerModel->getDelays();
+        if ($numDelays > static::MAX_DELAYS) {
+            $this->onTooManyDelays($serviceName, $workerName);
+        } else {
+            $until = $this->calculateDelay() + time();
+            $delays = $numDelays + 1;
+            $this->workerModel->setDelayedUntil($until);
+            $this->workerModel->setDelays($delays);
+            $this->workerModel->setState(ZfExtended_Models_Worker::STATE_DELAYED);
+            if ($this->saveWorkerDeadlockProof()) {
+                Logger::getInstance()->log($this->workerModel, ZfExtended_Models_Worker::STATE_DELAYED);
+                $this->stopExecution('Worker is delayed for the ' . $delays . '. time');
+            } else {
+                Logger::getInstance()->log($this->workerModel, 'missing worker');
+                $this->stopExecution('Worker could not be delayed');
+            }
+        }
+    }
+
+    /**
+     * Sets the worker to done
+     * @throws ZfExtended_Models_Db_Exceptions_DeadLockHandler
+     */
+    final protected function setDone(): bool
+    {
+        $progressDone = $this->calculateProgressDone();
+        $this->workerModel->setState(ZfExtended_Models_Worker::STATE_DONE);
+        $this->workerModel->setProgress($progressDone);
+        $this->workerModel->setEndtime(new Zend_Db_Expr('NOW()'));
+        $this->finishedWorker = clone $this->workerModel;
+        if (! $this->saveWorkerDeadlockProof()) {
+            Logger::getInstance()->log($this->workerModel, 'missing worker');
+
+            return false;
+        }
+        Logger::getInstance()->log($this->workerModel, ZfExtended_Models_Worker::STATE_DONE);
+        $this->onProgressUpdated($progressDone);
+
+        return true;
+    }
+
+    /**
+     * Terminates the process. Any cleanup-work has to be done.
+     */
+    final protected function stopExecution(string $reason)
+    {
+        die(get_class($this) . ': ' . $reason);
     }
 
     /**
