@@ -115,7 +115,7 @@ class ZfExtended_Resource_DbConfig extends Zend_Application_Resource_ResourceAbs
     protected function recursiveSetter(array &$dbOptionTree, array $path, $entry)
     {
         $value = $entry['value'];
-        $type = $entry['type'] ?? false;
+        $type = $entry['type'] ?? '';
         $key = array_shift($path);
 
         try {
