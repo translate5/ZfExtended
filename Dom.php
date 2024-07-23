@@ -52,7 +52,7 @@ final class ZfExtended_Dom extends DOMDocument
     {
         $html = '';
         foreach ($element->childNodes as $child) {
-            $html .= $element->ownerDocument->saveHTML($child);
+            $html .= $element->ownerDocument->saveXML($child);
         }
 
         return $html;
