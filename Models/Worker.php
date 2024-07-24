@@ -60,6 +60,8 @@ END LICENSE AND COPYRIGHT
  * @method string getProgress()
  * @method string getDelayedUntil()
  * @method string getDelays()
+ *
+ * @property ZfExtended_Models_Db_Worker $db
  */
 class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
 {
@@ -114,11 +116,6 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
     public const STATE_DELAYED = 'delayed';     //
 
     public const WORKER_SERVERID_HEADER = 'X-Translate5-Worker-Serverid';
-
-    /**
-     * @var ZfExtended_Models_Db_Worker
-     */
-    public $db;
 
     /**
      * @var string
@@ -363,25 +360,6 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
     }
 
     /**
-     * Removes any Delayed workers of the given type
-     * @throws Zend_Db_Exception
-     * @throws Zend_Exception
-     * @throws ZfExtended_Models_Db_Exceptions_DeadLockHandler
-     */
-    public function removeDelayed(string $taskGuid, string $worker): void
-    {
-        $sql =
-            'DELETE FROM `Zf_worker`'
-            . ' WHERE `state` = \'' . self::STATE_DELAYED . '\''
-            . ' AND `taskGuid` = ?'
-            . ' AND `worker` = ?';
-        $bindings = [$taskGuid, $worker];
-        $this->retryOnDeadlock(function () use ($sql, $bindings) {
-            return $this->db->getAdapter()->query($sql, $bindings);
-        }, true);
-    }
-
-    /**
      * Try to set worker into mutex-save mode
      *
      * @return boolean true if workerModel is set to mutex-save
@@ -466,30 +444,6 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
         $result = $stmt->rowCount();
 
         return $result > 0;
-    }
-
-    /**
-     * Set all Workers not yet finished as done for the current task & worker without the worker calling this API
-     */
-    public function setRemainingToDone()
-    {
-        // set unfinished workers to done
-        $sql =
-            'UPDATE `Zf_worker` SET `state` = \'' . self::STATE_DONE . '\' ' .
-            'WHERE `taskGuid` = ? ' .
-            'AND `worker` = ? ' .
-            'AND `id` != ? ' .
-            'AND `state` IN (' .
-                '"' . self::STATE_PREPARE . '",' .
-                '"' . self::STATE_SCHEDULED . '",' .
-                '"' . self::STATE_WAITING . '",' .
-                '"' . self::STATE_RUNNING . '",' .
-                '"' . self::STATE_DELAYED . '"' .
-            ')';
-        $bindings = [$this->getTaskGuid(), $this->getWorker(), $this->getId()];
-        $this->retryOnDeadlock(function () use ($sql, $bindings) {
-            return $this->db->getAdapter()->query($sql, $bindings);
-        }, true);
     }
 
     /**
@@ -599,27 +553,6 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
         }
 
         return $rows;
-    }
-
-    /**
-     * Fetches the number of workers in the given states for a task
-     * @throws Zend_Db_Table_Exception
-     */
-    public function getWorkerCountByStates(string $worker, string $taskGuid = null, array $states = []): int
-    {
-        $select = $this->db->select()
-            //->columns(array('resource', 'slot')) // this does not work :-((((
-            ->from('Zf_worker', 'COUNT(*) AS count')
-            ->where('worker = ?', $worker);
-        if ($taskGuid !== null) {
-            $select->where('taskGuid = ?', $taskGuid);
-        }
-        if (count($states) > 0) {
-            $select->where('state IN (?)', $states);
-        }
-        $row = $this->db->fetchRow($select);
-
-        return ($row === null) ? 0 : (int) $row->count; // @phpstan-ignore-line
     }
 
     /**
@@ -784,7 +717,7 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
         return empty($result) === false;
     }
 
-    public function getMaxLifetime()
+    public function getMaxLifetime(): string
     {
         return $this->maxLifetime;
     }
@@ -792,7 +725,7 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
     /**
      * sets the serialized parameters of the worker
      */
-    public function setParameters($parameters)
+    public function setParameters($parameters): void
     {
         $this->set('parameters', serialize($parameters));
     }
@@ -801,7 +734,7 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
      * returns the unserialized parameters of the worker
      * stores the unserialized values internally to prevent multiple unserialization (and multiple __wakeup calls)
      */
-    public function getParameters()
+    public function getParameters(): mixed
     {
         if (is_null($this->parameters)) {
             $this->parameters = unserialize($this->get('parameters'));

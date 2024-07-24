@@ -27,6 +27,3 @@
 
 ALTER TABLE `Zf_worker` ADD COLUMN `delayedUntil` int DEFAULT 0 COMMENT 'timestamp until the worker has to be delayed';
 ALTER TABLE `Zf_worker` ADD COLUMN `delays` tinyint DEFAULT 0 COMMENT 'Amount of delays the worker already had';
-
-INSERT INTO `Zf_configuration` (`name`, `confirmed`, `module`, `category`, `value`, `default`, `defaults`, `type`, `description`, `level`, `guiName`, `guiGroup`, `comment`)
-VALUES ('runtimeOptions.worker.skipFailedOperationsOnImport', '1', 'editor', 'import', '0', '0', '', 'boolean', 'When active (default: deactivated), failing recoverable operations (pretranslation, autoQA) due to unavauilable services will be skipped and the failed operations have to be triggered by the user afterwards', 8, 'System setup: General', 'Skip recoverable failed operations on import', '');
