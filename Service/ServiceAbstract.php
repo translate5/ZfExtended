@@ -110,6 +110,12 @@ abstract class ServiceAbstract
     protected ?string $requiredVersion = null;
 
     /**
+     * usually all versions of multi-endpoint must be sufficient
+     * When this is set to false, only one must be sufficient, otherwise just a warning is raised
+     */
+    protected bool $allVersionsMustMatch = true;
+
+    /**
      * Here configs can be defined that are used to fill the test-DB
      * Structure is [ 'runtimeOptions.plugins.pluginname.configName' => value ]
      * If value is NULL, it will be fetched from the application DB, otherwise the defined value is taken
@@ -226,6 +232,7 @@ abstract class ServiceAbstract
         // mock the service in case of API/UNIT tests and no proper config exists or we should always mocks
         if (! empty($this->mockConfigs)
             && ((defined('APPLICATION_APITEST') && APPLICATION_APITEST)
+                // @phpstan-ignore-next-line
                 || (defined('APPLICATION_UNITTEST') && APPLICATION_UNITTEST))
             && ($this->alwaysMockForTests || ! $this->hasConfigurations(array_keys($this->mockConfigs)))
         ) {
@@ -461,31 +468,44 @@ abstract class ServiceAbstract
      */
     protected function checkFoundVersions(): bool
     {
-        $passed = true;
         $count = 0;
+        $errors = [];
+        $onePassed = false;
         if ($this->requiredVersion !== null) {
             foreach ($this->checkedVersions as $version) {
                 // maybe a version parsing is neccessary
-                $version = $this->extractServiceVersion((string) $version);
+                $version = $this->extractServiceVersion($version);
                 if (! $this->isVersionSufficient($version)) {
                     $url = (count($this->checkedUrls) > $count) ? $this->checkedUrls[$count] : null;
                     $error = ($url === null) ?
                         'Service "' . $this->getName() . '"'
                         : 'Service "' . $this->getName() . '" at url "' . $url . '"';
                     $error .= ' has an insufficient version ' . $version . ', expected ' . $this->requiredVersion;
-                    $this->errors[] = $error;
-                    $passed = false;
+                    $errors[] = $error;
                     $count++;
+                } else {
+                    $onePassed = true;
                 }
             }
         }
 
-        return $passed;
+        if (count($errors) > 0) {
+            // Special: if only one version had to match, we turn the non-matching to warnings
+            if (! $this->allVersionsMustMatch && $onePassed) {
+                $this->warnings = array_merge($this->warnings, $errors);
+
+                return true;
+            }
+            $this->errors = array_merge($this->errors, $errors);
+
+            return false;
+        }
+
+        return true;
     }
 
     /**
      * Checks, if the found version for a service matches the requirements
-     * @param string|null
      */
     protected function isVersionSufficient(?string $foundVersion): bool
     {
