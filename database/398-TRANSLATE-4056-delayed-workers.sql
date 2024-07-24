@@ -25,5 +25,5 @@
 -- END LICENSE AND COPYRIGHT
 -- */
 
-ALTER TABLE `Zf_worker` ADD COLUMN `delayedUntil` int DEFAULT 0 COMMENT 'timestamp until the worker has to be delayed';
-ALTER TABLE `Zf_worker` ADD COLUMN `delays` tinyint DEFAULT 0 COMMENT 'Amount of delays the worker already had';
+ALTER TABLE `Zf_worker` ADD COLUMN `delayedUntil` int NOT NULL DEFAULT 0 COMMENT 'timestamp until the worker has to be delayed';
+ALTER TABLE `Zf_worker` ADD COLUMN `delays` tinyint NOT NULL DEFAULT 0 COMMENT 'Amount of delays the worker already had';
