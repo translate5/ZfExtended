@@ -25,7 +25,6 @@ declare(strict_types=1);
 
 namespace MittagQI\ZfExtended\Worker;
 
-use ZfExtended_Factory;
 use ZfExtended_Models_Worker;
 
 class Rescheduler
@@ -38,7 +37,7 @@ class Rescheduler
      */
     public static function reschedule(): void
     {
-        $workerModel = ZfExtended_Factory::get(ZfExtended_Models_Worker::class);
+        $workerModel = new ZfExtended_Models_Worker();
         $workerModel->rescheduleDelayed();
     }
 }

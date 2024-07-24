@@ -64,9 +64,7 @@ class ZfExtended_Models_Installer_Modules_Top extends ZfExtended_Models_Installe
         $this->addZendToIncludePath();
         $this->initApplication();
 
-        $worker = ZfExtended_Factory::get('ZfExtended_Models_Worker');
-        /* @var $worker ZfExtended_Models_Worker */
-
+        $worker = new ZfExtended_Models_Worker();
         $allWorker = $worker->loadAll();
 
         $resultNotListed = [];

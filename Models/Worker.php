@@ -63,7 +63,7 @@ END LICENSE AND COPYRIGHT
  *
  * @property ZfExtended_Models_Db_Worker $db
  */
-class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
+final class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
 {
     use ZfExtended_Models_Db_DeadLockHandlerTrait;
 
@@ -135,7 +135,7 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
      *  times when calling get we have to cache them.
      * @var mixed
      */
-    protected $parameters = null;
+    protected ?array $parameters = null;
 
     /**
      * Loads first worker of a specific worker for a specific task
@@ -724,8 +724,9 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
 
     /**
      * sets the serialized parameters of the worker
+     * TODO FIXME: we should use JSON as DB-format
      */
-    public function setParameters($parameters): void
+    public function setParameters(array $parameters): void
     {
         $this->set('parameters', serialize($parameters));
     }
@@ -734,10 +735,11 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
      * returns the unserialized parameters of the worker
      * stores the unserialized values internally to prevent multiple unserialization (and multiple __wakeup calls)
      */
-    public function getParameters(): mixed
+    public function getParameters(): array
     {
         if (is_null($this->parameters)) {
-            $this->parameters = unserialize($this->get('parameters'));
+            $unserialized = unserialize($this->get('parameters'));
+            $this->parameters = empty($unserialized) ? [] : (array) $unserialized;
         }
 
         return $this->parameters;
