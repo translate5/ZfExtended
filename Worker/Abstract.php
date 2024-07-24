@@ -216,12 +216,17 @@ abstract class ZfExtended_Worker_Abstract
     abstract protected function validateParameters(array $parameters): bool;
 
     /**
-     * @param number $parentId optional, defaults to 0. Should contain the workerId of the parent worker.
-     * @param string $state optional, defaults to null. Designed to queue a worker with a desired state.
+     * @param int $parentId optional, defaults to 0. Should contain the workerId of the parent worker.
+     * @param string|null $state optional, defaults to null. Designed to queue a worker with a desired state.
      * @param bool $startNext defaults to true, if true starts directly the queued worker. False to prevent this.
-     * @return integer returns the id of the newly created worker DB entry
+     * @return int returns the id of the newly created worker DB entry
+     * @throws Zend_Db_Statement_Exception
+     * @throws Zend_Exception
+     * @throws ZfExtended_Exception
+     * @throws ZfExtended_Models_Entity_Exceptions_IntegrityConstraint
+     * @throws ZfExtended_Models_Entity_Exceptions_IntegrityDuplicateKey
      */
-    public function queue($parentId = 0, $state = null, $startNext = true): int
+    public function queue(int $parentId = 0, string $state = null, bool $startNext = true): int
     {
         $this->checkIsInitCalled();
         $slot = $this->calculateSlot();
