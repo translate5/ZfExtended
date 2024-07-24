@@ -24,6 +24,7 @@ END LICENSE AND COPYRIGHT
 
 use MittagQI\ZfExtended\Worker\Cleaner;
 use MittagQI\ZfExtended\Worker\Queue;
+use MittagQI\ZfExtended\Worker\Rescheduler;
 
 /**
  * This resource bundles recurring jobs for cleaning up stuff in the application
@@ -74,7 +75,7 @@ class ZfExtended_Resource_GarbageCollector extends Zend_Application_Resource_Res
         }
 
         //start zfextended stuff to be cleaned
-        $this->cleanUpWorker();
+        $this->cleanUpWorker($callOrigin);
 
         // clean outdated session data
         $this->cleanUpSession();
@@ -139,7 +140,9 @@ class ZfExtended_Resource_GarbageCollector extends Zend_Application_Resource_Res
     protected function cleanUpWorker(): void
     {
         Cleaner::clean();
-        //basically calling the queue is preventing garbage in the worker table...
+        // re-schedule delayed workers
+        Rescheduler::reschedule();
+        // basically calling the queue is preventing garbage in the worker table...
         ZfExtended_Factory::get(Queue::class)->trigger();
     }
 

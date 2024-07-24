@@ -23,6 +23,7 @@ END LICENSE AND COPYRIGHT
 */
 
 use MittagQI\ZfExtended\Worker\Exception\MaxDelaysException;
+use MittagQI\ZfExtended\Worker\Exception\SetDelayedException;
 use MittagQI\ZfExtended\Worker\Logger;
 
 /**
@@ -62,15 +63,7 @@ abstract class ZfExtended_Worker_Abstract
      */
     public const DELAY_TIME = 30;
 
-    /**
-     * @var ZfExtended_Models_Worker
-     */
-    protected $workerModel;
-
-    /**
-     * @var string taskGuid
-     */
-    protected $taskGuid;
+    protected ZfExtended_Models_Worker $workerModel;
 
     /**
      * @var ZfExtended_Models_Worker
@@ -78,19 +71,23 @@ abstract class ZfExtended_Worker_Abstract
     protected $finishedWorker;
 
     /**
+     * For task-workers this will be the related task
+     */
+    protected ?string $taskGuid;
+
+    /**
      * Blocking-type for this worker
      * Default is the Resource-based Blocking
      * @var string blocking-type BLOCK_XYZ
      */
-    protected $blockingType = self::BLOCK_SLOT;
+    protected string $blockingType = self::BLOCK_SLOT;
 
     /**
      * If this flag is false, multiple workers per taskGuid can be run
      *  for example the termTagger
      *  Should be overriden by class extension
-     * @var boolean
      */
-    protected $onlyOncePerTask = true;
+    protected bool $onlyOncePerTask = true;
 
     /**
      * switch if the queue call of the worker will block the current thread until the worker was called
@@ -98,15 +95,13 @@ abstract class ZfExtended_Worker_Abstract
      *  like block and non blocking sockets
      * Has nothing to do with the above blocking type!
      * see also $blockingTimeout
-     * @var string
      */
-    protected $isBlocking = false;
+    protected bool $isBlocking = false;
 
     /**
      * Per default a "socket blocking like" worker is cancelled after 3600 seconds.
-     * @var integer
      */
-    protected $blockingTimeout = 3600;
+    protected int $blockingTimeout = 3600;
 
     /**
      * holds the result-values of processing method $this->work()
@@ -120,30 +115,22 @@ abstract class ZfExtended_Worker_Abstract
     /**
      * Contains the Exception thrown in the worker
      * Since one worker is designed to do one job, there should be only one exception.
-     * @var Throwable
      */
-    protected $workerException = null;
+    protected ?Throwable $workerException = null;
 
-    /**
-     * @var ZfExtended_EventManager
-     */
-    protected $events;
+    protected ZfExtended_EventManager $events;
 
-    /**
-     * @var ZfExtended_Worker_Behaviour_Default
-     */
-    protected $behaviour;
+    protected ZfExtended_Worker_Behaviour_Default $behaviour;
 
     /**
      * Defines the behaviour class to be used for this worker
-     * @var string
      */
-    protected $behaviourClass = 'ZfExtended_Worker_Behaviour_Default';
+    protected string $behaviourClass = ZfExtended_Worker_Behaviour_Default::class;
 
     public function __construct()
     {
         $this->log = Zend_Registry::get('logger');
-        $this->events = ZfExtended_Factory::get('ZfExtended_EventManager', [get_class($this)]);
+        $this->events = ZfExtended_Factory::get(ZfExtended_EventManager::class, [get_class($this)]);
         $this->behaviour = ZfExtended_Factory::get($this->behaviourClass);
     }
 
@@ -166,13 +153,10 @@ abstract class ZfExtended_Worker_Abstract
 
     /**
      * Initialize a worker and a internal worker-model
-     *
-     * @param string $taskGuid
-     * @param array $parameters stored in the worker-model
-     *
-     * @return boolean true if worker can be initialized.
+     * @param array $parameters stored in the worker-model     *
+     * @return bool true if worker can be initialized.
      */
-    public function init($taskGuid = null, $parameters = [])
+    public function init(string $taskGuid = null, array $parameters = []): bool
     {
         if (! $this->validateParameters($parameters)) {
             return false;
@@ -180,6 +164,15 @@ abstract class ZfExtended_Worker_Abstract
         $this->taskGuid = $taskGuid;
         $this->initWorkerModel($taskGuid, $parameters);
 
+        // gives inheriting workers the chance to initialize more stuff
+        return $this->onInit($parameters);
+    }
+
+    /**
+     * trigger function to add further initialization logic
+     */
+    protected function onInit(array $parameters): bool
+    {
         return true;
     }
 
@@ -417,7 +410,7 @@ abstract class ZfExtended_Worker_Abstract
 
             return false;
         }
-        //reload, to get running state and timestamps
+        // reload, to get running state and timestamps
         $this->workerModel->load((int) $this->workerModel->getId());
 
         Logger::getInstance()->log($this->workerModel, $this->workerModel::STATE_RUNNING);
@@ -433,6 +426,12 @@ abstract class ZfExtended_Worker_Abstract
             if (! $this->setDone()) {
                 return false;
             }
+        } catch (SetDelayedException $workException) {
+            // catches a delayed exception to set the worker as delayed
+            return $this->setDelayed(
+                $workException->getServiceName(),
+                $workException->getWorkerName()
+            );
         } catch (Throwable $workException) {
             $this->reconnectDb();
             $result = false;
@@ -503,7 +502,7 @@ abstract class ZfExtended_Worker_Abstract
      * Is called when the num of max delays for a non-responding/malfunctioning service is exceeded
      * @throws MaxDelaysException
      */
-    protected function onTooManyDelays(string $serviceName, string $workerName = null): void
+    protected function onTooManyDelays(string $serviceName, string $workerName = null): bool
     {
         throw new MaxDelaysException('E1613', [
             'worker' => $workerName ?? get_class($this),
@@ -523,11 +522,11 @@ abstract class ZfExtended_Worker_Abstract
      * Set the worker to state delayed. In this case, the worker is re-scheduled after a certain waiting-time
      * @throws MaxDelaysException
      */
-    final protected function setDelayed(string $serviceName, string $workerName = null): void
+    final protected function setDelayed(string $serviceName, string $workerName = null): bool
     {
         $numDelays = (int) $this->workerModel->getDelays();
         if ($numDelays > static::MAX_DELAYS) {
-            $this->onTooManyDelays($serviceName, $workerName);
+            return $this->onTooManyDelays($serviceName, $workerName);
         } else {
             $until = $this->calculateDelay() + time();
             $delays = $numDelays + 1;
@@ -536,11 +535,11 @@ abstract class ZfExtended_Worker_Abstract
             $this->workerModel->setState(ZfExtended_Models_Worker::STATE_DELAYED);
             if ($this->saveWorkerDeadlockProof()) {
                 Logger::getInstance()->log($this->workerModel, ZfExtended_Models_Worker::STATE_DELAYED);
-                $this->stopExecution('Worker is delayed for the ' . $delays . '. time');
             } else {
-                Logger::getInstance()->log($this->workerModel, 'missing worker');
-                $this->stopExecution('Worker could not be delayed');
+                Logger::getInstance()->log($this->workerModel, 'missing delayed worker');
             }
+
+            return false;
         }
     }
 
@@ -661,10 +660,10 @@ abstract class ZfExtended_Worker_Abstract
      */
     private function initWorkerModel(?string $taskGuid, array $parameters)
     {
-        if (! empty($this->workerModel)) {
+        if (isset($this->workerModel)) {
             return;
         }
-        $this->workerModel = ZfExtended_Factory::get('ZfExtended_Models_Worker');
+        $this->workerModel = ZfExtended_Factory::get(ZfExtended_Models_Worker::class);
         $this->workerModel->setState(ZfExtended_Models_Worker::STATE_SCHEDULED);
         $this->workerModel->setWorker(get_class($this));
         $this->workerModel->setTaskGuid($taskGuid);

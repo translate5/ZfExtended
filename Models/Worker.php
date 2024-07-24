@@ -123,7 +123,7 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
     /**
      * @var string
      */
-    protected $dbInstanceClass = 'ZfExtended_Models_Db_Worker';
+    protected $dbInstanceClass = ZfExtended_Models_Db_Worker::class;
 
     /**
      * Default worker-lifetime (could/should be overwritten by child-class)
@@ -131,7 +131,7 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
      * @var string
      *      MySQL INTERVAL as defined in http://dev.mysql.com/doc/refman/5.5/en/date-and-time-functions.html#function_date-add
      */
-    protected $maxLifetime = '1 HOUR';
+    protected string $maxLifetime = '1 HOUR';
 
     /**
      * To prevent that the serialized parameters are unserialized multiple
@@ -172,11 +172,6 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
 
     /***
      * Load worker rows by given $worker, $state and $taskGuid
-     *
-     * @param string $state
-     * @param string $worker optional
-     * @param string $taskGuid optional
-     * @return array
      */
     public function loadByState(string $state, string $worker = null, string $taskGuid = null): array
     {
@@ -208,10 +203,8 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
      * for import progress calculation.
      * This will return the oldest worker for given taskGuid with state running.
      * If no worker with state running is found return worker with state prepare,scheduled or done
-     * @param string $taskGuid
-     * @return array
      */
-    public function findWorkerContext(string $taskGuid)
+    public function findWorkerContext(string $taskGuid): array|false
     {
         $s = $this->db->select()
             ->where('state IN (?)', [
@@ -237,10 +230,7 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
     /***
      * Load all workers from Zf_worker table for the given taskGuid and given context.
      * The context represents set of workers connected with same parentId.
-     * ex: on task import, all queued workers are with same parentId (the id of the import worker : editor_Models_Import_Worker)
-     * @param string $taskGuid
-     * @param int $parrentId
-     * @return array
+     * e.g.: on task import, all queued workers are with same parentId (the id of the import worker : editor_Models_Import_Worker)
      */
     public function loadByTaskAndContext(string $taskGuid, int $parentId = 0): array
     {
@@ -258,7 +248,7 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
      * Wake up a scheduled worker (set state from scheduled to waiting)
      * if there are no other worker waiting or running with the same taskGuid
      */
-    public function wakeupScheduled()
+    public function wakeupScheduled(): void
     {
         // check if there are any worker waiting or running with this taskGuid
 
@@ -327,8 +317,11 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
 
     /**
      * sets the prepared workers of the same workergroup and taskGuid as the current one
+     * @throws Zend_Db_Exception
+     * @throws Zend_Exception
+     * @throws ZfExtended_Models_Db_Exceptions_DeadLockHandler
      */
-    public function schedulePrepared()
+    public function schedulePrepared(): void
     {
         // check if there are any worker waiting or running with this taskGuid
         $taskGuid = $this->getTaskGuid();
@@ -337,15 +330,52 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
             $parentId = $this->getId();
         }
 
-        $sql = 'UPDATE `Zf_worker` SET `state` = \'' . self::STATE_SCHEDULED . '\' ';
-        $sql .= 'WHERE `state` = \'' . self::STATE_PREPARE . '\' ';
-        $sql .= 'AND (`id` = ? OR `parentId` = ?) ';
+        $sql =
+            'UPDATE `Zf_worker` SET `state` = \'' . self::STATE_SCHEDULED . '\''
+            . ' WHERE `state` = \'' . self::STATE_PREPARE . '\''
+            . ' AND (`id` = ? OR `parentId` = ?)';
         $bindings = [$parentId, $parentId];
         if (! empty($taskGuid)) {
-            $sql .= 'AND taskGuid = ? ';
+            $sql .= ' AND taskGuid = ? ';
             $bindings[] = $taskGuid;
         }
 
+        $this->retryOnDeadlock(function () use ($sql, $bindings) {
+            return $this->db->getAdapter()->query($sql, $bindings);
+        }, true);
+    }
+
+    /**
+     * Reschedules any delayed Workers where the delay is exceeded
+     * @throws Zend_Db_Exception
+     * @throws Zend_Exception
+     * @throws ZfExtended_Models_Db_Exceptions_DeadLockHandler
+     */
+    public function rescheduleDelayed(): void
+    {
+        $sql =
+            'UPDATE `Zf_worker` SET `state` = \'' . self::STATE_SCHEDULED . '\''
+            . ' WHERE `state` = \'' . self::STATE_DELAYED . '\' '
+            . ' AND `delayedUntil` < ' . time();
+        $this->retryOnDeadlock(function () use ($sql) {
+            return $this->db->getAdapter()->query($sql);
+        }, true);
+    }
+
+    /**
+     * Removes any Delayed workers of the given type
+     * @throws Zend_Db_Exception
+     * @throws Zend_Exception
+     * @throws ZfExtended_Models_Db_Exceptions_DeadLockHandler
+     */
+    public function removeDelayed(string $taskGuid, string $worker): void
+    {
+        $sql =
+            'DELETE FROM `Zf_worker`'
+            . ' WHERE `state` = \'' . self::STATE_DELAYED . '\''
+            . ' AND `taskGuid` = ?'
+            . ' AND `worker` = ?';
+        $bindings = [$taskGuid, $worker];
         $this->retryOnDeadlock(function () use ($sql, $bindings) {
             return $this->db->getAdapter()->query($sql, $bindings);
         }, true);
@@ -401,7 +431,6 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
             'maxRuntime' => new Zend_Db_Expr('NOW() + INTERVAL ' . $this->getMaxLifetime()),
             'pid' => getmypid(),
         ];
-
         $id = $this->getId();
         //if there is no id, that means we are in a direct run and the worker should be started in any case
         if (empty($id)) {
@@ -412,7 +441,6 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
 
             return true;
         }
-
         $sets = function ($prefix) use ($data) {
             foreach ($data as $k => $v) {
                 $this->set($k, $v);
@@ -421,7 +449,6 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
 
             return ' SET ' . join(', ', $sets);
         };
-
         if ($oncePerTaskGuid) {
             $sql = 'UPDATE `Zf_worker` w1 LEFT OUTER JOIN `Zf_worker` w2';
             $sql .= ' ON w1.`taskGuid` = w2.`taskGuid` AND w1.`worker` = w2.`worker` AND w2.`state` = "' . self::STATE_RUNNING . '" AND w1.`id` != w2.`id`';
@@ -432,13 +459,10 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
             $sql .= $sets('');
             $sql .= ' WHERE id = ? AND state = "' . self::STATE_WAITING . '"';
         }
-
         $values = [$this->getId()];
-
         $stmt = $this->retryOnDeadlock(function () use ($sql, $values) {
             return $this->db->getAdapter()->query($sql, $values);
         }, true);
-
         $result = $stmt->rowCount();
 
         return $result > 0;
@@ -549,7 +573,7 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
      *
      * @return array: list of array(slot, count) for the given resource
      */
-    public function getListSlotsCount(string $resourceName = '', array $validSlots = null)
+    public function getListSlotsCount(string $resourceName = '', array $validSlots = null): array
     {
         $db = $this->db;
         $sql = $db->select()
@@ -575,6 +599,27 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
         }
 
         return $rows;
+    }
+
+    /**
+     * Fetches the number of workers in the given states for a task
+     * @throws Zend_Db_Table_Exception
+     */
+    public function getWorkerCountByStates(string $worker, string $taskGuid = null, array $states = []): int
+    {
+        $select = $this->db->select()
+            //->columns(array('resource', 'slot')) // this does not work :-((((
+            ->from('Zf_worker', 'COUNT(*) AS count')
+            ->where('worker = ?', $worker);
+        if ($taskGuid !== null) {
+            $select->where('taskGuid = ?', $taskGuid);
+        }
+        if (count($states) > 0) {
+            $select->where('state IN (?)', $states);
+        }
+        $row = $this->db->fetchRow($select);
+
+        return ($row === null) ? 0 : (int) $row->count; // @phpstan-ignore-line
     }
 
     /**
