@@ -28,6 +28,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 use Zend_Config;
 use Zend_Exception;
 use Zend_Registry;
+use ZfExtended_Debug;
 use ZfExtended_Exception;
 use ZfExtended_Models_SystemRequirement_Result;
 
@@ -39,7 +40,15 @@ use ZfExtended_Models_SystemRequirement_Result;
  */
 abstract class ServiceAbstract
 {
-    public const DO_DEBUG = false;
+    private static bool $doDebug;
+
+    protected static function doDebug(): bool
+    {
+        if(!isset(self::$doDebug)){
+            self::$doDebug = ZfExtended_Debug::hasLevel('core', 'Services');
+        }
+        return self::$doDebug;
+    }
 
     /**
      * The name is defined as array-key in a plugins $services prop and must be UNIQUE across all plugins and the base services
@@ -431,7 +440,7 @@ abstract class ServiceAbstract
      */
     public function output(string $msg, SymfonyStyle $io = null, string $ioMethod = 'note'): void
     {
-        if (self::DO_DEBUG) {
+        if (static::doDebug()) {
             error_log('SERVICE ' . $ioMethod . ': ' . $msg);
         }
         $io?->$ioMethod($msg);

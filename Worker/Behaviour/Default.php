@@ -34,9 +34,11 @@ class ZfExtended_Worker_Behaviour_Default
      * Some default behaviour can be configured (instead overwriting this class for just a small configurable change)
      */
     protected array $config = [
-        //false => return always false, so do not stop worker if maintenance is scheduled
+        // false => return always false, so do not stop worker if maintenance is scheduled
         // true => call isMaintenanceLoginLock check
         'isMaintenanceScheduled' => false,
+        // Multi-instance workers where several instances work on the same workload /usually processing segments)
+        'isMultiInstance' => false,
     ];
 
     /**
@@ -131,5 +133,13 @@ class ZfExtended_Worker_Behaviour_Default
         }
 
         return $this->isMaintenanceLoginLock(is_int($conf) ? $conf : null);
+    }
+
+    /**
+     * Some workers work in parallel on the same workload
+     */
+    public function isMultiInstance(): bool
+    {
+        return $this->config['isMultiInstance'];
     }
 }

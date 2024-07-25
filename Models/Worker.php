@@ -89,6 +89,15 @@ final class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
     public const STATE_WAITING = 'waiting';
 
     /**
+     * The worker is waiting for a (external) service to be available again. In this state, the worker-process is
+     * set to scheduled by a cron service after the given delay-time.
+     * The delay-time is set by the worker itself and after a max number of retries an exception is thrown
+     * (leading to an erroneus task)
+     * @var string
+     */
+    public const STATE_DELAYED = 'delayed';
+
+    /**
      * the worker is running
      * @var string
      */
@@ -105,15 +114,6 @@ final class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
      * @var string
      */
     public const STATE_DONE = 'done';
-
-    /**
-     * The worker is waiting for a (external) service to be available again. In this state, the worker-process is
-     * set to scheduled by a cron service after the given delay-time.
-     * The delay-time is set by the worker itself and after a max number of retries an exception is thrown
-     * (leading to an erroneus task)
-     * @var string
-     */
-    public const STATE_DELAYED = 'delayed';     //
 
     public const WORKER_SERVERID_HEADER = 'X-Translate5-Worker-Serverid';
 
@@ -354,9 +354,13 @@ final class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
             'UPDATE `Zf_worker` SET `state` = \'' . self::STATE_SCHEDULED . '\''
             . ' WHERE `state` = \'' . self::STATE_DELAYED . '\' '
             . ' AND `delayedUntil` < ' . time();
-        $this->retryOnDeadlock(function () use ($sql) {
+        $stmt = $this->retryOnDeadlock(function () use ($sql) {
             return $this->db->getAdapter()->query($sql);
         }, true);
+        /* @var Zend_Db_Statement_Interface $stmt */
+        if (ZfExtended_Debug::hasLevel('core', 'Workers') && $stmt->rowCount() > 0) {
+            error_log("\nWORKER RESCHEDULE: Rescheduled " . $stmt->rowCount() . ' delayed workers.');
+        }
     }
 
     /**
@@ -695,6 +699,30 @@ final class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
                 $params
             );
         });
+    }
+
+    /**
+     * Removes all other workers of the same type & task, that are not running, defunct or done.
+     * This is useful for finish parallel processing on the same workload.
+     * We delete them to have a proper progress-calculation
+     */
+    public function removeOtherMultiWorkers(): void
+    {
+        // set unfinished workers to done
+        $sql =
+            'DELETE FROM `Zf_worker` ' .
+            'WHERE `taskGuid` = ? ' .
+            'AND `worker` = ? ' .
+            'AND `id` != ? ' .
+            'AND `state` NOT IN (' .
+                '"' . self::STATE_DONE . '",' .
+                '"' . self::STATE_DEFUNCT . '",' .
+                '"' . self::STATE_RUNNING . '"' .
+            ')';
+        $bindings = [$this->getTaskGuid(), $this->getWorker(), $this->getId()];
+        $this->retryOnDeadlock(function () use ($sql, $bindings) {
+            return $this->db->getAdapter()->query($sql, $bindings);
+        }, true);
     }
 
     /**

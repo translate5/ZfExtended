@@ -10,15 +10,15 @@ use Exception;
 final class SetDelayedException extends Exception
 {
     public function __construct(
-        private string $serviceName,
+        private string $serviceId,
         private ?string $workerName = null
     ) {
-        parent::__construct('Set worker/service delayed: ' . ($workerName ?? $serviceName));
+        parent::__construct('Set worker/service delayed: ' . ($workerName ?? $serviceId));
     }
 
-    public function getServiceName(): string
+    public function getServiceId(): string
     {
-        return $this->serviceName;
+        return $this->serviceId;
     }
 
     public function getWorkerName(): ?string
