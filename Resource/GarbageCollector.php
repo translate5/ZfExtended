@@ -75,7 +75,7 @@ class ZfExtended_Resource_GarbageCollector extends Zend_Application_Resource_Res
         }
 
         //start zfextended stuff to be cleaned
-        $this->cleanUpWorker($callOrigin);
+        $this->cleanUpWorker();
 
         // clean outdated session data
         $this->cleanUpSession();
