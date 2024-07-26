@@ -430,7 +430,8 @@ abstract class ZfExtended_Worker_Abstract
             // catches a delayed exception to set the worker as delayed
             $result = $this->setDelayed(
                 $workException->getServiceId(),
-                $workException->getWorkerName()
+                $workException->getWorkerName(),
+                $workException->getSingleDelay()
             );
         } catch (Throwable $workException) {
             $this->catchedWorkException($workException);
@@ -521,13 +522,17 @@ abstract class ZfExtended_Worker_Abstract
      * Set the worker to state delayed. In this case, the worker is re-scheduled after a certain waiting-time
      * @throws MaxDelaysException
      */
-    final protected function setDelayed(string $serviceId, string $workerName = null): bool
+    final protected function setDelayed(string $serviceId, string $workerName = null, int $singleDelay = -1): bool
     {
         $numDelays = (int) $this->workerModel->getDelays();
-        if ($numDelays > static::MAX_DELAYS) {
+        // if given, a singleDelay will lead to waiting only once
+        $maxDelays = ($singleDelay > 0) ? 1 : static::MAX_DELAYS;
+        if ($numDelays >= $maxDelays) {
             return $this->onTooManyDelays($serviceId, $workerName);
         } else {
-            $until = $this->calculateDelay() + time();
+            // if given, a singleDelay will define the waiting-time
+            $toWait = ($singleDelay > 0) ? $singleDelay : $this->calculateDelay();
+            $until = $toWait + time();
             $delays = $numDelays + 1;
             $this->workerModel->setDelayedUntil($until);
             $this->workerModel->setDelays($delays);
