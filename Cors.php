@@ -58,7 +58,8 @@ final class Cors
         if (array_key_exists('REQUEST_METHOD', $_SERVER) && $_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
             header('Access-Control-Max-Age: 86400');
             header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
-            header('Access-Control-Allow-Headers: Authorization, Content-Type, Accept, Origin, ' . ZfExtended_Authentication::APPLICATION_TOKEN_HEADER);
+            header('Access-Control-Allow-Headers: Authorization, Content-Type, Accept, Origin, '
+                . ZfExtended_Authentication::APPLICATION_TOKEN_HEADER);
             header('Access-Control-Allow-Origin: *');
             error_log('Responding CORS preflight request');
             exit(0);
@@ -67,14 +68,14 @@ final class Cors
 
     public static function addResponseHeader(Zend_Controller_Response_Abstract $response)
     {
-        if (ZfExtended_Authentication::isAppTokenAuthenticated()) {
+        if (ZfExtended_Authentication::getInstance()->isAuthenticatedByToken()) {
             $response->setHeader('Access-Control-Allow-Origin', '*', true);
         }
     }
 
     public static function sendResponseHeader()
     {
-        if (ZfExtended_Authentication::isAppTokenAuthenticated()) {
+        if (ZfExtended_Authentication::getInstance()->isAuthenticatedByToken()) {
             header('Access-Control-Allow-Origin: *', true);
         }
     }

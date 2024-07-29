@@ -45,7 +45,7 @@ class ZfExtended_WorkerController extends ZfExtended_RestController
      */
     protected array $_unprotectedActions = ['put', 'queue'];
 
-    protected $cleanupSessionAfterRun;
+    protected bool $cleanupSessionAfterRun = false;
 
     public function __destruct()
     {
@@ -65,6 +65,7 @@ class ZfExtended_WorkerController extends ZfExtended_RestController
 
     /**
      * (non-PHPdoc)
+     * @throws ZfExtended_BadMethodCallException
      * @see ZfExtended_RestController::postAction()
      * For session handling see class head comment
      */
@@ -89,22 +90,28 @@ class ZfExtended_WorkerController extends ZfExtended_RestController
 
     /**
      * (non-PHPdoc)
+     * @throws Throwable
+     * @throws Zend_Exception
+     * @throws ZfExtended_Exception
+     * @throws ZfExtended_Models_Entity_NotFoundException
+     * @throws ZfExtended_Models_MaintenanceException
      * @see ZfExtended_RestController::putAction()
      */
     public function putAction()
     {
         try {
             $this->entity->load($this->getParam('id'));
-        } catch (ZfExtended_Models_Entity_NotFoundException $workerLoad) {
-            //we catch the not found here, since it can just happen in normal handling that a worker is triggered which is already deleted
-            // to prevent unwanted 404s here we just catch that not found messages and do nothing instead
-            // to prevent false positives when having multiple translate5 installations (and one has wrong server.name) it can happen,
-            // that the worker requests go to the wrong translate5 installation. Since no 404 is logged, we don't find out that easily.
-            // as solution we send additionally a server id which must match in order to run workers.
+        } catch (ZfExtended_Models_Entity_NotFoundException) {
+            //we catch the not found here, since it can just happen in normal handling that a worker is triggered
+            // which is already deleted to prevent unwanted 404s here we just catch that not found messages and do
+            // nothing instead to prevent false positives when having multiple translate5 installations (and one has
+            // wrong server.name) it can happen, that the worker requests go to the wrong translate5 installation.
+            // Since no 404 is logged, we don't find out that easily.
+            // As solution we send additionally a server id which must match in order to run workers.
             $this->decodePutData();
             $this->testServerId($this->data->serverId);
 
-            return false;
+            return;
         }
         //if maintenance is near, we disallow starting workers
         if ($this->isMaintenanceLoginLock()) {
@@ -127,11 +134,10 @@ class ZfExtended_WorkerController extends ZfExtended_RestController
             $worker = ZfExtended_Worker_Abstract::instanceByModel($this->entity);
 
             if (! $worker) {
-                return false;
+                return;
             }
             if (! $worker->runQueued()) {
-                // TODO what to do if worker can not be runQueued (e.g. because it can not be set to mutex-save)
-                return false;
+                return;
             }
 
             // set return as workerModel after runQueued()
@@ -142,10 +148,9 @@ class ZfExtended_WorkerController extends ZfExtended_RestController
 
     /**
      * tests if the given serverId is the one from the current installation
-     * @param string $givenId
      * @throws ZfExtended_Models_Entity_NotFoundException
      */
-    protected function testServerId($givenId)
+    protected function testServerId(?string $givenId): void
     {
         if ($givenId == Http::WORKER_CHECK_IGNORE) {
             $localId = $givenId;
@@ -155,22 +160,35 @@ class ZfExtended_WorkerController extends ZfExtended_RestController
 
         $this->_response->setHeader(ZfExtended_Models_Worker::WORKER_SERVERID_HEADER, $localId);
         if ($givenId !== $localId) {
-            throw new ZfExtended_Models_Entity_NotFoundException('Server ID does not match, called worker on wrong server.');
+            throw new ZfExtended_Models_Entity_NotFoundException(
+                'Server ID does not match, called worker on wrong server.'
+            );
         }
     }
 
     //if using this method, it must be ensured that the caller is allowed to see the stored hash values!
+
+    /**
+     * @throws ZfExtended_BadMethodCallException
+     */
     public function indexAction()
     {
         throw new ZfExtended_BadMethodCallException(__CLASS__ . '->' . __FUNCTION__);
     }
 
     //if using this method, it must be ensured that the caller is allowed to see the stored hash values!
+
+    /**
+     * @throws ZfExtended_BadMethodCallException
+     */
     public function getAction()
     {
         throw new ZfExtended_BadMethodCallException(__CLASS__ . '->' . __FUNCTION__);
     }
 
+    /**
+     * @throws ZfExtended_BadMethodCallException
+     */
     public function deleteAction()
     {
         throw new ZfExtended_BadMethodCallException(__CLASS__ . '->' . __FUNCTION__);
@@ -179,14 +197,28 @@ class ZfExtended_WorkerController extends ZfExtended_RestController
     /**
      * Not a real REST-action
      * Interface-function to trigger the application-wide workerQueue-Process
+     * @throws ReflectionException
+     * @throws Zend_Exception
      */
-    public function queueAction()
+    public function queueAction(): void
     {
-        $this->_response->setHeader(ZfExtended_Models_Worker::WORKER_SERVERID_HEADER, ZfExtended_Utils::installationHash('ZfExtended_Worker_Abstract'));
+        $this->_response->setHeader(
+            ZfExtended_Models_Worker::WORKER_SERVERID_HEADER,
+            ZfExtended_Utils::installationHash('ZfExtended_Worker_Abstract')
+        );
         $this->_response->sendHeaders();
         $this->_helper->viewRenderer->setNoRender(false);
+
         $workerQueue = ZfExtended_Factory::get(Queue::class);
-        $workerQueue->process();
+        if ($workerQueue->lockAcquire()) {
+            $foundWorkers = $workerQueue->process();
+            while ($foundWorkers) {
+                sleep(1);
+                $foundWorkers = $workerQueue->process();
+            }
+            $workerQueue->lockRelease();
+        }
+
         //$this->postDispatch(); needed for TRANSLATE-249
         exit; //since we have no output here, we will exit immediatelly
     }

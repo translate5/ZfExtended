@@ -32,13 +32,17 @@ class Cleaner
 {
     private const DELETABLE_STATES = [
         ZfExtended_Models_Worker::STATE_DONE,
-        ZfExtended_Models_Worker::STATE_DEFUNCT
+        ZfExtended_Models_Worker::STATE_DEFUNCT,
     ];
 
     public int $id;
+
     public int $parentId;
+
     public ?self $parent = null;
+
     public bool $processed = false;
+
     public ZfExtended_Models_Worker $worker;
 
     /* @var self[] $children */
@@ -57,11 +61,11 @@ class Cleaner
         //prepare treeable list
         $objectList = [];
         foreach ($allWorkers as $worker) {
-            $workerObj = new self;
-            $workerObj->id = (int)$worker['id'];
+            $workerObj = new self();
+            $workerObj->id = (int) $worker['id'];
             $workerObj->worker = new ZfExtended_Models_Worker();
             $workerObj->worker->init($worker);
-            $workerObj->parentId = (int)$worker['parentId'];
+            $workerObj->parentId = (int) $worker['parentId'];
 
             $objectList[$worker['id']] = $workerObj;
 
@@ -92,7 +96,9 @@ class Cleaner
         }
 
         if (! empty($toBeDeleted)) {
-            $workerDb->delete(['id in (?)' => array_keys($toBeDeleted)]);
+            $workerDb->delete([
+                'id in (?)' => array_keys($toBeDeleted),
+            ]);
         }
     }
 
@@ -108,7 +114,7 @@ class Cleaner
             $allDeleteable = $allDeleteable && $worker->isDeletable();
         }
 
-        if (!$allDeleteable) {
+        if (! $allDeleteable) {
             return;
         }
 
@@ -120,9 +126,10 @@ class Cleaner
     private function getRootParent(): self
     {
         $current = $this;
-        while (!is_null($current->parent)) {
+        while (! is_null($current->parent)) {
             $current = $current->parent;
         }
+
         return $current;
     }
 
@@ -132,6 +139,7 @@ class Cleaner
         foreach ($this->children as $child) {
             $result = array_merge($result, [$child], $child->getRecursiveChildren());
         }
+
         return $result;
     }
 

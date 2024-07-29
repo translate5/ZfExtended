@@ -28,7 +28,6 @@ use Zend_Exception;
 use Zend_Http_Client_Exception;
 use Zend_Http_Response;
 use ZfExtended_ApiClient;
-use ZfExtended_Authentication;
 use ZfExtended_Exception;
 use ZfExtended_FileUploadException;
 use ZfExtended_Zendoverwrites_Http_Exception_InvalidResponse;
@@ -45,10 +44,10 @@ final class ApiRequest
     public const VALID_RESPONSE_STATES = [200, 201];
 
     /**
-     * If no application-token is passed, the auth-cookie will be used
+     * If no explicit application-token is passed, the auth-cookie or the auth-token of the current request will be used
      */
     public function __construct(
-        private ?string $applicationToken = null
+        private readonly ?string $applicationToken = null
     ) {
     }
 
@@ -67,15 +66,10 @@ final class ApiRequest
         array $queryParams = [],
         array $file = []
     ): mixed {
-        $useAuthCookie = ! empty($this->applicationToken);
-        $client = new ZfExtended_ApiClient($endpointPath, dontAutoaddAuthCookie: $useAuthCookie);
+        $client = new ZfExtended_ApiClient($endpointPath, authorizationToken: $this->applicationToken);
         $client->setMethod($method);
         $client->setHeaders('Content-Type: ' . self::CONTENT_TYPE);
         $client->setHeaders('Accept: ' . self::ACCEPT);
-
-        if (! empty($this->applicationToken)) {
-            $client->setHeaders(ZfExtended_Authentication::APPLICATION_TOKEN_HEADER . ': ' . $this->applicationToken);
-        }
 
         if (! empty($queryParams)) {
             if ($method == 'POST' || $method == 'PUT') {

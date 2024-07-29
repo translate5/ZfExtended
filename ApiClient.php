@@ -39,7 +39,7 @@ class ZfExtended_ApiClient extends Zend_Http_Client
      * @throws Zend_Http_Client_Exception
      * @throws ZfExtended_Exception
      */
-    public function __construct($uri = null, $config = null, string $authorizationCookie = null, bool $dontAutoaddAuthCookie = false)
+    public function __construct($uri = null, string $authorizationCookie = null, string $authorizationToken = null)
     {
         $this->translate5ApiUrl = self::getServerBaseURL();
         $config = Zend_Registry::get('config');
@@ -50,13 +50,20 @@ class ZfExtended_ApiClient extends Zend_Http_Client
             $origin = (APPLICATION_ENV === ZfExtended_BaseIndex::ENVIRONMENT_TEST) ? ZfExtended_BaseIndex::ORIGIN_TEST : ZfExtended_BaseIndex::ORIGIN_APPTEST;
             $this->setHeaders('Origin', $origin);
         }
-        // set the auth-cookie
-        // but only if auto-add AuthCookie is not wanted
-        if ($dontAutoaddAuthCookie) {
+
+        // use token if given from outside or used by current request
+        if ($authorizationToken === null) {
+            $authorizationToken = ZfExtended_Authentication::getInstance()->getUsedToken();
+        }
+
+        if ($authorizationToken !== null && strlen($authorizationToken) > 0) {
+            $this->setHeaders(ZfExtended_Authentication::APPLICATION_TOKEN_HEADER . ': ' . $authorizationToken);
+
             return;
         }
 
-        $authCookieName = Zend_Session::getOptions('name');
+        //by default use the session cookie
+        $authCookieName = Zend_Registry::get('config')->resources->ZfExtended_Resource_Session->name;
         if ($authorizationCookie === null) {
             if (! array_key_exists($authCookieName, $_COOKIE)) {
                 throw new ZfExtended_Exception('ZfExtended_ApiClient: Authorization Cookie is not set.');

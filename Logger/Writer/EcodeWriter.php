@@ -44,6 +44,10 @@ class ZfExtended_Logger_Writer_EcodeWriter extends ZfExtended_Logger_Writer_Abst
 
     public function write(ZfExtended_Logger_Event $event): void
     {
+        // do not write during API-tests
+        if (defined('APPLICATION_APITEST') && APPLICATION_APITEST) {
+            return;
+        }
         //sanitize event message (no pipes allowed)
         $event->messageRaw = str_replace('|', '/', $event->messageRaw);
 

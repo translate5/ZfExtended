@@ -26,9 +26,11 @@ declare(strict_types=1);
 
 namespace MittagQI\ZfExtended\Worker\Trigger;
 
+use MittagQI\ZfExtended\Worker\Queue;
 use Zend_Exception;
-use Zend_Registry;
+use ZfExtended_BaseIndex;
 use ZfExtended_Debug;
+use ZfExtended_Factory;
 
 class Process implements TriggerInterface
 {
@@ -38,14 +40,9 @@ class Process implements TriggerInterface
      *
      * @throws Zend_Exception
      */
-    public function triggerWorker(string $id, string $hash, string $worker, ?string $taskGuid): bool
+    public function triggerWorker(string $id, string $hash): bool
     {
-        $workerId = [$worker, $taskGuid];
-        $dbName = Zend_Registry::get('config')->resources->db->params->dbname;
-        if ($dbName != 'translate5') { //we ignore default tables in debugging
-            array_unshift($workerId, $dbName);
-        }
-        $this->exec('worker:run ' . $id . ' -n --porcelain --debug="' . join(':', $workerId) . '"');
+        $this->exec('worker:run ' . $id);
 
         return true;
     }
@@ -62,13 +59,30 @@ class Process implements TriggerInterface
         if ($debug) {
             $cmd .= 'XDEBUG_MODE=debug XDEBUG_SESSION=1 PHP_IDE_CONFIG="serverName=default_upstream" ';
         }
-        $cmd .= 'nohup ./translate5.sh ' . $workerCmd . ' >/dev/null 2>&1 &';
-        exec($cmd);
+        // create the command-options
+        $options = ' -n --porcelain';
+        if (defined('APPLICATION_APITEST') && APPLICATION_APITEST) {
+            // test-mode must be transfered manually to the command
+            /** @phpstan-ignore-next-line */
+            $options .= (APPLICATION_ENV === ZfExtended_BaseIndex::ENVIRONMENT_TEST) ? ' --test' : ' --apptest';
+        }
+        // Prepare command and start service
+        if (preg_match('~WIN~', PHP_OS)) {
+            $cmd .= 'translate5.bat ' . $workerCmd . $options . ' >NUL 2>&1';
+            pclose(popen($cmd, 'r'));
+        } else {
+            $cmd .= 'nohup ./translate5.sh ' . $workerCmd . $options . ' >/dev/null 2>&1 &';
+            exec($cmd);
+        }
     }
 
     public function triggerQueue(): bool
     {
-        $this->exec('worker:queue -n --porcelain');
+        $workerQueue = ZfExtended_Factory::get(Queue::class);
+
+        if (! $workerQueue->isRunning()) {
+            $this->exec('worker:queue');
+        }
 
         return true;
     }

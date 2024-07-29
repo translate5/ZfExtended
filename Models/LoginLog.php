@@ -57,7 +57,7 @@ class ZfExtended_Models_LoginLog extends ZfExtended_Models_Entity_Abstract
     public static function addSuccess(ZfExtended_Authentication $auth, string $way): void
     {
         $user = $auth->getUser();
-        if ($auth::isAppTokenAuthenticated()) {
+        if ($auth->isAuthenticatedByToken()) {
             $way .= ' - APP-TOKEN';
         }
         $log = self::createLog($way);

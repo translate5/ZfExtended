@@ -71,7 +71,7 @@ class Http implements TriggerInterface
      *
      * @throws Zend_Exception
      */
-    public function triggerWorker(string $id, string $hash, string $worker, ?string $taskGuid): bool
+    public function triggerWorker(string $id, string $hash): bool
     {
         return $this->triggerUrl(
             APPLICATION_RUNDIR . '/editor/worker/' . $id,

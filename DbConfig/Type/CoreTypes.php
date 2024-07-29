@@ -75,6 +75,11 @@ class ZfExtended_DbConfig_Type_CoreTypes extends ZfExtended_DbConfig_Type_Abstra
      */
     public static function phpType(string $type): string
     {
+        // fallback-type if it can not be detected
+        if ($type === '') {
+            $type = 'string';
+        }
+
         return match ($type) {
             self::TYPE_LIST,
             self::TYPE_MAP,

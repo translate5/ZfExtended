@@ -28,16 +28,12 @@ class ZfExtended_Worker_Behaviour_Default
 {
     use ZfExtended_Controllers_MaintenanceTrait;
 
-    /**
-     * @var ZfExtended_Models_Worker
-     */
-    protected $workerModel;
+    protected ZfExtended_Models_Worker $workerModel;
 
     /**
      * Some default behaviour can be configured (instead overwriting this class for just a small configurable change)
-     * @var array
      */
-    protected $config = [
+    protected array $config = [
         //false => return always false, so do not stop worker if maintenance is scheduled
         // true => call isMaintenanceLoginLock check
         'isMaintenanceScheduled' => false,
@@ -45,9 +41,12 @@ class ZfExtended_Worker_Behaviour_Default
 
     /**
      * some behaviour is configurable ($config['configName'] => value):
-     * "isMaintenanceScheduled": false: worker ignores maintenance, true: isMaintenanceLoginLock check is called, integer: disallow worker run the value in minutes before scheduled maintenance
+     * "isMaintenanceScheduled":
+     *   false: worker ignores maintenance,
+     *   true: isMaintenanceLoginLock check is called,
+     *   integer: disallow worker run the value in minutes before scheduled maintenance
      */
-    public function setConfig(array $config)
+    public function setConfig(array $config): void
     {
         $this->config = array_merge($this->config, $config);
     }
@@ -60,7 +59,7 @@ class ZfExtended_Worker_Behaviour_Default
         return $this->config;
     }
 
-    public function setWorkerModel(ZfExtended_Models_Worker $workerModel)
+    public function setWorkerModel(ZfExtended_Models_Worker $workerModel): void
     {
         $this->workerModel = $workerModel;
     }
@@ -68,6 +67,9 @@ class ZfExtended_Worker_Behaviour_Default
     /**
      * Checks the parent workers if they are defunct, if yes set this worker also to defunct and return false
      * @return boolean returns true when all is OK, false when a parent worker is defunct
+     * @throws Zend_Db_Statement_Exception
+     * @throws ZfExtended_Models_Entity_Exceptions_IntegrityConstraint
+     * @throws ZfExtended_Models_Entity_Exceptions_IntegrityDuplicateKey
      */
     public function checkParentDefunc(): bool
     {
@@ -96,7 +98,7 @@ class ZfExtended_Worker_Behaviour_Default
     /**
      * sets the worker model to defunct when a fatal error happens
      */
-    public function registerShutdown()
+    public function registerShutdown(): void
     {
         register_shutdown_function(function ($wm) {
             $error = error_get_last();
@@ -109,17 +111,17 @@ class ZfExtended_Worker_Behaviour_Default
 
     /**
      * wake up scheduled workers and start next waiting workers
+     * @throws Zend_Exception
      */
-    public function wakeUpAndStartNextWorkers(ZfExtended_Models_Worker $workerModel)
+    public function wakeUpAndStartNextWorkers(): void
     {
-        //giving worker model as paramater since it is not sure that on all usage places this->workerModel is set already
-        $workerModel->wakeupScheduled();
         WorkerTriggerFactory::create()->triggerQueue();
     }
 
     /**
      * By default workers do not check if maintenance is scheduled.
      * This can be overwritten by worker.
+     * @throws Zend_Exception
      */
     public function isMaintenanceScheduled(): bool
     {

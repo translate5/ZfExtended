@@ -31,7 +31,7 @@ END LICENSE AND COPYRIGHT
  * @method void setWorker(string $phpClassName)
  * @method void setResource(string $resource)
  * @method void setSlot(string $slotName)
- * @method void setTaskGuid(string $taskGuid)
+ * @method void setTaskGuid(string|null $taskGuid)
  * @method void setPid(int $pid)
  * @method void setStarttime(string|null $starttime)
  * @method void setEndtime(string|null $endtime)
@@ -47,7 +47,7 @@ END LICENSE AND COPYRIGHT
  * @method string getWorker()
  * @method string getResource()
  * @method string getSlot()
- * @method string getTaskGuid()
+ * @method null|string getTaskGuid()
  * @method integer getPid()
  * @method null|string getStarttime()
  * @method null|string getEndtime()
@@ -242,11 +242,11 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
         $stateOrder = (self::STATE_RUNNING < self::STATE_SCHEDULED) ? 'ASC' : 'DESC'; // just for robustness: evaluate the needed ordering to make running workers appear first
         $intermediateTable =
 
-                   "SELECT w.id AS id, @num := if(@wworker = w.worker, @num:= @num + 1, 1) AS count, @wworker := w.worker as worker, w.maxParallelProcesses AS max, w.state AS state
+            "SELECT w.id AS id, @num := if(@wworker = w.worker, @num:= @num + 1, 1) AS count, @wworker := w.worker as worker, w.maxParallelProcesses AS max, w.state AS state
                     FROM Zf_worker w, (SELECT @wworker := _utf8mb4 '' COLLATE utf8mb4_unicode_ci, @num := 0) r
-                    WHERE w.state = ? /* BINDING 0 */
+                    WHERE w.state = '" . self::STATE_RUNNING . "'
                     OR (
-                        w.state = ? /* BINDING 1 */
+                        w.state = '" . self::STATE_SCHEDULED . "'
                         AND (
                             (NOT EXISTS (SELECT *
                                 FROM Zf_worker_dependencies d1
@@ -258,7 +258,12 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
                                 WHERE d2.dependency = ws.worker
                                 AND ws2.worker = d2.worker
                                 AND ws.taskGuid = ws2.taskGuid
-                                AND ws.state IN (?, ?, ?, ?) /* BINDING 2 - 5 */
+                                AND ws.state IN (
+                                    '" . self::STATE_WAITING . "',
+                                    '" . self::STATE_RUNNING . "',
+                                    '" . self::STATE_SCHEDULED . "',
+                                    '" . self::STATE_PREPARE . "'
+                                )
                                 AND ws2.id = w.id)
                         )
                     )
@@ -267,16 +272,14 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
 
         // we now update the worker state for the evaluated workers hold in the intermediate table but only up to the number of maxParalellWorkers per worker
         $sql = 'UPDATE Zf_worker u, ( ' . $intermediateTable . ' ) s
-                SET u.state = ? /* BINDING 6 */
+                SET u.state = \'' . self::STATE_WAITING . '\'
                 WHERE u.id = s.id
-                AND s.state = ? /* BINDING 7 */
+                AND s.state = \'' . self::STATE_SCHEDULED . '\'
                 AND s.count <= s.max;';
 
-        $bindings = [self::STATE_RUNNING, self::STATE_SCHEDULED, self::STATE_WAITING, self::STATE_RUNNING, self::STATE_SCHEDULED, self::STATE_PREPARE, self::STATE_WAITING, self::STATE_SCHEDULED];
-
         //it may happen that a worker is not set to waiting if the deadlock was ignored, at least at the next worker queue call it is triggered again
-        $this->ignoreOnDeadlock(function () use ($sql, $bindings) {
-            $this->db->getAdapter()->query($sql, $bindings);
+        $this->ignoreOnDeadlock(function () use ($sql) {
+            $this->db->getAdapter()->query($sql);
         }, true);
     }
 
@@ -339,10 +342,15 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
      * If it is a direct run (empty ID) the worker will be started always,
      *  regardless of already existing workers with the same taskGuid
      *
-     * @var boolean default true
      * @return boolean true if task was set to running
+     * @throws Zend_Db_Exception
+     * @throws Zend_Db_Statement_Exception
+     * @throws Zend_Exception
+     * @throws ZfExtended_Models_Db_Exceptions_DeadLockHandler
+     * @throws ZfExtended_Models_Entity_Exceptions_IntegrityConstraint
+     * @throws ZfExtended_Models_Entity_Exceptions_IntegrityDuplicateKey
      */
-    public function setRunning($oncePerTaskGuid = true)
+    public function setRunning(bool $oncePerTaskGuid = true): bool
     {
         $data = [
             'state' => self::STATE_RUNNING,
@@ -618,8 +626,7 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
         array $exludedWorkers = [],
         bool $includeRunning = false,
         bool $taskguidOnly = false,
-    ): void
-    {
+    ): void {
         $this->retryOnDeadlock(function () use ($exludedWorkers, $includeRunning, $taskguidOnly) {
             $byGroup = $workerExclude = '';
 

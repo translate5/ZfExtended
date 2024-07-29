@@ -142,6 +142,9 @@ class ZfExtended_Models_Installer_Maintenance
     public function isActive(int $sinceSeconds = 0): bool
     {
         $conf = $this->getConfFromDb();
+        if (is_null($conf->startDate)) {
+            return false;
+        }
         $startTimeStamp = strtotime($conf->startDate);
         $now = time() - $sinceSeconds;
 
@@ -161,7 +164,6 @@ class ZfExtended_Models_Installer_Maintenance
     }
 
     /**
-     * @throws ReflectionException
      * @throws Zend_Exception
      */
     public function disable(): void

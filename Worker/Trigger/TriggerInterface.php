@@ -33,7 +33,7 @@ interface TriggerInterface
      *
      * @param string $id numeric id
      */
-    public function triggerWorker(string $id, string $hash, string $worker, ?string $taskGuid): bool;
+    public function triggerWorker(string $id, string $hash): bool;
 
     public function triggerQueue(): bool;
 }

@@ -56,6 +56,10 @@ class Logger
             $msg .= ' data: ' . json_encode($worker->getDataObject());
         }
 
+        if ($type == $worker::STATE_RUNNING) {
+            $msg .= ' pid: ' . $worker->getPid();
+        }
+
         error_log($msg.PHP_EOL, 3, APPLICATION_DATA . '/logs/worker.log');
     }
 }
