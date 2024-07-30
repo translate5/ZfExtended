@@ -28,18 +28,18 @@ END LICENSE AND COPYRIGHT
 class ZfExtended_BadRequest extends ZfExtended_ErrorCodeException
 {
     /**
-     * @var integer
+     * @var int
      */
     protected $httpReturnCode = 400;
 
     /**
-     * By default we log that as INFO, if created as response then the level is set to DEBUG
-     * @var integer
+     * @var int
      */
     protected $level = ZfExtended_Logger::LEVEL_ERROR;
 
     protected static $localErrorCodes = [
         'E1559' => '400 Bad Request',
         'E1560' => '400 Bad Request - invalid JSON provided, JSON decode error: {error}',
+        'E1623' => '400 Bad Request - invalid Markup provided',
     ];
 }
