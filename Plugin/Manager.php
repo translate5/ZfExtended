@@ -62,10 +62,9 @@ class ZfExtended_Plugin_Manager
     public function __construct()
     {
         $config = Zend_Registry::get('config');
-        if (! isset($config->runtimeOptions->plugins)) {
+        if (! isset($config->runtimeOptions->plugins) || ! isset($config->runtimeOptions->plugins->active)) {
             return;
         }
-
         $this->activePlugins = array_unique($config->runtimeOptions->plugins->active->toArray());
     }
 
