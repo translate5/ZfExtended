@@ -77,20 +77,25 @@ final class ZfExtended_Sanitizer
      * Note, that invalid markup will be stripped and the text returned
      *
      * @throws SecurityException
+     * @throws ZfExtended_BadRequest
      */
     public static function markup(string $markup): string
     {
-        $dom = new ZfExtended_Dom();
-        $nodeList = $dom->loadUnicodeMarkup($markup);
-
-        if (!Markup::isValid($markup)) {
-            throw new SecurityException('Provided markup is malformed');
+        // Invalid markup will be rejected
+        if (! Markup::isValid($markup)) {
+            // Note: we do not throw a security-exception here since this error usually comes from our frontend!
+            throw new ZfExtended_BadRequest('E1623', [
+                'markup' => $markup,
+            ]);
         }
 
+        $dom = new ZfExtended_Dom();
+        $nodeList = $dom->loadUnicodeMarkup($markup);
         // this is debatable: when invalid markup is posted, we remove it and use the posted text contents
         // this is neccessary, as browsers are much more tolerant than DOMDocument,
         // and we can not expect the broken markup to be "broken enough" to not make attacks possible
         // may it is better to throw an "invalid markup exception" here ?
+        // TODO FIXME: can that still happen with the isValid check above ??
         if ($nodeList === null) {
             return strip_tags($markup);
         }
@@ -128,7 +133,7 @@ final class ZfExtended_Sanitizer
             }
         }
 
-        if (!$node->hasAttributes()) {
+        if (! $node->hasAttributes()) {
             return;
         }
 
@@ -167,7 +172,7 @@ final class ZfExtended_Sanitizer
 
         $hasInternalTags = false !== preg_match_all($exceptionRegex, $content, $tags, PREG_SET_ORDER);
 
-        if (!$hasInternalTags) {
+        if (! $hasInternalTags) {
             return Markup::escapeAllQuotes($content);
         }
 
@@ -211,7 +216,7 @@ final class ZfExtended_Sanitizer
         }
 
         $result = new \stdClass();
-        foreach ((array)$content as $key => $value) {
+        foreach ((array) $content as $key => $value) {
             $result->{$key} = match (true) {
                 is_array($value) => self::escapeHtmlRecursive($value, $exceptionRegex),
                 is_string($value) => self::escapeHtml($value, $exceptionRegex),
