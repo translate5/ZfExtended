@@ -30,7 +30,7 @@ class ZfExtended_SecurityException extends ZfExtended_Exception
     protected $defaultMessage = 'Security risk';
 
     /**
-     * @var integer
+     * @var int
      */
     protected $defaultCode = 403;
 }
