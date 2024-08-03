@@ -42,6 +42,11 @@ final class ZfExtended_Sanitizer
     public const MARKUP = 'markup';
 
     /**
+     * Leads to replacing '<' and '>' chars with '&lt;' and '&gt;'
+     */
+    public const ENCODE_TAGCHARS = 'encode';
+
+    /**
      * leads to NO sanitization and thus the application logic must ensure XSS prevention
      */
     public const UNSANITIZED = 'unsanitized';
@@ -60,14 +65,22 @@ final class ZfExtended_Sanitizer
 
         return match ($type) {
             self::MARKUP => self::markup($val),
+            self::ENCODE_TAGCHARS => self::string($val, 'encode'),
             self::UNSANITIZED => $val,
             default => self::string($val),
         };
     }
 
-    public static function string(string $string): string
+    /**
+     * @param string $string
+     * @param string $tagsHandling Can be 'strip' (default) or 'encode'
+     * @return string
+     */
+    public static function string(string $string, string $tagsHandling = 'strip'): string
     {
-        return strip_tags($string);
+        return $tagsHandling === 'strip'
+            ? strip_tags($string)
+            : str_replace(['<', '>'], ['&lt;', '&gt;'], $string);
     }
 
     /**

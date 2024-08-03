@@ -77,7 +77,7 @@ class ZfExtended_Sanitized_HttpRequest extends REST_Controller_Request_Http
         if (isset($this->_params[$keyName])) {
             return $this->_params[$keyName];
         } elseif ($keyName != 'data' && in_array('_GET', $paramSources) && isset($_GET[$keyName])) {
-            return $this->sanitizeRequestValue($_GET[$keyName]);
+            return $this->sanitizeRequestValue($_GET[$keyName], $keyName === 'filter' ? 'encode' : 'strip');
         } elseif ($keyName != 'data' && in_array('_POST', $paramSources) && isset($_POST[$keyName])) {
             return $this->sanitizeRequestValue($_POST[$keyName]);
         }
@@ -124,7 +124,7 @@ class ZfExtended_Sanitized_HttpRequest extends REST_Controller_Request_Http
         if (in_array('_GET', $paramSources) && isset($_GET) && is_array($_GET)) {
             foreach ($_GET as $key => $val) {
                 if (! array_key_exists($key, $return)) {
-                    $return[$key] = ($key === 'data') ? $val : $this->sanitizeRequestValue($val);
+                    $return[$key] = ($key === 'data') ? $val : $this->sanitizeRequestValue($val, $key === 'filter' ? 'encode' : 'strip');
                 }
             }
         }
@@ -198,9 +198,10 @@ class ZfExtended_Sanitized_HttpRequest extends REST_Controller_Request_Http
     /**
      * Sanitizes a single request value, which can only be string or array
      * @param array|string $requestValue
+     * @param string $tagsHandling Can be 'strip' (default) or 'encode'
      * @return array|string
      */
-    private function sanitizeRequestValue($requestValue)
+    private function sanitizeRequestValue($requestValue, string $tagsHandling = 'strip')
     {
         if (is_array($requestValue)) {
             foreach ($requestValue as $key => $value) {
@@ -210,7 +211,7 @@ class ZfExtended_Sanitized_HttpRequest extends REST_Controller_Request_Http
             return $requestValue;
         }
         if (! empty($requestValue)) {
-            return ZfExtended_Sanitizer::string($requestValue);
+            return ZfExtended_Sanitizer::string($requestValue, $tagsHandling);
         }
 
         return $requestValue;

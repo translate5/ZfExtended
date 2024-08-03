@@ -553,4 +553,15 @@ abstract class ZfExtended_Models_Filter
     {
         return preg_replace('~[%_]~', '\\\$0', $value);
     }
+
+    /**
+     * Decode '&lt;' and '&gt;' back to '<' and '>', respectively
+     *
+     * @param string $value
+     * @return string
+     */
+    public function decodeTagChars(string $value): string
+    {
+        return str_replace(['&lt;', '&gt;'], ['<', '>'], $value);
+    }
 }

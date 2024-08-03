@@ -360,6 +360,7 @@ class ZfExtended_Models_Filter_ExtJs extends ZfExtended_Models_Filter
     protected function applyString($field, $value)
     {
         $value = $this->escapeMysqlWildcards($value);
+        $value = $this->decodeTagChars($value);
         $this->where($field . ' like ?', '%' . $value . '%');
     }
 
