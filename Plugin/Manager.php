@@ -390,13 +390,14 @@ class ZfExtended_Plugin_Manager
     /**
      * Activating plugins having ::$enabledByDefault-flag as true
      *
+     * @param  array|null $allowedTypes if null, all. Empty array none.
      * @return string[]
      * @throws Zend_Db_Statement_Exception
      * @throws Zend_Exception
      * @throws ZfExtended_Models_Entity_Exceptions_IntegrityConstraint
      * @throws ZfExtended_Models_Entity_Exceptions_IntegrityDuplicateKey
      */
-    public function activateEnabledByDefault(): array {
+    public function activateEnabledByDefault(?array $allowedTypes = null): array {
         // Get available plugins and sort them
         $plugins = $this->getAvailable();
         ksort($plugins);
@@ -409,6 +410,10 @@ class ZfExtended_Plugin_Manager
 
         // Foreach available plugin
         foreach ($plugins as $pluginName => $pluginClass) {
+            if (!is_null($allowedTypes) && in_array($pluginClass::getType(), $allowedTypes)) {
+                continue;
+            }
+
             // If plugin should not be enabled by default - skip
             if (! $pluginClass::isEnabledByDefault()) {
                 continue;
