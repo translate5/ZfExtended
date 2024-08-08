@@ -386,4 +386,51 @@ class ZfExtended_Plugin_Manager
 
         return $mockConfigs;
     }
+
+    /**
+     * Activating plugins having ::$enabledByDefault-flag as true
+     *
+     * @return string[]
+     * @throws Zend_Db_Statement_Exception
+     * @throws Zend_Exception
+     * @throws ZfExtended_Models_Entity_Exceptions_IntegrityConstraint
+     * @throws ZfExtended_Models_Entity_Exceptions_IntegrityDuplicateKey
+     */
+    public function activateEnabledByDefault(): array {
+        // Get available plugins and sort them
+        $plugins = $this->getAvailable();
+        ksort($plugins);
+
+        // Get currently enabled/active plugins
+        $activePlugins = $this->getActive();
+
+        // Print where we are
+        $log = ["Activating plugins having ::\$enabledByDefault-flag as true"];
+
+        // Foreach available plugin
+        foreach ($plugins as $pluginName => $pluginClass) {
+            // If plugin should not be enabled by default - skip
+            if (! $pluginClass::isEnabledByDefault()) {
+                continue;
+            }
+
+            // If already activated
+            if (in_array($pluginClass, $activePlugins)) {
+                // Log that
+                $log[] = "Plugin $pluginName is already active";
+
+                // Skip
+                continue;
+            }
+
+            // Activate plugin
+            $this->setActive($pluginName);
+
+            // Log that
+            $log[] = "Plugin $pluginName is auto-activated";
+        }
+
+        // Return results log
+        return $log;
+    }
 }
