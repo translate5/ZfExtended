@@ -175,7 +175,7 @@ class ZfExtended_Exception extends Zend_Exception
     {
         $errors = '';
         if (! empty($this->errors)) {
-            $errors = "\n\n Additional error data: " . print_r($this->errors, 1);
+            $errors = "\n\n Additional error data: " . mb_substr(print_r($this->errors, 1), 1024 * 5);
         }
 
         return parent::__toString() . $errors;
