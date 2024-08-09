@@ -130,6 +130,11 @@ abstract class ZfExtended_Models_Entity_Abstract
         $this->debugFiltering = ZfExtended_Debug::hasLevel('core', 'EntityFilter');
     }
 
+    public function hydrate(array|Zend_Db_Table_Row_Abstract $data): void
+    {
+        $this->row = is_array($data) ? $this->db->createRow($data) : $data;
+    }
+
     /**
      * inits the Entity, resets the internal data
      * if data object is given, use it's values.
