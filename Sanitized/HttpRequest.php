@@ -198,10 +198,9 @@ class ZfExtended_Sanitized_HttpRequest extends REST_Controller_Request_Http
     /**
      * Sanitizes a single request value, which can only be string or array
      * @param array|string $requestValue
-     * @param string $tagsHandling Can be 'strip' (default) or 'encode'
      * @return array|string
      */
-    private function sanitizeRequestValue($requestValue, string $tagsHandling = 'strip')
+    private function sanitizeRequestValue($requestValue)
     {
         if (is_array($requestValue)) {
             foreach ($requestValue as $key => $value) {
@@ -211,7 +210,7 @@ class ZfExtended_Sanitized_HttpRequest extends REST_Controller_Request_Http
             return $requestValue;
         }
         if (! empty($requestValue)) {
-            return ZfExtended_Sanitizer::string($requestValue, $tagsHandling);
+            return ZfExtended_Sanitizer::string($requestValue);
         }
 
         return $requestValue;

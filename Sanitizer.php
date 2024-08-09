@@ -67,14 +67,11 @@ final class ZfExtended_Sanitizer
 
     /**
      * @param string $string
-     * @param string $tagsHandling Can be 'strip' (default) or 'encode'
      * @return string
      */
-    public static function string(string $string, string $tagsHandling = 'strip'): string
+    public static function string(string $string): string
     {
-        return $tagsHandling === 'strip'
-            ? strip_tags($string)
-            : str_replace(['<', '>'], ['&lt;', '&gt;'], $string);
+        return strip_tags($string);
     }
 
     /**
