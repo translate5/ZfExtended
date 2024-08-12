@@ -65,10 +65,6 @@ final class ZfExtended_Sanitizer
         };
     }
 
-    /**
-     * @param string $string
-     * @return string
-     */
     public static function string(string $string): string
     {
         return strip_tags($string);
