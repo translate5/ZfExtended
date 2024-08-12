@@ -44,9 +44,10 @@ abstract class ServiceAbstract
 
     protected static function doDebug(): bool
     {
-        if(!isset(self::$doDebug)){
+        if (! isset(self::$doDebug)) {
             self::$doDebug = ZfExtended_Debug::hasLevel('core', 'Services');
         }
+
         return self::$doDebug;
     }
 
@@ -84,6 +85,12 @@ abstract class ServiceAbstract
      * @var string[]
      */
     protected array $checkedVersions = [];
+
+    /**
+     * Optionally holds dditional Info about the checked URLs
+     * @var string[]
+     */
+    protected array $checkedInfos = [];
 
     /**
      * Represents the global config
@@ -405,8 +412,13 @@ abstract class ServiceAbstract
         return $this->getDescription() . ' is not relevant for the current configuration.';
     }
 
-    public function createServiceMsg(string $msg, string $seperator, bool $withUrls = true, bool $withVersions = true): string
-    {
+    public function createServiceMsg(
+        string $msg,
+        string $seperator,
+        bool $withUrls = true,
+        bool $withVersions = true,
+        bool $withInfos = true,
+    ): string {
         $text = $this->getDescription();
         if (! empty($msg)) {
             $text .= ' ' . $msg;
@@ -416,6 +428,9 @@ abstract class ServiceAbstract
         }
         if ($withVersions) {
             $text .= $this->getCheckedDetail($seperator, 'Version', $this->checkedVersions);
+        }
+        if ($withInfos) {
+            $text .= $this->getCheckedDetail($seperator, 'Additional Info', $this->checkedInfos);
         }
 
         return $text;
