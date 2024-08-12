@@ -410,7 +410,7 @@ class ZfExtended_Plugin_Manager
 
         // Foreach available plugin
         foreach ($plugins as $pluginName => $pluginClass) {
-            if (!is_null($allowedTypes) && in_array($pluginClass::getType(), $allowedTypes)) {
+            if (!is_null($allowedTypes) && ! in_array($pluginClass::getType(), $allowedTypes)) {
                 continue;
             }
 
