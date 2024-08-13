@@ -316,7 +316,8 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract
     /**
      * Check if the current user has parent user with the given id
      * @param string $parentId -> the parent userid to be checked if it is a parent of the current one
-     * @param string $parentIds optional, if empty take the parentIds of the current user instance. A custom comma separated string can be given here
+     * @param string $parentIds optional, if empty take the parentIds of the current user instance. A custom comma
+     *     separated string can be given here
      * @return boolean
      */
     public function hasParent($parentId, $parentIds = null)
@@ -395,7 +396,8 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract
     }
 
     /**
-     * returns a list of users matching the given parameter in login (mysql wildcards permitted) or a direct in the e-mail field
+     * returns a list of users matching the given parameter in login (mysql wildcards permitted) or a direct in the
+     * e-mail field
      */
     public function loadAllByLoginPartOrEMail(string $search): array
     {
@@ -509,5 +511,10 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract
         $userSetableRoles = ($user === null) ? [] : $user->getSetableRoles();
 
         return empty(array_diff($this->getRoles(), $userSetableRoles));
+    }
+
+    public function assignCustomers(array $customers): void
+    {
+        $this->setCustomers(',' . implode(',', $customers) . ',');
     }
 }
