@@ -124,7 +124,7 @@ class ZfExtended_Sanitized_HttpRequest extends REST_Controller_Request_Http
         if (in_array('_GET', $paramSources) && isset($_GET) && is_array($_GET)) {
             foreach ($_GET as $key => $val) {
                 if (! array_key_exists($key, $return)) {
-                    $return[$key] = ($key === 'data') ? $val : $this->sanitizeRequestValue($val);
+                    $return[$key] = ($key === 'data' || $key === 'filter') ? $val : $this->sanitizeRequestValue($val);
                 }
             }
         }
