@@ -64,6 +64,7 @@ class ZfExtended_DbConfig_Type_CoreTypes extends ZfExtended_DbConfig_Type_Abstra
             self::TYPE_REGEX,
             self::TYPE_REGEXLIST,
             self::TYPE_XPATH,
+            self::TYPE_MAP,
             self::TYPE_XPATHLIST => ZfExtended_Sanitizer::UNSANITIZED,
             self::TYPE_MARKUP => ZfExtended_Sanitizer::MARKUP,
             default => ZfExtended_Sanitizer::STRING,
