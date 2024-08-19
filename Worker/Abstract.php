@@ -525,15 +525,22 @@ abstract class ZfExtended_Worker_Abstract
     final protected function setDelayed(string $serviceId, string $workerName = null, int $singleDelay = -1): bool
     {
         $numDelays = (int) $this->workerModel->getDelays();
-        // if given, a singleDelay will lead to waiting only once
-        $maxDelays = ($singleDelay > 0) ? 1 : static::MAX_DELAYS;
-        if ($numDelays >= $maxDelays) {
+        // if we had too many delays we terminate the worker
+        // note, that delays with a defined delay-time will count as "non-terminating" that will not increase the delays
+        // nor can be too many ...
+        if ($singleDelay < 1 && $numDelays >= static::MAX_DELAYS) {
             return $this->onTooManyDelays($serviceId, $workerName);
         } else {
-            // if given, a singleDelay will define the waiting-time
-            $toWait = ($singleDelay > 0) ? $singleDelay : $this->calculateDelay();
+            // if given, a singleDelay will define the waiting-time and not increase the num of delays
+            if($singleDelay > 0){
+                $toWait = $singleDelay;
+                $delays = $numDelays;
+            } else {
+                $toWait = $this->calculateDelay();
+                $delays = $numDelays + 1;
+            }
             $until = $toWait + time();
-            $delays = $numDelays + 1;
+
             $this->workerModel->setDelayedUntil($until);
             $this->workerModel->setDelays($delays);
             $this->workerModel->setState(ZfExtended_Models_Worker::STATE_DELAYED);
