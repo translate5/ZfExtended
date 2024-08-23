@@ -315,7 +315,7 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller
         //oder als "FilterFactory" in der abstrakten ZfExtended_Models_Filter Klasse implementiert werden
         $filter = ZfExtended_Factory::get($this->filterClass, [
             $this->entity,
-            $this->_getParam('filter'),
+            $this->getRequest()->getRawParam('filter'),
         ]);
 
         /* @var $filter ZfExtended_Models_Filter_ExtJs */
