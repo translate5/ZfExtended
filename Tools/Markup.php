@@ -520,4 +520,15 @@ final class Markup
     {
         return str_replace(['&#13;', '&#10;', '&#9;'], ["\r", "\n", "\t"], $text);
     }
+
+    /**
+     * Convert 'some <taglikeText> text' to 'some &lt;taglikeText&gt; text' for tags
+     * having names starting with alhphabet character, so that t5 numeric tags are not affected
+     *
+     * NOTE: Only for Excel export/import API
+     */
+    public static function escapeTaglikePlaceholders(?string $text): string
+    {
+        return preg_replace('~<([a-z][a-z0-9]*)>~im', '&lt;$1&gt;', $text ?? '');
+    }
 }
