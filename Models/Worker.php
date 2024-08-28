@@ -758,7 +758,7 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
      * a:1:{s:14:"pretranslateMt";b:1;s:21:"pretranslateMatchrate";i:100;}
      * @throws ZfExtended_Exception
      */
-    public function isDuplicateByParams(array $params): bool
+    public function isDuplicateByParams(array $params, string $taskGuid = null): bool
     {
         if (empty($params)) {
             throw new ZfExtended_Exception('Worker:isDuplicateByParam: At least one param must be given.');

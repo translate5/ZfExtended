@@ -258,13 +258,13 @@ abstract class ZfExtended_Worker_Abstract
         $params = $this->workerModel->getParameters();
         $subset = [];
         foreach ($paramNames as $name) {
-            if (array_key_exists($name, $params)) {
-                $subset[$name] = $params[$name];
-            } else {
+            if (! array_key_exists($name, $params)) {
                 throw new ZfExtended_Exception(
                     'isDuplicateBySingleParam: Param "' . $name . '" does not exist in worker-model.'
                 );
             }
+
+            $subset[$name] = $params[$name];
         }
         if ($this->workerModel->isDuplicateByParams($subset)) {
             return false;
