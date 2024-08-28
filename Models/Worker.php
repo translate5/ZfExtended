@@ -706,6 +706,14 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
     }
 
     /**
+     * Retrieves the serialized parameters-string fromm the DB
+     */
+    public function getDbParameters(): ?string
+    {
+        return $this->get('parameters');
+    }
+
+    /**
      * Update the worker model progress field with given $progress value.
      * This will trigger updateProgress event on each call.
      *
@@ -739,6 +747,35 @@ class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
     public function isDone(): bool
     {
         return $this->getState() === self::STATE_DONE;
+    }
+
+    /**
+     * Searches a worker that was not yet running with the given params
+     * These params must exist in the worker model and are expected to identify the worker uniquely
+     * UGLY FIXME: parameters is a serialized object, work with JSON instead. the binary structure is like
+     * a:1:{s:13:"operationType";s:13:"matchanalysis";}
+     * a:1:{s:8:"taskGuid";s:38:"{b8e6ac2a-2e08-4754-9a69-8d88c85cc5e0}";}
+     * a:1:{s:14:"pretranslateMt";b:1;s:21:"pretranslateMatchrate";i:100;}
+     * @throws ZfExtended_Exception
+     */
+    public function isDuplicateByParams(array $params, string $taskGuid = null): bool
+    {
+        if (empty($params)) {
+            throw new ZfExtended_Exception('Worker:isDuplicateByParam: At least one param must be given.');
+        }
+        $select = $this->db->select();
+        $select
+            ->where('state IN (?)', [self::STATE_PREPARE, self::STATE_WAITING, self::STATE_SCHEDULED])
+            ->where('worker = ?', $this->getWorker());
+        if (! empty($taskGuid)) {
+            $select->where('taskGuid = ?', $taskGuid);
+        }
+        foreach ($params as $name => $value) {
+            $like = '%' . serialize($name) . serialize($value) . '%';
+            $select->where('parameters LIKE ?', $like);
+        }
+
+        return $this->db->fetchRow($select) !== null;
     }
 
     /**
