@@ -524,6 +524,8 @@ final class Markup
     /**
      * Convert 'some <taglikeText> text' to 'some &lt;taglikeText&gt; text' for tags
      * having names starting with alhphabet character, so that t5 numeric tags are not affected
+     *
+     * NOTE: Only for Excel export/import API
      */
     public static function escapeTaglikePlaceholders(?string $text): string
     {
