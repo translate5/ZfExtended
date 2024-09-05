@@ -244,6 +244,37 @@ abstract class ZfExtended_Worker_Abstract
     }
 
     /**
+     * Checks if a duplicate for the worker that did not run yet exists in the worker-table
+     * This expects the worker to be uniquely identified by the param(s) with the given name
+     * If it does not exist, it will be queued and true returned, otherwise false
+     * @throws ZfExtended_Exception
+     */
+    public function queueUniquely(
+        array $paramNames,
+        int $parentId = 0,
+        string $state = null,
+        bool $startNext = true,
+    ): bool {
+        $params = $this->workerModel->getParameters();
+        $subset = [];
+        foreach ($paramNames as $name) {
+            if (! array_key_exists($name, $params)) {
+                throw new ZfExtended_Exception(
+                    'isDuplicateBySingleParam: Param "' . $name . '" does not exist in worker-model.'
+                );
+            }
+
+            $subset[$name] = $params[$name];
+        }
+        if ($this->workerModel->isDuplicateByParams($subset)) {
+            return false;
+        }
+        $this->queue($parentId, $state, $startNext);
+
+        return true;
+    }
+
+    /**
      * Schedules prepared workers of same taskGuid and workergroup as the current
      */
     public function schedulePrepared(): void
