@@ -184,8 +184,7 @@ class ZfExtended_Debug
         $result->database->modCount = count($dbUpdater->getModifiedFiles());
         $result->database->isUptodate = $result->database->newCount === 0 && $result->database->modCount === 0;
 
-        $worker = ZfExtended_Factory::get('ZfExtended_Models_Worker');
-        /* @var $worker ZfExtended_Models_Worker */
+        $worker = new ZfExtended_Models_Worker();
         $result->worker = $worker->getSummary();
 
         $pm = Zend_Registry::get('PluginManager');

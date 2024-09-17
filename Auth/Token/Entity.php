@@ -43,9 +43,9 @@ END LICENSE AND COPYRIGHT
  */
 class ZfExtended_Auth_Token_Entity extends ZfExtended_Models_Entity_Abstract
 {
-    protected $dbInstanceClass = "ZfExtended_Auth_Token_Db_Entity";
+    protected $dbInstanceClass = ZfExtended_Auth_Token_Db_Entity::class;
 
-    protected $validatorInstanceClass = "ZfExtended_Auth_Token_Validator_Entity";
+    protected $validatorInstanceClass = ZfExtended_Auth_Token_Validator_Entity::class;
 
     protected array $publicColumns = ['token.id', 'description', 'created', 'expires'];
 

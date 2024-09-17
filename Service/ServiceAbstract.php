@@ -28,6 +28,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 use Zend_Config;
 use Zend_Exception;
 use Zend_Registry;
+use ZfExtended_Debug;
 use ZfExtended_Exception;
 use ZfExtended_Models_SystemRequirement_Result;
 
@@ -39,7 +40,16 @@ use ZfExtended_Models_SystemRequirement_Result;
  */
 abstract class ServiceAbstract
 {
-    public const DO_DEBUG = false;
+    private static bool $doDebug;
+
+    protected static function doDebug(): bool
+    {
+        if (! isset(self::$doDebug)) {
+            self::$doDebug = ZfExtended_Debug::hasLevel('core', 'Services');
+        }
+
+        return self::$doDebug;
+    }
 
     /**
      * The name is defined as array-key in a plugins $services prop and must be UNIQUE across all plugins and the base services
@@ -75,6 +85,12 @@ abstract class ServiceAbstract
      * @var string[]
      */
     protected array $checkedVersions = [];
+
+    /**
+     * Optionally holds dditional Info about the checked URLs
+     * @var string[]
+     */
+    protected array $checkedInfos = [];
 
     /**
      * Represents the global config
@@ -396,8 +412,13 @@ abstract class ServiceAbstract
         return $this->getDescription() . ' is not relevant for the current configuration.';
     }
 
-    public function createServiceMsg(string $msg, string $seperator, bool $withUrls = true, bool $withVersions = true): string
-    {
+    public function createServiceMsg(
+        string $msg,
+        string $seperator,
+        bool $withUrls = true,
+        bool $withVersions = true,
+        bool $withInfos = true,
+    ): string {
         $text = $this->getDescription();
         if (! empty($msg)) {
             $text .= ' ' . $msg;
@@ -407,6 +428,9 @@ abstract class ServiceAbstract
         }
         if ($withVersions) {
             $text .= $this->getCheckedDetail($seperator, 'Version', $this->checkedVersions);
+        }
+        if ($withInfos) {
+            $text .= $this->getCheckedDetail($seperator, 'Additional Info', $this->checkedInfos);
         }
 
         return $text;
@@ -431,7 +455,7 @@ abstract class ServiceAbstract
      */
     public function output(string $msg, SymfonyStyle $io = null, string $ioMethod = 'note'): void
     {
-        if (self::DO_DEBUG) {
+        if (static::doDebug()) {
             error_log('SERVICE ' . $ioMethod . ': ' . $msg);
         }
         $io?->$ioMethod($msg);
