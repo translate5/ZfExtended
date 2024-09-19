@@ -29,15 +29,12 @@ use MittagQI\ZfExtended\Worker\Trigger\Http;
  * Important: putAction and queueAction are deleting their session so that no new session entry is created
  * Therefore, these actions are not CSRF-protected
  * On futural usage of the postAction (to be used from frontend for direct calls) this indeed should not be the case!
+ *
+ * @property ZfExtended_Models_Worker $entity
  */
 class ZfExtended_WorkerController extends ZfExtended_RestController
 {
-    protected $entityClass = 'ZfExtended_Models_Worker';
-
-    /**
-     * @var ZfExtended_Models_Worker
-     */
-    protected $entity;
+    protected $entityClass = ZfExtended_Models_Worker::class;
 
     /**
      * Generally the worker-endpoints are CSRF unprotected, a protection is achieved via the worker-hash
