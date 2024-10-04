@@ -58,7 +58,7 @@ class Queue
     public function process(): bool
     {
         $workerModel = new ZfExtended_Models_Worker();
-        $workerModel->wakeupScheduled();
+        $workerModel->wakeupScheduledAndDelayed();
         $workerListQueued = $workerModel->getListQueued();
 
         $result = false;

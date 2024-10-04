@@ -244,9 +244,10 @@ final class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
 
     /**
      * Wake up a scheduled worker (set state from scheduled to waiting)
+     * or a worker that is delayed and the delay is overdue
      * if there are no other worker waiting or running with the same taskGuid
      */
-    public function wakeupScheduled(): void
+    public function wakeupScheduledAndDelayed(): void
     {
         // check if there are any worker waiting or running with this taskGuid
 
@@ -269,43 +270,48 @@ final class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
         // It seems MySQL ignores the collation default settings when creating variables what is really annoying as it is prone to cause problems, so the collation has to be set explicitly for the variable
         // TODO FIXME: Collation behaviour for variables may can be fixed by setting "character_set_connection"
         $stateOrder = (self::STATE_RUNNING < self::STATE_SCHEDULED) ? 'ASC' : 'DESC'; // just for robustness: evaluate the needed ordering to make running workers appear first
+        $time = time();
         $intermediateTable =
 
-            "SELECT w.id AS id, @num := if(@wworker = w.worker, @num:= @num + 1, 1) AS count, @wworker := w.worker as worker, w.maxParallelProcesses AS max, w.state AS state
-                    FROM Zf_worker w, (SELECT @wworker := _utf8mb4 '' COLLATE utf8mb4_unicode_ci, @num := 0) r
-                    WHERE w.state = '" . self::STATE_RUNNING . "'
-                    OR (
-                        w.state = '" . self::STATE_SCHEDULED . "'
-                        AND (
-                            (NOT EXISTS (SELECT *
-                                FROM Zf_worker_dependencies d1
-                                WHERE w.worker = d1.worker)
-                                )
-                            OR
-                            NOT EXISTS (SELECT *
-                                FROM Zf_worker ws, Zf_worker ws2, Zf_worker_dependencies d2
-                                WHERE d2.dependency = ws.worker
-                                AND ws2.worker = d2.worker
-                                AND ws.taskGuid = ws2.taskGuid
-                                AND ws.state IN (
-                                    '" . self::STATE_WAITING . "',
-                                    '" . self::STATE_RUNNING . "',
-                                    '" . self::STATE_SCHEDULED . "',
-                                    '" . self::STATE_PREPARE . "',
-                                    '" . self::STATE_DELAYED . "'
-                                )
-                                AND ws2.id = w.id)
-                        )
+            "SELECT w.id AS id, @num := if(@wworker = w.worker, @num:= @num + 1, 1) AS count,
+                @wworker := w.worker as worker,
+                w.maxParallelProcesses AS max,
+                w.state AS state,
+                w.delayedUntil AS delayedUntil
+                FROM Zf_worker w, (SELECT @wworker := _utf8mb4 '' COLLATE utf8mb4_unicode_ci, @num := 0) r
+                WHERE w.state = '" . self::STATE_RUNNING . "'
+                OR (
+                    (w.state = '" . self::STATE_SCHEDULED . "' OR (w.state = '" . self::STATE_DELAYED . "' AND w.delayedUntil < ' . $time . '))
+                    AND (
+                        (NOT EXISTS (SELECT *
+                            FROM Zf_worker_dependencies d1
+                            WHERE w.worker = d1.worker)
+                            )
+                        OR
+                        NOT EXISTS (SELECT *
+                            FROM Zf_worker ws, Zf_worker ws2, Zf_worker_dependencies d2
+                            WHERE d2.dependency = ws.worker
+                            AND ws2.worker = d2.worker
+                            AND ws.taskGuid = ws2.taskGuid
+                            AND ws.state IN (
+                                '" . self::STATE_WAITING . "',
+                                '" . self::STATE_RUNNING . "',
+                                '" . self::STATE_SCHEDULED . "',
+                                '" . self::STATE_PREPARE . "',
+                                '" . self::STATE_DELAYED . "'
+                            )
+                            AND ws2.id = w.id)
                     )
-                    ORDER BY w.worker ASC, w.state " . $stateOrder . ", w.id ASC
-                    FOR UPDATE";
+                )
+                ORDER BY w.worker ASC, w.state " . $stateOrder . ", w.id ASC
+                FOR UPDATE";
 
         // we now update the worker state for the evaluated workers hold in the intermediate table but only up to the number of maxParalellWorkers per worker
         $sql = 'UPDATE Zf_worker u, ( ' . $intermediateTable . ' ) s
-                SET u.state = \'' . self::STATE_WAITING . '\'
-                WHERE u.id = s.id
-                AND s.state = \'' . self::STATE_SCHEDULED . '\'
-                AND s.count <= s.max;';
+            SET u.state = \'' . self::STATE_WAITING . '\'
+            WHERE u.id = s.id
+            AND (s.state = \'' . self::STATE_SCHEDULED . '\' OR (s.state = \'' . self::STATE_DELAYED . '\' AND s.`delayedUntil` < ' . $time . '))
+            AND s.count <= s.max;';
 
         //it may happen that a worker is not set to waiting if the deadlock was ignored, at least at the next worker queue call it is triggered again
         $this->ignoreOnDeadlock(function () use ($sql) {
@@ -329,7 +335,7 @@ final class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
         }
         $bindings = [$parentId, $parentId];
         $taskClause = '';
-        if (!empty($taskGuid)) {
+        if (! empty($taskGuid)) {
             $taskClause = ' AND taskGuid = ?';
             $bindings[] = $taskGuid;
         }

@@ -276,6 +276,9 @@ abstract class ZfExtended_Worker_Abstract
 
     /**
      * Schedules prepared workers of same taskGuid and workergroup as the current
+     * @throws Zend_Db_Exception
+     * @throws Zend_Exception
+     * @throws ZfExtended_Models_Db_Exceptions_DeadLockHandler
      */
     public function schedulePrepared(): void
     {
@@ -552,8 +555,11 @@ abstract class ZfExtended_Worker_Abstract
     /**
      * Set the worker to state delayed. In this case, the worker is re-scheduled after a certain waiting-time
      * @throws MaxDelaysException
+     * @throws Zend_Db_Exception
+     * @throws Zend_Exception
+     * @throws ZfExtended_Models_Db_Exceptions_DeadLockHandler
      */
-    final protected function setDelayed(string $serviceId, string $workerName = null, int $singleDelay = -1): bool
+    final protected function setDelayed(string $serviceId, ?string $workerName = null, int $singleDelay = -1): bool
     {
         $numDelays = (int) $this->workerModel->getDelays();
         // if we had too many delays we terminate the worker
@@ -563,7 +569,7 @@ abstract class ZfExtended_Worker_Abstract
             return $this->onTooManyDelays($serviceId, $workerName);
         } else {
             // if given, a singleDelay will define the waiting-time and not increase the num of delays
-            if($singleDelay > 0){
+            if ($singleDelay > 0) {
                 $toWait = $singleDelay;
                 $delays = $numDelays;
             } else {
