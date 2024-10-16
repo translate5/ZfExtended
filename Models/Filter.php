@@ -170,6 +170,21 @@ abstract class ZfExtended_Models_Filter
         return false;
     }
 
+    /**
+     * Returns filter by filter name or null if not found
+     */
+    public function getFilter(string $filterName): ?object
+    {
+        //checking for a specific filtered field
+        foreach ($this->filter as $index => $filter) {
+            if ($filter->field === $filterName) {
+                return $this->filter[$index];
+            }
+        }
+
+        return null;
+    }
+
     public function deleteSort(string $sortName): bool
     {
         $key = array_search($sortName, array_column($this->sort, 'property'));
