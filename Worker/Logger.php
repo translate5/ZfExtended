@@ -25,7 +25,6 @@ declare(strict_types=1);
 
 namespace MittagQI\ZfExtended\Worker;
 
-use DateTimeInterface;
 use ZfExtended_Models_Worker;
 
 class Logger
@@ -42,15 +41,14 @@ class Logger
         if (is_null(self::$instance)) {
             self::$instance = new self();
         }
+
         return self::$instance;
     }
 
-    /**
-     */
     public function log(ZfExtended_Models_Worker $worker, string $type, bool $full = false): void
     {
-        $msg = (new \DateTime())->format('Y-m-d H:i:s.u P').
-            ' '.$type . ' ' . $worker->getId() . ' ' . $worker->getWorker();
+        $msg = (new \DateTime())->format('Y-m-d H:i:s.u P') .
+            ' ' . $type . ' ' . $worker->getId() . ' ' . $worker->getWorker();
 
         if ($full) {
             $msg .= ' data: ' . json_encode($worker->getDataObject());
@@ -60,6 +58,6 @@ class Logger
             $msg .= ' pid: ' . $worker->getPid();
         }
 
-        error_log($msg.PHP_EOL, 3, APPLICATION_DATA . '/logs/worker.log');
+        error_log($msg . PHP_EOL, 3, APPLICATION_DATA . '/logs/worker.log');
     }
 }

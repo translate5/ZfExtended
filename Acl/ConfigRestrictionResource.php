@@ -41,5 +41,4 @@ class ConfigRestrictionResource extends AbstractResource
      * @var string
      */
     public const ID = 'configAccessRestriction';
-
 }

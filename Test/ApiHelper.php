@@ -650,8 +650,6 @@ class ZfExtended_Test_ApiHelper
 
     /**
      * Loads the file contents of a file with data to be compared.
-     * @param string $file
-     * @return mixed
      */
     public function getFileContentRaw(string $file): mixed
     {

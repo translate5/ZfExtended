@@ -165,8 +165,7 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
 
         if (! ZfExtended_Utils::isHttpsRequest()
             && ! defined('APPLICATION_APITEST')
-            && ! ZfExtended_Utils::isDevelopment())
-        {
+            && ! ZfExtended_Utils::isDevelopment()) {
             //without HTTPS we have to use samesite = LAX which then prevents the proper functionality of this feature,
             // therefore we just disable sessionToken auth in that case
             throw new ZfExtended_NotAuthenticatedException(

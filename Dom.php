@@ -210,7 +210,6 @@ final class ZfExtended_Dom extends DOMDocument
      * Evaluates, if a loaded Document had no fatal errors and therefore can be seen as "valid"
      * If the evaluation has to be more strict you have to use the options
      */
-
     public function isValid(bool $allowErrors = true): bool
     {
         if (count($this->domErrors) == 0) {

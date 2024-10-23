@@ -250,7 +250,7 @@ class Http implements TriggerInterface
             $debug = $_SERVER['XDEBUG_CONFIG'];
         }
         if (isset($_SERVER['HTTP_X_TRANSLATE5_TESTNAME'])) {
-            $out .= self::TESTNAME_HEADER . ': '. $_SERVER['HTTP_X_TRANSLATE5_TESTNAME'] . "\r\n"; // this is translate5-specific !!!
+            $out .= self::TESTNAME_HEADER . ': ' . $_SERVER['HTTP_X_TRANSLATE5_TESTNAME'] . "\r\n"; // this is translate5-specific !!!
         }
         //forced debug by config
         if (ZfExtended_Debug::hasLevel('core', 'worker')) {

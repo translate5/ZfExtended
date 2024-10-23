@@ -33,7 +33,6 @@ use Symfony\Component\Lock\SharedLockInterface;
 use Symfony\Component\Lock\Store\FlockStore;
 use Symfony\Component\Lock\Store\SemaphoreStore;
 use Zend_Exception;
-use ZfExtended_Factory;
 use ZfExtended_Models_Worker;
 use ZfExtended_Utils;
 
@@ -93,10 +92,12 @@ class Queue
     public function isRunning(): bool
     {
         // isAquired works only in the same process, so for IPC we need the following construction
-        if($this->lock->acquire()) {
+        if ($this->lock->acquire()) {
             $this->lock->release(); //if we got the lock it was not locked before so we remove it
+
             return false;
         }
+
         return true;
     }
 
