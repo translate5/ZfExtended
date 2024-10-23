@@ -75,6 +75,7 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract
     public static function customersToCustomerIds(string $customers): array
     {
         $customerIds = array_map('intval', explode(',', trim($customers, ',')));
+
         // clean up the array for empty values
         return array_filter($customerIds);
     }
@@ -82,13 +83,15 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract
     /**
      * @throws ZfExtended_Exception since this should never happen a generic base exception is OK here
      */
-    public static function loadSystemUser(): static {
+    public static function loadSystemUser(): static
+    {
         try {
             $systemUser = ZfExtended_Factory::get(static::class);
             $systemUser->loadByLogin(self::SYSTEM_LOGIN);
         } catch (ReflectionException|ZfExtended_Models_Entity_NotFoundException) {
             throw new ZfExtended_Exception('system user not found');
         }
+
         return $systemUser;
     }
 
