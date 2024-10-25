@@ -43,13 +43,23 @@ END LICENSE AND COPYRIGHT
 abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract
 {
     /**
-     * Retrieves the primary language of a RFC 5646 language (e.g. "en" from "en-GB")
+     * Retrieves the lowercased primary language of a RFC 5646 language (e.g. "en" from "en-GB")
      */
     public static function primaryCodeByRfc5646(string $rfc5646): string
     {
         $parts = explode('-', $rfc5646);
 
         return strtolower($parts[0]);
+    }
+
+    /**
+     * Retrieves the lowercased sub language of a RFC 5646 language (e.g. "gb" from "en-GB" or empty string)
+     */
+    public static function sublangCodeByRfc5646(string $rfc5646): string
+    {
+        return strtolower(
+            preg_replace('~^'. self::primaryCodeByRfc5646($rfc5646) . '-?~', '', $rfc5646)
+        );
     }
 
     public const LANG_TYPE_ID = 'id';
