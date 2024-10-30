@@ -33,11 +33,35 @@ use Symfony\Component\Lock\SharedLockInterface;
 use Symfony\Component\Lock\Store\FlockStore;
 use Symfony\Component\Lock\Store\SemaphoreStore;
 use Zend_Exception;
+use ZfExtended_Debug;
 use ZfExtended_Models_Worker;
 use ZfExtended_Utils;
 
 class Queue
 {
+    /**
+     * Processes the worker-queue if the processing is not locked
+     * (meaning, a different php-process is not already triggering)
+     * @throws Zend_Exception
+     * @throws ReflectionException
+     */
+    public static function processQueueMutexed(): void
+    {
+        $workerQueue = new self();
+        $workerModel = new ZfExtended_Models_Worker();
+        $sleep = (int) \Zend_Registry::get('config')->runtimeOptions->worker->processSleep;
+        $doDebug = ZfExtended_Debug::hasLevel('core', 'Workers');
+
+        if ($workerQueue->lockAcquire()) {
+            $foundWorkers = $workerQueue->process($workerModel, $doDebug);
+            while ($foundWorkers) {
+                usleep($sleep);
+                $foundWorkers = $workerQueue->process($workerModel, $doDebug);
+            }
+            $workerQueue->lockRelease();
+        }
+    }
+
     /**
      * ensures that queue is triggered only once
      */
@@ -54,11 +78,15 @@ class Queue
      * @throws Zend_Exception
      * @return bool returns true if any ready to run workers found
      */
-    public function process(): bool
+    private function process(ZfExtended_Models_Worker $workerModel, bool $doDebug): bool
     {
-        $workerModel = new ZfExtended_Models_Worker();
         $workerModel->wakeupScheduledAndDelayed();
         $workerListQueued = $workerModel->getListQueued();
+
+        if ($doDebug) {
+            error_log("\nWORKER QUEUE: wakeupScheduledAndDelayed and found "
+                . count($workerListQueued) . ' workers to trigger.');
+        }
 
         $result = false;
         $trigger = WorkerTriggerFactory::create();

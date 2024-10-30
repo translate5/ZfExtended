@@ -206,15 +206,8 @@ class ZfExtended_WorkerController extends ZfExtended_RestController
         $this->_response->sendHeaders();
         $this->_helper->viewRenderer->setNoRender(false);
 
-        $workerQueue = ZfExtended_Factory::get(Queue::class);
-        if ($workerQueue->lockAcquire()) {
-            $foundWorkers = $workerQueue->process();
-            while ($foundWorkers) {
-                sleep(1);
-                $foundWorkers = $workerQueue->process();
-            }
-            $workerQueue->lockRelease();
-        }
+        // trigger the queue if possible
+        Queue::processQueueMutexed();
 
         //$this->postDispatch(); needed for TRANSLATE-249
         exit; //since we have no output here, we will exit immediatelly
