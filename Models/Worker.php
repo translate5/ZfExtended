@@ -124,16 +124,13 @@ final class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
 
     /**
      * Default worker-lifetime (could/should be overwritten by child-class)
-     *
-     * @var string
-     *      MySQL INTERVAL as defined in http://dev.mysql.com/doc/refman/5.5/en/date-and-time-functions.html#function_date-add
+     * MySQL INTERVAL as defined in http://dev.mysql.com/doc/refman/5.5/en/date-and-time-functions.html#function_date-add
      */
     protected string $maxLifetime = '1 HOUR';
 
     /**
      * To prevent that the serialized parameters are unserialized multiple
      *  times when calling get we have to cache them.
-     * @var mixed
      */
     protected ?array $parameters = null;
 
@@ -281,7 +278,7 @@ final class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
                 FROM Zf_worker w, (SELECT @wworker := _utf8mb4 '' COLLATE utf8mb4_unicode_ci, @num := 0) r
                 WHERE w.state = '" . self::STATE_RUNNING . "'
                 OR (
-                    (w.state = '" . self::STATE_SCHEDULED . "' OR (w.state = '" . self::STATE_DELAYED . "' AND w.delayedUntil < ' . $time . '))
+                    (w.state = '" . self::STATE_SCHEDULED . "' OR (w.state = '" . self::STATE_DELAYED . "' AND w.delayedUntil < " . $time . "))
                     AND (
                         (NOT EXISTS (SELECT *
                             FROM Zf_worker_dependencies d1
@@ -310,7 +307,7 @@ final class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
         $sql = 'UPDATE Zf_worker u, ( ' . $intermediateTable . ' ) s
             SET u.state = \'' . self::STATE_WAITING . '\'
             WHERE u.id = s.id
-            AND (s.state = \'' . self::STATE_SCHEDULED . '\' OR (s.state = \'' . self::STATE_DELAYED . '\' AND s.`delayedUntil` < ' . $time . '))
+            AND (s.state = \'' . self::STATE_SCHEDULED . '\' OR (s.state = \'' . self::STATE_DELAYED . '\' AND s.delayedUntil < ' . $time . '))
             AND s.count <= s.max;';
 
         //it may happen that a worker is not set to waiting if the deadlock was ignored, at least at the next worker queue call it is triggered again
