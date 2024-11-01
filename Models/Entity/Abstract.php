@@ -103,9 +103,9 @@ abstract class ZfExtended_Models_Entity_Abstract
     protected $modifiedValues = [];
 
     /**
-     * @var ZfExtended_Models_Filter
+     * @var ZfExtended_Models_Filter|null
      */
-    protected $filter;
+    protected ?ZfExtended_Models_Filter $filter = null;
 
     /**
      * @var ZfExtended_EventManager
