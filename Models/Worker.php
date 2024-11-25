@@ -609,6 +609,7 @@ final class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
             self::STATE_WAITING => 0,
             self::STATE_RUNNING => 0,
             self::STATE_DELAYED => 0,
+            self::STATE_PREPARE => 0,
             self::STATE_DEFUNCT => 0,
             self::STATE_DONE => 0,
         ];

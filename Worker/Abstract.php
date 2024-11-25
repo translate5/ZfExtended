@@ -22,6 +22,7 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
+use MittagQI\ZfExtended\Worker\Exception\EmulatedBlockingException;
 use MittagQI\ZfExtended\Worker\Exception\MaxDelaysException;
 use MittagQI\ZfExtended\Worker\Exception\SetDelayedException;
 use MittagQI\ZfExtended\Worker\Logger;
@@ -344,13 +345,21 @@ abstract class ZfExtended_Worker_Abstract
             $state = $wm->getState();
             switch ($state) {
                 case $wm::STATE_DEFUNCT:
-                    throw new ZfExtended_Exception('Worker "' . $wm . '" is defunct!');
+                    //Worker {worker} is defunct!
+                    throw new EmulatedBlockingException('E1640', [
+                        'worker' => $wm->__toString(),
+                        'task' => $this->taskGuid,
+                    ]);
                 case $wm::STATE_DONE:
                     return;
             }
         } while ($runtime < $this->blockingTimeout);
 
-        throw new ZfExtended_Exception('Worker "' . $wm . '" was queued blocking and timed out!');
+        //Worker {worker} was queued blocking and timed out!
+        throw new EmulatedBlockingException('E1641', [
+            'worker' => $wm->__toString(),
+            'task' => $this->taskGuid,
+        ]);
     }
 
     /**
@@ -386,6 +395,13 @@ abstract class ZfExtended_Worker_Abstract
             if ($this->workerException instanceof ZfExtended_Exception) {
                 //when a worker runs into an exception we want to have always a log
                 $this->workerException->setLogging(true);
+            }
+            if ($this->workerException instanceof ZfExtended_ErrorCodeException
+                && is_null($this->workerException->getExtra('task'))
+                && ! is_null($this->taskGuid)) {
+                $this->workerException->addExtraData([
+                    'task' => $this->taskGuid,
+                ]);
             }
 
             throw $this->workerException;

@@ -63,7 +63,7 @@ abstract class ZfExtended_Logger_Writer_Abstract
      * creates a Logger writer as defined in the given options array, possible values
      * @throws ZfExtended_Logger_Exception
      */
-    public static function create(array $options): ZfExtended_Logger_Writer_Abstract
+    public static function create(array $options): static
     {
         $cls = 'ZfExtended_Logger_Writer_' . $options['type'];
         if (! class_exists($cls)) {
