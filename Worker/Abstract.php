@@ -64,6 +64,14 @@ abstract class ZfExtended_Worker_Abstract
      */
     public const DELAY_TIME = 30;
 
+    /**
+     * Defines the max. delay time in seconds the single delays can add up to
+     * Note single-delays are defined by the causing code (e.g. looper) and thus work differently
+     * than the "normal" delays calculated by the worker itself
+     * This just prevents worker delayed "forever"
+     */
+    public const MAX_SINGLE_DELAYS = 3600;
+
     protected ZfExtended_Models_Worker $workerModel;
 
     protected ZfExtended_Models_Worker $finishedWorker;
@@ -578,11 +586,14 @@ abstract class ZfExtended_Worker_Abstract
     final protected function setDelayed(string $serviceId, ?string $workerName = null, int $singleDelay = -1): bool
     {
         $numDelays = (int) $this->workerModel->getDelays();
-        // if we had too many delays we terminate the worker
-        // note, that delays with a defined delay-time will count as "non-terminating" that will not increase the delays
-        // nor can be too many ...
+        $startTime = empty($this->workerModel->getStarttime()) ? 0 : strtotime($this->workerModel->getStarttime());
+
         if ($singleDelay < 1 && $numDelays >= static::MAX_DELAYS) {
+            // increasing delays: if we had too many delays we terminate the worker
             return $this->onTooManyDelays($serviceId, $workerName);
+        } elseif ($singleDelay > -1 && $startTime + self::MAX_SINGLE_DELAYS > time()) {
+            // single delays: if the sum of is too long, we also defunc the worker to prevent delaying forever
+            return $this->onSingleDelaysTooLong($workerName);
         } else {
             // if given, a singleDelay will define the waiting-time and not increase the num of delays
             if ($singleDelay > 0) {
@@ -632,6 +643,29 @@ abstract class ZfExtended_Worker_Abstract
             new MaxDelaysException('E1613', [
                 'worker' => $workerName ?? get_class($this),
                 'service' => $serviceId,
+            ])
+        );
+
+        return false;
+    }
+
+    /**
+     * Is called when the num of max delays for a non-responding/malfunctioning service is exceeded
+     * Will lead to a defunct worker
+     * @throws MaxDelaysException
+     */
+    protected function onSingleDelaysTooLong(string $workerName = null): bool
+    {
+        if ($this->doDebug) {
+            error_log(
+                'worker ' . $this->workerModel->getId() . ' was repeatedly delayed over "'
+                . self::MAX_SINGLE_DELAYS . ' seconds'
+            );
+        }
+        // set task to erroneous
+        $this->catchedWorkException(
+            new MaxDelaysException('E1639', [
+                'worker' => $workerName ?? get_class($this),
             ])
         );
 
