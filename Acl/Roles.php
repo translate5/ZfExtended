@@ -33,22 +33,50 @@ namespace MittagQI\ZfExtended\Acl;
  */
 class Roles
 {
+    /**
+     * SysAdmin - highest role, my change and see configurations related to the server infrastructure, see logs etc.
+     */
     public const SYSTEMADMIN = 'systemadmin';
+
+    /**
+     * Admin - access all what PMs may not access, instance related configurations, all users etc.
+     */
 
     public const ADMIN = 'admin';
 
+    /**
+     * API - similar to admin, may access some additonal pure API related endpoints
+     */
     public const API = 'api';
 
+    /**
+     * ProjectManager
+     */
     public const PM = 'pm';
 
+    /**
+     * Client restricted ProjectManager
+     */
     public const CLIENTPM = 'clientpm';
 
+    /**
+     * Restricted ProjectManager - compare the used Rights to find out the difference to ordinary PM
+     */
     public const PMLIGHT = 'pmlight';
 
+    /**
+     * Ordinary editor user
+     */
     public const EDITOR = 'editor';
 
+    /**
+     * Each authenticated user has that role
+     */
     public const BASIC = 'basic';
 
+    /**
+     * Role holding the rights used if no user is authenticated
+     */
     public const NORIGHTS = 'noRights';
 
     /**
