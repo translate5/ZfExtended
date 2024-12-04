@@ -6,6 +6,13 @@ use Exception;
 
 /**
  * A marker-exception that will trigger setting a worker to delayed
+ * A worker can be delayed in two ways:
+ *
+ * a) A (service)-worker will be delayed hoping when the service is unavailable hoping the service will be online
+ * again after a while. This delay will increase with each attempt and end after maxDelays with an exception
+ *
+ * b) A segment-processor/looper waiting for locked segments to become available again. This delay has a fixed length
+ * and will result in an exception after the overall max delay-time is reached
  */
 final class SetDelayedException extends Exception
 {
