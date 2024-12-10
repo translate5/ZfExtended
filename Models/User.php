@@ -41,7 +41,7 @@ use MittagQI\ZfExtended\Acl\Roles;
  * @method void setOpenIdIssuer(string $openIdIssuer)
  * @method void setOpenIdSubject(string $openIdSubject)
  *
- * @method string getId()
+ * @method int getId()
  * @method string getUserGuid()
  * @method string getFirstName()
  * @method string getSurName()

@@ -22,6 +22,7 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
+use MittagQI\ZfExtended\Worker\Exception\EmulatedBlockingException;
 use MittagQI\ZfExtended\Worker\Exception\MaxDelaysException;
 use MittagQI\ZfExtended\Worker\Exception\SetDelayedException;
 use MittagQI\ZfExtended\Worker\Logger;
@@ -62,6 +63,14 @@ abstract class ZfExtended_Worker_Abstract
      * @var int
      */
     public const DELAY_TIME = 30;
+
+    /**
+     * Defines the max. delay time in seconds the single delays can add up to
+     * Note single-delays are defined by the causing code (e.g. looper) and thus work differently
+     * than the "normal" delays calculated by the worker itself
+     * This just prevents worker delayed "forever"
+     */
+    public const MAX_SINGLE_DELAYS = 3600;
 
     protected ZfExtended_Models_Worker $workerModel;
 
@@ -344,13 +353,21 @@ abstract class ZfExtended_Worker_Abstract
             $state = $wm->getState();
             switch ($state) {
                 case $wm::STATE_DEFUNCT:
-                    throw new ZfExtended_Exception('Worker "' . $wm . '" is defunct!');
+                    //Worker {worker} is defunct!
+                    throw new EmulatedBlockingException('E1640', [
+                        'worker' => $wm->__toString(),
+                        'task' => $this->taskGuid,
+                    ]);
                 case $wm::STATE_DONE:
                     return;
             }
         } while ($runtime < $this->blockingTimeout);
 
-        throw new ZfExtended_Exception('Worker "' . $wm . '" was queued blocking and timed out!');
+        //Worker {worker} was queued blocking and timed out!
+        throw new EmulatedBlockingException('E1641', [
+            'worker' => $wm->__toString(),
+            'task' => $this->taskGuid,
+        ]);
     }
 
     /**
@@ -386,6 +403,13 @@ abstract class ZfExtended_Worker_Abstract
             if ($this->workerException instanceof ZfExtended_Exception) {
                 //when a worker runs into an exception we want to have always a log
                 $this->workerException->setLogging(true);
+            }
+            if ($this->workerException instanceof ZfExtended_ErrorCodeException
+                && is_null($this->workerException->getExtra('task'))
+                && ! is_null($this->taskGuid)) {
+                $this->workerException->addExtraData([
+                    'task' => $this->taskGuid,
+                ]);
             }
 
             throw $this->workerException;
@@ -562,11 +586,14 @@ abstract class ZfExtended_Worker_Abstract
     final protected function setDelayed(string $serviceId, ?string $workerName = null, int $singleDelay = -1): bool
     {
         $numDelays = (int) $this->workerModel->getDelays();
-        // if we had too many delays we terminate the worker
-        // note, that delays with a defined delay-time will count as "non-terminating" that will not increase the delays
-        // nor can be too many ...
+        $startTime = empty($this->workerModel->getStarttime()) ? 0 : strtotime($this->workerModel->getStarttime());
+
         if ($singleDelay < 1 && $numDelays >= static::MAX_DELAYS) {
+            // increasing delays: if we had too many delays we terminate the worker
             return $this->onTooManyDelays($serviceId, $workerName);
+        } elseif ($singleDelay > -1 && $startTime + self::MAX_SINGLE_DELAYS > time()) {
+            // single delays: if the sum of is too long, we also defunc the worker to prevent delaying forever
+            return $this->onSingleDelaysTooLong($workerName);
         } else {
             // if given, a singleDelay will define the waiting-time and not increase the num of delays
             if ($singleDelay > 0) {
@@ -616,6 +643,29 @@ abstract class ZfExtended_Worker_Abstract
             new MaxDelaysException('E1613', [
                 'worker' => $workerName ?? get_class($this),
                 'service' => $serviceId,
+            ])
+        );
+
+        return false;
+    }
+
+    /**
+     * Is called when the num of max delays for a non-responding/malfunctioning service is exceeded
+     * Will lead to a defunct worker
+     * @throws MaxDelaysException
+     */
+    protected function onSingleDelaysTooLong(string $workerName = null): bool
+    {
+        if ($this->doDebug) {
+            error_log(
+                'worker ' . $this->workerModel->getId() . ' was repeatedly delayed over "'
+                . self::MAX_SINGLE_DELAYS . ' seconds'
+            );
+        }
+        // set task to erroneous
+        $this->catchedWorkException(
+            new MaxDelaysException('E1639', [
+                'worker' => $workerName ?? get_class($this),
             ])
         );
 
