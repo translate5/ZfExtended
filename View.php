@@ -61,7 +61,7 @@ END LICENSE AND COPYRIGHT
 class ZfExtended_View extends Zend_View implements Zend_View_Interface
 {
     /**
-     * @var Zend_Db_Table_Select[]|stdClass[]|object
+     * @var Zend_Db_Table_Select[]|stdClass[]|stdClass
      * @see ZfExtended_Models_Entity_Abstract::loadAll, ZfExtended_RestController::indexAction and override
      * @see ZfExtended_Models_Entity_Abstract::getDataObject, ZfExtended_RestController::postAction,ZfExtended_RestController::putAction and overrides
      */
