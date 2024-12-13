@@ -68,7 +68,7 @@ class ZfExtended_Auth_Token_Entity extends ZfExtended_Models_Entity_Abstract
         $user = ZfExtended_Factory::get('ZfExtended_Models_User');
         $user->loadByLogin($login);
 
-        $this->setUserId($user->getId());
+        $this->setUserId((int) $user->getId());
         $this->setToken('Initial');
         $this->setDescription($description);
         if ($expires) {
@@ -83,7 +83,11 @@ class ZfExtended_Auth_Token_Entity extends ZfExtended_Models_Entity_Abstract
         return $this->getId() . ZfExtended_Auth_Token_Token::TOKEN_SEPARATOR . $token;
     }
 
-    public function loadAllForFrontEnd()
+    /**
+     * @return mixed[]
+     * @throws Zend_Db_Table_Exception
+     */
+    public function loadAllForFrontEnd(): array
     {
         $s = $this->db
             ->select()
@@ -98,7 +102,11 @@ class ZfExtended_Auth_Token_Entity extends ZfExtended_Models_Entity_Abstract
         return $this->loadFilterdCustom($s);
     }
 
-    public function loadAllForCli()
+    /**
+     * @return mixed[]
+     * @throws Zend_Db_Table_Exception
+     */
+    public function loadAllForCli(): array
     {
         $s = $this->db
             ->select()
@@ -111,5 +119,22 @@ class ZfExtended_Auth_Token_Entity extends ZfExtended_Models_Entity_Abstract
             ], 'users.id = token.userId', ['users.id as user_id']);
 
         return $this->loadFilterdCustom($s);
+    }
+
+    /**
+     * @return ZfExtended_Models_Entity_Abstract[]
+     * @throws Zend_Db_Table_Exception
+     */
+    public function loadAllOfUser(int $userId): array
+    {
+        $s = $this->db
+            ->select()
+            ->setIntegrityCheck(false)
+            ->from([
+                'token' => $this->db->info($this->db::NAME),
+            ], $this->publicColumns)
+            ->where('userId = ?', $userId);
+
+        return $this->loadAllEntities();
     }
 }
