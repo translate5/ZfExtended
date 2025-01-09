@@ -157,7 +157,7 @@ class ZfExtended_Models_Installer_Maintenance
     public function isNotified(): bool
     {
         $conf = $this->getConfFromDb();
-        $startTimeStamp = strtotime($conf->startDate);
+        $startTimeStamp = strtotime($conf->startDate ?? '');
         $now = time();
 
         return $startTimeStamp && $startTimeStamp - ((int) $conf->timeToNotify * 60) < $now;

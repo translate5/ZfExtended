@@ -28,7 +28,6 @@ END LICENSE AND COPYRIGHT
 
 namespace MittagQI\ZfExtended\Acl;
 
-use phpDocumentor\Reflection\DocBlockFactory;
 use ReflectionClass;
 
 /**
@@ -54,7 +53,6 @@ abstract class AbstractResource implements ResourceInterface
 
     protected function getRightsFromConstantList(array $consts, ReflectionClass $refl): array
     {
-        $factory = DocBlockFactory::createInstance();
         $result = [];
         foreach ($consts as $key => $val) {
             //ignore the resource ID itself
@@ -72,7 +70,7 @@ abstract class AbstractResource implements ResourceInterface
         return $result;
     }
 
-    private function getDescription(RightDTO $acl, ReflectionClass $refl, DocBlockFactory $factory): string
+    private function getDescription(RightDTO $acl, ReflectionClass $refl): string
     {
         $constantReflection = $refl->getReflectionConstant($acl->id);
         if ($constantReflection === false) {
@@ -82,12 +80,26 @@ abstract class AbstractResource implements ResourceInterface
         if (empty($docBlock)) {
             return 'NO DOCBLOCK GIVEN FOR ' . $acl->id;
         }
-        $docBlock = $factory->create($docBlock);
-        $result = trim($docBlock->getSummary());
+
+        $result = trim($this->getSummary($docBlock));
         if (strlen($result) === 0) {
             return 'NO DOCBLOCK DESCRIPTION GIVEN FOR ' . $acl->id;
         }
 
         return $result;
+    }
+
+    private function getSummary(string $docBlock): string
+    {
+        // Regex für den Text oberhalb der `@`-Annotations
+        preg_match('/\/\*\*([\s\S]*?)^\s*\*\s*(?:@|\/)/m', trim($docBlock), $matches);
+
+        if (! empty($matches)) {
+            $text = trim(preg_replace('/^\s*\*\s?/m', '', $matches[1]));
+
+            return $text;
+        }
+
+        return '';
     }
 }
