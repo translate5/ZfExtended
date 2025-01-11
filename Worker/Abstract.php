@@ -52,9 +52,10 @@ abstract class ZfExtended_Worker_Abstract
     /**
      * Defines the max. amount a worker can be delayed (re-scheduled after a waiting time)
      * in case e.g. of a non-responding service
+     * Results in an overall delay of 31,5 min with a delay of 30 sec.
      * @var int
      */
-    public const MAX_DELAYS = 5;
+    public const MAX_DELAYS = 6;
 
     /**
      * Defines the default waiting-time for a worker (seconds) when the worker is in state "delayed"
@@ -573,7 +574,9 @@ abstract class ZfExtended_Worker_Abstract
      */
     protected function calculateDelay(): int
     {
-        return ((int) $this->workerModel->getDelays()) * static::DELAY_TIME;
+        // will get 30 sec for the 1st delay, then 60, 120, 240, 480, 960
+        $run = (int) $this->workerModel->getDelays();
+        return pow(2, $run) * static::DELAY_TIME;
     }
 
     /**
