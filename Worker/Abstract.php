@@ -71,7 +71,7 @@ abstract class ZfExtended_Worker_Abstract
      * than the "normal" delays calculated by the worker itself
      * This just prevents worker delayed "forever"
      */
-    public const MAX_SINGLE_DELAYS = 3600;
+    public const MAX_SINGLE_DELAY_LIMIT = 3600;
 
     protected ZfExtended_Models_Worker $workerModel;
 
@@ -603,7 +603,7 @@ abstract class ZfExtended_Worker_Abstract
             return $this->onTooManyDelays($serviceId, $workerName);
 
         // single processing delays: if the sum of is too long, we also defunc the worker to prevent delaying forever
-        } elseif (! $isServiceDownDelay && time() > ($startTime + self::MAX_SINGLE_DELAYS)) {
+        } elseif (! $isServiceDownDelay && time() > ($startTime + self::MAX_SINGLE_DELAY_LIMIT)) {
 
             return $this->onSingleDelaysTooLong($workerName);
 
@@ -672,7 +672,7 @@ abstract class ZfExtended_Worker_Abstract
         if ($this->doDebug) {
             error_log(
                 'worker ' . $this->workerModel->getId() . ' was repeatedly processing delayed over "'
-                . self::MAX_SINGLE_DELAYS . ' seconds'
+                . self::MAX_SINGLE_DELAY_LIMIT . ' seconds'
             );
         }
         // set task to erroneous
