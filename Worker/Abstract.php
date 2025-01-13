@@ -52,9 +52,10 @@ abstract class ZfExtended_Worker_Abstract
     /**
      * Defines the max. amount a worker can be delayed (re-scheduled after a waiting time)
      * in case e.g. of a non-responding service
+     * Results in an overall delay of 31,5 min with a delay of 30 sec.
      * @var int
      */
-    public const MAX_DELAYS = 5;
+    public const MAX_DELAYS = 6;
 
     /**
      * Defines the default waiting-time for a worker (seconds) when the worker is in state "delayed"
@@ -70,7 +71,7 @@ abstract class ZfExtended_Worker_Abstract
      * than the "normal" delays calculated by the worker itself
      * This just prevents worker delayed "forever"
      */
-    public const MAX_SINGLE_DELAYS = 3600;
+    public const MAX_SINGLE_DELAY_LIMIT = 3600;
 
     protected ZfExtended_Models_Worker $workerModel;
 
@@ -573,7 +574,10 @@ abstract class ZfExtended_Worker_Abstract
      */
     protected function calculateDelay(): int
     {
-        return ((int) $this->workerModel->getDelays()) * static::DELAY_TIME;
+        // will get 30 sec for the 1st delay, then 60, 120, 240, 480, 960
+        $run = (int) $this->workerModel->getDelays();
+
+        return pow(2, $run) * static::DELAY_TIME;
     }
 
     /**
@@ -586,22 +590,31 @@ abstract class ZfExtended_Worker_Abstract
     final protected function setDelayed(string $serviceId, ?string $workerName = null, int $singleDelay = -1): bool
     {
         $numDelays = (int) $this->workerModel->getDelays();
-        $startTime = empty($this->workerModel->getStarttime()) ? 0 : strtotime($this->workerModel->getStarttime());
+        // when starttime is not set the worker was never saved and never started ... can that happen ?
+        $startTime = empty($this->workerModel->getStarttime()) ? time() : strtotime($this->workerModel->getStarttime());
+        // the delays can have two fundamentally different reasons:
+        // * A service being down (resulting in increasing delays)
+        // * The processing being blocked by concurrent workloads (resulting in "single processing delays")
+        $isServiceDownDelay = ($singleDelay < 1); // ServiceDown delays will have set the "single delay" field to -1
 
-        if ($singleDelay < 1 && $numDelays >= static::MAX_DELAYS) {
-            // increasing delays: if we had too many delays we terminate the worker
+        // increasing service delays: if we had too many delays we terminate the worker
+        if ($isServiceDownDelay && $numDelays >= static::MAX_DELAYS) {
+
             return $this->onTooManyDelays($serviceId, $workerName);
-        } elseif ($singleDelay > -1 && $startTime + self::MAX_SINGLE_DELAYS > time()) {
-            // single delays: if the sum of is too long, we also defunc the worker to prevent delaying forever
+
+        // single processing delays: if the sum of is too long, we also defunc the worker to prevent delaying forever
+        } elseif (! $isServiceDownDelay && time() > ($startTime + self::MAX_SINGLE_DELAY_LIMIT)) {
+
             return $this->onSingleDelaysTooLong($workerName);
+
         } else {
             // if given, a singleDelay will define the waiting-time and not increase the num of delays
-            if ($singleDelay > 0) {
-                $toWait = $singleDelay;
-                $delays = $numDelays;
-            } else {
+            if ($isServiceDownDelay) {
                 $toWait = $this->calculateDelay();
                 $delays = $numDelays + 1;
+            } else {
+                $toWait = $singleDelay;
+                $delays = $numDelays; // we do not increase the num delays here !
             }
             $until = $toWait + time();
 
@@ -611,7 +624,7 @@ abstract class ZfExtended_Worker_Abstract
             if ($this->saveWorkerDeadlockProof()) {
                 Logger::getInstance()->log($this->workerModel, ZfExtended_Models_Worker::STATE_DELAYED);
             } else {
-                Logger::getInstance()->log($this->workerModel, 'missing delayed worker');
+                Logger::getInstance()->log($this->workerModel, 'A worker being delayed is not in the table anymore when the delay is attempted to being saved ...');
             }
 
             if ($this->doDebug) {
@@ -658,8 +671,8 @@ abstract class ZfExtended_Worker_Abstract
     {
         if ($this->doDebug) {
             error_log(
-                'worker ' . $this->workerModel->getId() . ' was repeatedly delayed over "'
-                . self::MAX_SINGLE_DELAYS . ' seconds'
+                'worker ' . $this->workerModel->getId() . ' was repeatedly processing delayed over "'
+                . self::MAX_SINGLE_DELAY_LIMIT . ' seconds'
             );
         }
         // set task to erroneous

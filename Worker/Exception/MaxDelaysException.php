@@ -10,6 +10,6 @@ class MaxDelaysException extends ZfExtended_ErrorCodeException
 
     protected static $localErrorCodes = [
         'E1613' => 'The worker "{worker}" was too often delayed because the service "{service}" still malfunctions',
-        'E1639' => 'The worker "{worker}" was delayed for too long',
+        'E1639' => 'The worker "{worker}" had too many processing delays',
     ];
 }
