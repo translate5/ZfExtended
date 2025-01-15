@@ -51,6 +51,7 @@ END LICENSE AND COPYRIGHT
  * @property string appVersion
  * @property array|mixed validationResults
  * @property bool enableJsLogger
+ * @property bool enableJsLoggerFeedback
  * @see Editor_IndexController::indexAction
  *
  * @method ZfExtended_View_Helper_PluginLocale PluginLocale()
