@@ -122,7 +122,7 @@ class ZfExtended_Auth_Token_Entity extends ZfExtended_Models_Entity_Abstract
     }
 
     /**
-     * @return ZfExtended_Models_Entity_Abstract[]
+     * @return ZfExtended_Auth_Token_Entity[]
      * @throws Zend_Db_Table_Exception
      */
     public function loadAllOfUser(int $userId): array
