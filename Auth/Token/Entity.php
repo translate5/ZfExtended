@@ -122,19 +122,17 @@ class ZfExtended_Auth_Token_Entity extends ZfExtended_Models_Entity_Abstract
     }
 
     /**
-     * @return ZfExtended_Auth_Token_Entity[]
      * @throws Zend_Db_Table_Exception
      */
     public function loadAllOfUser(int $userId): array
     {
         $s = $this->db
             ->select()
-            ->setIntegrityCheck(false)
             ->from([
                 'token' => $this->db->info($this->db::NAME),
             ], $this->publicColumns)
             ->where('userId = ?', $userId);
 
-        return $this->loadAllEntities();
+        return $this->loadFilterdCustom($s);
     }
 }
