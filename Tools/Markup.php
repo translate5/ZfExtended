@@ -522,13 +522,39 @@ final class Markup
     }
 
     /**
-     * Convert 'some <taglikeText> text' to 'some &lt;taglikeText&gt; text' for tags
-     * having names starting with alhphabet character, so that t5 numeric tags are not affected
+     * NOTE: this function is only for Excel re-import
      *
-     * NOTE: Only for Excel export/import API
+     * Convert 'some <taglikeText> text' to 'some &lt;taglikeText&gt; text'
+     * but NOT for the internally used tags, which are:
+     * <123 />
+     * or
+     * <123>xxx</123>
+     *
+     * all other < and > brackets will, beside the ones for the internal tags, are replaced by &lt; / &gt;
      */
     public static function escapeTaglikePlaceholders(?string $text): string
     {
-        return preg_replace('~<([a-z][a-z0-9]*)>~im', '&lt;$1&gt;', $text ?? '');
+        // the following regular expression should find the wanted "internal tags"
+        $internalTagRegExes = [
+            'SingleTags' => '~<([0-9]{1,} /)>~im',
+            'OpenTags' => '~<([0-9]{1,})>~im',
+            'ClosingTags' => '~<(/[0-9]{1,})>~im',
+        ];
+
+        // these tags should be saved, therefore their brackets are escaped with the following special replacements
+        $lt = '::&lt;::';
+        $gt = '::&gt;::';
+        foreach ($internalTagRegExes as $regExName => $regEx) {
+            $text = preg_replace($regEx, $lt . '$1' . $gt, $text ?? '');
+        }
+
+        // then we replace all < and > brackets which are still in text (aka "the unwanted ones")
+        $text = str_replace(['<', '>'], ['&lt;', '&gt;'], $text);
+
+        // and finally we bring back the wanted < and > brackets
+        $text = str_replace([$lt, $gt], ['<', '>'], $text);
+
+        // and return the result
+        return $text;
     }
 }
