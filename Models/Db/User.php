@@ -33,7 +33,9 @@ END LICENSE AND COPYRIGHT
  */
 class ZfExtended_Models_Db_User extends Zend_Db_Table_Abstract
 {
-    protected $_name = 'Zf_users';
+    public const TABLE_NAME = 'Zf_users';
+
+    protected $_name = self::TABLE_NAME;
 
     public $_primary = 'id';
 }

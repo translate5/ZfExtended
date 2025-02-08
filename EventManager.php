@@ -37,7 +37,7 @@ class ZfExtended_EventManager extends Zend_EventManager_EventManager
     protected bool $logTrigger = false;
 
     /**
-     * @param null $identifiers
+     * @param null|string|int|array|Traversable $identifiers
      */
     public function __construct($identifiers = null)
     {

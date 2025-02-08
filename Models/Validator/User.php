@@ -55,10 +55,6 @@ class ZfExtended_Models_Validator_User extends ZfExtended_Models_Validator_Abstr
             'min' => 0,
             'max' => 255,
         ]);
-        $this->addValidator('parentIds', 'stringLength', [
-            'min' => 0,
-            'max' => 255,
-        ]);
         $this->setLoginValidator();
         //FIXME make a regex here!
         $this->setEmailValidator();

@@ -276,8 +276,16 @@ abstract class ZfExtended_Models_Filter
                 list($foreignTable, $localKey, $foreignKey, $columns) = $config;
                 $localTable = $table;
             }
-            $select->join($foreignTable, '`' . $localTable . '`.`' . $localKey . '` = `' . $foreignTable . '`.`' . $foreignKey . '`', $columns);
-            $select->setIntegrityCheck(false);
+
+            $select->join(
+                $foreignTable,
+                '`' . $localTable . '`.`' . $localKey . '` = `' . $foreignTable . '`.`' . $foreignKey . '`',
+                $columns
+            );
+
+            if (method_exists($select, 'setIntegrityCheck')) {
+                $select->setIntegrityCheck(false);
+            }
         }
 
         return $this->select;

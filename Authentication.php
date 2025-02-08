@@ -28,7 +28,7 @@ use ZfExtended_Models_User as User;
  * Handles authentication and password management
  * Main API to access the authenticated user (which has more roles than the underlying user object)
  */
-final class ZfExtended_Authentication
+final class ZfExtended_Authentication implements ZfExtended_AuthenticationInterface
 {
     public const LOGIN_STATUS_MAINTENANCE = 'maintenance';
 

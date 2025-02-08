@@ -28,6 +28,7 @@ END LICENSE AND COPYRIGHT
 
 namespace MittagQI\ZfExtended\Acl;
 
+use MittagQI\Translate5\Acl\Roles;
 use ReflectionClass;
 use ReflectionException;
 
