@@ -23,7 +23,7 @@ END LICENSE AND COPYRIGHT
 */
 
 use MittagQI\ZfExtended\Acl\ConfigLevelResource;
-use MittagQI\ZfExtended\Acl\Roles;
+use MittagQI\Translate5\Acl\Roles;
 
 /**
  * @method void setId(int $id)
@@ -33,10 +33,9 @@ use MittagQI\ZfExtended\Acl\Roles;
  * @method void setGender(string $gender)
  * @method void setLogin(string $login)
  * @method void setEmail(string $email)
- * @method void setPasswd(string $hash)
+ * @method void setPasswd(string|null $hash)
  * @method void setEditable(bool $editable)
  * @method void setLocale(string $locale)
- * @method void setParentIds(string $parentIds)
  * @method void setCustomers(string $customers)
  * @method void setOpenIdIssuer(string $openIdIssuer)
  * @method void setOpenIdSubject(string $openIdSubject)
@@ -51,7 +50,6 @@ use MittagQI\ZfExtended\Acl\Roles;
  * @method string getPasswd()
  * @method string getEditable()
  * @method string getLocale()
- * @method string getParentIds()
  * @method string getCustomers()
  * @method string getOpenIdIssuer()
  * @method string getOpenIdSubject()
@@ -63,10 +61,6 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract
     public const SYSTEM_GUID = '{00000000-0000-0000-0000-000000000000}';
 
     public const GENDER_NONE = 'n';
-
-    public const GENDER_FEMALE = 'f';
-
-    public const GENDER_MALE = 'm';
 
     /**
      * Turns the 2customers" string of our data-model to a proper array of integers
@@ -105,14 +99,6 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract
     protected $validatorInstanceClass = 'ZfExtended_Models_Validator_User';
 
     /**
-     * User-lists must be filtered by role-driven restrictions
-     */
-    protected ?array $clientAccessRestriction = [
-        'field' => 'customers',
-        'type' => 'listCommaSeparated',
-    ];
-
-    /**
      * Loads user by a given list of userGuids
      * @return array
      */
@@ -130,8 +116,12 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract
     public function setRoles(array $roles): void
     {
         //piping the method to __call, declaration is needed for interface
-        // the filterRoles removes "subroles" when the main role is not set (e.g. for the client-pm)
-        $this->__call('setRoles', [join(',', Roles::filterRoles($roles))]);
+        $this->__call(
+            'setRoles',
+            [
+                implode(',', $roles)
+            ]
+        );
     }
 
     /**
@@ -184,21 +174,15 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract
     }
 
     /**
-     * Load users hierarchically, based on the current logged in user.
+     * loads all users without the passwd field
+     * with role $role
+     * @param array $roles - acl roles
      * @return array
-     * @throws Zend_Db_Table_Exception
      */
-    public function loadAllOfHierarchy()
+    public function loadAllByRole(array $roles)
     {
-        $id = ZfExtended_Authentication::getInstance()->getUserId();
-        $adapter = $this->db->getAdapter();
         $s = $this->_loadAll();
-        //NOTE:the where must be in one row because of the brackets
-        //$s->where( parentIds like "%,4,5,6,%" OR id=2 )  sql=> WHERE (parentIds like "%,4,5,6,%" OR id=2)
-        //$s->where( parentIds like)
-        //$s->where( id=2 ) sql=> WHERE (parentIds like "%,4,5,6,%") OR id=2
-        //this with combination of the filters will provide different result
-        $s->where('parentIds like "%,' . $adapter->quote($id) . ',%" OR id=' . $adapter->quote($id));
+        $this->addByRoleSql($s, $roles);
 
         return $this->loadFilterdCustom($s);
     }
@@ -207,30 +191,14 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract
      * loads all users without the passwd field
      * with role $role
      * @param array $roles - acl roles
-     * @param int $parentIdFilter - the parent id which the select should check
-     * @return array
-     */
-    public function loadAllByRole(array $roles, int $parentIdFilter = -1)
-    {
-        $s = $this->_loadAll();
-        $this->addByRoleSql($s, $roles, $parentIdFilter);
-
-        return $this->loadFilterdCustom($s);
-    }
-
-    /**
-     * loads all users without the passwd field
-     * with role $role
-     * @param array $roles - acl roles
-     * @param int $parentIdFilter - the parent id which the select should check
      * @return int
      */
-    public function getTotalByRole(array $roles, int $parentIdFilter = -1)
+    public function getTotalByRole(array $roles)
     {
         $s = $this->_loadAll();
         $s->reset($s::COLUMNS);
         $s->reset($s::FROM);
-        $this->addByRoleSql($s, $roles, $parentIdFilter);
+        $this->addByRoleSql($s, $roles);
 
         return $this->computeTotalCount($s);
     }
@@ -240,7 +208,7 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract
      * @param string[] $roles
      * @param int $parentId -1 or 0 if no filtering shall be applied
      */
-    protected function addByRoleSql(Zend_Db_Select $select, array $roles, int $parentId = -1): void
+    protected function addByRoleSql(Zend_Db_Select $select, array $roles): void
     {
         if (empty($roles)) {
             //if there are no roles given, we may not find a user for them!
@@ -259,9 +227,6 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract
         }
         // and add them to the select all at once to keep the precedence
         $select->where(implode(' OR ', $roleLikes));
-        if ($parentId > 0) {
-            $select->where('parentIds LIKE "%,' . $parentId . ',%" OR id = ' . $adapter->quote($parentId));
-        }
     }
 
     /**
@@ -300,37 +265,6 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract
         $s->where('login != ?', self::SYSTEM_LOGIN); //filter out the system user
 
         return $this->computeTotalCount($s);
-    }
-
-    /**
-     * Get total count of hierarchy users
-     */
-    public function getTotalCountHierarchy(): int
-    {
-        $id = ZfExtended_Authentication::getInstance()->getUserId();
-        $adapter = $this->db->getAdapter();
-        $s = $this->db->select();
-        $s->where('login != ?', self::SYSTEM_LOGIN); //filter out the system user
-        $s->where('parentIds like "%,' . $adapter->quote($id) . ',%" OR id=' . $adapter->quote($id));
-
-        return $this->computeTotalCount($s);
-    }
-
-    /**
-     * Check if the current user has parent user with the given id
-     * @param string $parentId -> the parent userid to be checked if it is a parent of the current one
-     * @param string $parentIds optional, if empty take the parentIds of the current user instance. A custom comma
-     *     separated string can be given here
-     * @return boolean
-     */
-    public function hasParent($parentId, $parentIds = null)
-    {
-        if (empty($parentIds)) {
-            $parentIds = $this->getParentIds();
-        }
-        $parentIds = explode(',', trim($parentIds, ' ,'));
-
-        return in_array($parentId, $parentIds);
     }
 
     /**
@@ -473,7 +407,7 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract
      */
     public function isClientRestricted(): bool
     {
-        return Roles::isClientRestricted($this->getRoles());
+        return ! empty(array_intersect(Roles::getClientRestrictedRoles(), $this->getRoles()));
     }
 
     /**

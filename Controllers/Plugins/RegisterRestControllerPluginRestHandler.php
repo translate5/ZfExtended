@@ -44,6 +44,7 @@ class ZfExtended_Controllers_Plugins_RegisterRestControllerPluginRestHandler ext
             Zend_Rest_Route::class,
             ZfExtended_Controller_RestLikeRoute::class,
             ZfExtended_Controller_RestLikeRouteRegex::class,
+            ZfExtended_Controller_CustomPathRestRoute::class,
         ];
         $routeClass = get_class($front->getRouter()->getCurrentRoute());
         if (in_array($routeClass, $restFulRoutes, true)) {

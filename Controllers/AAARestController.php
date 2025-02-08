@@ -263,9 +263,11 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller
         ]);
     }
 
-    public function processClientReferenceVersion()
+    public function processClientReferenceVersion($entity = null)
     {
-        $entity = $this->entity;
+        if (empty($entity)) {
+            $entity = $this->entity;
+        }
 
         //if the entity self has a version field, we rely on this and must not use headers etc.
         if ($entity->hasField($entity::VERSION_FIELD)) {
