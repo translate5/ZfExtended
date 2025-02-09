@@ -241,6 +241,7 @@ abstract class ZfExtended_Models_Filter
 
     /**
      * applies the filter and sort statements to the given select and return it
+     * CAUTION: Do not add a select containing a join already, this can cause very problematic SQL
      * @param bool $applySort [optional] default true
      * @return Zend_Db_Select
      */
@@ -456,6 +457,20 @@ abstract class ZfExtended_Models_Filter
     public function addJoinedTable($table, $localKey, $foreignKey, array $columns = [], $localOverride = null)
     {
         $this->joinedTables[$table . '#' . $localKey . '#' . $foreignKey] = func_get_args();
+    }
+
+    /**
+     * Checks, if a joined table already exists
+     */
+    public function hasJoinedTable(string $tableName): bool
+    {
+        foreach ($this->joinedTables as $key => $data) {
+            if ($data[0] === $tableName) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
