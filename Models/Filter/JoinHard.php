@@ -46,7 +46,7 @@ class ZfExtended_Models_Filter_JoinHard extends ZfExtended_Models_Filter_JoinAbs
      */
     public function __construct($tableClass, $searchField, $foreignKey = 'id', $localKey = null, $localFilterType = 'list')
     {
-        if (! is_subclass_of($tableClass, 'Zend_Db_Table_Abstract')) {
+        if (! is_subclass_of($tableClass, Zend_Db_Table_Abstract::class)) {
             //Given tableClass "{tableClass}" is not a subclass of Zend_Db_Table_Abstract!
             throw new ZfExtended_Models_Filter_Exception('E1225', [
                 'tableClass' => $tableClass,
@@ -67,13 +67,10 @@ class ZfExtended_Models_Filter_JoinHard extends ZfExtended_Models_Filter_JoinAbs
         $this->filterForBasetable = $filter;
     }
 
-    /**
-     * Configure the filter instance in the entity
-     */
-    public function configureEntityFilter(ZfExtended_Models_Filter $filterInstance)
+    public function configureEntityFilter(ZfExtended_Models_Filter $filterInstance): void
     {
         $db = ZfExtended_Factory::get($this->table);
-        /* @var $db Zend_Db_Table_Abstract */
+        /** @var Zend_Db_Table_Abstract $db */
 
         //clone the filter for the joined table
         $filter = clone $this->filterForBasetable;
@@ -88,7 +85,7 @@ class ZfExtended_Models_Filter_JoinHard extends ZfExtended_Models_Filter_JoinAbs
 
         //init the separate filter instance for the query on the joined table
         $filterInstanceForJoined = ZfExtended_Factory::get(get_class($filterInstance));
-        /* @var $filterInstanceForJoined ZfExtended_Models_Filter */
+        /** @var ZfExtended_Models_Filter $filterInstanceForJoined */
         $filterInstanceForJoined->addFilter($filter);
 
         //prepare the query to the joined table and fetch data from there

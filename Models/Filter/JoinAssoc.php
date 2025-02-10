@@ -22,6 +22,8 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
+use MittagQI\ZfExtended\Models\Filter\FilterJoinDTO;
+
 /**
  * Implements a double join for t1 n-n t2 relations with a t3 assoc table in between.
  * Searches in t2 (given as $finalJoin), joins then with $table.
@@ -56,16 +58,15 @@ class ZfExtended_Models_Filter_JoinAssoc extends ZfExtended_Models_Filter_Join
         $filter->table = $this->finalJoin->table;
     }
 
-    /**
-     * Configure the filter instance in the entity
-     */
-    public function configureEntityFilter(ZfExtended_Models_Filter $filter)
+    public function configureEntityFilter(ZfExtended_Models_Filter $filter): void
     {
         //if searchfield is ambigious we have to set the originaltable as mapping, the foreign table name is set directly in the filter
         $filter->addTableForField($this->searchField, $filter->getEntityTable());
         // join to the assoc table
-        $filter->addJoinedTable($this->table, $this->localKey, $this->foreignKey, []);
+        $assocJoinDTO = new FilterJoinDTO($this->table, $this->localKey, $this->foreignKey, []);
+        $filter->addJoinedTable($assocJoinDTO);
         // join to the final table
-        $filter->addJoinedTable($this->finalJoin->table, $this->finalJoin->localKey, $this->finalJoin->foreignKey, [], $this->table);
+        $finalJoinDTO = new FilterJoinDTO($this->finalJoin->table, $this->finalJoin->localKey, $this->finalJoin->foreignKey, [], $this->table);
+        $filter->addJoinedTable($finalJoinDTO);
     }
 }
