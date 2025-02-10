@@ -456,7 +456,7 @@ abstract class ZfExtended_Models_Filter
      */
     public function addJoinedTable(FilterJoinDTO $joinedTable): void
     {
-        if (! $joinedTable->isInList($this->joinedTables)) {
+        if (! array_key_exists($joinedTable->getIdentifier(), $this->joinedTables)) {
             $this->joinedTables[$joinedTable->getIdentifier()] = $joinedTable;
         }
     }
