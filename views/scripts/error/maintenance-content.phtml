@@ -28,7 +28,11 @@ $config = Zend_Registry::get('config');
         );
         ?>
     </p>
-    <p><?php echo htmlspecialchars($config->runtimeOptions->maintenance->message ?? ''); ?></p>
+    <?php if (strlen($config->runtimeOptions->maintenance->message ?? '') > 0) { ?>
+    <p style="font-weight: bold; font-style: italic;">
+        <?php echo htmlspecialchars($config->runtimeOptions->maintenance->message ?? ''); ?>
+    </p>
+    <?php } ?>
     <p><?php echo htmlspecialchars($config->runtimeOptions->companyName); ?></p>
     <p id="last-reload" style="color:#cdcdcd;font-size:9px;"></p>
 </div>
