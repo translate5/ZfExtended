@@ -22,6 +22,8 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
+use MittagQI\ZfExtended\Models\Filter\FilterJoinDTO;
+
 /**
  * Filter to doing just one Join to another table for filtering
  */
@@ -49,6 +51,6 @@ class ZfExtended_Models_Filter_Join extends ZfExtended_Models_Filter_JoinAbstrac
     {
         //if searchfield is ambigious we have to set the originaltable as mapping, the foreign table name is set directly in the filter
         $filter->addTableForField($this->searchField, $filter->getEntityTable());
-        $filter->addJoinedTable($this->table, $this->localKey, $this->foreignKey, []);
+        $filter->addJoinedTable(new FilterJoinDTO($this->table, $this->localKey, $this->foreignKey, []));
     }
 }

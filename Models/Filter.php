@@ -22,6 +22,8 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
+use MittagQI\ZfExtended\Models\Filter\FilterJoinDTO;
+
 /**
  * @todo bei Bedarf aus der Unterklasse ExtJS abstrahieren
  */
@@ -84,7 +86,7 @@ abstract class ZfExtended_Models_Filter
 
     /**
      * Contains the automatically joined tables coming from join configurations in fileTypeMaps
-     * @var array
+     * @var FilterJoinDTO[]
      */
     protected $joinedTables = [];
 
@@ -270,18 +272,19 @@ abstract class ZfExtended_Models_Filter
         } else {
             $table = $this->defaultTable;
         }
-        foreach ($this->joinedTables as $config) {
-            if (count($config) > 4) {
-                list($foreignTable, $localKey, $foreignKey, $columns, $localTable) = $config;
-            } else {
-                list($foreignTable, $localKey, $foreignKey, $columns) = $config;
-                $localTable = $table;
-            }
 
-            $select->join(
-                $foreignTable,
-                '`' . $localTable . '`.`' . $localKey . '` = `' . $foreignTable . '`.`' . $foreignKey . '`',
-                $columns
+        foreach ($this->joinedTables as $joinedTable) {
+            $localTable = $joinedTable->localAlias ?? $table;
+            $joinFunction = match ($joinedTable->joinType) {
+                Zend_Db_Select::INNER_JOIN => 'joinInner',
+                Zend_Db_Select::LEFT_JOIN => 'joinLeft',
+                Zend_Db_Select::RIGHT_JOIN => 'joinRight',
+                default => 'join'
+            };
+            $select->$joinFunction(
+                $joinedTable->table,
+                '`' . $localTable . '`.`' . $joinedTable->localKey . '` = `' . $joinedTable->table . '`.`' . $joinedTable->foreignKey . '`',
+                $joinedTable->columns
             );
 
             if (method_exists($select, 'setIntegrityCheck')) {
@@ -450,13 +453,29 @@ abstract class ZfExtended_Models_Filter
 
     /**
      * Adds a table join configuration to be used for the filters
-     * @param string $table
-     * @param string $localKey
-     * @param string $foreignKey
      */
-    public function addJoinedTable($table, $localKey, $foreignKey, array $columns = [], $localOverride = null)
+    public function addJoinedTable(FilterJoinDTO $joinedTable)
     {
-        $this->joinedTables[$table . '#' . $localKey . '#' . $foreignKey] = func_get_args();
+        $this->joinedTables[$joinedTable->getIdentifier()] = $joinedTable;
+    }
+
+    /**
+     * Creates or merges an existing join
+     */
+    public function overrideJoinedTable(FilterJoinDTO $joinedTable)
+    {
+        $key = $joinedTable->getIdentifier();
+        if (array_key_exists($key, $this->joinedTables)) {
+            // if the join already exists, we merge the columns
+            $this->joinedTables[$key]->columns = array_values(
+                array_unique(array_merge($this->joinedTables[$key]->columns, $joinedTable->columns))
+            );
+            // ... and overide the type & alias (dangerous & ugly!)
+            $this->joinedTables[$key]->joinType = $joinedTable->joinType;
+            $this->joinedTables[$key]->localAlias = $joinedTable->localAlias;
+        } else {
+            $this->joinedTables[$key] = $joinedTable;
+        }
     }
 
     /**
@@ -466,8 +485,8 @@ abstract class ZfExtended_Models_Filter
     public function hasJoinedTable(string $tableName, bool $applySort = true): bool
     {
         // search in our defined joins
-        foreach ($this->joinedTables as $key => $data) {
-            if ($data[0] === $tableName) {
+        foreach ($this->joinedTables as $joinedTable) {
+            if ($joinedTable->table === $tableName) {
                 return true;
             }
         }
