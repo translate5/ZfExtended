@@ -26,4 +26,19 @@ final class FilterJoinDTO
     {
         return $this->table . '#' . $this->localKey . '#' . $this->foreignKey;
     }
+
+    /**
+     * Checks a list of DTOs if we are already contained
+     * @param FilterJoinDTO[] $joinedTables
+     */
+    public function isInList(array $joinedTables): bool
+    {
+        foreach ($joinedTables as $joinedTable) {
+            if ($joinedTable->getIdentifier() === $this->getIdentifier()) {
+                return true;
+            }
+        }
+
+        return false;
+    }
 }

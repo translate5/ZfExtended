@@ -67,10 +67,7 @@ class ZfExtended_Models_Filter_JoinHard extends ZfExtended_Models_Filter_JoinAbs
         $this->filterForBasetable = $filter;
     }
 
-    /**
-     * Configure the filter instance in the entity
-     */
-    public function configureEntityFilter(ZfExtended_Models_Filter $filterInstance)
+    public function configureEntityFilter(ZfExtended_Models_Filter $filterInstance, array $joinedTables): void
     {
         $db = ZfExtended_Factory::get($this->table);
         /* @var $db Zend_Db_Table_Abstract */
