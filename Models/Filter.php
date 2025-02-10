@@ -460,7 +460,7 @@ abstract class ZfExtended_Models_Filter
     }
 
     /**
-     * Creates or merges an existing join
+     * Creates a new or merges an existing join. Be aware, this overrides the join-type & local alias!
      */
     public function overrideJoinedTable(FilterJoinDTO $joinedTable)
     {
