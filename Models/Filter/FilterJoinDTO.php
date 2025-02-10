@@ -5,7 +5,7 @@ namespace MittagQI\ZfExtended\Models\Filter;
 use Zend_Db_Select;
 
 /**
- * Validate filter and sort fields against the actual table fields.
+ * Represents a table-join in the entity-filters
  */
 final class FilterJoinDTO
 {
