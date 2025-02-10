@@ -464,8 +464,18 @@ abstract class ZfExtended_Models_Filter
      */
     public function hasJoinedTable(string $tableName): bool
     {
+        // search in our defined joins
         foreach ($this->joinedTables as $key => $data) {
             if ($data[0] === $tableName) {
+                return true;
+            }
+        }
+        // search in our subfilters
+        foreach ($this->filter as $item) {
+            if (is_object($item->type) &&
+                is_a($item->type, ZfExtended_Models_Filter_JoinAbstract::class) &&
+                $item->type->getTable() === $tableName
+            ) {
                 return true;
             }
         }
@@ -558,6 +568,7 @@ abstract class ZfExtended_Models_Filter
         $data = new stdClass();
         $data->_classname = get_class($this);
         $data->filter = [];
+        $data->joinedTables = $this->joinedTables;
         foreach ($this->filter as $filter) {
             $data->filter[] = $this->debugFilterItem($filter);
         }
