@@ -162,12 +162,19 @@ class ZfExtended_BaseIndex
     /**
      * start the application
      * @throws Zend_Application_Exception
+     * @throws Zend_Db_Statement_Exception
      */
     public function startApplication(): void
     {
         try {
             $app = $this->initApplication();
             $app->bootstrap()->run();
+        } catch (Zend_Db_Statement_Exception $e) {
+            if (str_contains($e->getMessage(), 'SQLSTATE[HY000]: General error: 1021 Disk full')) {
+                $this->handleDatabaseDown($e);
+            } else {
+                throw $e;
+            }
         } catch (Zend_Db_Adapter_Exception $e) {
             $this->handleDatabaseDown($e);
         }
@@ -379,7 +386,7 @@ class ZfExtended_BaseIndex
         } elseif (str_contains($e->getMessage(), 'SQLSTATE[HY000] [2002] php_network_getaddresses: getaddrinfo failed')) {
             error_log('Fatal: Could not connect to the database! Wrong host given?');
         } else {
-            error_log('Fatal: Could not connect to the database!');
+            error_log('Fatal: Could not connect to the database! Message from DB: ' . $e->getMessage());
         }
         header('HTTP/1.1 500 Internal Server Error');
         if (ZfExtended_Utils::requestAcceptsJson()) {

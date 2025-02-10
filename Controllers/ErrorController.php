@@ -241,8 +241,7 @@ class ErrorController extends ZfExtended_Controllers_Action
 
             return 'error/errorRest.phtml';
         }
-        $config = Zend_Registry::get('config');
-        if (! empty($config->runtimeOptions->showErrorsInBrowser)) {
+        if (ZfExtended_Utils::isDevelopment()) {
             $this->view->exception = $this->exception;
 
             return 'error/errorAdmin.phtml';
