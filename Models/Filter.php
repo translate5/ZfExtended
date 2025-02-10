@@ -461,8 +461,9 @@ abstract class ZfExtended_Models_Filter
 
     /**
      * Checks, if a joined table already exists
+     * Be aware, sorting potentially can join as well, so we need to know if it will be applied
      */
-    public function hasJoinedTable(string $tableName): bool
+    public function hasJoinedTable(string $tableName, bool $applySort = true): bool
     {
         // search in our defined joins
         foreach ($this->joinedTables as $key => $data) {
@@ -471,12 +472,32 @@ abstract class ZfExtended_Models_Filter
             }
         }
         // search in our subfilters
-        foreach ($this->filter as $item) {
-            if (is_object($item->type) &&
-                is_a($item->type, ZfExtended_Models_Filter_JoinAbstract::class) &&
-                $item->type->getTable() === $tableName
-            ) {
+        foreach ($this->filter as $filter) {
+            /** @var string|ZfExtended_Models_Filter_JoinAbstract|ZfExtended_Models_Filter $type */
+            $type = $filter->type;
+            // subfilter is a filter-instance & has join
+            if ($this->isFilterOrJoin($type) && $type->hasJoinedTable($tableName)) {
                 return true;
+            }
+            // subfilter is a mapped filter-instance & has join
+            if (! empty($this->_filterTypeMap) && array_key_exists($filter->field, $this->_filterTypeMap)) {
+                /** @var string|ZfExtended_Models_Filter_JoinAbstract|ZfExtended_Models_Filter $mappedFilter */
+                $mappedFilter = $this->_filterTypeMap[$filter->field];
+                if ($this->isFilterOrJoin($mappedFilter) && $mappedFilter->hasJoinedTable($tableName)) {
+                    return true;
+                }
+            }
+        }
+        // search for mapped joins in sorts if sorting applied
+        if ($applySort) {
+            foreach ($this->sort as $field => $sort) {
+                if (array_key_exists($sort->property, $this->_sortColMap)) {
+                    $sortFilter = $this->_sortColMap[$sort->property];
+                    /** @var string|ZfExtended_Models_Filter_JoinAbstract|ZfExtended_Models_Filter $sortFilter */
+                    if ($this->isFilterOrJoin($sortFilter) && $sortFilter->hasJoinedTable($tableName)) {
+                        return true;
+                    }
+                }
             }
         }
 
@@ -569,6 +590,7 @@ abstract class ZfExtended_Models_Filter
         $data->_classname = get_class($this);
         $data->filter = [];
         $data->joinedTables = $this->joinedTables;
+        $data->sort = $this->sort;
         foreach ($this->filter as $filter) {
             $data->filter[] = $this->debugFilterItem($filter);
         }
@@ -601,5 +623,14 @@ abstract class ZfExtended_Models_Filter
     public function escapeMysqlWildcards(string $value): string
     {
         return preg_replace('~[%_]~', '\\\$0', $value);
+    }
+
+    /**
+     * Helper to identify sup-filter instances
+     */
+    private function isFilterOrJoin(mixed $prop): bool
+    {
+        return is_object($prop) && (is_a($prop, ZfExtended_Models_Filter_JoinAbstract::class) ||
+                is_a($prop, ZfExtended_Models_Filter::class));
     }
 }

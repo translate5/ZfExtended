@@ -70,6 +70,14 @@ abstract class ZfExtended_Models_Filter_JoinAbstract
     }
 
     /**
+     * Inour case just checks, if we join the specified table
+     */
+    public function hasJoinedTable(string $tableName): bool
+    {
+        return $this->getTable() === $tableName;
+    }
+
+    /**
      * merge the join info into the single filter coming from the frontend
      */
     abstract public function mergeFilter(stdClass $filter);
