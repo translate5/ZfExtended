@@ -648,7 +648,7 @@ abstract class ZfExtended_Models_Filter
     }
 
     /**
-     * Helper to identify sup-filter instances
+     * Helper to identify sub-filter instances
      */
     private function isFilterOrJoin(mixed $prop): bool
     {
