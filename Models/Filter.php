@@ -429,10 +429,7 @@ abstract class ZfExtended_Models_Filter
         }
         // if the mapped sortkey is a joined table, we have to configure it
         if ($sortKey instanceof ZfExtended_Models_Filter_JoinAbstract) {
-
-            // we anly apply the join, if it is not already present in our joined tables!
-
-            $sortKey->configureEntityFilter($this, $this->joinedTables);
+            $sortKey->configureEntityFilter($this);
 
             return $sortKey->getTable() . '.' . $sortKey->getSearchfield();
         }
@@ -459,7 +456,9 @@ abstract class ZfExtended_Models_Filter
      */
     public function addJoinedTable(FilterJoinDTO $joinedTable): void
     {
-        $this->joinedTables[$joinedTable->getIdentifier()] = $joinedTable;
+        if (! $joinedTable->isInList($this->joinedTables)) {
+            $this->joinedTables[$joinedTable->getIdentifier()] = $joinedTable;
+        }
     }
 
     /**

@@ -188,7 +188,7 @@ class ZfExtended_Models_Filter_ExtJs extends ZfExtended_Models_Filter
         if ($filter->type instanceof ZfExtended_Models_Filter_JoinAbstract) {
             $join = $filter->type;
             $join->mergeFilter($filter);
-            $join->configureEntityFilter($this, $this->joinedTables);
+            $join->configureEntityFilter($this);
         }
         settype($filter->type, 'string');
         settype($filter->field, 'string');

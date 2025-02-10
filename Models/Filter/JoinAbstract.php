@@ -22,8 +22,6 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
-use MittagQI\ZfExtended\Models\Filter\FilterJoinDTO;
-
 abstract class ZfExtended_Models_Filter_JoinAbstract
 {
     protected $table;
@@ -86,10 +84,8 @@ abstract class ZfExtended_Models_Filter_JoinAbstract
 
     /**
      * Configure the filter instance in the entity
-     * Make sure, identical joins are not added multiple times!
-     * @param FilterJoinDTO[] $joinedtables: The joins that are already present in the filter/select
      */
-    abstract public function configureEntityFilter(ZfExtended_Models_Filter $filter, array $joinedTables): void;
+    abstract public function configureEntityFilter(ZfExtended_Models_Filter $filter): void;
 
     /**
      * Debugs the filter

@@ -58,19 +58,15 @@ class ZfExtended_Models_Filter_JoinAssoc extends ZfExtended_Models_Filter_Join
         $filter->table = $this->finalJoin->table;
     }
 
-    public function configureEntityFilter(ZfExtended_Models_Filter $filter, array $joinedTables): void
+    public function configureEntityFilter(ZfExtended_Models_Filter $filter): void
     {
         //if searchfield is ambigious we have to set the originaltable as mapping, the foreign table name is set directly in the filter
         $filter->addTableForField($this->searchField, $filter->getEntityTable());
         // join to the assoc table
         $assocJoinDTO = new FilterJoinDTO($this->table, $this->localKey, $this->foreignKey, []);
-        if (! $assocJoinDTO->isInList($joinedTables)) {
-            $filter->addJoinedTable($assocJoinDTO);
-        }
+        $filter->addJoinedTable($assocJoinDTO);
         // join to the final table
         $finalJoinDTO = new FilterJoinDTO($this->finalJoin->table, $this->finalJoin->localKey, $this->finalJoin->foreignKey, [], $this->table);
-        if (! $finalJoinDTO->isInList($joinedTables)) {
-            $filter->addJoinedTable($finalJoinDTO);
-        }
+        $filter->addJoinedTable($finalJoinDTO);
     }
 }
