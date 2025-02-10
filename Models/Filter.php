@@ -454,7 +454,7 @@ abstract class ZfExtended_Models_Filter
     /**
      * Adds a table join configuration to be used for the filters
      */
-    public function addJoinedTable(FilterJoinDTO $joinedTable)
+    public function addJoinedTable(FilterJoinDTO $joinedTable): void
     {
         $this->joinedTables[$joinedTable->getIdentifier()] = $joinedTable;
     }
@@ -462,7 +462,7 @@ abstract class ZfExtended_Models_Filter
     /**
      * Creates a new or merges an existing join. Be aware, this overrides the join-type & local alias!
      */
-    public function overrideJoinedTable(FilterJoinDTO $joinedTable)
+    public function overrideJoinedTable(FilterJoinDTO $joinedTable): void
     {
         $key = $joinedTable->getIdentifier();
         if (array_key_exists($key, $this->joinedTables)) {
