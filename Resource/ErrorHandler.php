@@ -80,17 +80,21 @@ class ZfExtended_Resource_ErrorHandler extends Zend_Application_Resource_Resourc
         $level = $this->errorCodes[$type][1];
         $msg = 'PHP ' . $label . ': ';
 
-        //in early bootstrapping logger is maybe not defined yet
-        if (Zend_Registry::isRegistered('logger')) {
-            $codes = [
-                'fatal' => 'E1027',
-                'warn' => 'E1029',
-                'info' => 'E1030',
-                'debug' => 'E1030',
-            ];
-            $logger = Zend_Registry::get('logger');
-            /* @var $logger ZfExtended_Logger */
-            $logger->finalError($codes[$level], $msg, $level, $error);
+        try {
+            //in early bootstrapping logger is maybe not defined yet
+            if (Zend_Registry::isRegistered('logger')) {
+                $codes = [
+                    'fatal' => 'E1027',
+                    'warn' => 'E1029',
+                    'info' => 'E1030',
+                    'debug' => 'E1030',
+                ];
+                $logger = Zend_Registry::get('logger');
+                /* @var $logger ZfExtended_Logger */
+                $logger->finalError($codes[$level], $msg, $level, $error);
+            }
+        } catch (Throwable $e) {
+            error_log($e->getMessage());
         }
 
         //on fatal errors we assume that there is no usable out put, so we overwrite it
@@ -102,12 +106,39 @@ class ZfExtended_Resource_ErrorHandler extends Zend_Application_Resource_Resourc
         }
         if (PHP_SAPI === 'cli') {
             echo ob_get_clean();
+            print_r($error);
 
             return;
         }
-        $out = '';
         ob_get_length() && ob_clean(); //show only a white page
-        echo '<h1>Internal Server Error</h1>' . "\n" . $out;
+
+        /***
+         *** IF WE ARE REACHING HERE THE SUPPORTER HAS ALSO TO CHECK THE php.log AND NOT ONLY THE SYS LOG!
+         ***/
+
+        $msg = 'Fatal Internal Server Error - check php.log also and not only sys log';
+        if (ZfExtended_Utils::isDevelopment()) {
+            $msg .= "\n<br>" . preg_replace('/#([0-9])+ /', "<br/>\n #\\1 ", print_r($error, true));
+        }
+
+        if (str_contains($_SERVER['HTTP_ACCEPT'] ?? '', 'application/json')
+            || str_contains($_SERVER['HTTP_ACCEPT'] ?? '', 'application/merge-patch+json')) {
+            if (! headers_sent()) {
+                header('Content-Type: application/json; charset=utf-8');
+            }
+
+            $response = [
+                'success' => 'false',
+                'errorMessage' => $msg,
+            ];
+
+            echo json_encode($response);
+        } else {
+            if (! headers_sent() && getenv('T5_REDIRECT_ON_ERROR')) {
+                header('Refresh: 5; url=' . getenv('T5_REDIRECT_ON_ERROR'));
+            }
+            echo '<h1>Internal Server Error</h1>' . "\n<p>" . $msg . '</p>';
+        }
     }
 
     /**

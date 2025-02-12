@@ -22,6 +22,8 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
+use MittagQI\ZfExtended\Models\Filter\FilterJoinDTO;
+
 /**
  * @todo bei Bedarf aus der Unterklasse ExtJS abstrahieren
  */
@@ -84,7 +86,7 @@ abstract class ZfExtended_Models_Filter
 
     /**
      * Contains the automatically joined tables coming from join configurations in fileTypeMaps
-     * @var array
+     * @var FilterJoinDTO[]
      */
     protected $joinedTables = [];
 
@@ -241,6 +243,7 @@ abstract class ZfExtended_Models_Filter
 
     /**
      * applies the filter and sort statements to the given select and return it
+     * CAUTION: Do not add a select containing a join already, this can cause very problematic SQL
      * @param bool $applySort [optional] default true
      * @return Zend_Db_Select
      */
@@ -269,18 +272,19 @@ abstract class ZfExtended_Models_Filter
         } else {
             $table = $this->defaultTable;
         }
-        foreach ($this->joinedTables as $config) {
-            if (count($config) > 4) {
-                list($foreignTable, $localKey, $foreignKey, $columns, $localTable) = $config;
-            } else {
-                list($foreignTable, $localKey, $foreignKey, $columns) = $config;
-                $localTable = $table;
-            }
 
-            $select->join(
-                $foreignTable,
-                '`' . $localTable . '`.`' . $localKey . '` = `' . $foreignTable . '`.`' . $foreignKey . '`',
-                $columns
+        foreach ($this->joinedTables as $joinedTable) {
+            $localTable = $joinedTable->localAlias ?? $table;
+            $joinFunction = match ($joinedTable->joinType) {
+                Zend_Db_Select::INNER_JOIN => 'joinInner',
+                Zend_Db_Select::LEFT_JOIN => 'joinLeft',
+                Zend_Db_Select::RIGHT_JOIN => 'joinRight',
+                default => 'join'
+            };
+            $select->$joinFunction(
+                $joinedTable->table,
+                '`' . $localTable . '`.`' . $joinedTable->localKey . '` = `' . $joinedTable->table . '`.`' . $joinedTable->foreignKey . '`',
+                $joinedTable->columns
             );
 
             if (method_exists($select, 'setIntegrityCheck')) {
@@ -423,7 +427,7 @@ abstract class ZfExtended_Models_Filter
         if (isset($this->_sortColMap[$sortKey])) {
             $sortKey = $this->_sortColMap[$sortKey];
         }
-        //if the mapped sortkey is a joined table, we have to configure it
+        // if the mapped sortkey is a joined table, we have to configure it
         if ($sortKey instanceof ZfExtended_Models_Filter_JoinAbstract) {
             $sortKey->configureEntityFilter($this);
 
@@ -449,13 +453,77 @@ abstract class ZfExtended_Models_Filter
 
     /**
      * Adds a table join configuration to be used for the filters
-     * @param string $table
-     * @param string $localKey
-     * @param string $foreignKey
      */
-    public function addJoinedTable($table, $localKey, $foreignKey, array $columns = [], $localOverride = null)
+    public function addJoinedTable(FilterJoinDTO $joinedTable): void
     {
-        $this->joinedTables[$table . '#' . $localKey . '#' . $foreignKey] = func_get_args();
+        if (! array_key_exists($joinedTable->getIdentifier(), $this->joinedTables)) {
+            $this->joinedTables[$joinedTable->getIdentifier()] = $joinedTable;
+        }
+    }
+
+    /**
+     * Creates a new or merges an existing join.
+     * Be aware, this overrides the join-type & local alias!
+     */
+    public function overrideJoinedTable(FilterJoinDTO $joinedTable): void
+    {
+        $key = $joinedTable->getIdentifier();
+        if (array_key_exists($key, $this->joinedTables)) {
+            // if the join already exists, we merge the columns
+            $this->joinedTables[$key]->columns = array_values(
+                array_unique(array_merge($this->joinedTables[$key]->columns, $joinedTable->columns))
+            );
+            // ... and overide the type & alias (dangerous & ugly!)
+            $this->joinedTables[$key]->joinType = $joinedTable->joinType;
+            $this->joinedTables[$key]->localAlias = $joinedTable->localAlias;
+        } else {
+            $this->joinedTables[$key] = $joinedTable;
+        }
+    }
+
+    /**
+     * Checks, if a joined table already exists
+     * Be aware, sorting potentially can join as well, so we need to know if it will be applied
+     */
+    public function hasJoinedTable(string $tableName, bool $applySort = true): bool
+    {
+        // search in our defined joins
+        foreach ($this->joinedTables as $joinedTable) {
+            if ($joinedTable->table === $tableName) {
+                return true;
+            }
+        }
+        // search in our subfilters
+        foreach ($this->filter as $filter) {
+            /** @var string|ZfExtended_Models_Filter_JoinAbstract|ZfExtended_Models_Filter $type */
+            $type = $filter->type;
+            // subfilter is a filter-instance & has join
+            if ($this->isFilterOrJoin($type) && $type->hasJoinedTable($tableName)) {
+                return true;
+            }
+            // subfilter is a mapped filter-instance & has join
+            if (! empty($this->_filterTypeMap) && array_key_exists($filter->field, $this->_filterTypeMap)) {
+                /** @var string|ZfExtended_Models_Filter_JoinAbstract|ZfExtended_Models_Filter $mappedFilter */
+                $mappedFilter = $this->_filterTypeMap[$filter->field];
+                if ($this->isFilterOrJoin($mappedFilter) && $mappedFilter->hasJoinedTable($tableName)) {
+                    return true;
+                }
+            }
+        }
+        // search for mapped joins in sorts if sorting applied
+        if ($applySort) {
+            foreach ($this->sort as $field => $sort) {
+                if (array_key_exists($sort->property, $this->_sortColMap)) {
+                    $sortFilter = $this->_sortColMap[$sort->property];
+                    /** @var string|ZfExtended_Models_Filter_JoinAbstract|ZfExtended_Models_Filter $sortFilter */
+                    if ($this->isFilterOrJoin($sortFilter) && $sortFilter->hasJoinedTable($tableName)) {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -543,6 +611,8 @@ abstract class ZfExtended_Models_Filter
         $data = new stdClass();
         $data->_classname = get_class($this);
         $data->filter = [];
+        $data->joinedTables = $this->joinedTables;
+        $data->sort = $this->sort;
         foreach ($this->filter as $filter) {
             $data->filter[] = $this->debugFilterItem($filter);
         }
@@ -575,5 +645,14 @@ abstract class ZfExtended_Models_Filter
     public function escapeMysqlWildcards(string $value): string
     {
         return preg_replace('~[%_]~', '\\\$0', $value);
+    }
+
+    /**
+     * Helper to identify sub-filter instances
+     */
+    private function isFilterOrJoin(mixed $prop): bool
+    {
+        return is_object($prop) && (is_a($prop, ZfExtended_Models_Filter_JoinAbstract::class) ||
+                is_a($prop, ZfExtended_Models_Filter::class));
     }
 }
