@@ -78,7 +78,7 @@ abstract class ZfExtended_Models_Entity_Abstract
 
     /**
      * the Validator Instance
-     * @var ZfExtended_Models_Validator_Abstract
+     * @var ?ZfExtended_Models_Validator_Abstract
      */
     protected $validator;
 
@@ -822,9 +822,12 @@ abstract class ZfExtended_Models_Entity_Abstract
         return $this->modifiedValues;
     }
 
+    /**
+     * TODO FIXME: remove API and integrate into ::getValidator ...
+     */
     protected function validatorLazyInstatiation()
     {
-        if (empty($this->validator)) {
+        if (! isset($this->validator)) {
             $this->validator = ZfExtended_Factory::get($this->validatorInstanceClass, [$this]);
         }
     }
