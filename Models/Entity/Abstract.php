@@ -130,6 +130,11 @@ abstract class ZfExtended_Models_Entity_Abstract
         $this->debugFiltering = ZfExtended_Debug::hasLevel('core', 'EntityFilter');
     }
 
+    public function getTableName(): string
+    {
+        return $this->tableName;
+    }
+
     /**
      * inits the Entity, resets the internal data
      * if data object is given, use it's values.
