@@ -102,9 +102,6 @@ abstract class ZfExtended_Models_Entity_Abstract
      */
     protected $modifiedValues = [];
 
-    /**
-     * @var ZfExtended_Models_Filter|null
-     */
     protected ?ZfExtended_Models_Filter $filter = null;
 
     /**
