@@ -78,7 +78,7 @@ abstract class ZfExtended_Models_Entity_Abstract
 
     /**
      * the Validator Instance
-     * @var ZfExtended_Models_Validator_Abstract
+     * @var ?ZfExtended_Models_Validator_Abstract
      */
     protected $validator;
 
@@ -102,9 +102,6 @@ abstract class ZfExtended_Models_Entity_Abstract
      */
     protected $modifiedValues = [];
 
-    /**
-     * @var ZfExtended_Models_Filter|null
-     */
     protected ?ZfExtended_Models_Filter $filter = null;
 
     /**
@@ -128,6 +125,11 @@ abstract class ZfExtended_Models_Entity_Abstract
         $db = $this->db;
         $this->tableName = $db->info($db::NAME);
         $this->debugFiltering = ZfExtended_Debug::hasLevel('core', 'EntityFilter');
+    }
+
+    public function getTableName(): string
+    {
+        return $this->tableName;
     }
 
     /**
@@ -820,9 +822,12 @@ abstract class ZfExtended_Models_Entity_Abstract
         return $this->modifiedValues;
     }
 
+    /**
+     * TODO FIXME: remove API and integrate into ::getValidator ...
+     */
     protected function validatorLazyInstatiation()
     {
-        if (empty($this->validator)) {
+        if (! isset($this->validator)) {
             $this->validator = ZfExtended_Factory::get($this->validatorInstanceClass, [$this]);
         }
     }
