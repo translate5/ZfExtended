@@ -58,6 +58,10 @@ class Logger
             $msg .= ' pid: ' . $worker->getPid();
         }
 
+        if (! empty($worker->getTaskGuid())) {
+            $msg .= ' task: ' . $worker->getTaskGuid();
+        }
+
         error_log($msg . PHP_EOL, 3, APPLICATION_DATA . '/logs/worker.log');
     }
 }
