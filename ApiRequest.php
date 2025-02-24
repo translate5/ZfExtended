@@ -27,6 +27,7 @@ namespace MittagQI\ZfExtended;
 use Zend_Exception;
 use Zend_Http_Client_Exception;
 use Zend_Http_Response;
+use Zend_Registry;
 use ZfExtended_ApiClient;
 use ZfExtended_Exception;
 use ZfExtended_FileUploadException;
@@ -42,6 +43,29 @@ final class ApiRequest
     public const ACCEPT = 'application/json; charset=utf-8';
 
     public const VALID_RESPONSE_STATES = [200, 201];
+
+    /**
+     * Helper to perform a T5 api-request with a DTO
+     * @throws Zend_Exception
+     * @throws Zend_Http_Client_Exception
+     * @throws ZfExtended_Exception
+     * @throws ZfExtended_FileUploadException
+     */
+    public static function requestApi(ApiRequestDTO $dto): mixed
+    {
+        $request = new self();
+
+        try {
+            return $request->fetch($dto->method, $dto->endpoint, $dto->rawData, $dto->params, $dto->files);
+        } catch (ZfExtended_Zendoverwrites_Http_Exception_InvalidResponse $e) {
+            $logger = Zend_Registry::get('logger')->cloneMe($dto->loggerDomain);
+            $logger->exception($e, [
+                'level' => $logger::LEVEL_WARN,
+            ]);
+        }
+
+        return null;
+    }
 
     /**
      * If no explicit application-token is passed, the auth-cookie or the auth-token of the current request will be used
