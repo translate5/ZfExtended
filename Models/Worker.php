@@ -424,6 +424,11 @@ final class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
             'maxRuntime' => new Zend_Db_Expr('NOW() + INTERVAL ' . $this->getMaxLifetime()),
             'pid' => getmypid(),
         ];
+        // in case of a delayed worker we need to keep the startime as it was initially set
+        // delayed workers shall represent their full lifetime incl. delays and this is needed for calculations
+        if ($this->getState() === self::STATE_DELAYED && ! empty($this->getStarttime())) {
+            unset($data['starttime']);
+        }
         $id = $this->getId();
         //if there is no id, that means we are in a direct run and the worker should be started in any case
         if (empty($id)) {

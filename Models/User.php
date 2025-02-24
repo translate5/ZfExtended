@@ -71,7 +71,7 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract
         $customerIds = array_map('intval', explode(',', trim($customers, ',')));
 
         // clean up the array for empty values
-        return array_filter($customerIds);
+        return array_values(array_filter($customerIds));
     }
 
     /**
@@ -293,6 +293,21 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract
         return static::customersToCustomerIds($this->getCustomers());
     }
 
+    /**
+     * Retrieves the primary customer of the user
+     * The primary customer is the first assigned customer
+     * Defaults to the default-customer
+     */
+    public function getPrimaryCustomerId(): int
+    {
+        $ids = $this->getCustomersArray();
+        if (count($ids) > 0) {
+            return reset($ids);
+        } else {
+            return editor_Models_Customer_Customer::getDefaultCustomerId();
+        }
+    }
+
     /***
      * Load user by given issuer and subject (the issuer and subject are openid specific fields)
      * @param string $login
@@ -356,8 +371,7 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract
         if (empty($userGuid) || empty($domain)) {
             return null;
         }
-        $customer = ZfExtended_Factory::get('editor_Models_Customer_Customer');
-        /* @var $customer editor_Models_Customer_Customer */
+        $customer = ZfExtended_Factory::get(editor_Models_Customer_Customer::class);
         $customer->loadByDomain($domain);
         if ($customer->getId() == null) {
             return null;
