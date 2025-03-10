@@ -168,7 +168,10 @@ class ZfExtended_Models_Installer_Maintenance
      */
     public function disable(): void
     {
-        Zend_Registry::get('logger')->info('E1549', 'End maintenance mode');
+        Zend_Registry::get('logger')
+            ->cloneMe('system.maintenance')
+            ->info('E1549', 'End maintenance mode');
+
         $this->db->query(
             "UPDATE `Zf_configuration` SET `value` = null WHERE `name` = 'runtimeOptions.maintenance.startDate'"
         );
@@ -195,10 +198,12 @@ class ZfExtended_Models_Installer_Maintenance
             return false;
         }
         $timeStamp = date('Y-m-d H:i', $timeStamp);
-        Zend_Registry::get('logger')->info('E1548', 'Set maintenance at {time} with message "{msg}"', [
-            'time' => $timeStamp,
-            'msg' => $msg,
-        ]);
+        Zend_Registry::get('logger')
+            ->cloneMe('system.maintenance')
+            ->info('E1548', 'Set maintenance at {time} with message "{msg}"', [
+                'time' => $timeStamp,
+                'msg' => $msg,
+            ]);
         $this->db->query(
             "UPDATE `Zf_configuration` SET `value` = ? WHERE `name` = 'runtimeOptions.maintenance.startDate'",
             $timeStamp
