@@ -22,6 +22,8 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
+use MittagQI\ZfExtended\Worker\Logger;
+
 /**
  * Abstract Worker Class
  *
@@ -349,9 +351,40 @@ final class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
             . ' AND `delayedUntil` < ' . time()
             . ')';
 
-        $this->retryOnDeadlock(function () use ($sql, $bindings) {
+        $result = $this->retryOnDeadlock(function () use ($sql, $bindings) {
             return $this->db->getAdapter()->query($sql, $bindings);
         }, true);
+        Logger::getInstance()->logRaw('schedulePrepared ' . $result->rowCount() . ' workers; task: ' . $taskGuid);
+    }
+
+    public function scheduleDanglingPreparedChildren(int $parentWorkerId): void
+    {
+        // schedule any dangling prepared child workers for a parent-id
+        // where the parent is not in prepare anymore
+        $sql =
+            'UPDATE `Zf_worker` as children, `Zf_worker` as parent
+             SET children.`state` = ?
+             WHERE children.`parentId` = parent.`id`
+               AND  children.`state` = ?
+               AND parent.id = ?
+               AND parent.state != ?';
+
+        $result = $this->retryOnDeadlock(function () use ($sql, $parentWorkerId) {
+            return $this->db->getAdapter()->query($sql, [
+                self::STATE_SCHEDULED, //set children
+                self::STATE_PREPARE,   // children are in state
+                $parentWorkerId,       //children of
+                self::STATE_PREPARE,   // parent is not in state
+            ]);
+        }, true);
+
+        $rowCount = $result->rowCount();
+
+        if ($rowCount > 0) {
+            Logger::getInstance()->logRaw(
+                'scheduleDanglingPrepared ' . $rowCount . ' workers; parentId: ' . $parentWorkerId
+            );
+        }
     }
 
     /**
