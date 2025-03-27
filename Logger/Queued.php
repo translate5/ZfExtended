@@ -40,6 +40,9 @@ class ZfExtended_Logger_Queued extends ZfExtended_Logger
     public function __construct($domain = ZfExtended_Logger::CORE_DOMAIN)
     {
         $this->domain = $domain;
+        $r = new ReflectionClass($this);
+        // enables different log levels logging
+        $this->logLevels = array_flip($r->getConstants());
     }
 
     /**
