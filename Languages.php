@@ -58,7 +58,7 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract
     public static function sublangCodeByRfc5646(string $rfc5646): string
     {
         return strtolower(
-            preg_replace('~^'. self::primaryCodeByRfc5646($rfc5646) . '-?~', '', $rfc5646)
+            preg_replace('~^' . self::primaryCodeByRfc5646($rfc5646) . '-?~', '', $rfc5646)
         );
     }
 
