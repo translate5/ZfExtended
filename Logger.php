@@ -294,7 +294,6 @@ class ZfExtended_Logger
      * Log the given exception
      * @param array $eventOverride array to override the event generated from the exception
      * @param boolean $returnEvent if true given: return the created event instead processing it
-     * @throws Zend_Exception
      */
     public function exception(
         \Throwable $exception,
@@ -322,7 +321,11 @@ class ZfExtended_Logger
         $this->fillTrace($event, $exception);
         $event->extra = $extraData;
 
-        $this->fillStaticData($event);
+        try {
+            $this->fillStaticData($event);
+        } catch (Zend_Exception $e) {
+
+        }
         $previous = $exception->getPrevious();
         if (! empty($previous)) {
             $event->previous = $this->exception($previous, [], true);
@@ -459,15 +462,17 @@ class ZfExtended_Logger
 
     /**
      * Fills up log data about the request and the current user
-     * @throws Zend_Exception
      */
     protected function fillStaticData(ZfExtended_Logger_Event $event): void
     {
+        $event->httpHost = gethostname();
         if (class_exists('Zend_Registry', false) && Zend_Registry::isRegistered('config')) {
-            $event->httpHost = Zend_Registry::get('config')->runtimeOptions->server->protocol;
-            $event->httpHost .= Zend_Registry::get('config')->runtimeOptions->server->name;
-        } else {
-            $event->httpHost = gethostname();
+            try {
+                $event->httpHost = Zend_Registry::get('config')->runtimeOptions->server->protocol;
+                $event->httpHost .= Zend_Registry::get('config')->runtimeOptions->server->name;
+            } catch (Zend_Exception) {
+                //just keep hostname then
+            }
         }
 
         if (empty($_SERVER['REQUEST_METHOD'])) {
