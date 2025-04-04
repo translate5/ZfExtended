@@ -22,6 +22,7 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
+use MittagQI\ZfExtended\Controller\Response\Header;
 use WilsonGlasser\Spout\Common\Entity\ColumnDimension;
 use WilsonGlasser\Spout\Writer\Common\Creator\Style\StyleBuilder;
 use WilsonGlasser\Spout\Writer\Common\Entity\Sheet;
@@ -42,6 +43,15 @@ class ZfExtended_Models_Entity_ExcelExportV2 extends ZfExtended_Models_Entity_Ex
 
         // Create writer
         $this->writer = WriterEntityFactory::createWriter('xlsx');
+
+        // Prepare default style
+        $defaultStyle = (new StyleBuilder())
+            ->setFontName('Calibri')
+            ->setFontSize(11)
+            ->build();
+
+        // Apply default style
+        $this->writer->setDefaultRowStyle($defaultStyle);
     }
 
     /**
@@ -128,8 +138,14 @@ class ZfExtended_Models_Entity_ExcelExportV2 extends ZfExtended_Models_Entity_Ex
      */
     public function writeHeadings(array $headingFields): void
     {
+        // Get current sheet
+        $sheet = $this->writer->getCurrentSheet();
+
         // Init headings row
         $row = WriterEntityFactory::createRow();
+
+        // Columns array
+        $columns = explode(',', 'A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z');
 
         // Foreach heading field
         foreach ($headingFields as $headingField) {
@@ -141,28 +157,16 @@ class ZfExtended_Models_Entity_ExcelExportV2 extends ZfExtended_Models_Entity_Ex
 
             // Add to the row
             $row->addCell(WriterEntityFactory::createCell($this->getLabel($headingField)));
+
+            // Add autoSize
+            $sheet->addColumnDimension(new ColumnDimension(
+                array_shift($columns),
+                -1,
+                true
+            ));
         }
 
         // Write row to the sheet
         $this->writer->addRow($row);
-    }
-
-    /**
-     * Adjust the column size of each worksheet in given spredsheet
-     */
-    public function autosizeColumnsV2()
-    {
-        foreach ($this->writer->getSheets() as $sheet) {
-            foreach ($sheet->getColumnDimensions() as $colDimension) {
-                $colDimension->setAutoSize(true);
-            }
-
-            /*$sheet->calculateColumnWidths();
-            $sheet->addColumnDimension(new ColumnDimension(
-                'A',
-                -1,
-                true
-            ));*/
-        }
     }
 }
