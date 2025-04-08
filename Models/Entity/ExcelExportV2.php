@@ -22,7 +22,6 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
-use MittagQI\ZfExtended\Controller\Response\Header;
 use WilsonGlasser\Spout\Common\Entity\ColumnDimension;
 use WilsonGlasser\Spout\Writer\Common\Creator\Style\StyleBuilder;
 use WilsonGlasser\Spout\Writer\Common\Entity\Sheet;
@@ -42,7 +41,7 @@ class ZfExtended_Models_Entity_ExcelExportV2 extends ZfExtended_Models_Entity_Ex
         parent::__construct();
 
         // Create writer
-        $this->writer = WriterEntityFactory::createWriter('xlsx');
+        $this->writer = (new \ZfExtended_Models_Entity_Spout_WriterFactory())->create('xlsx');
 
         // Prepare default style
         $defaultStyle = (new StyleBuilder())
