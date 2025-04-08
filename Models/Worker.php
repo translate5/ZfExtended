@@ -404,7 +404,7 @@ final class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
         }, true);
         /* @var Zend_Db_Statement_Interface $stmt */
         if (ZfExtended_Debug::hasLevel('core', 'Workers') && $stmt->rowCount() > 0) {
-            error_log("\nWORKER RESCHEDULE: Rescheduled " . $stmt->rowCount() . ' delayed workers.');
+            error_log("WORKER RESCHEDULE: Rescheduled " . $stmt->rowCount() . ' delayed workers.');
         }
     }
 
@@ -656,6 +656,23 @@ final class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
         }
 
         return $result;
+    }
+
+    public function hasRemaininWorkers(): bool
+    {
+        $s = $this->db->select()
+            ->from($this->db, [
+                'cnt' => 'count(*)',
+            ])
+            ->where('state IN (?)', [
+                self::STATE_SCHEDULED,
+                self::STATE_WAITING,
+                self::STATE_RUNNING,
+                self::STATE_DELAYED,
+            ]);
+        $row = $this->db->fetchRow($s);
+
+        return $row['cnt'] > 0;
     }
 
     /**

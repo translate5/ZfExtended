@@ -25,40 +25,42 @@ declare(strict_types=1);
 
 namespace MittagQI\ZfExtended\Worker;
 
+use MittagQI\ZfExtended\Worker\Queue\EmptyPipeException;
 use MittagQI\ZfExtended\Worker\Trigger\Factory as WorkerTriggerFactory;
-use ReflectionException;
 use Symfony\Component\Lock\LockFactory;
 use Symfony\Component\Lock\LockInterface;
 use Symfony\Component\Lock\SharedLockInterface;
 use Symfony\Component\Lock\Store\FlockStore;
-use Symfony\Component\Lock\Store\SemaphoreStore;
 use Zend_Exception;
+use Zend_Registry;
 use ZfExtended_Debug;
 use ZfExtended_Models_Worker;
 use ZfExtended_Utils;
 
 class Queue
 {
+    private Queue\FifoPipe $fifoPipe;
+
+    private array $workerLocking = [];
+
     /**
      * Processes the worker-queue if the processing is not locked
      * (meaning, a different php-process is not already triggering)
      * @throws Zend_Exception
-     * @throws ReflectionException
      */
-    public static function processQueueMutexed(): void
+    public static function processQueueMutexed(bool $asDameon = false): void
     {
-        $workerQueue = new self();
-        $workerModel = new ZfExtended_Models_Worker();
-        $sleep = (int) \Zend_Registry::get('config')->runtimeOptions->worker->processSleep;
-        $doDebug = ZfExtended_Debug::hasLevel('core', 'Workers');
+        $workerQueue = new self(
+            $asDameon,
+            ZfExtended_Debug::hasLevel('core', 'Workers')
+        );
+        $sleep = (int) Zend_Registry::get('config')->runtimeOptions->worker->processSleep;
 
         if ($workerQueue->lockAcquire()) {
-            $foundWorkers = $workerQueue->process($workerModel, $doDebug);
-            while ($foundWorkers) {
-                usleep($sleep);
-                $foundWorkers = $workerQueue->process($workerModel, $doDebug);
-            }
+            $workerQueue->process(new ZfExtended_Models_Worker(), $sleep);
             $workerQueue->lockRelease();
+        } elseif ($asDameon === false) {
+            WorkerTriggerFactory::create()->triggerQueue();
         }
     }
 
@@ -67,35 +69,53 @@ class Queue
      */
     private LockInterface|SharedLockInterface $lock;
 
-    public function __construct()
-    {
-        $factory = new LockFactory(extension_loaded('sysvsem') ? new SemaphoreStore() : new FlockStore());
+    public function __construct(
+        private readonly bool $asDameon = false,
+        private readonly bool $doDebug = false
+    ) {
+        $factory = new LockFactory(new FlockStore());
         $this->lock = $factory->createLock(ZfExtended_Utils::installationHash());
+        $this->fifoPipe = new Queue\FifoPipe();
     }
 
     /**
-     * @throws ReflectionException
-     * @throws Zend_Exception
      * @return bool returns true if any ready to run workers found
      */
-    private function process(ZfExtended_Models_Worker $workerModel, bool $doDebug): bool
+    private function runWorkers(ZfExtended_Models_Worker $workerModel): bool
     {
         $workerModel->wakeupScheduledAndDelayed();
         $workerListQueued = $workerModel->getListQueued();
 
-        if ($doDebug) {
-            error_log("\nWORKER QUEUE: wakeupScheduledAndDelayed and found "
+        if ($this->doDebug) {
+            error_log("WORKER QUEUE: wakeupScheduledAndDelayed and found "
                 . count($workerListQueued) . ' workers to trigger.');
         }
 
         $result = false;
         $trigger = WorkerTriggerFactory::create();
+
         foreach ($workerListQueued as $workerQueue) {
+            $id = (string) $workerQueue['id'];
             $result = true;
+            $now = time();
+            if (array_key_exists($id, $this->workerLocking)) {
+                $this->cleanBlockedWorkers($id, $now);
+
+                continue;
+            }
+            $this->workerLocking[$id] = $now;
+            Logger::getInstance()
+                ->logRaw('dispatcher run ' . $id . ' ' . $workerQueue['worker'] . ' ' . $workerQueue['taskGuid']);
             $trigger->triggerWorker(
-                (string) $workerQueue['id'],
+                $id,
                 $workerQueue['hash'],
             );
+        }
+
+        //clean up duplicate run protection
+        $now = time();
+        foreach (array_keys($this->workerLocking) as $id) {
+            $this->cleanBlockedWorkers($id, $now);
         }
 
         return $result;
@@ -103,23 +123,28 @@ class Queue
 
     /**
      * trigger application-wide worker-queue
-     * @throws Zend_Exception
      */
     public function trigger(): void
     {
-        if (! $this->isRunning()) {
+        if (! $this->notifyRunning()) {
             WorkerTriggerFactory::create()->triggerQueue();
         }
     }
 
-    public function lockAcquire(): bool
+    private function lockAcquire(): bool
     {
         return $this->lock->acquire();
     }
 
-    public function isRunning(): bool
+    /**
+     * returns false if no queue is running or could not be notified
+     */
+    public function notifyRunning(bool $asDaemon = false): bool
     {
-        // isAquired works only in the same process, so for IPC we need the following construction
+        if ($asDaemon) {
+            $this->fifoPipe::notifyRunning();
+        }
+
         if ($this->lock->acquire()) {
             $this->lock->release(); //if we got the lock it was not locked before so we remove it
 
@@ -129,8 +154,77 @@ class Queue
         return true;
     }
 
-    public function lockRelease(): void
+    private function lockRelease(): void
     {
         $this->lock->release();
+    }
+
+    private function process(ZfExtended_Models_Worker $workerModel, int $sleep): void
+    {
+        $this->fifoPipe->initReader($this->asDameon);
+
+        Logger::getInstance()->logRaw('dispatcher start ' . getmypid());
+
+        $runWorkers = true;
+        while (true) {
+            if ($runWorkers) {
+                //if we started workers, we keep running by assuming that there might come more
+                $runWorkers = $this->runWorkers($workerModel);
+                if ($runWorkers) {
+                    usleep($sleep);
+                }
+            }
+
+            if ($this->doDebug) {
+                error_log('WORKER QUEUE: runWorkers ' . $runWorkers);
+            }
+
+            if (! $this->asDameon) {
+                if ($runWorkers) {
+                    continue;
+                }
+
+                Logger::getInstance()->logRaw('dispatcher stop');
+
+                break;
+            }
+
+            try {
+                //check if more queue calls are requested
+                $runWorkers = $this->fifoPipe->checkPipe() || $runWorkers;
+            } catch (EmptyPipeException) {
+                if ($this->stopDispatching($workerModel)) {
+                    break;
+                }
+            }
+        }
+
+        $this->fifoPipe->close();
+    }
+
+    private function cleanBlockedWorkers(int|string $id, mixed $now): void
+    {
+        if (($this->workerLocking[$id] + 5) <= $now) {
+            unset($this->workerLocking[$id]);
+        }
+    }
+
+    private function stopDispatching(ZfExtended_Models_Worker $workerModel): bool
+    {
+        //if there are still running workers we keep the loop
+        if (! $workerModel->hasRemaininWorkers()) {
+            Logger::getInstance()->logRaw('dispatcher stop with empty pipe');
+
+            return true;
+        }
+        Logger::getInstance()->logRaw('dispatcher waiting blocked mode');
+        if (! $this->fifoPipe->waitForPipe()) {
+            Logger::getInstance()->logRaw('dispatcher stop after pipe timeout');
+
+            return true;
+        }
+        Logger::getInstance()->logRaw('dispatcher keep alive');
+
+        return false;
     }
 }
