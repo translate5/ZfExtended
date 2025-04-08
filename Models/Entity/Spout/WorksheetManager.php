@@ -1,7 +1,5 @@
 <?php
 
-//namespace WilsonGlasser\Spout\Writer\XLSX\Manager;
-
 use WilsonGlasser\Spout\Common\Entity\Cell;
 use WilsonGlasser\Spout\Common\Entity\Row;
 use WilsonGlasser\Spout\Common\Entity\Style\Style;
@@ -26,7 +24,7 @@ use WilsonGlasser\Spout\Writer\XLSX\Manager\Style\StyleManager;
  * Class WorksheetManager
  * XLSX worksheet manager, providing the interfaces to work with XLSX worksheets.
  */
-class ZfExtended_Models_Entity_Spout_WorksheetManagerV2 implements WorksheetManagerInterface
+class ZfExtended_Models_Entity_Spout_WorksheetManager implements WorksheetManagerInterface
 {
     /**
      * Maximum number of characters a cell can contain
