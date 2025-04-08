@@ -27,11 +27,6 @@ use WilsonGlasser\Spout\Writer\Common\Creator\Style\StyleBuilder;
 use WilsonGlasser\Spout\Writer\Common\Entity\Sheet;
 use WilsonGlasser\Spout\Writer\Common\Creator\WriterEntityFactory;
 use WilsonGlasser\Spout\Writer\XLSX\Writer as XLSXWriter;
-use WilsonGlasser\Spout\Common\Helper\GlobalFunctionsHelper;
-use WilsonGlasser\Spout\Writer\Common\Creator\InternalEntityFactory;
-use WilsonGlasser\Spout\Writer\XLSX\Creator\HelperFactory as XLSXHelperFactory;
-use ZfExtended_Models_Entity_Spout_ManagerFactory as XLSXManagerFactory;
-use WilsonGlasser\Spout\Writer\XLSX\Manager\OptionsManager as XLSXOptionsManager;
 
 class ZfExtended_Models_Entity_ExcelExportV2 extends ZfExtended_Models_Entity_ExcelExport
 {
@@ -46,12 +41,7 @@ class ZfExtended_Models_Entity_ExcelExportV2 extends ZfExtended_Models_Entity_Ex
         parent::__construct();
 
         // Create writer
-        $this->writer = new XLSXWriter(
-            new XLSXOptionsManager(new StyleBuilder()),
-            new GlobalFunctionsHelper(),
-            $helperFactory = new XLSXHelperFactory(),
-            new XLSXManagerFactory(new InternalEntityFactory(), $helperFactory)
-        );
+        $this->writer = WriterEntityFactory::createWriter('xlsx');
 
         // Prepare default style
         $defaultStyle = (new StyleBuilder())
