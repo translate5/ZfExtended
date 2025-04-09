@@ -23,26 +23,10 @@ END LICENSE AND COPYRIGHT
 */
 declare(strict_types=1);
 
-namespace MittagQI\ZfExtended\Worker\Trigger;
+namespace MittagQI\ZfExtended\Worker\Queue;
 
-use Zend_Exception;
-use Zend_Registry;
+use RuntimeException;
 
-class Factory
+class EmptyPipeException extends RuntimeException
 {
-    public static function create(): TriggerInterface
-    {
-        try {
-            $config = Zend_Registry::get('config');
-            $type = $config->runtimeOptions->worker->triggerType;
-        } catch (Zend_Exception) {
-            $type = '';
-        }
-
-        return match ($type) {
-            'http' => new Http(),
-            'processdaemon' => new ProcessDaemon(),
-            default => new Process(),
-        };
-    }
 }
