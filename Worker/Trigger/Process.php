@@ -27,7 +27,7 @@ declare(strict_types=1);
 namespace MittagQI\ZfExtended\Worker\Trigger;
 
 use MittagQI\ZfExtended\Worker\Queue;
-use Zend_Exception;
+use ReflectionException;
 use ZfExtended_BaseIndex;
 use ZfExtended_Debug;
 use ZfExtended_Factory;
@@ -37,8 +37,6 @@ class Process implements TriggerInterface
     /**
      * Trigger worker with id = $id.
      * To run mutex-save, the current hash is needed
-     *
-     * @throws Zend_Exception
      */
     public function triggerWorker(string $id, string $hash): bool
     {
@@ -47,7 +45,7 @@ class Process implements TriggerInterface
         return true;
     }
 
-    private function exec(string $workerCmd): void
+    protected function exec(string $workerCmd): void
     {
         chdir(APPLICATION_ROOT);
         $cmd = '';
@@ -67,7 +65,7 @@ class Process implements TriggerInterface
             $options .= (APPLICATION_ENV === ZfExtended_BaseIndex::ENVIRONMENT_TEST) ? ' --test' : ' --apptest';
         }
         // Prepare command and start service
-        if (preg_match('~WIN~', PHP_OS)) {
+        if (str_contains(PHP_OS, 'WIN')) {
             $cmd .= 'translate5.bat ' . $workerCmd . $options . ' >NUL 2>&1';
             pclose(popen($cmd, 'r'));
         } else {
@@ -76,11 +74,14 @@ class Process implements TriggerInterface
         }
     }
 
+    /**
+     * @throws ReflectionException
+     */
     public function triggerQueue(): bool
     {
         $workerQueue = ZfExtended_Factory::get(Queue::class);
 
-        if (! $workerQueue->isRunning()) {
+        if (! $workerQueue->notifyRunning()) {
             $this->exec('worker:queue');
         }
 
