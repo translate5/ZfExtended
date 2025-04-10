@@ -28,7 +28,7 @@ use WilsonGlasser\Spout\Writer\Common\Entity\Sheet;
 use WilsonGlasser\Spout\Writer\Common\Creator\WriterEntityFactory;
 use WilsonGlasser\Spout\Writer\XLSX\Writer as XLSXWriter;
 
-class ZfExtended_Models_Entity_ExcelExportV2 extends ZfExtended_Models_Entity_ExcelExport
+class ZfExtended_Models_Entity_ExcelExportSpout extends ZfExtended_Models_Entity_ExcelExport
 {
     public ?XLSXWriter $writer = null;
 
@@ -131,7 +131,6 @@ class ZfExtended_Models_Entity_ExcelExportV2 extends ZfExtended_Models_Entity_Ex
     }
 
     /**
-     * @param array $headingFields
      * @throws \WilsonGlasser\Spout\Common\Exception\IOException
      * @throws \WilsonGlasser\Spout\Writer\Exception\WriterNotOpenedException
      */
