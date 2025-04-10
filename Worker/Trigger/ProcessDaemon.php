@@ -21,28 +21,28 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 
 END LICENSE AND COPYRIGHT
 */
+
 declare(strict_types=1);
 
 namespace MittagQI\ZfExtended\Worker\Trigger;
 
-use Zend_Exception;
-use Zend_Registry;
+use MittagQI\ZfExtended\Worker\Queue;
+use ReflectionException;
+use ZfExtended_Factory;
 
-class Factory
+class ProcessDaemon extends Process
 {
-    public static function create(): TriggerInterface
+    /**
+     * @throws ReflectionException
+     */
+    public function triggerQueue(): bool
     {
-        try {
-            $config = Zend_Registry::get('config');
-            $type = $config->runtimeOptions->worker->triggerType;
-        } catch (Zend_Exception) {
-            $type = '';
+        $workerQueue = ZfExtended_Factory::get(Queue::class);
+
+        if (! $workerQueue->notifyRunning(true)) {
+            $this->exec('worker:queue --daemon');
         }
 
-        return match ($type) {
-            'http' => new Http(),
-            'processdaemon' => new ProcessDaemon(),
-            default => new Process(),
-        };
+        return true;
     }
 }
