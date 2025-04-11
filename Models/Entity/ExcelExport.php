@@ -31,55 +31,55 @@ class ZfExtended_Models_Entity_ExcelExport
     /**
      * @var PhpOffice\PhpSpreadsheet\Spreadsheet
      */
-    private $spreadsheet = false;
+    protected $spreadsheet = false;
 
     /**
      * Container to hold document properties like filename etc. (properties->name->value)
      * @var stdClass
      */
-    private $properties = false;
+    protected $properties = false;
 
     /**
      * Container to hold fields that should not be shown in the excel
      * @var stdClass
      */
-    private $hiddenFields = false;
+    protected $hiddenFields = false;
 
     /**
      * Container to hold lablenames (lablenames->label->translation)
      * @var stdClass
      */
-    private $labels = false;
+    protected $labels = false;
 
     /**
      * Container to hold callback functions for manipulating field-content (callbacks->label->$closureFunction)
      * @var stdClass
      */
-    private $callbacks = [];
+    protected $callbacks = [];
 
     /**
      * Container to hold fieldType-Definitions (like \PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_DATE_YYYYMMDDSLASH)
      * @var stdClass
      */
-    private $fieldTypes = false;
+    protected $fieldTypes = false;
 
     /**
      * Default format for date fields
      * @var string
      */
-    private $_defaultFieldTypeDate = \PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_DATE_YYYYMMDD2;
+    protected $_defaultFieldTypeDate = \PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_DATE_YYYYMMDD2;
 
     /**
      * Default format for percent fields
      * @var string
      */
-    private $_defaultFieldTypePercent = '0.0%;[RED]-0.0%';
+    protected $_defaultFieldTypePercent = '0.0%;[RED]-0.0%';
 
     /**
      * Default format for currency fields
      * @var string
      */
-    private $_defaultFieldTypeCurrency = \PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_CURRENCY_EUR_SIMPLE;
+    protected $_defaultFieldTypeCurrency = \PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_CURRENCY_EUR_SIMPLE;
 
     /**
      * Pre-calculate formulas
