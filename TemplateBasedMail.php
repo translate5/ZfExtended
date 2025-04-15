@@ -510,7 +510,7 @@ class ZfExtended_TemplateBasedMail
      */
     public function hasCustomTemplate(string $template): bool
     {
-        $scriptsPath = APPLICATION_PATH . '/../client-specific/views/' . Zend_Registry::get('module') . '/scripts/mail/';
+        $scriptsPath = APPLICATION_ROOT . '/client-specific/views/' . Zend_Registry::get('module') . '/scripts/mail/';
         return file_exists($scriptsPath.$template);
     }
 }
