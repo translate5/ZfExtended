@@ -502,4 +502,15 @@ class ZfExtended_TemplateBasedMail
     {
         $this->mail->addCc($email, $name = '');
     }
+
+    /**
+     * @param string $template
+     * @return bool
+     * @throws Zend_Exception
+     */
+    public function hasCustomTemplate(string $template): bool
+    {
+        $scriptsPath = APPLICATION_PATH . '/../client-specific/views/' . Zend_Registry::get('module') . '/scripts/mail/';
+        return file_exists($scriptsPath.$template);
+    }
 }
