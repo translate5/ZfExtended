@@ -45,7 +45,7 @@ class Logger
         return self::$instance;
     }
 
-    public function log(ZfExtended_Models_Worker $worker, string $type, bool $full = false): void
+    public function log(ZfExtended_Models_Worker $worker, string $type, bool $full = false, string $event = ''): void
     {
         $msg = $this->getTime() . ' ' . $type . ' ' . $worker->getId() . ' ' . $worker->getWorker();
 
@@ -61,7 +61,16 @@ class Logger
             $msg .= ' task: ' . $worker->getTaskGuid();
         }
 
+        if (! empty($event)) {
+            $msg .= ' event: ' . $event;
+        }
+
         error_log($msg . PHP_EOL, 3, APPLICATION_DATA . '/logs/worker.log');
+    }
+
+    public function logEvent(ZfExtended_Models_Worker $worker, string $event): void
+    {
+        $this->log($worker, $worker->getState(), false, $event);
     }
 
     public function logRaw(string $msg): void
