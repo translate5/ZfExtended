@@ -142,10 +142,48 @@ class ZfExtended_Utils
     }
 
     /**
-     * Does a recursive copy of the given directory. Optionally a extension blacklist prevents files with the given extension(s) to be copied
+     * Checks, if a directory contans files
      */
-    public static function recursiveCopy(string $sourceDir, string $destinationDir, ?array $extensionBlacklist = null)
+    public static function hasFilesInDirectory(string $directoryPath): bool
     {
+        foreach (new DirectoryIterator($directoryPath) as $fileInfo) {
+            if ($fileInfo->isDot()) {
+                continue;
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Retrieves the file-extensions of the files in the directory
+     */
+    public static function getExtensionsInDirectory(string $directoryPath): array
+    {
+        $extensions = [];
+        foreach (new DirectoryIterator($directoryPath) as $fileInfo) {
+            if ($fileInfo->isDot()) {
+                continue;
+            }
+            $extensions[] = strtolower($fileInfo->getExtension());
+        }
+
+        return array_values(array_unique($extensions));
+    }
+
+    /**
+     * Does a recursive copy of the given directory.
+     * Optionally a extension blacklist prevents files with the given extension(s) to be copied
+     * Second option is, to move the files instead copying them
+     */
+    public static function recursiveCopy(
+        string $sourceDir,
+        string $destinationDir,
+        ?array $extensionBlacklist = null,
+        bool $doMoveInsteadCopy = false,
+    ) {
         $dir = opendir($sourceDir);
         if (! file_exists($destinationDir)) {
             if (! mkdir($destinationDir) && ! is_dir($destinationDir)) {
@@ -165,10 +203,17 @@ class ZfExtended_Utils
                 self::recursiveCopy(
                     $sourceDir . DIRECTORY_SEPARATOR . $file,
                     $destinationDir . DIRECTORY_SEPARATOR . $file,
-                    $extensionBlacklist
+                    $extensionBlacklist,
+                    $doMoveInsteadCopy
                 );
-            } elseif ($extensionBlacklist === null || ! in_array(pathinfo($file, PATHINFO_EXTENSION), $extensionBlacklist)) {
-                copy($sourceDir . DIRECTORY_SEPARATOR . $file, $destinationDir . DIRECTORY_SEPARATOR . $file);
+            } elseif ($extensionBlacklist === null ||
+                ! in_array(pathinfo($file, PATHINFO_EXTENSION), $extensionBlacklist)
+            ) {
+                if ($doMoveInsteadCopy) {
+                    rename($sourceDir . DIRECTORY_SEPARATOR . $file, $destinationDir . DIRECTORY_SEPARATOR . $file);
+                } else {
+                    copy($sourceDir . DIRECTORY_SEPARATOR . $file, $destinationDir . DIRECTORY_SEPARATOR . $file);
+                }
             }
         }
         closedir($dir);

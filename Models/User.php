@@ -22,8 +22,8 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
-use MittagQI\ZfExtended\Acl\ConfigLevelResource;
 use MittagQI\Translate5\Acl\Roles;
+use MittagQI\ZfExtended\Acl\ConfigLevelResource;
 
 /**
  * @method void setId(int $id)
@@ -119,7 +119,7 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract
         $this->__call(
             'setRoles',
             [
-                implode(',', $roles)
+                implode(',', $roles),
             ]
         );
     }
@@ -206,7 +206,6 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract
     /**
      * Adds a role selector and parent id filter to an exising user SELECT query
      * @param string[] $roles
-     * @param int $parentId -1 or 0 if no filtering shall be applied
      */
     protected function addByRoleSql(Zend_Db_Select $select, array $roles): void
     {

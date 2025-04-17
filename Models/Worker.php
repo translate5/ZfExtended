@@ -198,11 +198,11 @@ final class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
     /***
      * Find the first worker required for context calculation. This is specific method and it is used only
      * for import progress calculation.
-     * This will return the oldest worker for given taskGuid with state running.
-     * If no worker with state running is found return worker with state prepare,scheduled or done
+     * This will return the oldest worker for given taskGuid
      */
     public function findWorkerContext(string $taskGuid): array|false
     {
+        // we search all workers for the task. This may includes finished operations !!
         $s = $this->db->select()
             ->where('state IN (?)', [
                 self::STATE_RUNNING,
@@ -218,10 +218,44 @@ final class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
                 new Zend_Db_Expr('state="' . self::STATE_SCHEDULED . '" desc'),
                 new Zend_Db_Expr('state="' . self::STATE_DELAYED . '" desc'),
                 new Zend_Db_Expr('state="' . self::STATE_DONE . '" desc'),
-            ])->limit(1);
-        $result = $this->db->fetchAll($s)->toArray();
+            ]);
+        // the first worker of the result will represent the one that is currently running or is prepared/waiting
+        // since this worker might be in a nested hierarchy (currently the parentId of a worker not neccessarily
+        // point to the outer operation worker, we must search upwards for the parent having "0" as parent
+        $list = $this->db->fetchAll($s)->toArray();
+        if (count($list) > 0) {
+            $first = $list[0];
+            $parentId = (int) $first['parentId'];
+            $topmost = ($parentId === 0) ? $first : $this->findTopmostWorker($list, $parentId);
+            // this may happens when workers become defunct ...
+            if ($topmost === null) {
+                error_log('ERROR: Worker::findWorkerContext("' . $taskGuid .
+                    '") can not find the topmost worker:' . print_r($list, true));
+            }
 
-        return reset($result);
+            // as a fallback, we return the $first as context
+            return ($topmost === null) ? $first : $topmost;
+        }
+
+        return false;
+    }
+
+    /**
+     * Finds the Topmost Worker in a List of workers
+     */
+    private function findTopmostWorker(array $workerList, int $parentId, int $iterations = 0): ?array
+    {
+        // we need to limit the iterations, invalid worker-models theoretically could cause deadloops
+        if ($iterations < 25) {
+            foreach ($workerList as $worker) {
+                if ((int) $worker['id'] === $parentId) {
+                    return ((int) $worker['parentId'] === 0) ?
+                        $worker : $this->findTopmostWorker($workerList, (int) $worker['parentId'], ++$iterations);
+                }
+            }
+        }
+
+        return null;
     }
 
     /***

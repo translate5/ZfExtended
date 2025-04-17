@@ -599,14 +599,11 @@ abstract class ZfExtended_Worker_Abstract
 
         // increasing service delays: if we had too many delays we terminate the worker
         if ($isServiceDownDelay && $numDelays >= static::MAX_DELAYS) {
-
             return $this->onTooManyDelays($serviceId, $workerName);
 
-        // single processing delays: if the sum of is too long, we also defunc the worker to prevent delaying forever
+            // single processing delays: if the sum of is too long, we also defunc the worker to prevent delaying forever
         } elseif (! $isServiceDownDelay && time() > ($startTime + self::MAX_SINGLE_DELAY_LIMIT)) {
-
             return $this->onSingleDelaysTooLong($workerName);
-
         } else {
             // if given, a singleDelay will define the waiting-time and not increase the num of delays
             if ($isServiceDownDelay) {
@@ -622,9 +619,18 @@ abstract class ZfExtended_Worker_Abstract
             $this->workerModel->setDelays($delays);
             $this->workerModel->setState(ZfExtended_Models_Worker::STATE_DELAYED);
             if ($this->saveWorkerDeadlockProof()) {
-                Logger::getInstance()->log($this->workerModel, ZfExtended_Models_Worker::STATE_DELAYED);
+                $reasonMsg = $isServiceDownDelay ?
+                    'service “' . $serviceId . '” is down' : 'the processing is blocked by concurrent workloads';
+                $delaysMsg = ($delays < 2) ? 'for the first time' : 'with ' . ($delays - 1) . 'delays already';
+                Logger::getInstance()->logEvent(
+                    $this->workerModel,
+                    'Delay worker until ' . $until . ' ' . $delaysMsg . ' because ' . $reasonMsg,
+                );
             } else {
-                Logger::getInstance()->log($this->workerModel, 'A worker being delayed is not in the table anymore when the delay is attempted to being saved ...');
+                Logger::getInstance()->logEvent(
+                    $this->workerModel,
+                    'A worker being delayed is not in the table anymore when the delay is attempted to be saved'
+                );
             }
 
             if ($this->doDebug) {
@@ -645,11 +651,10 @@ abstract class ZfExtended_Worker_Abstract
      */
     protected function onTooManyDelays(string $serviceId, string $workerName = null): bool
     {
+        $event = ' was delayed too many times because service "' . $serviceId . '" failed.';
+        Logger::getInstance()->logEvent($this->workerModel, 'worker ' . $event);
         if ($this->doDebug) {
-            error_log(
-                'worker ' . $this->workerModel->getId() . ' was delayed too many times because service "'
-                . $serviceId . '" failed.'
-            );
+            error_log('worker ' . $this->workerModel->getId() . $event);
         }
         // kind of continuing where the first catched delay started
         $this->catchedWorkException(
@@ -669,11 +674,10 @@ abstract class ZfExtended_Worker_Abstract
      */
     protected function onSingleDelaysTooLong(string $workerName = null): bool
     {
+        $event = ' was repeatedly processing delayed for over ' . self::MAX_SINGLE_DELAY_LIMIT . ' seconds';
+        Logger::getInstance()->logEvent($this->workerModel, 'worker ' . $event);
         if ($this->doDebug) {
-            error_log(
-                'worker ' . $this->workerModel->getId() . ' was repeatedly processing delayed over "'
-                . self::MAX_SINGLE_DELAY_LIMIT . ' seconds'
-            );
+            error_log('worker ' . $this->workerModel->getId() . $event);
         }
         // set task to erroneous
         $this->catchedWorkException(

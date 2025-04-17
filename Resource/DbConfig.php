@@ -122,6 +122,7 @@ class ZfExtended_Resource_DbConfig extends Zend_Application_Resource_ResourceAbs
             $configType = $this->typeManager->getType($entry['typeClass'] ?? null);
         } catch (Exception $exception) {
             $this->typeClassNotFound[] = $entry['name'] ?? null;
+            $configType = null;
         }
 
         if ($configType === null) {
