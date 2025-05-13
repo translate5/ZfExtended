@@ -104,10 +104,8 @@ class ZfExtended_Models_Installer_DbUpdater
 
     /**
      * returns an array ready for DB Insertion in dbversion
-     * @param string $appVersion
-     * @return array
      */
-    protected function getInsertData(array $file, $appVersion)
+    protected function getInsertData(array $file, string $appVersion): array
     {
         return [
             'origin' => $file['origin'],
@@ -239,12 +237,16 @@ class ZfExtended_Models_Installer_DbUpdater
     /**
      * Adds the new SQL files to the DB or runs the PHP script
      * @return int count of imported new files
+     * @throws ReflectionException
+     * @throws Zend_Cache_Exception
+     * @throws Zend_Exception
+     * @throws ZfExtended_Exception
      */
     public function applyNew(array $toProcess): int
     {
         $count = 0;
-        $dbversion = ZfExtended_Factory::get('ZfExtended_Models_Db_DbVersion');
-        /* @var $dbversion ZfExtended_Models_Db_DbVersion */
+        $dbversion = ZfExtended_Factory::get(ZfExtended_Models_Db_DbVersion::class);
+        $appliedFiles = [];
 
         foreach ($this->sqlFilesNew as $key => $file) {
             $entryHash = $this->getEntryHash($file['origin'], $file['relativeToOrigin']);
@@ -252,17 +254,20 @@ class ZfExtended_Models_Installer_DbUpdater
                 continue;
             }
 
+            $duration = microtime(true);
             if (! $this->handleFile($file)) {
                 //we stop processing, print the error message and do not process the following SQL files
                 break;
             }
+            $file['duration'] = round(microtime(true) - $duration, 3) . ' s';
+            $appliedFiles[$entryHash] = $file;
             $count++;
             $dbversion->insert($this->getInsertData($file, ZfExtended_Utils::getAppVersion()));
             unset($this->sqlFilesNew[$key]);
         }
         //we clean up all cache files after database update since DB definitions are cached
         Zend_Registry::get('cache')->clean();
-        $this->logErrors();
+        $this->logErrors($appliedFiles);
 
         return $count;
     }
@@ -342,20 +347,37 @@ class ZfExtended_Models_Installer_DbUpdater
     /**
      * Logs collected errors on importing / updating if any
      */
-    protected function logErrors()
+    protected function logErrors(array $appliedFiles = []): void
     {
         if (! empty($this->errors)) {
-            $this->log->error('E1294', 'Errors on calling database update - see details for more information.', $this->errors);
+            $this->log->error(
+                'E1294',
+                'Errors on calling database update - see details for more information.',
+                $this->errors
+            );
         }
         if (! empty($this->warnings)) {
-            $this->log->warn('E1294', 'Warnings on calling database update - see details for more information.', $this->warnings);
+            $this->log->warn(
+                'E1294',
+                'Warnings on calling database update - see details for more information.',
+                $this->warnings
+            );
+        }
+        if (! empty($appliedFiles)) {
+            $this->log->info(
+                'E1294',
+                'Applied {count} files to the database.',
+                [
+                    'count' => count($appliedFiles),
+                    'filesDuration' => $appliedFiles,
+                ]
+            );
         }
     }
 
     /**
      * executes the given SQL file
      *
-     * @return boolean
      * @throws Zend_Db_Exception
      * @throws Zend_Exception
      */
