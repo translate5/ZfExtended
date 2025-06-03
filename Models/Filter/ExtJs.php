@@ -86,23 +86,11 @@ class ZfExtended_Models_Filter_ExtJs extends ZfExtended_Models_Filter
             return;
         }
         $method = 'apply' . ucfirst($filter->type);
+
         //were assuming that all $methods are using the given field directly as
         //DB field name so we can merge the table alias as simple text
-        $field = $filter->field;
-        if (! empty($filter->table)) {
-            $field = '`' . $filter->table . '`.' . $field;
-        } elseif (! empty($this->defaultTable)) {
-            $field = '`' . $this->defaultTable . '`.' . $field;
-        } else {
-            $table = $this->getEntityTable();
-            $alias = null;
-            foreach ($this->select->getPart('from') as $_alias => $info) {
-                if ($table == $info['tableName']) {
-                    $alias = $_alias;
-                }
-            }
-            $field = '`' . ($alias ?? $table) . '`.' . $field;
-        }
+        $field = $this->getFullyQualifiedFieldname($filter, $filter->field);
+
         switch ($filter->type) {
             case 'orExpression':
                 $this->applyExpression($filter, true);
@@ -122,7 +110,7 @@ class ZfExtended_Models_Filter_ExtJs extends ZfExtended_Models_Filter
                 break;
             case 'percent':
                 $method = 'applyPercent_' . $filter->comparison;
-                $this->$method($field, $filter->value, $filter->totalField);
+                $this->$method($field, $filter->value, $this->getFullyQualifiedFieldname($filter, $filter->totalField));
 
                 break;
             case 'numeric':
@@ -423,5 +411,28 @@ class ZfExtended_Models_Filter_ExtJs extends ZfExtended_Models_Filter
         $this->applyListAsString($field, array_map(function ($item) {
             return ',' . $item . ',';
         }, $values));
+    }
+
+    /**
+     * @throws Zend_Db_Select_Exception
+     */
+    private function getFullyQualifiedFieldname(stdClass $filter, string $field): string
+    {
+        if (! empty($filter->table)) {
+            $field = '`' . $filter->table . '`.' . $field;
+        } elseif (! empty($this->defaultTable)) {
+            $field = '`' . $this->defaultTable . '`.' . $field;
+        } else {
+            $table = $this->getEntityTable();
+            $alias = null;
+            foreach ($this->select->getPart('from') as $_alias => $info) {
+                if ($table == $info['tableName']) {
+                    $alias = $_alias;
+                }
+            }
+            $field = '`' . ($alias ?? $table) . '`.' . $field;
+        }
+
+        return $field;
     }
 }
