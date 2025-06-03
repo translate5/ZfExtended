@@ -727,4 +727,36 @@ class ZfExtended_Utils
         // Trim leading and trailing whitespaces
         return trim($text);
     }
+
+    /**
+     * Renames an existing log-file to an older version - if there is one
+     * The naming-scheme is as: php.log, php-1.log, php-2.log, ... with -1 being the oldest
+     */
+    public static function versionExistingLogFile(string $filePath): bool
+    {
+        if (file_exists($filePath)) {
+            $extension = self::getFileExtension($filePath);
+            $pathNoExtension = substr($filePath, 0, -1 * (strlen($extension) + 1));
+            $count = 1;
+            while (file_exists($pathNoExtension . '-' . $count . '.' . $extension)) {
+                $count++;
+            }
+            rename($filePath, $pathNoExtension . '-' . $count . '.' . $extension);
+
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Writes a log-file
+     * The naming-scheme is as: php.log, php-1.log, php-2.log, ... with -1 being the oldest
+     */
+    public static function saveVersionedLogFile(string $filePath, string $logDdata): bool|int
+    {
+        self::versionExistingLogFile($filePath);
+
+        return file_put_contents($filePath, $logDdata);
+    }
 }
