@@ -731,6 +731,34 @@ final class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
     }
 
     /**
+     * Retrieves workers, that are either running or will run in the future for the given task and worker-classes
+     * @param string[] $workers
+     */
+    public function getPresentWorkerInfo(string $taskGuid, array $workers = []): array
+    {
+        $states = [
+            self::STATE_PREPARE,
+            self::STATE_SCHEDULED,
+            self::STATE_WAITING,
+            self::STATE_RUNNING,
+            self::STATE_DELAYED,
+        ];
+        $select = $this->db->select()
+            ->where('taskGuid = ?', $taskGuid)
+            ->where('state IN (?)', $states);
+        if (count($workers) > 0) {
+            $select->where('worker IN (?)', $workers);
+        }
+
+        $workers = [];
+        foreach ($this->db->fetchAll($select)->toArray() as $row) {
+            $workers[] = $row['worker'] . ' (' . $row['state'] . ') ' . ' (' . $row['taskGuid'] . ')';
+        }
+
+        return array_unique($workers);
+    }
+
+    /**
      * returns a summary of the workers states of the current workers group.
      *  grouped by state and worker
      *  Worker group means: same taskGuid, same parent worker.
