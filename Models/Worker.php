@@ -732,6 +732,10 @@ final class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
 
     /**
      * Retrieves infos about operations for a task
+     * These Infos hold the id of the operation starting worker and the state the whole operation is in
+     * and the starting-time of the operation (-1 if not yet started)
+     * If the operation is not yet started or is in progress, the state will be "waiting"
+     * This of course requires, the operation starting-worker is the parent of the others
      * @return array<int, array{ id: int, starttime: int, state: 'defunct'|'done'|'waiting' }>
      */
     public function getOperationInfo(string $taskGuid, string $startWorker, int $startWorkerId = -1): array
@@ -746,12 +750,13 @@ final class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
         foreach ($this->db->fetchAll($select)->toArray() as $row) {
             $operation = [];
             $operation['id'] = (int) $row['id'];
-            $operation['starttime'] = empty($row['starttime']) ? time() : strtotime($row['starttime']);
+            $operation['starttime'] = empty($row['starttime']) ? -1 : strtotime($row['starttime']);
             if ($row['state'] === self::STATE_DEFUNCT) {
                 $operation['state'] = self::STATE_DEFUNCT;
             } elseif ($row['state'] !== self::STATE_DONE) {
                 $operation['state'] = self::STATE_WAITING;
             } else {
+                // when the starting worker has worked the state will depend of the childs ...
                 $operation['state'] = self::STATE_DONE;
                 $select = $this->db->select()
                     ->where('taskGuid = ?', $taskGuid)
