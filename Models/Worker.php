@@ -731,31 +731,43 @@ final class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
     }
 
     /**
-     * Retrieves workers, that are either running or will run in the future for the given task and worker-classes
-     * @param string[] $workers
+     * Retrieves infos about operations for a task
+     * @return array<int, array{ id: int, starttime: int, state: 'defunct'|'done'|'waiting' }>
      */
-    public function getPresentWorkerInfo(string $taskGuid, array $workers = []): array
+    public function getOperationInfo(string $taskGuid, string $startWorker, int $startWorkerId = -1): array
     {
-        $states = [
-            self::STATE_PREPARE,
-            self::STATE_SCHEDULED,
-            self::STATE_WAITING,
-            self::STATE_RUNNING,
-            self::STATE_DELAYED,
-        ];
+        $operations = [];
         $select = $this->db->select()
             ->where('taskGuid = ?', $taskGuid)
-            ->where('state IN (?)', $states);
-        if (count($workers) > 0) {
-            $select->where('worker IN (?)', $workers);
+            ->where('worker = ?', $startWorker);
+        if ($startWorkerId > 0) {
+            $select->where('id = ?', $startWorkerId);
         }
-
-        $workers = [];
         foreach ($this->db->fetchAll($select)->toArray() as $row) {
-            $workers[] = $row['worker'] . ' (' . $row['state'] . ') ' . ' (' . $row['taskGuid'] . ')';
+            $operation = [];
+            $operation['id'] = (int) $row['id'];
+            $operation['starttime'] = empty($row['starttime']) ? time() : strtotime($row['starttime']);
+            if ($row['state'] === self::STATE_DEFUNCT) {
+                $operation['state'] = self::STATE_DEFUNCT;
+            } elseif ($row['state'] !== self::STATE_DONE) {
+                $operation['state'] = self::STATE_WAITING;
+            } else {
+                $operation['state'] = self::STATE_DONE;
+                $select = $this->db->select()
+                    ->where('taskGuid = ?', $taskGuid)
+                    ->where('parentId = ?', $row['id']);
+                foreach ($this->db->fetchAll($select)->toArray() as $childRow) {
+                    if ($childRow['state'] === self::STATE_DEFUNCT) {
+                        $operation['state'] = self::STATE_DEFUNCT;
+                    } elseif ($childRow['state'] !== self::STATE_DONE && $operation['state'] !== self::STATE_DEFUNCT) {
+                        $operation['state'] = self::STATE_WAITING;
+                    }
+                }
+            }
+            $operations[] = $operation;
         }
 
-        return array_unique($workers);
+        return $operations;
     }
 
     /**
