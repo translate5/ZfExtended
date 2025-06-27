@@ -53,4 +53,9 @@ abstract class ZfExtended_DbConfig_Type_Abstract
      * returns true if the given value string is valid regarding the underlying defaults
      */
     abstract public function isValidInDefaults(editor_Models_Config $config, string $value): bool;
+
+    public static function getDefaultList(?string $dbValue): ?string
+    {
+        return $dbValue;
+    }
 }

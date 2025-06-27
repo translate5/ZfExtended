@@ -82,7 +82,14 @@ class ZfExtended_Models_Filter_ExtJs extends ZfExtended_Models_Filter
     {
         $this->initFilterData($filter);
         $this->checkField($filter);
-        if (! isset($filter->value) || is_array($filter->value) && empty($filter->value)) {
+        if (
+            // no filter value
+            ! isset($filter->value) ||
+            // array without elements
+            (is_array($filter->value) && empty($filter->value)) ||
+            // explicit comparisions without value
+            (in_array($filter->type, ['numeric', 'percent', 'date']) && $filter->value === '')
+        ) {
             return;
         }
         $method = 'apply' . ucfirst($filter->type);

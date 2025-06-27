@@ -22,7 +22,6 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
-use MittagQI\Translate5\Acl\Rights;
 use MittagQI\ZfExtended\Acl\SystemResource;
 use ZfExtended_Authentication as Auth;
 
@@ -200,11 +199,11 @@ class ZfExtended_SessionController extends ZfExtended_RestController
         $sessionId = $this->_getParam('id');
 
         $sessionTable = new ZfExtended_Models_Db_Session();
-        // longer as 30 (32) means that it is the internalSessionUniqId,
+        // prefixed with "internal-" means that it is the internalSessionUniqId,
         // and we delete the session by internalSessionUniqId then
         $this->acl = ZfExtended_Acl::getInstance();
         if ($this->isAllowed(SystemResource::ID, SystemResource::SESSION_DELETE_BY_INTERNAL_ID)
-            && strlen($sessionId) > 30) {
+            && str_starts_with($sessionId, 'internal-')) {
             $sessionTable->delete([
                 'internalSessionUniqId = ?' => $sessionId,
             ]);
@@ -217,7 +216,7 @@ class ZfExtended_SessionController extends ZfExtended_RestController
         ]);
     }
 
-    protected function log($msg)
+    protected function log($msg): void
     {
         if (ZfExtended_Debug::hasLevel('core', 'apiLogin')) {
             error_log($msg);
