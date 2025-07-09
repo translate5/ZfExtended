@@ -60,8 +60,7 @@ class ZfExtended_Logger_Summary
         $acl = ZfExtended_Acl::getInstance();
         $admins = $user->loadAllByRole($acl->getRolesWith(SystemResource::ID, SystemResource::SYSTEM_LOG_SUMMARY));
 
-        $mail = ZfExtended_Factory::get('ZfExtended_Mailer', ['utf8']);
-        /* @var $mail ZfExtended_Mailer */
+        $mail = new MittagQI\ZfExtended\Mailer(new MittagQI\ZfExtended\Mail\MailLogger(), 'utf8');
 
         $version = ZfExtended_Utils::getAppVersion();
 

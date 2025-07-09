@@ -41,7 +41,7 @@ class ZfExtended_TemplateBasedMail
     protected $view;
 
     /**
-     * @var ZfExtended_Mailer
+     * @var MittagQI\ZfExtended\Mailer
      */
     protected $mail;
 
@@ -107,7 +107,7 @@ class ZfExtended_TemplateBasedMail
      */
     public function setMail()
     {
-        $this->mail = new ZfExtended_Mailer('utf-8');
+        $this->mail = new MittagQI\ZfExtended\Mailer(new MittagQI\ZfExtended\Mail\MailLogger(), 'utf-8');
     }
 
     /**
@@ -504,13 +504,12 @@ class ZfExtended_TemplateBasedMail
     }
 
     /**
-     * @param string $template
-     * @return bool
      * @throws Zend_Exception
      */
     public function hasCustomTemplate(string $template): bool
     {
         $scriptsPath = APPLICATION_ROOT . '/client-specific/views/' . Zend_Registry::get('module') . '/scripts/mail/';
-        return file_exists($scriptsPath.$template);
+
+        return file_exists($scriptsPath . $template);
     }
 }

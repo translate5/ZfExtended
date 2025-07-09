@@ -22,31 +22,38 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
-class ZfExtended_Mailer extends Zend_Mail
+namespace MittagQI\ZfExtended;
+
+use MittagQI\ZfExtended\Mail\MailLogger;
+use Throwable;
+use Zend_Config;
+use Zend_Exception;
+use Zend_Mail;
+use Zend_Mail_Transport_Abstract;
+use Zend_Registry;
+use ZfExtended_Debug;
+use ZfExtended_Logger;
+
+class Mailer extends Zend_Mail
 {
     /**
      * disable sending E-Mails completly
-     * @var boolean
      */
-    protected static $sendingDisabled = false;
+    protected static bool $sendingDisabled = false;
 
-    /**
-     * @var Zend_Config
-     */
-    protected $config;
+    protected Zend_Config $config;
 
-    /**
-     * @var Throwable
-     */
-    protected $lastError = null;
+    protected ?Throwable $lastError = null;
 
     /**
      * Public constructor
      *
-     * @param  string $charset
+     * @throws Zend_Exception
      */
-    public function __construct($charset = null)
-    {
+    public function __construct(
+        private readonly MailLogger $mailLog,
+        string $charset = null
+    ) {
         $this->config = Zend_Registry::get('config');
         if (! self::$sendingDisabled) {
             self::$sendingDisabled = $this->config->runtimeOptions->sendMailDisabled;
@@ -59,21 +66,25 @@ class ZfExtended_Mailer extends Zend_Mail
      * set DefaultTransport or the internal mail function if no
      * default transport had been set.
      *
-     * @param  Zend_Mail_Transport_Abstract $transport
-     * @return ZfExtended_Mailer                    Provides fluent interface
+     * @param Zend_Mail_Transport_Abstract $transport
+     * @return self                    Provides fluent interface
+     * @throws Zend_Exception
      */
-    public function send($transport = null)
+    public function send($transport = null): self
     {
         if (self::$sendingDisabled) {
             if (ZfExtended_Debug::hasLevel('core', 'mailing')) {
-                error_log('translate5 disabled mail: ' . $this->getSubject() . ' <' . implode(',', $this->getRecipients()) . '>');
+                error_log('translate5 disabled mail: '
+                    . $this->getSubject() . ' <' . implode(',', $this->getRecipients()) . '>');
             }
+            $this->mailLog->logMail($this, 'DISABLED');
 
-            return null;
+            return $this;
         }
 
         try {
-            return parent::send($transport);
+            parent::send($transport);
+            $this->mailLog->logMail($this, 'SUCCESS');
         } catch (Throwable $e) {
             $this->lastError = $e;
             //disable mail sending, so it not end up in endles loop
@@ -85,9 +96,10 @@ class ZfExtended_Mailer extends Zend_Mail
             } else {
                 error_log($e);
             }
+            $this->mailLog->logMail($this, 'FAIL');
         }
 
-        return null;
+        return $this;
     }
 
     /**
