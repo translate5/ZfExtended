@@ -25,21 +25,27 @@ declare(strict_types=1);
 
 namespace MittagQI\ZfExtended\Worker;
 
+use MittagQI\ZfExtended\Logger\SimpleFileLogger;
 use ZfExtended_Models_Worker;
 
 class Logger
 {
+    public const LOG_NAME = 'worker.log';
+
     private static ?self $instance = null;
 
-    protected function __construct()
-    {
+    protected function __construct(
+        private readonly SimpleFileLogger $fileLogger
+    ) {
         // just beeing protected
     }
 
     public static function getInstance(): self
     {
         if (is_null(self::$instance)) {
-            self::$instance = new self();
+            self::$instance = new self(
+                new SimpleFileLogger(self::LOG_NAME)
+            );
         }
 
         return self::$instance;
@@ -47,7 +53,7 @@ class Logger
 
     public function log(ZfExtended_Models_Worker $worker, string $type, bool $full = false, string $event = ''): void
     {
-        $msg = $this->getTime() . ' ' . $type . ' ' . $worker->getId() . ' ' . $worker->getWorker();
+        $msg = $this->fileLogger->getTime() . ' ' . $type . ' ' . $worker->getId() . ' ' . $worker->getWorker();
 
         if ($full) {
             $msg .= ' data: ' . json_encode($worker->getDataObject());
@@ -65,7 +71,7 @@ class Logger
             $msg .= ' event: ' . $event;
         }
 
-        error_log($msg . PHP_EOL, 3, APPLICATION_DATA . '/logs/worker.log');
+        error_log($msg . PHP_EOL, 3, APPLICATION_DATA . '/logs/' . self::LOG_NAME);
     }
 
     public function logEvent(ZfExtended_Models_Worker $worker, string $event): void
@@ -75,11 +81,6 @@ class Logger
 
     public function logRaw(string $msg): void
     {
-        error_log($this->getTime() . ' ' . $msg . PHP_EOL, 3, APPLICATION_DATA . '/logs/worker.log');
-    }
-
-    private function getTime(): string
-    {
-        return (new \DateTime())->format('Y-m-d H:i:s.u P');
+        $this->fileLogger->log($msg);
     }
 }

@@ -1140,4 +1140,9 @@ class ZfExtended_Test_ApiHelper
 
         return $value;
     }
+
+    public function getTestConfig(): array
+    {
+        return self::$CONFIG;
+    }
 }

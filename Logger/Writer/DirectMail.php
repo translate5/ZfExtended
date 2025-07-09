@@ -44,7 +44,7 @@ class ZfExtended_Logger_Writer_DirectMail extends ZfExtended_Logger_Writer_Abstr
         $subject .= $event->message;
         $subject = substr($subject, 0, 254); //limited length of 254, the whole message is in the body
 
-        $mail = new ZfExtended_Mailer('utf-8');
+        $mail = new MittagQI\ZfExtended\Mailer(new MittagQI\ZfExtended\Mail\MailLogger(), 'utf-8');
         $mail->addTo($this->options['receiver']);
         $mail->setFrom($this->options['sender']);
 
