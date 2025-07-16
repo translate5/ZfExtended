@@ -168,9 +168,12 @@ class ZfExtended_Models_Installer_Maintenance
      */
     public function disable(): void
     {
-        Zend_Registry::get('logger')
-            ->cloneMe('system.maintenance')
-            ->info('E1549', 'End maintenance mode');
+        $conf = $this->getConfFromDb();
+        if (! empty($conf->startDate) || ! empty($conf->message)) {
+            Zend_Registry::get('logger')
+                ->cloneMe('system.maintenance')
+                ->info('E1549', 'End maintenance mode');
+        }
 
         $this->db->query(
             "UPDATE `Zf_configuration` SET `value` = null WHERE `name` = 'runtimeOptions.maintenance.startDate'"
