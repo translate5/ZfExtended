@@ -872,9 +872,9 @@ final class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
     }
 
     /**
-     * Check if export is running for given task and given export class
+     * Check if a worker is waiting, prepared, scheduled or running for given task and given worker
      */
-    public function isExportRunning(string $taskGuid, string $exportClass): bool
+    public function hasWaitingWorker(string $taskGuid, string $workerClass): bool
     {
         $s = $this->db->select()
             ->where('state IN(?)', [
@@ -885,7 +885,7 @@ final class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
                 self::STATE_PREPARE,
             ])
             ->where('taskGuid = ?', $taskGuid)
-            ->where('worker = ?', $exportClass);
+            ->where('worker = ?', $workerClass);
         $result = $this->db->fetchAll($s)->toArray();
 
         return empty($result) === false;

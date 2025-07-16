@@ -254,6 +254,33 @@ abstract class ZfExtended_Worker_Abstract
     }
 
     /**
+     * Queues a worker with an initial delay so the worker will run earliest in $delay seconds
+     * @param int $delay The wanted delay in seconds
+     * @param int $parentId optional, defaults to 0. Should contain the workerId of the parent worker.
+     * @return int returns the id of the newly created worker DB entry
+     * @throws Zend_Db_Statement_Exception
+     * @throws Zend_Exception
+     * @throws ZfExtended_Exception
+     * @throws ZfExtended_Models_Entity_Exceptions_IntegrityConstraint
+     * @throws ZfExtended_Models_Entity_Exceptions_IntegrityDuplicateKey
+     */
+    public function queueDelayed(int $delay, int $parentId = 0): int
+    {
+        $this->checkIsInitCalled();
+        $slot = $this->calculateSlot();
+        $this->saveWorkerModel(
+            $slot['resource'],
+            $slot['slot'],
+            $parentId,
+            $this->getMaxParallelProcesses(),
+            ZfExtended_Models_Worker::STATE_DELAYED,
+            $delay
+        );
+
+        return (int) $this->workerModel->getId();
+    }
+
+    /**
      * Checks if a duplicate for the worker that did not run yet exists in the worker-table
      * This expects the worker to be uniquely identified by the param(s) with the given name
      * If it does not exist, it will be queued and true returned, otherwise false
@@ -773,6 +800,7 @@ abstract class ZfExtended_Worker_Abstract
         int $parentId,
         int $maxParallel,
         string $state = null,
+        int $delay = 0
     ): void {
         $this->workerModel->setResource($resource);
         $this->workerModel->setSlot($slot);
@@ -780,6 +808,9 @@ abstract class ZfExtended_Worker_Abstract
         $this->workerModel->setMaxParallelProcesses($maxParallel);
         if (! is_null($state)) {
             $this->workerModel->setState($state);
+        }
+        if ($state === ZfExtended_Models_Worker::STATE_DELAYED && $delay > 0) {
+            $this->workerModel->setDelayedUntil(time() + $delay);
         }
         $this->workerModel->save();
         Logger::getInstance()->log($this->workerModel, 'queue', true);

@@ -244,6 +244,9 @@ class ZfExtended_TemplateBasedMail
             $this->addImagesIfExist();
             $this->mail->setBodyHtml($htmlbody, null, Zend_Mime::ENCODING_QUOTEDPRINTABLE);
         }
+        if (! empty($this->view->attachments)) {
+            $this->setAttachment((array) $this->view->attachments);
+        }
     }
 
     /**
