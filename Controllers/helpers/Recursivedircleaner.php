@@ -34,36 +34,17 @@ END LICENSE AND COPYRIGHT
  *
  */
 
+/**
+ * @deprecated FIXME DELETE CLASS ABOUT 09.2025
+ */
 class ZfExtended_Controller_Helper_Recursivedircleaner extends Zend_Controller_Action_Helper_Abstract
 {
     /**
-     * @param string $directory Pfad zum rekursiv mit allen Inhalten zu löschenden Verzeichnis
+     * @deprecated use ZfExtended_Utils::recursiveDelete instead
+     * @see ZfExtended_Utils::recursiveDelete
      */
     public function delete(string $directory)
     {
-        ZfExtended_Utils::recursiveDelete($directory);
-    }
-
-    /***
-     * Remove files older than the given timestamp
-     *
-     * @param string $directory
-     * @param int $olderThan
-     */
-    public function deleteOldFiles(string $directory, int $olderThan = null)
-    {
-        $iterator = new DirectoryIterator($directory);
-        foreach ($iterator as $fileInfo) {
-            if ($fileInfo->isDot()) {
-                continue;
-            }
-            if ($fileInfo->isDir()) {
-                $this->deleteOldFiles($directory . DIRECTORY_SEPARATOR . $fileInfo->getFilename(), $olderThan);
-            }
-
-            if ($fileInfo->isFile() && filemtime($fileInfo->getRealPath()) < $olderThan) {
-                unlink($fileInfo->getRealPath());
-            }
-        }
+        throw new \RuntimeException('DEPRECATED USE ZfExtended_Utils::recursiveDelete INSTEAD');
     }
 }

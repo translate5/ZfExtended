@@ -28,6 +28,9 @@ END LICENSE AND COPYRIGHT
  * @version 2.0
  *
  */
+
+use MittagQI\ZfExtended\Tools\RecursiveFileDeletion;
+
 /**
  * Defines some global functions.
  * Functions should be defines as public static function, so they can be calles as:
@@ -235,70 +238,12 @@ class ZfExtended_Utils
         bool $whitelistIsBlacklist = false,
         bool $doDeletePassedDirectory = true
     ): bool {
-        $iterator = new DirectoryIterator($directory);
-        $dirIsEmpty = true; // we need to know for deleting $directory
-        foreach ($iterator as $fileinfo) { /* @var DirectoryIterator $fileinfo */
-            if ($fileinfo->isDot()) {
-                continue;
-            }
-            if ($fileinfo->isDir()) {
-                if (! self::recursiveDelete(
-                    $directory . DIRECTORY_SEPARATOR . $fileinfo->getFilename(),
-                    $extensionWhitelist,
-                    $whitelistIsBlacklist,
-                    $doDeletePassedDirectory
-                )) {
-                    $dirIsEmpty = false;
-                }
-            } elseif (
-                $fileinfo->isFile() &&
-                static::recursiveDoDeleteExtension(
-                    $fileinfo->getExtension(),
-                    $extensionWhitelist,
-                    $whitelistIsBlacklist
-                )) {
-                try {
-                    unlink($directory . DIRECTORY_SEPARATOR . $fileinfo->getFilename());
-                } catch (Exception $e) {
-                    error_log(
-                        'ZfExtended_Utils::recursiveDelete: Could not delete file ' .
-                        $directory . DIRECTORY_SEPARATOR . $fileinfo->getFilename() . ': ' . $e->getMessage()
-                    );
-                    $dirIsEmpty = false;
-                }
-            } else {
-                $dirIsEmpty = false;
-            }
-        }
-        if ($extensionWhitelist === null && $dirIsEmpty && $doDeletePassedDirectory) {
-            //FIXME try catch ist nur eine übergangslösung!!!
-            try {
-                if (rmdir($directory)) {
-                    return true;
-                }
-            } catch (Exception $e) {
-                error_log(
-                    'ZfExtended_Utils::recursiveDelete: Could not delete file ' .
-                    $directory . DIRECTORY_SEPARATOR . ': ' . $e->getMessage()
-                );
-            }
-        }
-
-        return false;
-    }
-
-    /**
-     * Helper for ::recursiveDelete to evaluate the black/whitelist param
-     */
-    private static function recursiveDoDeleteExtension(string $extension, ?array $extensionWhitelist, bool $whitelistIsBlacklist): bool
-    {
-        if ($extensionWhitelist === null) {
-            return true;
-        } elseif ($whitelistIsBlacklist) {
-            return ! in_array($extension, $extensionWhitelist);
-        } else {
-            return in_array($extension, $extensionWhitelist);
-        }
+        return (new RecursiveFileDeletion())->recursiveDelete(
+            $directory,
+            $extensionWhitelist,
+            $whitelistIsBlacklist,
+            $doDeletePassedDirectory,
+        );
     }
 
     /**

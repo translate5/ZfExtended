@@ -22,6 +22,7 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
+use MittagQI\Translate5\Export\QueuedExportCleanUpService;
 use MittagQI\ZfExtended\Worker\Cleaner;
 use MittagQI\ZfExtended\Worker\Queue;
 use MittagQI\ZfExtended\Worker\Rescheduler;
@@ -31,6 +32,17 @@ use MittagQI\ZfExtended\Worker\Rescheduler;
  */
 class ZfExtended_Resource_GarbageCollector extends Zend_Application_Resource_ResourceAbstract
 {
+    /**
+     * @deprecated remove the feature switch after feature was rolled out and tested in the wild
+     */
+    private bool $exportCleanining;
+
+    public function __construct($options = null)
+    {
+        parent::__construct($options);
+        $this->exportCleanining = (bool) ($this->_options['featureSwitchExportCleaning'] ?? false);
+    }
+
     public function init()
     {
         // currently nothing to do
@@ -52,6 +64,8 @@ class ZfExtended_Resource_GarbageCollector extends Zend_Application_Resource_Res
 
         // cleanup chache (Zf_memcache)
         $this->cleanUpCache();
+
+        $this->cleanUpData();
 
         //trigger cleanup-event for module specific clean up
         $events = ZfExtended_Factory::get(ZfExtended_EventManager::class, [get_class($this)]);
@@ -92,5 +106,13 @@ class ZfExtended_Resource_GarbageCollector extends Zend_Application_Resource_Res
     {
         $cache = Zend_Cache::factory('Core', new ZfExtended_Cache_MySQLMemoryBackend());
         $cache->clean('old');
+    }
+
+    protected function cleanUpData(): void
+    {
+        if ($this->exportCleanining) {
+            $exportCleanUpService = new QueuedExportCleanUpService();
+            $exportCleanUpService->cleanUp();
+        }
     }
 }
