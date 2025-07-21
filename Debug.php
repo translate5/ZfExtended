@@ -228,4 +228,24 @@ class ZfExtended_Debug
             $applicationState->languagesource[] = $obj;
         }
     }
+
+    public static function xhprofEnable(): void
+    {
+        if (extension_loaded('tideways_xhprof')) {
+            tideways_xhprof_enable(); //XHPROF_FLAGS_CPU + XHPROF_FLAGS_MEMORY
+        }
+    }
+
+    public static function xhprofDisable(string $id): void
+    {
+        if (! extension_loaded('tideways_xhprof')) {
+            return;
+        }
+        $data = tideways_xhprof_disable();
+        $profDir = APPLICATION_DATA . '/profiling';
+        if (! file_exists($profDir)) {
+            mkdir($profDir);
+        }
+        file_put_contents($profDir . '/' . $id . '.json', json_encode($data));
+    }
 }

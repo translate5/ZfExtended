@@ -128,6 +128,10 @@ abstract class ZfExtended_Worker_Abstract
     protected string $behaviourClass = ZfExtended_Worker_Behaviour_Default::class;
 
     protected bool $doDebug = false;
+    /**
+     * @var true
+     */
+    private bool $profilingStarted = false;
 
     public function __construct()
     {
@@ -506,8 +510,10 @@ abstract class ZfExtended_Worker_Abstract
                 'worker' => $this,
                 'taskGuid' => $this->taskGuid,
             ]);
+            $this->profilingStart();
             // do the actual work
             $result = $this->work();
+            $this->profilingEnd();
 
             if (! $this->setDone()) {
                 return false;
@@ -527,6 +533,28 @@ abstract class ZfExtended_Worker_Abstract
         $this->logWorkerUsage();
 
         return $result;
+    }
+
+    /**
+     * @throws Zend_Exception
+     */
+    private function profilingStart(): void
+    {
+        $config = Zend_Registry::get('config');
+        $workersToProfile = $config->debug?->profiling?->workers?->toArray() ?? [];
+        $taskGuidsToProfile = $config->debug?->profiling?->taskGuids?->toArray() ?? [];
+        if (in_array($this::class, $workersToProfile)
+            && (empty($taskGuidsToProfile) || in_array($this->taskGuid, $taskGuidsToProfile))) {
+            ZfExtended_Debug::xhprofEnable();
+            $this->profilingStarted = true;
+        }
+    }
+
+    private function profilingEnd(): void
+    {
+        if ($this->profilingStarted) {
+            ZfExtended_Debug::xhprofDisable(str_replace("\\", '-', $this::class) . '-' . $this->workerModel->getId());
+        }
     }
 
     /**
