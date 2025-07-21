@@ -128,9 +128,7 @@ abstract class ZfExtended_Worker_Abstract
     protected string $behaviourClass = ZfExtended_Worker_Behaviour_Default::class;
 
     protected bool $doDebug = false;
-    /**
-     * @var true
-     */
+
     private bool $profilingStarted = false;
 
     public function __construct()
@@ -543,8 +541,10 @@ abstract class ZfExtended_Worker_Abstract
         $config = Zend_Registry::get('config');
         $workersToProfile = $config->debug?->profiling?->workers?->toArray() ?? [];
         $taskGuidsToProfile = $config->debug?->profiling?->taskGuids?->toArray() ?? [];
+
         if (in_array($this::class, $workersToProfile)
-            && (empty($taskGuidsToProfile) || in_array($this->taskGuid, $taskGuidsToProfile))) {
+            && (empty($taskGuidsToProfile) || in_array($this->taskGuid, $taskGuidsToProfile))
+        ) {
             ZfExtended_Debug::xhprofEnable();
             $this->profilingStarted = true;
         }
