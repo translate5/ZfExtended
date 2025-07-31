@@ -53,7 +53,7 @@ class ZfExtended_Application extends Zend_Application
     public static function createWorkerUrl(string $path = null): string
     {
         $config = Zend_Registry::get('config');
-        $url = empty($config->runtimeOptions->worker->server) ? $config->runtimeOptions->server->protocol . $config->runtimeOptions->server->name : $config->runtimeOptions->worker->server;
+        $url = empty($config->runtimeOptions->server->internalURL) ? $config->runtimeOptions->server->protocol . $config->runtimeOptions->server->name : $config->runtimeOptions->server->internalURL;
 
         return ($path === null) ? $url : $url . '/' . ltrim($path, '/');
     }

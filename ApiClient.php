@@ -121,7 +121,7 @@ class ZfExtended_ApiClient extends Zend_Http_Client
     public static function getServerBaseURL(): string
     {
         $config = Zend_Registry::get('config');
-        $url = $config->runtimeOptions->worker->server;
+        $url = $config->runtimeOptions->server->internalURL;
         if (empty($url)) {
             return $config->runtimeOptions->server->protocol . $config->runtimeOptions->server->name;
         }

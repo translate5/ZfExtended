@@ -22,4 +22,4 @@
 -- */
 
 INSERT INTO `Zf_configuration` (`name`, `confirmed`, `module`, `category`, `value`, `default`, `defaults`, `type`, `description`) 
-VALUES ('runtimeOptions.worker.server', '1', 'app', 'worker', '', '', '', 'string', 'If empty defaults to "runtimeOptions.server.protocol" and "runtimeOptions.server.name". This config allows to access the local worker API through a different URL as the public one. Format of this configuration value: SCHEME://HOST:PORT');
+VALUES ('runtimeOptions.server.internalURL', '1', 'app', 'worker', '', '', '', 'string', 'If empty defaults to "runtimeOptions.server.protocol" and "runtimeOptions.server.name". This config allows to access the local worker API through a different URL as the public one. Format of this configuration value: SCHEME://HOST:PORT');
