@@ -44,6 +44,8 @@ class ZfExtended_DbConfig_Type_CoreTypes extends ZfExtended_DbConfig_Type_Abstra
 
     public const TYPE_MARKUP = 'markup';
 
+    public const TYPE_URL = 'url';
+
     public const TYPE_JSON = 'json';
 
     public const TYPE_REGEX = 'regex';
@@ -90,6 +92,7 @@ class ZfExtended_DbConfig_Type_CoreTypes extends ZfExtended_DbConfig_Type_Abstra
             self::TYPE_JSON,
             self::TYPE_MARKUP,
             self::TYPE_REGEX,
+            self::TYPE_URL,
             self::TYPE_XPATH => 'string',
             default => $type,
         };
@@ -191,6 +194,19 @@ class ZfExtended_DbConfig_Type_CoreTypes extends ZfExtended_DbConfig_Type_Abstra
 
                         return false;
                     }
+                }
+
+                return true;
+
+            case self::TYPE_URL:
+                if (strlen($newvalue) === 0) {
+                    return true;
+                }
+
+                if (! filter_var($newvalue, FILTER_VALIDATE_URL)) {
+                    $errorStr = "not a valid $type '$newvalue'";
+
+                    return false;
                 }
 
                 return true;
