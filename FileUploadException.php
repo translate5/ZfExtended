@@ -22,6 +22,19 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
+/**
+ * SECTION TO INCLUDE PROGRAMMATIC LOCALIZATION
+ * ============================================
+ * $translate->_('Es liegt kein Fehler vor, die Datei wurde erfolgreich hochgeladen.');
+ * $translate->_('Die hochgeladene Datei überschreitet die in der Anweisung upload_max_filesize in php.ini festgelegte Größe.');
+ * $translate->_('Die hochgeladene Datei überschreitet die in dem HTML Formular mittels der Anweisung MAX_FILE_SIZE angegebene maximale Dateigröße.');
+ * $translate->_('Die Datei wurde nur teilweise hochgeladen.');
+ * $translate->_('Es wurde keine Datei hochgeladen.');
+ * $translate->_('Fehlender temporärer Ordner.');
+ * $translate->_('Speichern der Datei auf die Festplatte ist fehlgeschlagen.');
+ * $translate->_('Eine PHP Erweiterung hat den Upload der Datei gestoppt. PHP bietet keine Möglichkeit an, um festzustellen welche Erweiterung das Hochladen der Datei gestoppt hat. Überprüfung aller geladenen Erweiterungen mittels phpinfo() könnte helfen.');
+ */
+
 class ZfExtended_FileUploadException extends ZfExtended_UnprocessableEntity
 {
     //Since such errors are mainly intresting for the uploading user, we just log it as debug

@@ -23,6 +23,22 @@ END LICENSE AND COPYRIGHT
 */
 
 /**
+ * SECTION TO INCLUDE PROGRAMMATIC LOCALIZATION
+ * ============================================
+ * hint: translation happens in ZfExtended_Models_Filter_ExtJs6
+ * $translate->_('like');
+ * $translate->_('notInList');
+ * $translate->_('in');
+ * $translate->_('eq');
+ * $translate->_(gt);
+ * $translate->_('gteq');
+ * $translate->_('lt');
+ * $translate->_('lteq');
+ * $translate->_('=');
+ * $translate->_('==');
+ */
+
+/**
  * converts the given Filter and Sort String from ExtJS to an object structure appliable to a Zend Select Object
  * @author Marc Mittag
  */
