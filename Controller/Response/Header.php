@@ -38,8 +38,13 @@ class Header
     /**
      * Sends the neccessary Headers to download a file
      */
-    public static function sendDownload(string $fileName = null, ?string $contentType = 'text/xml', ?string $cacheControl = 'no-cache', int $contentLength = -1, array $additionalHeaders = [])
-    {
+    public static function sendDownload(
+        string $fileName = null,
+        ?string $contentType = 'text/xml',
+        ?string $cacheControl = 'no-cache',
+        int $contentLength = -1,
+        array $additionalHeaders = [],
+    ): void {
         // CORS header
         Cors::sendResponseHeader();
         // base download headers
@@ -61,10 +66,33 @@ class Header
     }
 
     /**
+     * Sends the neccessary Headers to download a file-translation
+     */
+    public static function sendFileTranslation(string $fileName, ?string $contentType): void
+    {
+        self::sendDownload(
+            $fileName,
+            $contentType,
+            'no-cache',
+            -1,
+            [
+                'Content-Transfer-Encoding' => 'binary',
+                'Content-Description' => 'File Transfer',
+                'Expires' => '0',
+                'Pragma' => 'public',
+            ]
+        );
+    }
+
+    /**
      * Sends headers to pseudo-stream a video
      */
-    public static function pseudoStreamVideo(string $extension, string $httpStatus = null, string $contentRange = null, int $contentLength = -1)
-    {
+    public static function pseudoStreamVideo(
+        string $extension,
+        string $httpStatus = null,
+        string $contentRange = null,
+        int $contentLength = -1,
+    ): void {
         // CORS header
         Cors::sendResponseHeader();
         if ($httpStatus != null) {
