@@ -658,12 +658,14 @@ class ZfExtended_Test_ApiHelper
 
     /**
      * returns the content of the given filename in a given ZIP, in filename * and ? may be used. If it mathces multiple files the first one is returned.
+     * TODO FIXME: This should better be named "getFileDataFromZipPath"
      * @param string $pathToZip absolute file system path to zip file
      * @param string $pathToFileInZip relative path to file inside of zip (uses glob to evaluate * ? etc pp. returns the first file if matched multiple files!)
-     * @return false|string
+     * @param bool $getFileSize instead of the file-contents only the file-size is retrieved
+     * @return false|string|int
      * @throws Exception
      */
-    public function getFileContentFromZipPath(string $pathToZip, string $pathToFileInZip)
+    public function getFileContentFromZipPath(string $pathToZip, string $pathToFileInZip, bool $getFileSize = false)
     {
         $zip = new ZipArchive();
         $zip->open($pathToZip);
@@ -676,16 +678,16 @@ class ZfExtended_Test_ApiHelper
         $files = glob($dir . $pathToFileInZip, GLOB_NOCHECK);
         $file = reset($files);
         $this->test::assertFileExists($file);
-        $content = file_get_contents($file);
+        $content = $getFileSize ? filesize($file) : file_get_contents($file);
+        //delete the exported file, so the next call can recreate it
         $this->rmDir($dir);
 
-        //delete exported file, so that next call can recreate it
         return $content;
     }
 
     /**
-     * @return boolean false if directory did not exist
-     * @throws Exception if directory is a file
+     * @return boolean false if the directory did not exist
+     * @throws Exception if the directory is a file
      */
     public function rmDir(string $directory): bool
     {
