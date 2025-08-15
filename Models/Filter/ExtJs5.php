@@ -30,7 +30,7 @@ END LICENSE AND COPYRIGHT
  * $translate->_('notInList');
  * $translate->_('in');
  * $translate->_('eq');
- * $translate->_(gt);
+ * $translate->_('gt');
  * $translate->_('gteq');
  * $translate->_('lt');
  * $translate->_('lteq');
