@@ -49,7 +49,7 @@ da sie als Administrator eingetragen sind.<br />
     'header' => $this->header,
     'footer' => $this->footer,
     'maintenanceDate' => $this->maintenanceDate,
-    'additionalInfo' => empty($this->message) ? '' : $this->templateApply('Zusätzliche Informationen: {message}'."<br />\n<br />\n",['message' => $this->message]),
+    'additionalInfo' => empty($this->message) ? '' : $this->templateApply("Zusätzliche Informationen: {message}<br />\n<br />\n", ['message' => $this->message]),
 ]);
 
 $this->textbody = strip_tags($mail);
