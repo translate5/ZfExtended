@@ -24,8 +24,8 @@ END LICENSE AND COPYRIGHT
 
 use WilsonGlasser\Spout\Common\Entity\ColumnDimension;
 use WilsonGlasser\Spout\Writer\Common\Creator\Style\StyleBuilder;
-use WilsonGlasser\Spout\Writer\Common\Entity\Sheet;
 use WilsonGlasser\Spout\Writer\Common\Creator\WriterEntityFactory;
+use WilsonGlasser\Spout\Writer\Common\Entity\Sheet;
 use WilsonGlasser\Spout\Writer\XLSX\Writer as XLSXWriter;
 
 class ZfExtended_Models_Entity_ExcelExportSpout extends ZfExtended_Models_Entity_ExcelExport
@@ -64,6 +64,7 @@ class ZfExtended_Models_Entity_ExcelExportSpout extends ZfExtended_Models_Entity
         foreach ($this->writer->getSheets() as $sheet) {
             if ($sheet->getName() === $sheetName) {
                 $this->writer->setCurrentSheet($sheet);
+
                 return $sheet;
             }
         }
@@ -97,13 +98,11 @@ class ZfExtended_Models_Entity_ExcelExportSpout extends ZfExtended_Models_Entity
 
         // Write data
         foreach ($data as $item) {
-
             // Init new row
             $row = WriterEntityFactory::createRow();
 
             // Foreach data field
             foreach ($item as $field => $value) {
-
                 // Skip if hidden
                 if ($this->isHiddenField($field)) {
                     continue;
@@ -147,7 +146,6 @@ class ZfExtended_Models_Entity_ExcelExportSpout extends ZfExtended_Models_Entity
 
         // Foreach heading field
         foreach ($headingFields as $headingField) {
-
             // Skip if hidden
             if ($this->isHiddenField($headingField)) {
                 continue;
