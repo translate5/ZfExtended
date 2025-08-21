@@ -22,18 +22,6 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
-/**#@+
- * @author Marc Mittag
- * @package ZfExtended
- * @version 2.0
- *
- */
-/**
- * Klasse zur Initialisierung aller Formulare
- *
- * - liest Form aus ini ein entsprechend der Konvention "controllerAction" des aufrufenden Controllers und der aufrufenden Action
- * - Kinder können auch zur Datenvalidierung im Modell herangezogen werden
- */
 class ZfExtended_Zendoverwrites_Translate extends Zend_Translate
 {
     protected static $_instance = null;
@@ -86,11 +74,6 @@ class ZfExtended_Zendoverwrites_Translate extends Zend_Translate
     protected $targetLang;
 
     /**
-     * @var string
-     */
-    protected $logPath;
-
-    /**
      * @var array
      */
     protected $translationPaths;
@@ -111,9 +94,13 @@ class ZfExtended_Zendoverwrites_Translate extends Zend_Translate
 
         //this is to have a translation adapter set if an error occurs inside translation
         //process before translation adapter is set - but errorcontroller needs one
-        parent::__construct('Zend_Translate_Adapter_Array', [
-            '' => '',
-        ], 'en');
+        parent::__construct(
+            'Zend_Translate_Adapter_Array',
+            [
+                '' => '',
+            ],
+            'en'
+        );
 
         //store translation instance only in registry if no targetLang is given and its therefore the default instance
         if (empty($targetLang)) {
@@ -121,7 +108,6 @@ class ZfExtended_Zendoverwrites_Translate extends Zend_Translate
         }
         $this->setSourceLang();
         $this->setTargetLang($targetLang);
-        $this->getLogPath();
 
         $config = [
             'adapter' => 'ZfExtended_Zendoverwrites_Translate_Adapter_Xliff',
@@ -129,17 +115,13 @@ class ZfExtended_Zendoverwrites_Translate extends Zend_Translate
             'locale' => $this->sourceLang,
             'disableNotices' => true,
             'logUntranslated' => true,
-            'logMessage' => '<trans-unit id=\'%id%\'>' .
-                '<source>%message%</source>' .
-                '<target>%message%</target>' .
-                '</trans-unit>',
+            'logMessage' => 'Localization: translation missing for id: %id%, string: %message%',
             'useId' => true,
         ];
 
         if (ZfExtended_Utils::isDevelopment()) {
             $writer = new Zend_Log_Writer_Stream($this->getLogPath());
-            $formatter = new Zend_Log_Formatter_Simple('%message%' . PHP_EOL);
-            $writer->setFormatter($formatter);
+            $writer->setFormatter(new Zend_Log_Formatter_Simple('%message%' . PHP_EOL));
             $config['log'] = new Zend_Log($writer);
         } else {
             //cache translations in production
@@ -184,21 +166,23 @@ class ZfExtended_Zendoverwrites_Translate extends Zend_Translate
 
     public function getXliffStartString()
     {
-        return '<?xml version="1.0" ?>
-<xliff version=\'1.1\' xmlns=\'urn:oasis:names:tc:xliff:document:1.1\'>
-<!-- the transunit-ID should contain the base64-encoded source-string als used in the php source-code. This ID is used for matching. -->
-<!-- html-tags inside the target-string must not be encoded as they should regarding xliff but should be left as plain hmtl. At this stage ZfExtended does not support xliff inline tags -->
- <file original=\'php-sourcecode\' source-language=\'' . $this->getSourceLang() .
-                '\' target-language=\'' . $this->getTargetLang() . '\' datatype=\'php\' xml:space=\'preserve\'>
-  <body>';
+        return '<?xml version="1.0" ?>' . "\n" .
+            '<xliff version="1.1" xmlns="urn:oasis:names:tc:xliff:document:1.1">' . "\n" .
+            '    <!-- the transunit-ID should contain the base64-encoded source-string als used in the php source-code.' .
+            ' This ID is used for matching. -->' . "\n" .
+            '    <!-- html-tags inside the target-string must not be encoded as they should regarding xliff but should' .
+            ' be left as plain hmtl. At this stage ZfExtended does not support xliff inline tags -->' . "\n" .
+            '    <file original="php-sourcecode" source-language="' . $this->getSourceLang() . '" target-language="' .
+            $this->getTargetLang() . '" datatype="php" xml:space="preserve">' . "\n" .
+            '        <body>';
     }
 
     public function getXliffEndString()
     {
-        return "
-  </body>
- </file>
-</xliff>";
+        return "\n" .
+            "        </body>\n" .
+            "    </file>\n" .
+            "</xliff>";
     }
 
     /**
@@ -325,12 +309,7 @@ class ZfExtended_Zendoverwrites_Translate extends Zend_Translate
      */
     public function getLogPath()
     {
-        if (empty($this->logPath)) {
-            $this->logPath = $this->config->runtimeOptions->dir->logs . '/notFoundTranslation-' .
-        APPLICATION_MODULE . '-' . $this->sourceLang . '-' . $this->getTargetLang() . '.xliff';
-        }
-
-        return $this->logPath;
+        return APPLICATION_DATA . '/logs/l10n.log';
     }
 
     /**
@@ -375,9 +354,12 @@ class ZfExtended_Zendoverwrites_Translate extends Zend_Translate
             $s = json_encode($s, JSON_HEX_APOS);
             $length = strlen($s);
             if ($s[0] == '"' && $s[$length - 1] == '"') {
-                $s = substr($s, 1, -1); //we do not use trim here, because then a second trailing quote would be removed also
+                //we do not use trim here, because then a second trailing quote would be removed also
+                $s = substr($s, 1, -1);
             } else {
-                throw new Zend_Exception('Beginning and trailing Quotes of jsonEncode could not be removed properly.');
+                throw new Zend_Exception(
+                    'Beginning and trailing Quotes of jsonEncode could not be removed properly.'
+                );
             }
         }
 

@@ -29,6 +29,7 @@ END LICENSE AND COPYRIGHT
  *
  */
 /**
+ * TODO l10n: is this still in use/neccessary ???
  * Erstellt eine vernünftige xliff-Datei aus den notFoundTranslations
  */
 class ZfExtended_Controllers_Plugins_ParseXliff extends Zend_Controller_Plugin_Abstract

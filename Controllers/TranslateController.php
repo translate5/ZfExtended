@@ -23,6 +23,7 @@ END LICENSE AND COPYRIGHT
 */
 
 /**
+ * TODO l10n: is this still in use/neccessary ???
  * manuall helper methods for the translation process - not intended to use in programmatic routines
  */
 
