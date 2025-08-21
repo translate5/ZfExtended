@@ -115,7 +115,7 @@ class ZfExtended_Zendoverwrites_Translate extends Zend_Translate
             'locale' => $this->sourceLang,
             'disableNotices' => true,
             'logUntranslated' => true,
-            'logMessage' => 'Localization: translation missing for id: %id%, string: %message%',
+            'logMessage' => 'Localization: translation missing for id: "%id%", string: "%message%"',
             'useId' => true,
         ];
 
