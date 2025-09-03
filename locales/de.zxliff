@@ -1,0 +1,54 @@
+<?xml version="1.0" ?>
+<xliff version='1.1' xmlns='urn:oasis:names:tc:xliff:document:1.1'>
+<!-- the transunit-ID should contain the base64-encoded source-string als used in the php source-code. This ID is used for matching. -->
+<!-- html-tags inside the target-string must not be encoded as they should regarding xliff but should be left as plain hmtl. At this stage ZfExtended does not support xliff inline tags -->
+ <file original='php-sourcecode' source-language='de' target-language='de' datatype='php'>
+  <body>
+      <trans-unit id="R2VuZXJhbE1ldGF0YWdUaXRsZVN1ZmZpeA=="><source>GeneralMetatagTitleSuffix</source><target>translate5</target></trans-unit>
+      <trans-unit id='QW5tZWxkdW5nIG1pdCBTaW5nbGUgU2lnbiBPbiBzY2hsdWcgZmVobCwgYml0dGUgdmVyc3VjaGVuIFNpZSBlcyBlcm5ldXQu'><source>Anmeldung mit Single Sign On schlug fehl, bitte versuchen Sie es erneut.</source><target>Anmeldung mit Single Sign On schlug fehl, bitte versuchen Sie es erneut.</target></trans-unit>
+      <trans-unit id='e2FwcE5hbWV9IC0gQW5rw7xuZGlndW5nIFNlcnZlciBXYXJ0dW5n'><source>{appName} - Ankündigung Server Wartung</source><target>{appName} - Ankündigung Server Wartung</target></trans-unit>
+<trans-unit id='WnVzw6R0emxpY2hlIEluZm9ybWF0aW9uZW46IHttZXNzYWdlfTxiciAvPgo8YnIgLz4K'><source>Zusätzliche Informationen: {message}<br />
+<br />
+</source><target>Zusätzliche Informationen: {message}<br />
+<br />
+</target></trans-unit>
+<trans-unit id='e2hlYWRlcn0KQXVmZ3J1bmQgdm9uIFdhcnR1bmdzbWHDn25haG1lbiB3aXJkIHthcHBOYW1lfSBhdWYge3BvcnRhbFVybH08YnIgLz4KZsO8ciBrdXJ6ZSBaZWl0IG5pY2h0IGVycmVpY2hiYXIgc2Vpbi48YnIgLz4KPGJyIC8+CkRpZSBXYXJ0dW5nIGlzdCBnZXBsYW50IGbDvHI6IHttYWludGVuYW5jZURhdGV9LjxiciAvPgp7YWRkaXRpb25hbEluZm99RGllIGdlbmF1ZSBVaHJ6ZWl0IGRlciBXYXJ0dW5nIHdpcmQgaW4gZGVyIEFud2VuZHVuZyBzZWxic3QgYW5nZXplaWd0LCA8YnIgLz4KbWl0IGVpbmVtIHplaXRsaWNoZW4gVm9ybGF1ZiB2b24gZWluZXIgU3R1bmRlLjxiciAvPgo8YnIgLz4KV2lyIGJpdHRlbiB1bSBJaHIgVmVyc3TDpG5kbmlzLjxiciAvPgo8YnIgLz4KU2llIGVyaGFsdGVuIGRpZXNlIGF1dG9tYXRpc2NoIHZlcnNlbmRldGUgRS1NYWlsLApkYSBzaWUgYWxzIEFkbWluaXN0cmF0b3IgZWluZ2V0cmFnZW4gc2luZC48YnIgLz4Ke2Zvb3Rlcn0='><source>{header}
+Aufgrund von Wartungsmaßnahmen wird {appName} auf {portalUrl}<br />
+für kurze Zeit nicht erreichbar sein.<br />
+<br />
+Die Wartung ist geplant für: {maintenanceDate}.<br />
+{additionalInfo}Die genaue Uhrzeit der Wartung wird in der Anwendung selbst angezeigt, <br />
+mit einem zeitlichen Vorlauf von einer Stunde.<br />
+<br />
+Wir bitten um Ihr Verständnis.<br />
+<br />
+Sie erhalten diese automatisch versendete E-Mail,
+da sie als Administrator eingetragen sind.<br />
+{footer}</source><target>{header}
+Aufgrund von Wartungsmaßnahmen wird {appName} auf {portalUrl}<br />
+für kurze Zeit nicht erreichbar sein.<br />
+<br />
+Die Wartung ist geplant für: {maintenanceDate}.<br />
+{additionalInfo}Die genaue Uhrzeit der Wartung wird in der Anwendung selbst angezeigt, <br />
+mit einem zeitlichen Vorlauf von einer Stunde.<br />
+<br />
+Wir bitten um Ihr Verständnis.<br />
+<br />
+Sie erhalten diese automatisch versendete E-Mail,
+da sie als Administrator eingetragen sind.<br />
+{footer}</target></trans-unit>
+            <trans-unit id="V2lyIHNpbmQgPGJyLz5iYWxkIHdpZWRlciBkYSE=">
+              <source>Wir sind <br/>bald wieder da!</source>
+              <target>Wir sind <br/>bald wieder da!</target>
+            </trans-unit>
+            <trans-unit id="V2FydHVuZ3NhcmJlaXRlbiBzaW5kIGltIEdhbmdlLiA8YnIvPnthcHBOYW1lfSB3aXJkIG5hY2ggQWJzY2hsdXNzIGRlciBXYXJ0dW5nc2FyYmVpdGVuIHdpZWRlciB2ZXJmJiMyNTI7Z2JhciBzZWluLg==">
+              <source>Wartungsarbeiten sind im Gange. <br/>{appName} wird nach Abschluss der Wartungsarbeiten wieder verf&#252;gbar sein.</source>
+              <target>Wartungsarbeiten sind im Gange. <br/>{appName} wird nach Abschluss der Wartungsarbeiten wieder verf&#252;gbar sein.</target>
+            </trans-unit>
+            <trans-unit id="e2FwcE5hbWV9IGlzdCBpbiB3ZW5pZ2VuIE1pbnV0ZW4gd2llZGVyIG9ubGluZSE=">
+              <source>{appName} ist in wenigen Minuten wieder online!</source>
+              <target>{appName} ist in wenigen Minuten wieder online!</target>
+            </trans-unit>
+  </body>
+ </file>
+</xliff>

@@ -24,6 +24,19 @@ END LICENSE AND COPYRIGHT
 
 class ZfExtended_Zendoverwrites_Translate extends Zend_Translate
 {
+    /**
+     * The file-extension for the used translation-files
+     */
+    const FILE_EXTENSION = 'zxliff';
+
+    /**
+     * The file-extension preceided by "." for the used translation-files
+     */
+    const DOT_EXTENSION = '.zxliff';
+
+    /**
+     * @var ZfExtended_Zendoverwrites_Translate|null
+     */
     protected static $_instance = null;
 
     /**
@@ -111,7 +124,7 @@ class ZfExtended_Zendoverwrites_Translate extends Zend_Translate
 
         $config = [
             'adapter' => 'ZfExtended_Zendoverwrites_Translate_Adapter_Xliff',
-            'content' => $this->config->runtimeOptions->dir->locales . '/' . $this->sourceLang . '.xliff',
+            'content' => $this->config->runtimeOptions->dir->locales . '/' . $this->sourceLang . self::DOT_EXTENSION,
             'locale' => $this->sourceLang,
             'disableNotices' => true,
             'logUntranslated' => true,
@@ -148,7 +161,7 @@ class ZfExtended_Zendoverwrites_Translate extends Zend_Translate
         $xliffFiles = scandir($this->config->runtimeOptions->dir->locales);
         foreach ($xliffFiles as $key => &$file) {
             $pathinfo = pathinfo($file);
-            if (empty($pathinfo['extension']) || $pathinfo['extension'] !== 'xliff') {
+            if (empty($pathinfo['extension']) || $pathinfo['extension'] !== self::FILE_EXTENSION) {
                 continue;
             }
             $locale = preg_replace('"^.*-([a-zA-Z]{2,3})$"i', '\\1', $pathinfo['filename']);
@@ -162,27 +175,6 @@ class ZfExtended_Zendoverwrites_Translate extends Zend_Translate
         asort($locales, SORT_NATURAL);
 
         return $locales;
-    }
-
-    public function getXliffStartString()
-    {
-        return '<?xml version="1.0" ?>' . "\n" .
-            '<xliff version="1.1" xmlns="urn:oasis:names:tc:xliff:document:1.1">' . "\n" .
-            '    <!-- the transunit-ID should contain the base64-encoded source-string als used in the php source-code.' .
-            ' This ID is used for matching. -->' . "\n" .
-            '    <!-- html-tags inside the target-string must not be encoded as they should regarding xliff but should' .
-            ' be left as plain hmtl. At this stage ZfExtended does not support xliff inline tags -->' . "\n" .
-            '    <file original="php-sourcecode" source-language="' . $this->getSourceLang() . '" target-language="' .
-            $this->getTargetLang() . '" datatype="php" xml:space="preserve">' . "\n" .
-            '        <body>';
-    }
-
-    public function getXliffEndString()
-    {
-        return "\n" .
-            "        </body>\n" .
-            "    </file>\n" .
-            "</xliff>";
     }
 
     /**
@@ -251,7 +243,7 @@ class ZfExtended_Zendoverwrites_Translate extends Zend_Translate
         $dirs = $this->getTranslationDirectories();
 
         foreach ($dirs as $path) {
-            $path = $path . $this->getTargetLang() . '.xliff';
+            $path = $path . $this->getTargetLang() . self::DOT_EXTENSION;
             if (file_exists($path)) {
                 $this->translationPaths[] = $path;
             }

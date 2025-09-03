@@ -652,7 +652,9 @@ class ZfExtended_Utils
             foreach ($userPrefLangs as $testLocale) {
                 $testLocaleObj = new Zend_Locale($testLocale);
                 $testLang = $testLocaleObj->getLanguage();
-                if (file_exists($config->runtimeOptions->dir->locales . DIRECTORY_SEPARATOR . $testLang . '.xliff')) {
+                $localePath = $config->runtimeOptions->dir->locales . DIRECTORY_SEPARATOR . $testLang .
+                    ZfExtended_Zendoverwrites_Translate::DOT_EXTENSION;
+                if (file_exists($localePath)) {
                     return $testLang;
                 }
             }
