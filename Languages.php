@@ -486,7 +486,7 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract
     public function loadAllForDisplay(string $fieldKey = '', bool $onlyName = false): array
     {
         $translate = ZfExtended_Zendoverwrites_Translate::getInstance();
-        $langs = $this->loadFilterdCustom($this->db->select()->where('hidden=0'));
+        $langs = $this->loadAll();
         $result = [];
         foreach ($langs as $lang) {
             $name = $translate->_($lang['langName']);
