@@ -27,12 +27,12 @@ class ZfExtended_Zendoverwrites_Translate extends Zend_Translate
     /**
      * The file-extension for the used translation-files
      */
-    const FILE_EXTENSION = 'zxliff';
+    public const FILE_EXTENSION = 'zxliff';
 
     /**
      * The file-extension preceided by "." for the used translation-files
      */
-    const DOT_EXTENSION = '.zxliff';
+    public const DOT_EXTENSION = '.zxliff';
 
     /**
      * @var ZfExtended_Zendoverwrites_Translate|null
