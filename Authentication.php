@@ -139,6 +139,7 @@ final class ZfExtended_Authentication implements ZfExtended_AuthenticationInterf
      */
     public function createSecurePassword(string $plainPassword): string
     {
+        error_log($plainPassword);
         $secret = Zend_Registry::get('config')->runtimeOptions?->authentication?->secret ?? 'translate5';
 
         return $this->encryptPassword($plainPassword, $secret);
