@@ -49,6 +49,7 @@ END LICENSE AND COPYRIGHT
  * @method string getDefault()
  * @method string getDefaults()
  * @method string getType()
+ * @method string getLevel()
  * @method string getTypeClass()
  * @method string getDescription()
  * @method string getComment()
