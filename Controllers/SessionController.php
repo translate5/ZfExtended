@@ -110,11 +110,12 @@ class ZfExtended_SessionController extends ZfExtended_RestController
 
     /**
      * (non-PHPdoc)
-     * @see ZfExtended_RestController::postAction()
      * @return bool true if login was successful, false otherwise
      * @throws Zend_Db_Table_Exception
      * @throws Zend_Exception
-     * @throws ZfExtended_NoAccessException
+     * @throws ZfExtended_NoAccessException*@throws ReflectionException
+     * @throws ReflectionException
+     * @see ZfExtended_RestController::postAction()
      */
     public function postAction()
     {
@@ -146,8 +147,7 @@ class ZfExtended_SessionController extends ZfExtended_RestController
             return false;
         }
 
-        $invalidLoginCounter = ZfExtended_Factory::get('ZfExtended_Models_Invalidlogin', [$login]);
-        /* @var $invalidLoginCounter ZfExtended_Models_Invalidlogin */
+        $invalidLoginCounter = ZfExtended_Factory::get(ZfExtended_Models_Invalidlogin::class);
 
         $oldSessId = substr(Zend_Session::getId(), 0, 10);
         session_destroy();
@@ -166,13 +166,13 @@ class ZfExtended_SessionController extends ZfExtended_RestController
             $this->view->sessionToken = $sessionDb->updateAuthToken($this->view->sessionId, $userModel->getId());
 
             $this->log('User authentication by API successful for ' . $login);
-            $invalidLoginCounter->resetCounter();
+            $invalidLoginCounter->resetCounter($login);
             ZfExtended_Models_LoginLog::addSuccess($authentication, 'sessionapi' . '#' . $oldSessId . '#' . $newSessId);
 
             return true;
         }
         ZfExtended_Models_LoginLog::addFailed($login, 'sessionapi' . '#' . $oldSessId);
-        $invalidLoginCounter->increment();
+        $invalidLoginCounter->increment($login);
         //throwing a 403 on the authentication request means:
         //  hey guy you could not be authenticated with the given credentials!
         $this->log('User authentication by API failed for ' . $login);

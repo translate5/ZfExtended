@@ -97,10 +97,10 @@ class ZfExtended_Models_LoginLog extends ZfExtended_Models_Entity_Abstract
     /**
      * loads the login log from latest to oldest, amount limited to the limit parameter
      */
-    public function loadByUserGuid(string $userGuid, int $limit): array
+    public function loadByLogin(string $login, int $limit): array
     {
         $s = $this->db->select()
-            ->where('userGuid = ?', $userGuid)
+            ->where('login = ?', $login)
             ->order('id DESC')
             ->limit($limit);
 
