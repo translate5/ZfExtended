@@ -33,65 +33,64 @@ END LICENSE AND COPYRIGHT
  */
 class ZfExtended_Models_Invalidlogin extends ZfExtended_Models_Db_Invalidlogin
 {
-    /**
-     * @var string
-     */
-    protected $login;
+    private int $maximum;
 
     /**
-     * Invalidlogin wird mit dem betroffenen Login / E-Mail-Adresse initialisiert
+     * @throws Zend_Exception
      */
-    public function __construct(string $login, $maximum = 3)
+    public function __construct(?int $maximum = null)
     {
-        $this->login = $login;
-
         $config = Zend_Registry::get('config');
-        if ($maximum == 3 && isset($config->runtimeOptions->invalidLogin->maximum)) {
-            $maximum = $config->runtimeOptions->invalidLogin->maximum;
+        if ($maximum === null) {
+            $maximum = $config->runtimeOptions?->invalidLogin?->maximum ?? 3;
         }
-        $this->maximum = $maximum;
+        $this->maximum = (int) $maximum;
 
         parent::__construct();
-
-        $this->delete("created < '" . date('Y-m-d h:i:s', time() - 24 * 3600) . "'");
     }
 
     /**
-     * erhöht den Invalid Login Counter eines Logins / einer login um eins, gibt $this zurück
+     * increments the invalid logins of a login
      */
-    public function increment()
+    public function increment(string $login): void
     {
         $this->insert(
             [
-                'login' => $this->login,
+                'login' => $login,
             ]
         );
     }
 
-    /**
-     * setzt den Invalid Login Counter eines Logins / einer login zurück, gibt $this zurück
-     */
-    public function resetCounter()
+    public function resetCounter(string $login): void
     {
-        $where = $this->getAdapter()->quoteInto('login = ?', $this->login);
+        $where = $this->getAdapter()->quoteInto('login = ?', $login);
         $this->delete($where);
     }
 
     /**
-     * gibt zurück ob eine Login / eine login-Adresse die maximale Anzahl an falschen Logins erreicht hat.
-     * @return boolean
+     * @throws Zend_Db_Select_Exception
      */
-    public function hasMaximumInvalidations()
+    public function hasMaximumInvalidations(string $login): bool
     {
-        $row = $this->fetchRow($this->select([
-            'invalidlogins' => 'COUNT(*)',
-        ])
-            ->reset(Zend_Db_Select::COLUMNS)
-            ->columns([
+        //before max check, we clean older than a day:
+        $this->delete("created < '" . date('Y-m-d h:i:s', time() - 24 * 3600) . "'");
+
+        $row = $this->fetchRow(
+            $this->select([
                 'invalidlogins' => 'COUNT(*)',
             ])
-            ->where('login = ? and created > (NOW() - INTERVAL 1 DAY)', $this->login));
+                ->reset(Zend_Db_Select::COLUMNS)
+                ->columns([
+                    'invalidlogins' => 'COUNT(*)',
+                ])
+                ->where('login = ? and created > (NOW() - INTERVAL 1 DAY)', $login)
+        );
 
-        return ($row['invalidlogins'] >= $this->maximum);
+        return $row['invalidlogins'] >= $this->maximum;
+    }
+
+    public function loadInvalidLogins(string $login): array
+    {
+        return $this->fetchAll($this->select()->where('login = ?', $login))->toArray();
     }
 }

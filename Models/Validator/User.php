@@ -61,7 +61,7 @@ class ZfExtended_Models_Validator_User extends ZfExtended_Models_Validator_Abstr
         $this->setPasswdValidator();
         $this->addValidator('customers', 'stringLength', [
             'min' => 0,
-            'max' => 255,
+            'max' => 5000,
         ]);
 
         $this->addValidator('editable', 'boolean');
