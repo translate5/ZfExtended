@@ -123,8 +123,15 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
     /**
      * checks if login-request is valid and does corresponding handling
      * @return boolean
+     * @throws ReflectionException
+     * @throws Zend_Db_Statement_Exception
+     * @throws Zend_Db_Table_Exception
+     * @throws Zend_Exception
+     * @throws Zend_Form_Exception
+     * @throws ZfExtended_Models_Entity_Exceptions_IntegrityConstraint
+     * @throws ZfExtended_Models_Entity_Exceptions_IntegrityDuplicateKey
      */
-    protected function isValidLogin()
+    protected function isValidLogin(): bool
     {
         if (! $this->_form->isValid($this->_request->getParams())) {
             return false;
@@ -135,9 +142,8 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
         if ($passwd == '') {
             return false;
         }
-        $invalidLoginCounter = ZfExtended_Factory::get('ZfExtended_Models_Invalidlogin', [$login]);
-        /* @var $invalidLoginCounter ZfExtended_Models_Invalidlogin */
-        if ($this->hasMaximumInvalidations($invalidLoginCounter)) {
+        $invalidLoginCounter = ZfExtended_Factory::get(ZfExtended_Models_Invalidlogin::class);
+        if ($this->hasMaximumInvalidations($invalidLoginCounter, $login)) {
             return false;
         }
         if ($this->hasUserAlreadyASession($login)) {
@@ -146,7 +152,8 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
 
         $auth = Auth::getInstance();
         if ($auth->authenticate($login, $passwd)) {
-            $invalidLoginCounter->resetCounter(); // bei erfolgreichem login den counter zurücksetzen
+            //reset login counter on login success
+            $invalidLoginCounter->resetCounter($login);
 
             ZfExtended_Models_LoginLog::addSuccess($auth, 'plainlogin');
 
@@ -158,8 +165,8 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
             return true;
         }
         ZfExtended_Models_LoginLog::addFailed($login, "plainlogin");
-        $invalidLoginCounter->increment();
-        if ($this->hasMaximumInvalidations($invalidLoginCounter)) {
+        $invalidLoginCounter->increment($login);
+        if ($this->hasMaximumInvalidations($invalidLoginCounter, $login)) {
             return false;
         }
         $this->view->errors = true;
@@ -217,11 +224,17 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
     }
 
     /**
-     * @return boolean
+     * @throws ReflectionException
+     * @throws Zend_Db_Select_Exception
+     * @throws Zend_Db_Statement_Exception
+     * @throws Zend_Exception
+     * @throws ZfExtended_Models_Entity_Exceptions_IntegrityConstraint
+     * @throws ZfExtended_Models_Entity_Exceptions_IntegrityDuplicateKey
+     * @throws ZfExtended_ValidateException
      */
-    protected function hasMaximumInvalidations(ZfExtended_Models_Invalidlogin $invalidLogin)
+    protected function hasMaximumInvalidations(ZfExtended_Models_Invalidlogin $invalidLogin, string $login): bool
     {
-        if ($invalidLogin->hasMaximumInvalidations()) {
+        if ($invalidLogin->hasMaximumInvalidations($login)) {
             $passwdreset = ZfExtended_Factory::get('ZfExtended_Models_Passwdreset');
             /* @var $passwdreset ZfExtended_Models_Passwdreset */
             $passwdreset->reset($this->_form->getValue('login'), __FUNCTION__);
@@ -311,6 +324,7 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
      * @throws ZfExtended_Models_Entity_Exceptions_IntegrityConstraint
      * @throws ZfExtended_Models_Entity_Exceptions_IntegrityDuplicateKey
      * @throws ZfExtended_Models_Entity_NotFoundException
+     * @throws ReflectionException
      */
     public function passwdnewAction()
     {
@@ -345,15 +359,14 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
                 }
 
                 $user = ZfExtended_Factory::get(User::class);
-                $user->load($passwdreset->getUserId());
+                $user->load((int) $passwdreset->getUserId());
                 $pwd = trim($this->_form->getValue('passwd'));
                 $pwd = ZfExtended_Authentication::getInstance()->createSecurePassword($pwd);
                 $user->setPasswd($pwd);
                 $user->save();
 
-                $invalidLogin = ZfExtended_Factory::get('ZfExtended_Models_Invalidlogin', [$user->getLogin()]);
-                /* @var ZfExtended_Models_Invalidlogin $invalidLogin */
-                $invalidLogin->resetCounter();
+                $invalidLogin = ZfExtended_Factory::get(ZfExtended_Models_Invalidlogin::class);
+                $invalidLogin->resetCounter($user->getLogin());
 
                 $this->_form = new ZfExtended_Zendoverwrites_Form('loginIndex.ini');
                 $this->_form->setTranslator($this->_translate);
