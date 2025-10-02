@@ -164,10 +164,13 @@ class ZfExtended_BaseIndex
      * @throws Zend_Application_Exception
      * @throws Zend_Db_Statement_Exception
      */
-    public function startApplication(): void
+    public function startApplication(?callable $callable = null): void
     {
         try {
             $app = $this->initApplication();
+            if ($callable !== null) {
+                $callable($app);
+            }
             $app->bootstrap()->run();
         } catch (Zend_Db_Statement_Exception $e) {
             if (str_contains($e->getMessage(), 'SQLSTATE[HY000]: General error: 1021 Disk full')) {
