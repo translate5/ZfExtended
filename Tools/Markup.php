@@ -208,7 +208,7 @@ final class Markup
     }
 
     /**
-     * Escapes import text, where we do not now the standard of escaping (strict, non-strict, XML, HTML5, XHTML)
+     * Escapes import text, where we do not know the standard of escaping (strict, non-strict, XML, HTML5, XHTML)
      */
     public static function escapeImportText(?string $textWithoutTags): string
     {
