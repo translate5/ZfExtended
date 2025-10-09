@@ -427,7 +427,7 @@ final class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
      * @throws Zend_Exception
      * @throws ZfExtended_Models_Db_Exceptions_DeadLockHandler
      */
-    public function rescheduleDelayed(): void
+    public function rescheduleDelayed(): int
     {
         $sql =
             'UPDATE `Zf_worker` SET `state` = \'' . self::STATE_SCHEDULED . '\''
@@ -436,10 +436,12 @@ final class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
         $stmt = $this->retryOnDeadlock(function () use ($sql) {
             return $this->db->getAdapter()->query($sql);
         }, true);
-        /* @var Zend_Db_Statement_Interface $stmt */
+        /** @var Zend_Db_Statement_Interface $stmt */
         if (ZfExtended_Debug::hasLevel('core', 'Workers') && $stmt->rowCount() > 0) {
             error_log("WORKER RESCHEDULE: Rescheduled " . $stmt->rowCount() . ' delayed workers.');
         }
+
+        return $stmt->rowCount();
     }
 
     /**
@@ -891,6 +893,26 @@ final class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
         return empty($result) === false;
     }
 
+    /**
+     * Checks, if a parent worker has inner workers waiting, prepared, scheduled or running
+     * These inner workers need to have the given parent-id set, -> are direct descendants
+     */
+    public function hasWaitingChildWorker(int $parentId): bool
+    {
+        $s = $this->db->select()
+            ->where('state IN(?)', [
+                self::STATE_RUNNING,
+                self::STATE_WAITING,
+                self::STATE_SCHEDULED,
+                self::STATE_DELAYED,
+                self::STATE_PREPARE,
+            ])
+            ->where('parentId = ?', $parentId);
+        $result = $this->db->fetchAll($s)->toArray();
+
+        return empty($result) === false;
+    }
+
     public function getMaxLifetime(): string
     {
         return $this->maxLifetime;
@@ -959,6 +981,11 @@ final class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
     public function isDone(): bool
     {
         return $this->getState() === self::STATE_DONE;
+    }
+
+    public function isDelayed(): bool
+    {
+        return $this->getState() === self::STATE_DELAYED;
     }
 
     /**
