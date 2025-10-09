@@ -395,6 +395,7 @@ class ZfExtended_BaseIndex
         if (ZfExtended_Utils::requestAcceptsJson()) {
             die('{"success": false, "httpStatus": 500, "errorMessage": "<b>Fatal: Could not connect to the database!</b> <br>If you get this message in the Browser: try to reload the application. <br>See error log for details."}');
         }
+        define('BACKUP_RUNNING', file_exists(APPLICATION_DATA.'/backup.lock'));
         include('layouts/dbdown.phtml');
     }
 }
