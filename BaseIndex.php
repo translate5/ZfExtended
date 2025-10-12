@@ -164,10 +164,13 @@ class ZfExtended_BaseIndex
      * @throws Zend_Application_Exception
      * @throws Zend_Db_Statement_Exception
      */
-    public function startApplication(): void
+    public function startApplication(?callable $callable = null): void
     {
         try {
             $app = $this->initApplication();
+            if ($callable !== null) {
+                $callable($app);
+            }
             $app->bootstrap()->run();
         } catch (Zend_Db_Statement_Exception $e) {
             if (str_contains($e->getMessage(), 'SQLSTATE[HY000]: General error: 1021 Disk full')) {
@@ -392,6 +395,7 @@ class ZfExtended_BaseIndex
         if (ZfExtended_Utils::requestAcceptsJson()) {
             die('{"success": false, "httpStatus": 500, "errorMessage": "<b>Fatal: Could not connect to the database!</b> <br>If you get this message in the Browser: try to reload the application. <br>See error log for details."}');
         }
+        define('BACKUP_RUNNING', file_exists(APPLICATION_DATA.'/backup.lock'));
         include('layouts/dbdown.phtml');
     }
 }
