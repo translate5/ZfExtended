@@ -28,13 +28,13 @@ trait ZfExtended_Models_Db_DeadLockHandlerTrait
      * how often should the function be retried on a deadlock
      * @var integer
      */
-    protected $DEADLOCK_REPETITIONS = 3;
+    private const DEADLOCK_REPETITIONS = 10;
 
     /**
      * how long should we wait between the retries, in seconds
      * @var integer
      */
-    protected $DEADLOCK_SLEEP = 1;
+    protected const MAX_DEADLOCK_SLEEP = 20;
 
     /**
      * Executes the given function, and just do nothing if a DB DeadLock occurs
@@ -92,7 +92,7 @@ trait ZfExtended_Models_Db_DeadLockHandlerTrait
     public function retryOnDeadlock(callable $function, bool $reduceDeadlocks = false)
     {
         $e = null;
-        for ($i = 0; $i < $this->DEADLOCK_REPETITIONS; $i++) {
+        for ($i = 0; $i < self::DEADLOCK_REPETITIONS; $i++) {
             try {
                 if ($reduceDeadlocks) {
                     $this->reduceDeadlocks();
@@ -101,7 +101,7 @@ trait ZfExtended_Models_Db_DeadLockHandlerTrait
                 if ($i > 0 && ! empty($e)) {
                     $logger = Zend_Registry::get('logger')->cloneMe(ZfExtended_Models_Db_Exceptions_DeadLockHandler::DOMAIN);
                     /* @var $logger ZfExtended_Logger */
-                    $logger->debug('E1202', 'A transaction could be completed after {retries} retries after a DB deadlock.', [
+                    $logger->info('E1202', 'A transaction could be completed after {retries} retries after a DB deadlock.', [
                         'deadlock' => (string) $e,
                         'retries' => $i,
                     ]);
@@ -111,7 +111,8 @@ trait ZfExtended_Models_Db_DeadLockHandlerTrait
             } catch (Zend_Db_Statement_Exception $e) {
                 //hier schleife
                 $this->throwIfNotDeadLockException($e);
-                sleep($this->DEADLOCK_SLEEP);
+                // use random time to avoid that two processes collide again and again
+                sleep(rand(1, self::MAX_DEADLOCK_SLEEP));
             }
         }
 
