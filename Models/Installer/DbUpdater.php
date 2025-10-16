@@ -504,6 +504,24 @@ class ZfExtended_Models_Installer_DbUpdater
         ];
     }
 
+    public function deinstallPlugin(string $pluginName): array
+    {
+        $filefinder = ZfExtended_Factory::get(ZfExtended_Models_Installer_DbFileFinder::class);
+        $toProcess = $filefinder->findDeinstallFiles($pluginName);
+        $applied = $this->applyNew($toProcess);
+        $toProcessCount = count($toProcess);
+
+        if ($applied < $toProcessCount) {
+            $this->errors[] = 'There are remaining DB files to be processed!' . $applied . ' # ' . $toProcessCount;
+        }
+
+        return [
+            'new' => $toProcessCount,
+            'modified' => 0,
+            'newProcessed' => $applied,
+        ];
+    }
+
     /**
      * Not all environments can deal with all characters in the DB credentials.
      * This is checked here.
