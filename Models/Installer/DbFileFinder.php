@@ -261,7 +261,7 @@ class ZfExtended_Models_Installer_DbFileFinder
     /**
      * iterates through the contents of the given directory
      */
-    protected function iterateThroughDirectory(string $path, string $name): void
+    protected function iterateThroughDirectory(string $path, string $name, bool $deinstallOnly = false): void
     {
         foreach (new DirectoryIterator($path) as $fileInfo) {
             $filename = $fileInfo->getFilename();
@@ -274,9 +274,11 @@ class ZfExtended_Models_Installer_DbFileFinder
 
                 continue;
             }
-            if (str_starts_with($filename, 'deinstall_')) {
+            $isDeinstall = str_starts_with($filename, 'deinstall_');
+            if ($deinstallOnly && ! $isDeinstall || ! $deinstallOnly && $isDeinstall) {
                 continue;
             }
+
             if (! isset($this->toImport[$name])) {
                 $this->toImport[$name] = [];
             }
@@ -463,5 +465,35 @@ class ZfExtended_Models_Installer_DbFileFinder
         }
 
         return $r;
+    }
+
+    public function findDeinstallFiles(string $pluginName): array
+    {
+        $pluginManager = new ZfExtended_Plugin_Manager();
+        $plugins = $pluginManager->getAvailable();
+        foreach ($plugins as $name => $pluginCls) {
+            if (strtolower($pluginName) !== strtolower($name)) {
+                continue;
+            }
+
+            try {
+                $ref = new ReflectionClass($pluginCls);
+            } catch (ReflectionException) {
+                continue;
+            }
+
+            $singlePluginDbPath = dirname($ref->getFileName()) . '/database';
+            if (is_dir($singlePluginDbPath)) {
+                $this->iterateThroughDirectory($singlePluginDbPath, $name, true);
+                //if the database dir exists, but is empty, then nothing can be sorted
+                if (empty($this->toImport[$name])) {
+                    continue;
+                }
+                //sort the loaded files by name, this is the initial natural order
+                ksort($this->toImport[$name]);
+            }
+        }
+
+        return $this->flatten();
     }
 }
