@@ -227,7 +227,7 @@ class ExcelExport
         }
 
         if (array_key_exists($name, $this->callbacks)) {
-            return call_user_func($this->callbacks->$name, $value);
+            return call_user_func($this->callbacks[$name], $value);
         }
 
         return $value;
