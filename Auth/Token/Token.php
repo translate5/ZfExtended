@@ -53,14 +53,15 @@ class ZfExtended_Auth_Token_Token
             return;
         }
         $this->token = $tokenParts[1] ?? '';
-        // validate the site of the token
+        // validate the size of the token
         if (! preg_match('/[a-zA-Z0-9]{' . self::TOKEN_LENGTH . '}/', $this->token)) {
             $this->token = '';
             $this->prefix = null;
 
             return;
         }
-        $this->prefix = $tokenParts[0] ?? null;
+
+        $this->prefix = (int) $tokenParts[0];
     }
 
     /**
