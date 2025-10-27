@@ -101,7 +101,7 @@ trait ZfExtended_Models_Db_DeadLockHandlerTrait
                 if ($i > 0 && ! empty($e)) {
                     $logger = Zend_Registry::get('logger')->cloneMe(ZfExtended_Models_Db_Exceptions_DeadLockHandler::DOMAIN);
                     /* @var $logger ZfExtended_Logger */
-                    $logger->info('E1202', 'A transaction could be completed after {retries} retries after a DB deadlock.', [
+                    $logger->debug('E1202', 'A transaction could be completed after {retries} retries after a DB deadlock.', [
                         'deadlock' => (string) $e,
                         'retries' => $i,
                     ]);
