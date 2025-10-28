@@ -365,7 +365,6 @@ class ZfExtended_Zendoverwrites_Translate extends Zend_Translate
      * @uses Zend_Translate_Adapter::_
      * @param string $s: string to be translated
      * @param string $locale: language locale
-     * @throws Zend_Exception
      * @return string
      */
     public function _($s, $locale = null)
@@ -375,9 +374,8 @@ class ZfExtended_Zendoverwrites_Translate extends Zend_Translate
             $s = json_encode($s, JSON_HEX_APOS);
             $length = strlen($s);
             if ($s[0] == '"' && $s[$length - 1] == '"') {
-                $s = substr($s, 1, -1); //we do not use trim here, because then a second trailing quote would be removed also
-            } else {
-                throw new Zend_Exception('Beginning and trailing Quotes of jsonEncode could not be removed properly.');
+                //we do not use trim here, because then a second trailing quote would be removed also
+                $s = substr($s, 1, -1);
             }
         }
 
