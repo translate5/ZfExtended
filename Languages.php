@@ -241,27 +241,23 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract
     {
         $this->loadByLcid($lcid);
 
-        return $this->getId();
+        return (int) $this->getId();
     }
 
     /**
      * Gibt die interne Sprach ID (PK der Sprach Tabelle) zu einem Sprachkürzel nach RFC5646 zurück
-     * @param int $lang Sprachkürzel nach RFC5646, wie in Tabelle languages hinterlegt
-     * @return int id der gesuchten Sprache
      */
-    public function getLangIdByRfc5646($lang)
+    public function getLangIdByRfc5646(string $lang): int
     {
         $this->loadByRfc5646($lang);
 
-        return $this->getId();
+        return (int) $this->getId();
     }
 
     /**
      * Gibt die interne default Sublanguage zu einem Sprachkürzel nach RFC5646 zurück
-     * @param int $lang Sprachkürzel nach RFC5646, wie in Tabelle languages hinterlegt
-     * @return string sublanguage der gesuchten Sprache
      */
-    public function getSublanguageByRfc5646($lang)
+    public function getSublanguageByRfc5646(string $lang): string
     {
         $this->loadByRfc5646($lang);
 
