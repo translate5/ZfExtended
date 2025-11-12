@@ -116,7 +116,7 @@ class ZfExtended_Logger
      * Renders the extra-data into the message
      * @return string
      */
-    protected static function renderMessageExtra(string $message, array $extra = null)
+    public static function renderMessageExtra(string $message, array $extra = null)
     {
         if ($message === '' || empty($extra)) {
             return $message;
