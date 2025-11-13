@@ -78,7 +78,7 @@ class ExcelExport
     /**
      * Default format for currency fields
      */
-    protected string $defaultFieldTypeCurrency = NumberFormat::FORMAT_CURRENCY_EUR_INTEGER;
+    protected string $defaultFieldTypeCurrency = NumberFormat::FORMAT_CURRENCY_EUR;
 
     /**
      * Pre-calculate formulas
@@ -150,12 +150,16 @@ class ExcelExport
                     $tempSheet->setCellValue($colCount . 1, $this->getLabel($key));
                 }
 
-                // if fieldtype is defined for this field, set it.
-                if ($this->getFieldType($key) !== null) {
+                $fieldType = $this->getFieldType($key);
+                // if fieldtype is defined for this field, set it
+                if ($fieldType !== null) {
+                    if ($fieldType === NumberFormat::FORMAT_CURRENCY_EUR) {
+                        $value = (float) $value;
+                    }
                     $tempSheet
                         ->getStyle($colCount . ($rowCount + 1))
                         ->getNumberFormat()
-                        ->setFormatCode($this->getFieldType($key));
+                        ->setFormatCode($fieldType);
                 }
 
                 // set fields-value
