@@ -69,9 +69,11 @@ class FifoPipe
         if (! $enabled) {
             return;
         }
+        $umask = umask(0);
         if (! posix_mkfifo(self::FIFO_PATH, 0666) && ! file_exists(self::FIFO_PATH)) {
             error_log('Could not create temporary fifo file ' . self::FIFO_PATH);
         }
+        umask($umask);
 
         $this->lastActivity = time();
         $this->pipeResource = fopen(self::FIFO_PATH, 'r+');
