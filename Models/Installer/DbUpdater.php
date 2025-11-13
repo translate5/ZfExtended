@@ -609,4 +609,14 @@ class ZfExtended_Models_Installer_DbUpdater
 
         return count($tables->fetchAll()) === 0;
     }
+
+    /**
+     * To be used in PHP scripts to check, if updates/transformations,
+     * that potentially harm or disturb test-runs and are not needed for Empty DBs
+     * can be skipped
+     */
+    public function isTestOrInstallEnvironment(): bool
+    {
+        return (defined('DATABASE_RECREATION') && DATABASE_RECREATION);
+    }
 }
