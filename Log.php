@@ -84,7 +84,6 @@ class ZfExtended_Log extends ZfExtended_TemplateBasedMail
     }
 
     /**
-     * @param string message
      * @deprecated
      */
     public function logError(string $message, string $longMessage = null): void
@@ -178,7 +177,7 @@ class ZfExtended_Log extends ZfExtended_TemplateBasedMail
     {
         //for TRANSLATE-600 only:
         $this->setMail();
-        $this->setContent(substr($subject, 0, 120) . $this->getAffectedTaskGuid(), $subject . "\r\n\r\n" . (string) $message);
+        $this->setContent(substr($subject, 0, 120), $subject . "\r\n\r\n" . (string) $message);
         $receiver = $this->_config->resources->ZfExtended_Resource_Logger->writer->mail->receiver ?? $this->_config->resources->mail->defaultFrom->email;
         if ($receiver instanceof Zend_Config) {
             $receiver = $receiver->toArray();
@@ -190,22 +189,5 @@ class ZfExtended_Log extends ZfExtended_TemplateBasedMail
         } else {
             $this->send($receiver, $this->_config->resources->mail->defaultFrom->name);
         }
-    }
-
-    /**
-     * For a better debugging with a fast implementation we introduced TRANSLATE-600
-     * @return string
-     */
-    protected function getAffectedTaskGuid()
-    {
-        $prefix = ' taskGuid: ';
-        if (isset($_SESSION) && isset($_SESSION['Default']) && isset($_SESSION['Default']['taskGuid'])) {
-            return $prefix . $_SESSION['Default']['taskGuid'];
-        }
-        if (Zend_Registry::isRegistered('affected_taskGuid')) {
-            return $prefix . Zend_Registry::get('affected_taskGuid');
-        }
-
-        return '';
     }
 }
