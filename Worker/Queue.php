@@ -193,6 +193,14 @@ class Queue
                 //check if more queue calls are requested
                 $runWorkers = $this->fifoPipe->checkPipe() || $runWorkers;
             } catch (EmptyPipeException) {
+                try {
+                    if ($workerModel->rescheduleDelayed() > 0) {
+                        continue;
+                    }
+                } catch (Zend_Exception) {
+                    // in case of an error retry to schedule the workers
+                    continue;
+                }
                 if ($this->stopDispatching($workerModel)) {
                     break;
                 }
