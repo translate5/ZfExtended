@@ -126,9 +126,7 @@ class Queue
      */
     public function trigger(): void
     {
-        if (! $this->notifyRunning()) {
-            WorkerTriggerFactory::create()->triggerQueue();
-        }
+        WorkerTriggerFactory::create()->triggerQueue();
     }
 
     private function lockAcquire(): bool
