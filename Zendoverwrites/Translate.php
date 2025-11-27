@@ -221,12 +221,10 @@ class ZfExtended_Zendoverwrites_Translate extends Zend_Translate
     {
         $paths = $this->getTranslationPaths();
         foreach ($paths as $path) {
-            $this->addTranslation(
-                [
-                    'content' => $path,
-                    'locale' => $this->getTargetLang(),
-                ]
-            );
+            $this->addTranslation([
+                'content' => $path,
+                'locale' => $this->getTargetLang(),
+            ]);
         }
     }
 
@@ -272,7 +270,7 @@ class ZfExtended_Zendoverwrites_Translate extends Zend_Translate
         // add client-specific Translations
         $directories[] = APPLICATION_ROOT . '/client-specific/locales/';
 
-        return array_unique($directories);
+        return array_values(array_unique($directories));
     }
 
     /**
