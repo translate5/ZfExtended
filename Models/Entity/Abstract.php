@@ -731,9 +731,8 @@ abstract class ZfExtended_Models_Entity_Abstract
 
     /**
      * returns the internal configured filter
-     * @return ZfExtended_Models_Filter
      */
-    public function getFilter()
+    public function getFilter(): ?ZfExtended_Models_Filter
     {
         return $this->filter;
     }

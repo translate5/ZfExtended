@@ -21,96 +21,95 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 
 END LICENSE AND COPYRIGHT
 */
+declare(strict_types=1);
+
+namespace MittagQI\ZfExtended\Models\Entity;
 
 use MittagQI\ZfExtended\Controller\Response\Header;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+use PhpOffice\PhpSpreadsheet\Cell\StringValueBinder;
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Shared\Date;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class ZfExtended_Models_Entity_ExcelExport
+class ExcelExport
 {
-    /**
-     * @var PhpOffice\PhpSpreadsheet\Spreadsheet
-     */
-    protected $spreadsheet = false;
+    protected Spreadsheet $spreadsheet;
 
     /**
      * Container to hold document properties like filename etc. (properties->name->value)
-     * @var stdClass
      */
-    protected $properties = false;
+    protected string $fileName = 'NoName';
 
     /**
      * Container to hold fields that should not be shown in the excel
-     * @var stdClass
      */
-    protected $hiddenFields = false;
+    protected array $hiddenFields = [];
 
     /**
      * Container to hold lablenames (lablenames->label->translation)
-     * @var stdClass
      */
-    protected $labels = false;
+    protected array $labels = [];
 
     /**
      * Container to hold callback functions for manipulating field-content (callbacks->label->$closureFunction)
-     * @var stdClass
      */
-    protected $callbacks = [];
+    protected array $callbacks = [];
 
     /**
-     * Container to hold fieldType-Definitions (like \PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_DATE_YYYYMMDDSLASH)
-     * @var stdClass
+     * Container to hold fieldType-Definitions
+     * (like \PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_DATE_YYYYMMDDSLASH)
      */
-    protected $fieldTypes = false;
+    protected array $fieldTypes = [];
 
     /**
      * Default format for date fields
-     * @var string
      */
-    protected $_defaultFieldTypeDate = \PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_DATE_YYYYMMDD2;
+    protected string $defaultFieldTypeDate = NumberFormat::FORMAT_DATE_YYYYMMDD;
 
     /**
      * Default format for percent fields
-     * @var string
      */
-    protected $_defaultFieldTypePercent = '0.0%;[RED]-0.0%';
+    protected string $defaultFieldTypePercent = '0.0%;[RED]-0.0%';
 
     /**
      * Default format for currency fields
-     * @var string
      */
-    protected $_defaultFieldTypeCurrency = \PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_CURRENCY_EUR_SIMPLE;
+    protected string $defaultFieldTypeCurrency = NumberFormat::FORMAT_CURRENCY_EUR;
 
     /**
      * Pre-calculate formulas
-     * Forces PhpSpreadsheet to recalculate all formulae in a workbook when saving, so that the pre-calculated values are
+     * Forces PhpSpreadsheet to recalculate all formulae in a workbook on saving, so that the pre-calculated values are
      *    immediately available to MS Excel or other office spreadsheet viewer when opening the file
      *
      * @var boolean
      */
-    protected $_preCalculateFormulas = false;
+    protected bool $preCalculateFormulas = false;
 
     public function __construct()
     {
         $this->spreadsheet = new Spreadsheet();
 
-        $this->properties = new stdClass();
-        $this->properties->filename = 'ERP-Export';
+        $stringBinder = new StringValueBinder();
+        $stringBinder->setNumericConversion(false)
+            ->setBooleanConversion(false)
+            ->setNullConversion(false)
+            ->setFormulaConversion(true);
 
-        $this->hiddenFields = new stdClass();
-        $this->labels = new stdClass();
-        $this->callbacks = new stdClass();
-        $this->fieldTypes = new stdClass();
+        $this->spreadsheet->setValueBinder($stringBinder);
     }
 
     /**
      * set global document format settings
      */
-    public function initDefaultFormat()
+    public function initDefaultFormat(): void
     {
         $this->spreadsheet->getDefaultStyle()->getAlignment()
-            ->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_TOP)
-            ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT)
+            ->setVertical(Alignment::VERTICAL_TOP)
+            ->setHorizontal(Alignment::HORIZONTAL_LEFT)
             ->setWrapText(true);
         // @TODO: add some padding to all fields... but how??
     }
@@ -119,7 +118,7 @@ class ZfExtended_Models_Entity_ExcelExport
      * The callback is called before the file is sent for download and after all cells are initialized.
      * In the callback we can do cell resizing,change its value etc...
      */
-    public function simpleArrayToExcel(array $data, Closure $callback = null)
+    public function simpleArrayToExcel(array $data, callable $callback = null): void
     {
         //set spreadsheet cells data from the array
         $this->loadArrayData($data);
@@ -133,13 +132,13 @@ class ZfExtended_Models_Entity_ExcelExport
     /**
      * Loads the array data in the excel spreadsheet
      */
-    public function loadArrayData(array $data, int $activeSheetIndex = 0)
+    public function loadArrayData(array $data, int $activeSheetIndex = 0): void
     {
         $this->spreadsheet->setActiveSheetIndex($activeSheetIndex);
         $tempSheet = $this->spreadsheet->getActiveSheet();
         $rowCount = 1;
         foreach ($data as $row) {
-            $colCount = 1;
+            $colCount = 'A';
             foreach ($row as $key => $value) {
                 // don't show hidden fields
                 if ($this->isHiddenField($key)) {
@@ -148,16 +147,23 @@ class ZfExtended_Models_Entity_ExcelExport
 
                 // set labels in first row
                 if ($rowCount == 1) {
-                    $tempSheet->setCellValueByColumnAndRow($colCount, 1, $this->getLabel($key));
+                    $tempSheet->setCellValue($colCount . 1, $this->getLabel($key));
                 }
 
-                // if fieldtype is defined for this field, set it.
-                if ($this->getFieldType($key)) {
-                    $tempSheet->getStyleByColumnAndRow($colCount, $rowCount + 1)->getNumberFormat()->setFormatCode($this->getFieldType($key));
+                $fieldType = $this->getFieldType($key);
+                // if fieldtype is defined for this field, set it
+                if ($fieldType !== null) {
+                    if ($fieldType === NumberFormat::FORMAT_CURRENCY_EUR) {
+                        $value = (float) $value;
+                    }
+                    $tempSheet
+                        ->getStyle($colCount . ($rowCount + 1))
+                        ->getNumberFormat()
+                        ->setFormatCode($fieldType);
                 }
 
                 // set fields-value
-                $tempSheet->setCellValueByColumnAndRow($colCount, $rowCount + 1, $this->getCallback($key, $value));
+                $tempSheet->setCellValue($colCount . ($rowCount + 1), $this->getCallback($key, $value));
 
                 $colCount++;
             }
@@ -169,91 +175,63 @@ class ZfExtended_Models_Entity_ExcelExport
 
     /**
      * Set some properties used to generate the excel
-     * @param mixed $value
      */
-    public function setProperty(string $name, $value)
+    public function setFilename(string $filename): void
     {
-        $this->properties->$name = $value;
-    }
-
-    /**
-     * Get property with name $name used to generate the excel
-     * @return mixed
-     */
-    public function getProperty(string $name)
-    {
-        if (property_exists($this->properties, $name)) {
-            return $this->properties->$name;
-        }
-
-        return false;
+        $this->fileName = $filename;
     }
 
     /**
      * Adds a field to the list of hidden fields
      */
-    public function setHiddenField(string $name)
+    public function setHiddenField(string $name): void
     {
-        $this->hiddenFields->$name = true;
+        $this->hiddenFields[$name] = true;
     }
 
     /**
      * Checks if field is hidden
-     * @return boolean
      */
-    public function isHiddenField(string $name)
+    public function isHiddenField(string $name): bool
     {
-        if (property_exists($this->hiddenFields, $name)) {
-            return true;
-        }
-
-        return false;
+        return $this->hiddenFields[$name] ?? false;
     }
 
     /**
      * Set label used in the excelsheet to transform key of data[key] into a speaking label (or used for translation)
-     * @param string $label
      */
-    public function setLabel(string $name, $label)
+    public function setLabel(string $name, string $label): void
     {
-        $this->labels->$name = $label;
+        $this->labels[$name] = $label;
     }
 
     /**
      * Get label of $name
-     * @return string
      */
-    public function getLabel(string $name)
+    public function getLabel(string $name): string
     {
-        if (property_exists($this->labels, $name)) {
-            return $this->labels->$name;
-        }
-
-        return $name;
+        return $this->labels[$name] ?? $name;
     }
 
     /**
      * Set callback-function used in the excelsheet to manipulate the $value for a certain $key of data[$key] = $value
-     * @param Closure $function as closure function variable
      */
-    public function setCallback(string $name, $function)
+    public function setCallback(string $name, callable $function): void
     {
-        $this->callbacks->$name = $function;
+        $this->callbacks[$name] = $function;
     }
 
     /**
      * Get manipulated value of field $name
-     * @param mixed $value
-     * @return mixed
      */
-    public function getCallback(string $name, $value)
+    public function getCallback(string $name, mixed $value): mixed
     {
-        if (($value == 0 || empty($value)) && property_exists($this->fieldTypes, $name)) {
+        if (($value == 0 || empty($value)) && array_key_exists($name, $this->fieldTypes)) {
             return '';
         }
 
-        if (property_exists($this->callbacks, $name)) {
-            return call_user_func($this->callbacks->$name, $value);
+        if (array_key_exists($name, $this->callbacks)) {
+            return call_user_func($this->callbacks[$name], $value);
         }
 
         return $value;
@@ -261,22 +239,18 @@ class ZfExtended_Models_Entity_ExcelExport
 
     /**
      * Set fieldtype used in the excelsheet to format the output in excel
-     * @param string $fieldtype
      */
-    public function setFieldType(string $name, $fieldtype)
+    public function setFieldType(string $name, string $fieldtype): void
     {
-        $this->fieldTypes->$name = $fieldtype;
+        $this->fieldTypes[$name] = $fieldtype;
     }
 
     /**
      * Get fieldtype of field $name
-     * @return string
      */
-    public function getFieldType(string $name)
+    public function getFieldType(string $name): ?string
     {
-        if (property_exists($this->fieldTypes, $name)) {
-            return $this->fieldTypes->$name;
-        }
+        return $this->fieldTypes[$name] ?? null;
     }
 
     /**
@@ -287,20 +261,18 @@ class ZfExtended_Models_Entity_ExcelExport
     {
         // for date fields the following callback must be set
         $stringToDate = function ($date) {
-            return \PhpOffice\PhpSpreadsheet\Shared\Date::PHPToExcel($date);
+            return Date::PHPToExcel($date);
         };
 
         $this->setCallback($field, $stringToDate);
-        $this->setFieldType($field, $this->_defaultFieldTypeDate);
+        $this->setFieldType($field, $this->defaultFieldTypeDate);
     }
 
     /**
      * Set field to percent field format in excel output
      * Also sets a callback function to format field value as required
-     *
-     * @param string $field
      */
-    public function setFieldTypePercent($field)
+    public function setFieldTypePercent(string $field): void
     {
         // for date fields the following callback must be set
         $percentToPercent = function ($percent) {
@@ -308,45 +280,25 @@ class ZfExtended_Models_Entity_ExcelExport
         };
 
         $this->setCallback($field, $percentToPercent);
-        $this->setFieldType($field, $this->_defaultFieldTypePercent);
+        $this->setFieldType($field, $this->defaultFieldTypePercent);
     }
 
     /**
      * Set field to currency field format in excel output
-     *
-     * @param string $field
      */
-    public function setFieldTypeCurrency($field)
+    public function setFieldTypeCurrency(string $field): void
     {
-        $this->setFieldType($field, $this->_defaultFieldTypeCurrency);
-    }
-
-    /**
-     * Get Pre-Calculate Formulas flag
-     *     If this is true (the default), then the writer will recalculate all formulae in a workbook when saving,
-     *        so that the pre-calculated values are immediately available to MS Excel or other office spreadsheet
-     *        viewer when opening the file
-     *     If false, then formulae are not calculated on save. This is faster for saving in PhpSpreadsheet, but slower
-     *        when opening the resulting file in MS Excel, because Excel has to recalculate the formulae itself
-     *
-     * @return boolean
-     */
-    public function getPreCalculateFormulas()
-    {
-        return $this->_preCalculateFormulas;
+        $this->setFieldType($field, $this->defaultFieldTypeCurrency);
     }
 
     /**
      * Set Pre-Calculate Formulas
-     *		Set to true (the default) to advise the Writer to calculate all formulae on save
-     *		Set to false to prevent precalculation of formulae on save.
-     *
-     * @param bool $pValue	Pre-Calculate Formulas?
-     * @return ZfExtended_Models_Entity_ExcelExport
+     *   Set to true (the default) to advise the Writer to calculate all formulae on save
+     *   Set to false to prevent precalculation of formulae on save.
      */
-    public function setPreCalculateFormulas($pValue = true)
+    public function setPreCalculateFormulas(bool $pValue = true): self
     {
-        $this->_preCalculateFormulas = (bool) $pValue;
+        $this->preCalculateFormulas = $pValue;
 
         return $this;
     }
@@ -354,14 +306,14 @@ class ZfExtended_Models_Entity_ExcelExport
     /**
      * Redirect output to a client's web browser (Excel)
      */
-    public function sendDownload()
+    public function sendDownload(): void
     {
-        $fileName = $this->getProperty('filename') . date('-Y-m-d') . '.xlsx';
+        $fileName = $this->fileName . date('-Y-m-d') . '.xlsx';
 
         // XLSX Excel 2010 output
-        $objWriter = \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($this->spreadsheet, 'Xlsx');
+        $objWriter = IOFactory::createWriter($this->spreadsheet, 'Xlsx');
 
-        $objWriter->setPreCalculateFormulas($this->getPreCalculateFormulas());
+        $objWriter->setPreCalculateFormulas($this->preCalculateFormulas);
 
         Header::sendDownload(
             rawurlencode($fileName),
@@ -376,34 +328,30 @@ class ZfExtended_Models_Entity_ExcelExport
      * Save the current spreadsheet to the given path
      * @param string $path
      */
-    public function saveToDisc(string $path)
+    public function saveToDisc(string $path): void
     {
         // XLSX Excel 2010 output
-        $objWriter = \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($this->spreadsheet, 'Xlsx');
-        $objWriter->setPreCalculateFormulas($this->getPreCalculateFormulas());
+        $objWriter = IOFactory::createWriter($this->spreadsheet, 'Xlsx');
+        $objWriter->setPreCalculateFormulas($this->preCalculateFormulas);
         $objWriter->save($path);
     }
 
-    public function getSpreadsheet()
+    public function getSpreadsheet(): Spreadsheet
     {
         return $this->spreadsheet;
     }
 
-    public function getAllWorksheets()
+    public function getAllWorksheets(): array
     {
         return $this->spreadsheet->getAllSheets();
     }
 
     /**
      * Column index from string.
-     *
-     * @param string $pString eg 'A'
-     *
-     * @return int Column index (A = 1)
      */
-    public function columnIndexFromString($pString)
+    public function columnIndexFromString(string $charColumnIndex): int
     {
-        return Coordinate::columnIndexFromString($pString);
+        return Coordinate::columnIndexFromString($charColumnIndex);
     }
 
     /**
@@ -411,17 +359,16 @@ class ZfExtended_Models_Entity_ExcelExport
      */
     public function addWorksheet(string $sheetName, int $index): void
     {
-        $tempWorksheet = new \PhpOffice\PhpSpreadsheet\Worksheet\Worksheet($this->spreadsheet, $sheetName);
-        $tempWorksheet->getDefaultColumnDimension()->setAutoSize(true); // does not work propper in Libre-Office. With Microsoft-Office everything is OK.
+        $tempWorksheet = new Worksheet($this->spreadsheet, $sheetName);
+        // does not work propper in Libre-Office. With Microsoft-Office everything is OK.
+        $tempWorksheet->getDefaultColumnDimension()->setAutoSize(true);
         $this->spreadsheet->addSheet($tempWorksheet, $index);
     }
 
     /**
      * Returns the worksheet of the given name
-     * @param string $sheetName
-     * @return PhpOffice\PhpSpreadsheet\Worksheet\Worksheet
      */
-    public function getWorksheetByName($sheetName)
+    public function getWorksheetByName(string $sheetName): Worksheet
     {
         $this->spreadsheet->setActiveSheetIndexByName($sheetName);
 
@@ -432,16 +379,15 @@ class ZfExtended_Models_Entity_ExcelExport
      * Remove the worksheet of the given index
      * @param integer $index
      */
-    public function removeWorksheetByIndex(int $index)
+    public function removeWorksheetByIndex(int $index): void
     {
         $this->spreadsheet->removeSheetByIndex($index);
     }
 
     /***
      * Adjust the column size of each worksheet in given spredsheet
-     * @param PhpOffice\PhpSpreadsheet\Spreadsheet $sp
      */
-    public function autosizeColumns(PhpOffice\PhpSpreadsheet\Spreadsheet $sp)
+    public function autosizeColumns(Spreadsheet $sp): void
     {
         foreach ($sp->getWorksheetIterator() as $worksheet) {
             $sp->setActiveSheetIndex($sp->getIndex($worksheet));
@@ -450,7 +396,6 @@ class ZfExtended_Models_Entity_ExcelExport
             $cellIterator = $sheet->getRowIterator()->current()->getCellIterator();
             $cellIterator->setIterateOnlyExistingCells(true);
 
-            /** @var PHPExcel_Cell $cell */
             foreach ($cellIterator as $cell) {
                 $sheet->getColumnDimension($cell->getColumn())->setAutoSize(true);
             }
