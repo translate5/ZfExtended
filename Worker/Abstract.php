@@ -523,6 +523,9 @@ abstract class ZfExtended_Worker_Abstract
                 $workException->getWorkerName(),
                 $workException->getSingleDelay()
             );
+
+            //for delayed workers we have to explicitly re-trigger the queue
+            $this->wakeUpAndStartNextWorkers();
         } catch (Throwable $workException) {
             $this->catchedWorkException($workException);
             $result = false;
