@@ -33,7 +33,11 @@ class FifoPipe
 
     public const NOTIFICATION_FAILED = 2;
 
-    private const FIFO_PATH = APPLICATION_DATA . '/tmp/worker.fifo';
+    /**
+     * This generally needs to be in a path tot affected by being API-test environment or not
+     * API-tests have their own data dir "testdata" ...
+     */
+    private const FIFO_PATH = APPLICATION_ROOT . '/data/tmp/worker.fifo';
 
     /**
      * Waiting for new queue notifications in seconds
