@@ -34,8 +34,9 @@ class FifoPipe
     public const NOTIFICATION_FAILED = 2;
 
     /**
-     * This generally needs to be in a path tot affected by being API-test environment or not
-     * API-tests have their own data dir "testdata" ...
+     * This generally needs to be in a path not affected by the API-test environment
+     * API-tests have their own data-dir "testdata" and during a test usually not everything
+     * runs with "test" as environment ...
      */
     private const FIFO_PATH = APPLICATION_ROOT . '/data/tmp/worker.fifo';
 
