@@ -103,4 +103,14 @@ class ZfExtended_Models_Db_Session extends Zend_Db_Table_Abstract
 
         return $this->getAdapter()->fetchRow($s);
     }
+
+    public function findUserBySessionId(string $sessionId): ?int
+    {
+        $s = $this->select()
+            ->from($this->_name, 'userId')
+            ->where('session_id = ?', $sessionId);
+        $result = $this->getAdapter()->fetchRow($s);
+
+        return $result ? (int) $result['userId'] : null;
+    }
 }
