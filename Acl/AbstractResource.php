@@ -63,7 +63,7 @@ abstract class AbstractResource implements ResourceInterface
             $acl->id = $key;
             $acl->name = $val;
             $acl->resource = $this->getId();
-            $acl->description = $this->getDescription($acl, $refl, $factory);
+            $acl->description = $this->getDescription($acl, $refl);
             $result[] = $acl;
         }
 
