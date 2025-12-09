@@ -295,12 +295,13 @@ class ZfExtended_Models_Installer_DbUpdater
 
     /**
      * Checks the given DB-update files for unwanted or dangerous SQL
+     * @throws ZfExtended_Exception
      */
     public function checkNewFiles(): void
     {
         foreach ($this->sqlFilesNew as $file) {
             $checker = new DbUpdateFileCheck($file->absolutePath);
-            if (! $checker->check()) {
+            if ($checker->checkAndSanitize() === null) {
                 $this->errors[] = $checker->getError();
             }
         }
@@ -418,13 +419,12 @@ class ZfExtended_Models_Installer_DbUpdater
         $db = Zend_Db::factory($config->resources->db->adapter, $config->resources->db->params->toArray());
 
         $checker = new DbUpdateFileCheck($file);
-        if (! $checker->check()) {
+        $sql = $checker->checkAndSanitize();
+        if ($sql === null) {
             $this->errors[] = $checker->getError();
 
             return false;
         }
-
-        $sql = file_get_contents($file);
 
         try {
             $stmt = $db->prepare($sql);

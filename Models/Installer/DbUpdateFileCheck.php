@@ -42,7 +42,7 @@ class DbUpdateFileCheck
         return $this->error;
     }
 
-    public function check(): bool
+    public function checkAndSanitize(): ?string
     {
         $content = file_get_contents($this->absolutePath);
         if ($content === false) {
@@ -58,14 +58,14 @@ class DbUpdateFileCheck
             $this->error = 'The file ' . $this->absolutePath .
                 ' contains DEFINER= statements, they must be removed manually before!';
 
-            return false;
+            return null;
         }
         //prevent DELIMITER statements in the code (https://stackoverflow.com/a/5314879/1749200):
         if (str_contains($content, 'DELIMITER')) {
             $this->error = 'The file ' . $this->absolutePath . ' contains DELIMITER statements,' .
                 ' they must be removed since not needed and not usable by PHP based import!';
 
-            return false;
+            return null;
         }
         // prevent not explicitly named constraints
         $constraints = $this->findUnnamedConstraints($content);
@@ -73,10 +73,10 @@ class DbUpdateFileCheck
             $this->error = 'The file ' . $this->absolutePath . ' contains CONSTRAINTS that are not explicitly named.' .
                 ' These constrained must be named: "' . implode('", "', $constraints) . '"';
 
-            return false;
+            return null;
         }
 
-        return true;
+        return $content;
     }
 
     private function cleanSql(string $sql): string
