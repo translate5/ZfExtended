@@ -124,6 +124,11 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
         $saveHandler = new ZfExtended_Session_SaveHandler_DbTable($this->sessionConfig);
         Zend_Session::setSaveHandler($saveHandler);
 
+        if ($this->handleSidParameter()) {
+            // We need to process the request without a redirect. Here the session is set and started from request parameter
+            return;
+        }
+
         //makes a redirect if successfully
         $this->handleSessionToken();
 
@@ -212,6 +217,34 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
         //reload redirect to remove authToken from parameter
         //or doing this in access plugin because there are several helpers?
         $this->reload(); //making exit
+    }
+
+    /**
+     * Check if the session_id is passed as a request parameter. In case it is, validating it and if valid, start the session
+     * with the session id. One of the reasons is when using the logout on window close feature: in that case, the cookie
+     * is not passed to the backend because it is unset in the UI.
+     * @throws Zend_Session_Exception
+     */
+    private function handleSidParameter(): bool
+    {
+        $sid = $_REQUEST['sid'] ?? null;
+        if (empty($sid)) {
+            return false;
+        }
+
+        $sessionDb = new ZfExtended_Models_Db_Session();
+        $row = $sessionDb->fetchRow([
+            'session_id = ?' => $sid,
+        ]);
+
+        if (empty($row) || empty($row->session_id)) {
+            return false;
+        }
+
+        Zend_Session::setId($sid);
+        Zend_Session::start();
+
+        return true;
     }
 
     /**

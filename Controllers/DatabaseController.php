@@ -97,11 +97,11 @@ class DatabaseController extends ZfExtended_Controllers_Action
         $modified = $dbupdater->getModifiedFiles();
         $all = array_merge($new, $modified);
         foreach ($all as $file) {
-            if ($file['entryHash'] !== $hash) {
+            if ($file->entryHash !== $hash) {
                 continue;
             }
             echo '<pre>';
-            echo htmlspecialchars(file_get_contents($file['absolutePath']));
+            echo htmlspecialchars(file_get_contents($file->absolutePath));
             echo '</pre>';
 
             return;

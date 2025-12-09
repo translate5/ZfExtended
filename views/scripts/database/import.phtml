@@ -74,12 +74,12 @@ $printTable = function (array $data, $checkBoxCls) {
     $row = '<tr><td%1$s>%2$s</td><td%1$s><a href="javascript:windowOpen(\'%4$s\');">%3$s</a></td>';
     $row .= '<td%1$s><input class="%5$s" type="checkbox" name="%4$s" value="1"></td></tr>';
 
-    foreach ($data as $file) {
-        $name = preg_replace('#\.php$#i', '<span style="color:#ff0000;">.php</span>', $file['relativeToOrigin']);
-        if ($name != $file['relativeToOrigin']) {
+    foreach ($data as $file) { /** @var \MittagQI\ZfExtended\Models\Installer\DbUpdateFile $file */
+        $name = preg_replace('#\.php$#i', '<span style="color:#ff0000;">.php</span>', $file->relativeToOrigin);
+        if ($name != $file->relativeToOrigin) {
             $name = '<b>Warning: Auto Include of PHP file: </b><br />' . $name . '';
         }
-        printf($row, $cellcss, $file['origin'], $name, $file['entryHash'], $checkBoxCls);
+        printf($row, $cellcss, $file->origin, $name, $file->entryHash, $checkBoxCls);
     }
     echo '</table>';
 };

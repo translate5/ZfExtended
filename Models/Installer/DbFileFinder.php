@@ -22,6 +22,8 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
+use MittagQI\ZfExtended\Models\Installer\DbUpdateFile;
+
 /**
  * Searches for database alter files to be imported
  */
@@ -45,11 +47,13 @@ class ZfExtended_Models_Installer_DbFileFinder
 
     /**
      * The sql files to import, already ordered
+     * array<string, array<string, DbUpdateFile>>
      */
     protected array $toImport = [];
 
     /**
      * returns all available SQL files, already in the order to be imported
+     * @return DbUpdateFile[]
      * @throws Zend_Exception
      * @throws ZfExtended_Exception
      * @throws ZfExtended_NoAccessException
@@ -76,8 +80,8 @@ class ZfExtended_Models_Installer_DbFileFinder
             // first remove dependencies that cannot be resolved because they are either not in the set of files or the files are depend on are not in the set
             $allPathes = [];
             $dependenciesToRemove = [];
-            foreach ($files as $fileData) {
-                $allPathes[$fileData['absolutePath']] = 1;
+            foreach ($files as $fileData) { /** @var DbUpdateFile $fileData */
+                $allPathes[$fileData->absolutePath] = 1;
             }
             foreach ($dependencies as $dependentPath => $dependsOn) {
                 if (array_key_exists($dependentPath, $allPathes)) {
@@ -114,9 +118,9 @@ class ZfExtended_Models_Installer_DbFileFinder
                 $delayedFiles = [];
                 $currentOrigin = null;
                 $lastPath = null;
-                foreach ($files as $fileData) {
-                    $path = $fileData['absolutePath'];
-                    $origin = $fileData['origin'];
+                foreach ($files as $fileData) { /** @var DbUpdateFile $fileData */
+                    $path = $fileData->absolutePath;
+                    $origin = $fileData->origin;
                     $processed = false;
                     if ($currentOrigin === $origin) {
                         if ($debug) {
@@ -147,7 +151,7 @@ class ZfExtended_Models_Installer_DbFileFinder
                         } else {
                             // we need to delay the file
                             $delayedFiles[$path] = $fileData;
-                            $currentOrigin = $fileData['origin'];
+                            $currentOrigin = $fileData->origin;
                             if ($debug) {
                                 error_log('DELAYED PATH: ' . $path);
                             }
@@ -282,11 +286,11 @@ class ZfExtended_Models_Installer_DbFileFinder
             if (! isset($this->toImport[$name])) {
                 $this->toImport[$name] = [];
             }
-            $this->toImport[$name][$filename] = [
-                'absolutePath' => $fileInfo->getPathname(),
-                'relativeToOrigin' => $filename,
-                'origin' => $name,
-            ];
+            $this->toImport[$name][$filename] = new DbUpdateFile(
+                $fileInfo->getPathname(),
+                $filename,
+                $name
+            );
         }
     }
 
@@ -302,11 +306,11 @@ class ZfExtended_Models_Installer_DbFileFinder
             if (! $overwrite->isFile() || ! $this->isFileToProcess($overwrite)) {
                 continue;
             }
-            $this->replacements[$targetPackage][$overwrite->getFilename()] = [
-                'absolutePath' => $overwrite->getPathname(),
-                'relativeToOrigin' => $targetPackage . '/' . $overwrite->getFilename(),
-                'origin' => $name,
-            ];
+            $this->replacements[$targetPackage][$overwrite->getFilename()] = new DbUpdateFile(
+                $overwrite->getPathname(),
+                $targetPackage . '/' . $overwrite->getFilename(),
+                $name
+            );
         }
     }
 

@@ -138,6 +138,8 @@ class ZfExtended_BaseIndex
      * (re-)initializes important registry values
      *
      * @throws Zend_Application_Bootstrap_Exception
+     * @throws Zend_Controller_Exception
+     * @throws Zend_Controller_Response_Exception
      */
     public function initRegistry(Zend_Application_Bootstrap_Bootstrap $bootstrap): void
     {
@@ -149,6 +151,8 @@ class ZfExtended_BaseIndex
 
         $config = new Zend_Config($bootstrap->getOptions());
         Zend_Registry::set('config', $config);
+
+        $this->abortMonitoringDuringBackup($front);
 
         $bootstrap->bootstrap('db');
         Zend_Registry::set('db', $bootstrap->getResource('db'));
@@ -377,6 +381,50 @@ class ZfExtended_BaseIndex
         defined('NOW_ISO') || define('NOW_ISO', date('Y-m-d H:i:s', $_SERVER['REQUEST_TIME']));
     }
 
+    /**
+     * Short-circuits /index/monitoring during backups before DB bootstrap to avoid DB connection timeouts.
+     * @throws Zend_Controller_Exception
+     * @throws Zend_Controller_Response_Exception
+     */
+    private function abortMonitoringDuringBackup(Zend_Controller_Front $front): void
+    {
+        $uri = (string) ($_SERVER['REQUEST_URI'] ?? '');
+        if (! str_contains($uri, '/index/monitoring') || ! $this->isBackupRunning()) {
+            return;
+        }
+
+        $response = $front->getResponse();
+        if (! $response instanceof Zend_Controller_Response_Http) {
+            $response = new Zend_Controller_Response_Http();
+            $front->setResponse($response);
+        }
+
+        $lockFile = APPLICATION_DATA . '/backup.lock';
+        if (is_file($lockFile) && time() - (int) filemtime($lockFile) > 10800) {
+            $response->setHttpResponseCode(503);
+            $message = 'backup.lock still exists after 3h. Still running?';
+        } else {
+            $response->setHttpResponseCode(200);
+            $message = 'All Ok'; //from viewpoint of monitoring all fine
+        }
+        if ($_GET['json'] ?? false) {
+            $response->setHeader('Content-Type', 'application/json');
+            $response->setBody(json_encode([
+                'status' => $message,
+            ]));
+        } else {
+            $response->setHeader('Content-Type', 'text/plain; charset=utf-8');
+            $response->setBody($message);
+        }
+        $response->sendResponse();
+        exit;
+    }
+
+    private function isBackupRunning(): bool
+    {
+        return file_exists(APPLICATION_DATA . '/backup.lock');
+    }
+
     private function handleDatabaseDown(Exception|Zend_Db_Adapter_Exception $e): void
     {
         error_log($e);
@@ -395,7 +443,7 @@ class ZfExtended_BaseIndex
         if (ZfExtended_Utils::requestAcceptsJson()) {
             die('{"success": false, "httpStatus": 500, "errorMessage": "<b>Fatal: Could not connect to the database!</b> <br>If you get this message in the Browser: try to reload the application. <br>See error log for details."}');
         }
-        define('BACKUP_RUNNING', file_exists(APPLICATION_DATA.'/backup.lock'));
+        define('BACKUP_RUNNING', $this->isBackupRunning());
         include('layouts/dbdown.phtml');
     }
 }
