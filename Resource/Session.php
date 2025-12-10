@@ -124,7 +124,7 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
         $saveHandler = new ZfExtended_Session_SaveHandler_DbTable($this->sessionConfig);
         Zend_Session::setSaveHandler($saveHandler);
 
-        if ($this->handleSidParameter()) {
+        if ($this->startSessionBySidParameter()) {
             // We need to process the request without a redirect. Here the session is set and started from request parameter
             return;
         }
@@ -225,7 +225,7 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
      * is not passed to the backend because it is unset in the UI.
      * @throws Zend_Session_Exception
      */
-    private function handleSidParameter(): bool
+    private function startSessionBySidParameter(): bool
     {
         $sid = $_REQUEST['sid'] ?? null;
         if (empty($sid)) {
