@@ -3,21 +3,21 @@
 START LICENSE AND COPYRIGHT
 
  This file is part of ZfExtended library
- 
+
  Copyright (c) 2013 - 2021 Marc Mittag; MittagQI - Quality Informatics;  All rights reserved.
 
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
 
  This file may be used under the terms of the GNU LESSER GENERAL PUBLIC LICENSE version 3
- as published by the Free Software Foundation and appearing in the file lgpl3-license.txt 
- included in the packaging of this file.  Please review the following information 
+ as published by the Free Software Foundation and appearing in the file lgpl3-license.txt
+ included in the packaging of this file.  Please review the following information
  to ensure the GNU LESSER GENERAL PUBLIC LICENSE version 3.0 requirements will be met:
 https://www.gnu.org/licenses/lgpl-3.0.txt
 
  @copyright  Marc Mittag, MittagQI - Quality Informatics
  @author     MittagQI - Quality Informatics
  @license    GNU LESSER GENERAL PUBLIC LICENSE version 3
-			 https://www.gnu.org/licenses/lgpl-3.0.txt
+             https://www.gnu.org/licenses/lgpl-3.0.txt
 
 END LICENSE AND COPYRIGHT
 */
@@ -43,52 +43,53 @@ END LICENSE AND COPYRIGHT
 <h1 class="dep"><span class="blinking">DEPRECATED</span>: use the <a style="text-decoration: underline;" href="https://confluence.translate5.net/pages/viewpage.action?pageId=186974220">CLI tools</a> instead! </h1>
 <?php
 
-if($this->importStarted) {
+if ($this->importStarted) {
     echo '<h2>Chosen SQL Files were imported!</h2>';
-    if(!empty($this->errors)) {
+    if (! empty($this->errors)) {
         echo '<b>With the following errors:</b><pre>';
         print_r($this->errors);
         echo '</pre>';
     }
-}
-else {
-    if(!empty($this->errors)) {
+} else {
+    if (! empty($this->errors)) {
         echo '<b>The following MySQL connection errors have occurred:</b><pre>';
         print_r($this->errors);
         echo '</pre>';
+
         return;
     }
 }
 
-if(empty($this->sqlFilesNew) && empty($this->sqlFilesChanged)) {
+if (empty($this->sqlFilesNew) && empty($this->sqlFilesChanged)) {
     echo "<h2>No modified / new SQL files found!</h2><br /><br />";
+
     return;
 }
 
-$printTable = function(array $data, $checkBoxCls) {
+$printTable = function (array $data, $checkBoxCls) {
     $cellcss = ' style="border:1px solid black; padding:0 5px;"';
     echo '<table style="border:1px solid black;border-collapse: collapse;">';
-    echo '<tr><th'.$cellcss.'>Origin SQL Package</th><th'.$cellcss.'>SQL File</th>';
-    echo '<th><input type="checkbox" name="checkall" onclick="toggle(this,\''.$checkBoxCls.'\');"/></th></tr>';
+    echo '<tr><th' . $cellcss . '>Origin SQL Package</th><th' . $cellcss . '>SQL File</th>';
+    echo '<th><input type="checkbox" name="checkall" onclick="toggle(this,\'' . $checkBoxCls . '\');"/></th></tr>';
     $row = '<tr><td%1$s>%2$s</td><td%1$s><a href="javascript:windowOpen(\'%4$s\');">%3$s</a></td>';
     $row .= '<td%1$s><input class="%5$s" type="checkbox" name="%4$s" value="1"></td></tr>';
-    
-    foreach($data as $file) {
-        $name = preg_replace('#\.php$#i', '<span style="color:#ff0000;">.php</span>', $file['relativeToOrigin']);
-        if($name != $file['relativeToOrigin']) {
-            $name = '<b>Warning: Auto Include of PHP file: </b><br />'.$name.'';
+
+    foreach ($data as $file) { /** @var \MittagQI\ZfExtended\Models\Installer\DbUpdateFile $file */
+        $name = preg_replace('#\.php$#i', '<span style="color:#ff0000;">.php</span>', $file->relativeToOrigin);
+        if ($name != $file->relativeToOrigin) {
+            $name = '<b>Warning: Auto Include of PHP file: </b><br />' . $name . '';
         }
-        printf($row, $cellcss, $file['origin'], $name, $file['entryHash'], $checkBoxCls);
+        printf($row, $cellcss, $file->origin, $name, $file->entryHash, $checkBoxCls);
     }
     echo '</table>';
 };
 
-echo '<form action="'.$_SERVER['REQUEST_URI'].'" method="post" name="toprocess">';
-if(!empty($this->sqlFilesNew)) {
+echo '<form action="' . $_SERVER['REQUEST_URI'] . '" method="post" name="toprocess">';
+if (! empty($this->sqlFilesNew)) {
     echo '<h2>New SQL files found:</h2>';
     $printTable($this->sqlFilesNew, 'checkerNew');
 }
-if(!empty($this->sqlFilesChanged)) {
+if (! empty($this->sqlFilesChanged)) {
     echo '<h2>Modified SQL files found (<a href="javascript:showModInfo()">More info about modified files.</a>):</h2>';
     echo '<p></p>';
     echo '<div id="mod-info" style="display:none;border:1px solid red;">';
@@ -113,7 +114,7 @@ if(!empty($this->sqlFilesChanged)) {
     <input type="checkbox" name="catchup" value="1" id="catchupbox"/>
     <label for="catchupbox">catchup mode - for NEW files needed only. </label>
     <p>WARNING: With enabled catchup mode the selected new files won't be imported! They will be just marked as imported, so that they disappear in the new files list.</p>
-</form><?php //start form above in PHP CODE! ?>
+</form><?php //start form above in PHP CODE!?>
 <script type="text/javascript">
 function toggle(master, cls) {
     boxes = document.getElementsByClassName(cls);
