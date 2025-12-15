@@ -193,10 +193,12 @@ class Queue
             } catch (EmptyPipeException) {
                 try {
                     if ($workerModel->rescheduleDelayed() > 0) {
+                        $runWorkers = true; // in order to run the rescheduled workers
                         continue;
                     }
                 } catch (Zend_Exception) {
                     // in case of an error retry to schedule the workers
+                    $runWorkers = true;
                     continue;
                 }
                 if ($this->stopDispatching($workerModel)) {
@@ -223,6 +225,7 @@ class Queue
 
             return true;
         }
+        //
         Logger::getInstance()->logRaw('dispatcher waiting blocked mode');
         if (! $this->fifoPipe->waitForPipe()) {
             Logger::getInstance()->logRaw('dispatcher stop after pipe timeout');
