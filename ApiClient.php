@@ -42,8 +42,9 @@ class ZfExtended_ApiClient extends Zend_Http_Client
     public function __construct($uri = null, string $authorizationCookie = null, string $authorizationToken = null)
     {
         $this->translate5ApiUrl = self::getServerBaseURL();
-        $config = Zend_Registry::get('config');
-        parent::__construct($uri, $config); // why do we pass "our" config here ?
+        parent::__construct($uri, [
+            'timeout' => 720,
+        ]);
         // we need to trigger correct environment for request on our own API while API-testing
         // security: APPLICATION_APITEST can only be set, when the instance is set up for testing
         if (defined('APPLICATION_APITEST') && APPLICATION_APITEST) {
