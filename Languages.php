@@ -39,6 +39,8 @@ END LICENSE AND COPYRIGHT
  * @method void setRtl(boolean $rtl)
  * @method string getIso6393()
  * @method void setIso6393(string $lang)
+ * @method string getHidden()
+ * @method void setHidden(bool $hidden)
  */
 abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract
 {
@@ -473,6 +475,7 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract
      *      "2"=>" rtl ",
      *      "3"=>" rfc ",
      *      "4"=>" iso3166Part1alpha2 ", // 'public/modules/editor/images/flags/{iso3166Part1alpha2}.png'
+     *      "5"=>" hidden ",
      * ]
      * If field key is provided, this lek_languages field will be used as key for each language in the return array.
      * If optional param $onlyName is sumbitted with TRUE, only the name without rfc5646 in brackets will be returned
@@ -485,10 +488,13 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract
         $langs = $this->loadAll();
         $result = [];
         foreach ($langs as $lang) {
+            if ($lang['hidden']) {
+                continue;
+            }
             $name = $translate->_($lang['langName']);
             $key = empty($fieldKey) ? $name : $lang[$fieldKey];
             $tempName = $name . (($onlyName !== true) ? ' (' . $lang['rfc5646'] . ')' : '');
-            $result[$key] = [$lang['id'], $tempName, $lang['rtl'], $lang['rfc5646'], $lang['iso3166Part1alpha2']];
+            $result[$key] = [$lang['id'], $tempName, $lang['rtl'], $lang['rfc5646'], $lang['iso3166Part1alpha2'], $lang['hidden']];
         }
         ksort($result); //sort by name of language
         if (empty($result)) {
