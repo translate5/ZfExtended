@@ -126,6 +126,10 @@ final class ZfExtended_Sanitizer
             throw new SecurityException('Script tags are not allowed in the sent markup');
         }
 
+        if (strtolower($node->nodeName) === 'iframe') {
+            throw new SecurityException('Iframe tags are not allowed in the sent markup');
+        }
+
         if ($node->hasChildNodes()) {
             foreach ($node->childNodes as $childNode) {
                 /* @var $childNode DOMNode */
