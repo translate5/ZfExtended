@@ -23,6 +23,7 @@ END LICENSE AND COPYRIGHT
 */
 
 use MittagQI\ZfExtended\Acl\SystemResource;
+use MittagQI\ZfExtended\Sanitizer\Type;
 use ZfExtended_Authentication as Auth;
 
 /**
@@ -36,7 +37,7 @@ class ZfExtended_SessionController extends ZfExtended_RestController
     public const STATE_NOT_AUTHENTICATED = 'not authenticated';
 
     protected array $dataSanitizationMap = [
-        'passwd' => ZfExtended_Sanitizer::UNSANITIZED,
+        'passwd' => Type::Unsanitized,
     ];
 
     /**

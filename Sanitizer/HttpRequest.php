@@ -22,13 +22,21 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
+namespace MittagQI\ZfExtended\Sanitizer;
+
+use JsonException;
 use MittagQI\ZfExtended\Cors;
+use MittagQI\ZfExtended\Sanitizer;
+use REST_Controller_Request_Http;
+use Zend_Controller_Request_Exception;
+use ZfExtended_BadRequest;
+use ZfExtended_SecurityException;
 
 /**
  * Base Request Class
  * Sanitizes all parameters but not 'data' which shall be retrieved with ::getData to properly support JSON params
  */
-class ZfExtended_Sanitized_HttpRequest extends REST_Controller_Request_Http
+class HttpRequest extends REST_Controller_Request_Http
 {
     private array $explicitlySet = [];
 
@@ -96,23 +104,6 @@ class ZfExtended_Sanitized_HttpRequest extends REST_Controller_Request_Http
     }
 
     /**
-     * Retrieves a sanitized request param
-     * The type must be one of ZfExtended_Sanitizer constants
-     * @param null $default
-     * @return mixed
-     * @throws ZfExtended_SecurityException
-     */
-    public function getSanitizedParam(string $key, string $type, $default = null)
-    {
-        $param = parent::getParam($key, $default);
-        if (is_string($param)) {
-            return ZfExtended_Sanitizer::sanitize($param, $type);
-        }
-
-        return $param;
-    }
-
-    /**
      * Retrieves an unsanitized request parameter
      * @param mixed $default
      * @return mixed
@@ -164,6 +155,7 @@ class ZfExtended_Sanitized_HttpRequest extends REST_Controller_Request_Http
 
     /**
      * Sanitizes the "data" param that represents the JSON data of a PUT or POST
+     * @param array<Type> $typeMap
      * @throws Zend_Controller_Request_Exception
      * @throws ZfExtended_BadRequest
      * @throws ZfExtended_SecurityException
@@ -193,7 +185,7 @@ class ZfExtended_Sanitized_HttpRequest extends REST_Controller_Request_Http
         } elseif (is_object($data)) {
             return $this->sanitizeObject($data, $typeMap);
         } elseif (is_string($data)) {
-            return ZfExtended_Sanitizer::string($data);
+            return Sanitizer::string($data);
         }
 
         // can only be number, bool or null here, so needs no sanitization
@@ -224,7 +216,7 @@ class ZfExtended_Sanitized_HttpRequest extends REST_Controller_Request_Http
             return $requestValue;
         }
         if (! empty($requestValue)) {
-            return ZfExtended_Sanitizer::string($requestValue);
+            return Sanitizer::string($requestValue);
         }
 
         return $requestValue;
@@ -232,6 +224,8 @@ class ZfExtended_Sanitized_HttpRequest extends REST_Controller_Request_Http
 
     /**
      * Helper for data-sanitization of arrays
+     * @param array<Type> $typeMap
+     * @throws ZfExtended_BadRequest
      * @throws ZfExtended_SecurityException
      */
     private function sanitizeArray(array $data, array $typeMap): array
@@ -251,10 +245,11 @@ class ZfExtended_Sanitized_HttpRequest extends REST_Controller_Request_Http
 
     /**
      * Helper for data-sanitization of stdClass Objects
-     * @return mixed
+     * @param array<Type> $typeMap
+     * @throws ZfExtended_BadRequest
      * @throws ZfExtended_SecurityException
      */
-    private function sanitizeObject($data, array $typeMap)
+    private function sanitizeObject(object $data, array $typeMap): object
     {
         foreach ($data as $key => $val) {
             if (is_string($val)) {
@@ -271,14 +266,16 @@ class ZfExtended_Sanitized_HttpRequest extends REST_Controller_Request_Http
 
     /**
      * Helper for data-sanitization
+     * @param array<Type> $typeMap
+     * @throws ZfExtended_BadRequest
      * @throws ZfExtended_SecurityException
      */
     private function sanitizeDataValue(string $key, string $val, array $typeMap): string
     {
         if (array_key_exists($key, $typeMap)) {
-            return ZfExtended_Sanitizer::sanitize($val, $typeMap[$key]);
+            return Sanitizer::sanitize($val, $typeMap[$key]);
         }
 
-        return ZfExtended_Sanitizer::string($val);
+        return Sanitizer::string($val);
     }
 }
