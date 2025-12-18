@@ -30,6 +30,8 @@ use MittagQI\ZfExtended\Cors;
  */
 class ZfExtended_Sanitized_HttpRequest extends REST_Controller_Request_Http
 {
+    private array $explicitlySet = [];
+
     public function __construct($action = null, $controller = null, $module = null, array $params = [])
     {
         // processing CORS preflight requests
@@ -85,6 +87,14 @@ class ZfExtended_Sanitized_HttpRequest extends REST_Controller_Request_Http
         return $default;
     }
 
+    public function setParam($key, $value)
+    {
+        $this->explicitlySet[$key] = true;
+        parent::setParam($key, $value);
+
+        return $this;
+    }
+
     /**
      * Retrieves a sanitized request param
      * The type must be one of ZfExtended_Sanitizer constants
@@ -123,16 +133,20 @@ class ZfExtended_Sanitized_HttpRequest extends REST_Controller_Request_Http
         $paramSources = $this->getParamSources();
         if (in_array('_GET', $paramSources) && isset($_GET) && is_array($_GET)) {
             foreach ($_GET as $key => $val) {
-                if (! array_key_exists($key, $return)) {
-                    $return[$key] = ($key === 'data' || $key === 'filter') ? $val : $this->sanitizeRequestValue($val);
+                if (array_key_exists($key, $this->explicitlySet)) {
+                    continue;
                 }
+
+                $return[$key] = ($key === 'data' || $key === 'filter') ? $val : $this->sanitizeRequestValue($val);
             }
         }
         if (in_array('_POST', $paramSources) && isset($_POST) && is_array($_POST)) {
             foreach ($_POST as $key => $val) {
-                if (! array_key_exists($key, $return)) {
-                    $return[$key] = ($key === 'data') ? $val : $this->sanitizeRequestValue($val);
+                if (array_key_exists($key, $this->explicitlySet)) {
+                    continue;
                 }
+
+                $return[$key] = ($key === 'data') ? $val : $this->sanitizeRequestValue($val);
             }
         }
 

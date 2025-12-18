@@ -82,7 +82,7 @@ class MismatchException extends ZfExtended_ErrorCodeException
         // If message have placeholders like {0}, {1}, {2} etc
         if (preg_match('~{([0-9])}~', $msg)) {
             // Replace those with values from $extra arg
-            $msg = preg_replace_callback('~{([0-9])}~', fn ($m) => $extra[$m[1]] ?? $m[1], $msg);
+            $msg = preg_replace_callback('~{([0-9])}~', fn ($m) => htmlentities($extra[$m[1]] ?? $m[1]), $msg);
         }
 
         // Spoof msg
