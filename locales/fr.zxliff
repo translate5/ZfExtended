@@ -1,0 +1,349 @@
+<?xml version="1.0" ?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.1" version="1.1">
+    <file original="php-sourcecode" source-language="de" target-language="fr" datatype="php">
+        <body>
+            <trans-unit id="JyV2YWx1ZSUnIGlzdCBuaWNodCBGQUxTRQ==">
+                <source>'%value%' ist nicht FALSE</source>
+                <target>'%value%' n’est pas FALSE</target>
+            </trans-unit>
+            <trans-unit id="JyV2YWx1ZSUnIGlzdCBuaWNodCBUUlVF">
+                <source>'%value%' ist nicht TRUE</source>
+                <target>'%value%' n’est pas TRUE</target>
+            </trans-unit>
+            <trans-unit id="JyV2YWx1ZSUnIGlzdCBuaWNodCB2b20gVHlwIEJvb2xlYW4=">
+                <source>'%value%' ist nicht vom Typ Boolean</source>
+                <target>'%value%' n’est pas de type booléen</target>
+            </trans-unit>
+            <trans-unit id="LyBBdWZydWYgZXJmb2xndGUgZHVyY2ggSVA6IA==">
+                <source>/ Aufruf erfolgte durch IP: </source>
+                <target>/ accès effectué par IP: </target>
+            </trans-unit>
+            <trans-unit id="PQ==">
+                <source>=</source>
+                <target>=</target>
+            </trans-unit>
+            <trans-unit id="PT0=">
+                <source>==</source>
+                <target>==</target>
+            </trans-unit>
+            <trans-unit id="QW53ZW5kdW5nc2ZlaGxlcg==">
+                <source>Anwendungsfehler</source>
+                <target>Erreur d’utilisation</target>
+            </trans-unit>
+            <trans-unit id="RGFzIFBhc3N3b3J0IGVudGjDpGx0IGVpbiBXb3J0IGF1cyBkZXIgc2Nod2FyemVuIExpc3RlLg==">
+                <source>Das Passwort enthält ein Wort aus der schwarzen Liste.</source>
+                <target>Le mot de passe contient un mot de la liste noire.</target>
+            </trans-unit>
+            <trans-unit id="RGVyIFJlc2V0SGFzaCBvZGVyIGRpZSBCcm93c2Vyc2l0enVuZyBpc3QgbmljaHQgKG1laHIpIGfDvGx0aWcuIEJpdHRlIGZvcmRlcm4gU2llIMO8YmVyIGRhcyBuZWJlbnN0ZWhlbmRlIEZvcm11bGFyIGVpbmUgRS1NYWlsIG1pdCBlaW5lbSBuZXVlbiBMaW5rIGFuLg==">
+                <source>Der ResetHash oder die Browsersitzung ist nicht (mehr) gültig. Bitte fordern Sie über das nebenstehende Formular eine E-Mail mit einem neuen Link an.</source>
+                <target>Le ResetHash ou la session du navigateur n’est pas (plus) valide. Veuillez demander un e-mail avec un nouveau lien à l’aide du formulaire ci-contre.</target>
+            </trans-unit>
+            <trans-unit id="RGllIERhdGVpIHd1cmRlIG51ciB0ZWlsd2Vpc2UgaG9jaGdlbGFkZW4u">
+                <source>Die Datei wurde nur teilweise hochgeladen.</source>
+                <target>Le fichier n’a été téléchargé que partiellement.</target>
+            </trans-unit>
+            <trans-unit id="RGllIGhvY2hnZWxhZGVuZSBEYXRlaSDDvGJlcnNjaHJlaXRldCBkaWUgaW4gZGVtIEhUTUwgRm9ybXVsYXIgbWl0dGVscyBkZXIgQW53ZWlzdW5nIE1BWF9GSUxFX1NJWkUgYW5nZWdlYmVuZSBtYXhpbWFsZSBEYXRlaWdyw7bDn2Uu">
+                <source>Die hochgeladene Datei überschreitet die in dem HTML Formular mittels der Anweisung MAX_FILE_SIZE angegebene maximale Dateigröße.</source>
+                <target>Le fichier téléchargé dépasse la taille maximale spécifiée dans l’instruction MAX_FILE_SIZE du formulaire HTML.</target>
+            </trans-unit>
+            <trans-unit id="RGllIGhvY2hnZWxhZGVuZSBEYXRlaSDDvGJlcnNjaHJlaXRldCBkaWUgaW4gZGVyIEFud2Vpc3VuZyB1cGxvYWRfbWF4X2ZpbGVzaXplIGluIHBocC5pbmkgZmVzdGdlbGVndGUgR3LDtsOfZS4=">
+                <source>Die hochgeladene Datei überschreitet die in der Anweisung upload_max_filesize in php.ini festgelegte Größe.</source>
+                <target>Le fichier téléchargé dépasse la taille spécifiée dans l’instruction upload_max_filesize de php.ini.</target>
+            </trans-unit>
+            <trans-unit id="RGllc2VyIEJlbnV0emVyIHdpcmQgYmVyZWl0cyB2ZXJ3ZW5kZXQuIDxici8+Qml0dGUgd2FydGVuIFNpZSBiaXMgZGVyIEJlbnV0emVyIHdpZWRlciB2ZXJmw7xnYmFyIGlzdCwgb2RlciBiZW51dHplbiBTaWUgZWluZW4gYW5kZXJlbiE=">
+                <source>Dieser Benutzer wird bereits verwendet. <br/>Bitte warten Sie bis der Benutzer wieder verfügbar ist, oder benutzen Sie einen anderen!</source>
+                <target>Dieser Benutzer wird bereits verwendet. <br/>Bitte warten Sie, bis der Benutzer wieder verfügbar ist, oder benutzen Sie einen anderen!</target>
+            </trans-unit>
+            <trans-unit id="RWluZSBQSFAgRXJ3ZWl0ZXJ1bmcgaGF0IGRlbiBVcGxvYWQgZGVyIERhdGVpIGdlc3RvcHB0LiBQSFAgYmlldGV0IGtlaW5lIE3DtmdsaWNoa2VpdCBhbiwgdW0gZmVzdHp1c3RlbGxlbiB3ZWxjaGUgRXJ3ZWl0ZXJ1bmcgZGFzIEhvY2hsYWRlbiBkZXIgRGF0ZWkgZ2VzdG9wcHQgaGF0LiDDnGJlcnByw7xmdW5nIGFsbGVyIGdlbGFkZW5lbiBFcndlaXRlcnVuZ2VuIG1pdHRlbHMgcGhwaW5mbygpIGvDtm5udGUgaGVsZmVuLg==">
+                <source>Eine PHP Erweiterung hat den Upload der Datei gestoppt. PHP bietet keine Möglichkeit an, um festzustellen welche Erweiterung das Hochladen der Datei gestoppt hat. Überprüfung aller geladenen Erweiterungen mittels phpinfo() könnte helfen.</source>
+                <target>Une extension PHP a stoppé le téléchargement du fichier. PHP ne permet pas de déterminer quelle extension a arrêté le téléchargement du fichier. Vérifier toutes les extensions chargées à l’aide de la fonction phpinfo() pourrait vous aider.</target>
+            </trans-unit>
+            <trans-unit id="RWluZSBXYXJ0dW5nIHN0ZWh0IHVubWl0dGVsYmFyIGJldm9yLCBTaWUga8O2bm5lbiBzaWNoIGRhaGVyIG5pY2h0IGFubWVsZGVuLiBCaXR0ZSB2ZXJzdWNoZW4gU2llIGVzIGluIEvDvHJ6ZSBlcm5ldXQu">
+                <source>Eine Wartung steht unmittelbar bevor, Sie können sich daher nicht anmelden. Bitte versuchen Sie es in Kürze erneut.</source>
+                <target>Une maintenance est imminente, vous ne pouvez donc pas vous connecter. Veuillez réessayer sous peu.</target>
+            </trans-unit>
+            <trans-unit id="RXMgbGllZ3Qga2VpbiBGZWhsZXIgdm9yLCBkaWUgRGF0ZWkgd3VyZGUgZXJmb2xncmVpY2ggaG9jaGdlbGFkZW4u">
+                <source>Es liegt kein Fehler vor, die Datei wurde erfolgreich hochgeladen.</source>
+                <target>Aucune erreur, le fichier a été téléchargé avec succès.</target>
+            </trans-unit>
+            <trans-unit id="RXMgd3VyZGUga2VpbmUgRGF0ZWkgaG9jaGdlbGFkZW4u">
+                <source>Es wurde keine Datei hochgeladen.</source>
+                <target>Aucun fichier n’a été téléchargé.</target>
+            </trans-unit>
+            <trans-unit id="RmVobGVuZGVyIHRlbXBvcsOkcmVyIE9yZG5lci4=">
+                <source>Fehlender temporärer Ordner.</source>
+                <target>Dossier temporaire manquant.</target>
+            </trans-unit>
+            <trans-unit id="R2VuZXJhbE1ldGF0YWdUaXRsZVN1ZmZpeA==">
+                <source>GeneralMetatagTitleSuffix</source>
+                <target>GeneralMetatagTitleSuffix</target>
+            </trans-unit>
+            <trans-unit id="SWhyIFBhc3N3b3J0IHd1cmRlIG5ldSBnZXNldHp0LiBTaWUga8O2bm5lbiBzaWNoIG51biBlaW5sb2dnZW4u">
+                <source>Ihr Passwort wurde neu gesetzt. Sie können sich nun einloggen.</source>
+                <target>Votre mot de passe a été réinitialisé. Vous pouvez maintenant vous connecter.</target>
+            </trans-unit>
+            <trans-unit id="S2VpbiBCZW51dHplcm5hbWUgYW5nZWdlYmVuLg==">
+                <source>Kein Benutzername angegeben.</source>
+                <target>Aucun nom d’utilisateur saisi.</target>
+            </trans-unit>
+            <trans-unit id="S2VpbiBQYXNzd29ydCBhbmdlZ2ViZW4u">
+                <source>Kein Passwort angegeben.</source>
+                <target>Aucun mot de passe saisi.</target>
+            </trans-unit>
+            <trans-unit id="TG9naW5uYW1lIGdlw6RuZGVydA==">
+                <source>Loginname geändert</source>
+                <target>Identifiant modifié</target>
+            </trans-unit>
+            <trans-unit id="TWluZGVzdGVucyAxMiBaZWljaGVu">
+                <source>Mindestens 12 Zeichen</source>
+                <target>Au moins 12 caractères</target>
+            </trans-unit>
+            <trans-unit id="TWluZGVzdGVucyBlaW4gR3Jvw59idWNoc3RhYmU=">
+                <source>Mindestens ein Großbuchstabe</source>
+                <target>Au moins une majuscule</target>
+            </trans-unit>
+            <trans-unit id="TWluZGVzdGVucyBlaW4gS2xlaW5idWNoc3RhYmU=">
+                <source>Mindestens ein Kleinbuchstabe</source>
+                <target>Au moins une minuscule</target>
+            </trans-unit>
+            <trans-unit id="TWluZGVzdGVucyBlaW5lIFphaGw=">
+                <source>Mindestens eine Zahl</source>
+                <target>Au moins un chiffre</target>
+            </trans-unit>
+            <trans-unit id="TmV1ZXMgUGFzc3dvcnQ=">
+                <source>Neues Passwort</source>
+                <target>Nouveau mot de passe</target>
+            </trans-unit>
+            <trans-unit id="UGFzc3dvcnQgbmV1IHNldHplbg==">
+                <source>Passwort neu setzen</source>
+                <target>Réinitialiser le mot de passe</target>
+            </trans-unit>
+            <trans-unit id="UGFzc3dvcnQgc2V0emVu">
+                <source>Passwort setzen</source>
+                <target>Définir un mot de passe</target>
+            </trans-unit>
+            <trans-unit id="UGVyIEUtTWFpbCB3dXJkZSBJaG5lbiBlaW4gTGluayB6dWdlc2FuZHQsIG1pdCB3ZWxjaGVtIFNpZSBJaHIgUGFzc3dvcnQgbmV1IHNldHplbiBrw7ZubmVuLiBEaWVzZXIgTGluayBpc3QgMzAgbWluIGfDvGx0aWcgdW5kIGZ1bmt0aW9uaWVydCBudXIsIHNvIGxhbmdlIFNpZSBJaHJlbiBCcm93c2VyIG5pY2h0IHp3aXNjaGVuemVpdGxpY2ggZ2VzY2hsb3NzZW4gaGFiZW4uIFNpZSBrw7ZubmVuIGplZGVyemVpdCBlaW5lbiBuZXVlbiBMaW5rIMO8YmVyIGRpZXNlcyBGb3JtdWxhciBhbmZvcmRlcm4u">
+                <source>Per E-Mail wurde Ihnen ein Link zugesandt, mit welchem Sie Ihr Passwort neu setzen können. Dieser Link ist 30 min gültig und funktioniert nur, so lange Sie Ihren Browser nicht zwischenzeitlich geschlossen haben. Sie können jederzeit einen neuen Link über dieses Formular anfordern.</source>
+                <target>Un lien vous a été envoyé par e-mail afin de réinitialiser votre mot de passe. Ce lien est valable 30 minutes et ne fonctionne que si vous n’avez pas fermé votre navigateur entre-temps. Vous pouvez à tout moment demander un nouveau lien via ce formulaire.</target>
+            </trans-unit>
+            <trans-unit id="U2VpdGUgbmljaHQgZ2VmdW5kZW46IA==">
+                <source>Seite nicht gefunden: </source>
+                <target>Page non trouvée: </target>
+            </trans-unit>
+            <trans-unit id="U29sbHRlIGlubmVyaGFsYiBkZXMgbsOkY2hzdGVuIEFyYmVpdHN0YWdzIGtlaW5lIEtvbnRha3RhdWZuYWhtZSBlcmZvbGd0IHNlaW4sIGxpZWd0IGVpbmUgYWxsZ2VtZWluZSBTdMO2cnVuZyB2b3IsIGRpZSBkaWUgYXV0b21hdGlzY2hlIEJlbmFjaHJpY2h0aWd1bmcgdW5zZXJlciBBZG1pbmlzdHJhdG9yZW4gdmVyaGluZGVydC4gQml0dGUgYmVuYWNocmljaHRpZ2VuIFNpZSB1bnMgZGFubiBtw7ZnbGljaHN0IHVtZ2VoZW5kIHVudGVyIGRlbiBmb2xnZW5kZW4gS29udGFrdGRhdGVuOg==">
+                <source>Sollte innerhalb des nächsten Arbeitstags keine Kontaktaufnahme erfolgt sein, liegt eine allgemeine Störung vor, die die automatische Benachrichtigung unserer Administratoren verhindert. Bitte benachrichtigen Sie uns dann möglichst umgehend unter den folgenden Kontaktdaten:</source>
+                <target>Si aucune prise de contact n’a eu lieu dans le prochain jour ouvrable, il s’agit d’un dysfonctionnement général qui empêche la notification automatique de nos administrateurs. Dans ce cas, veuillez nous en informer le plus rapidement possible aux coordonnées suivantes:</target>
+            </trans-unit>
+            <trans-unit id="U3BlaWNoZXJuIGRlciBEYXRlaSBhdWYgZGllIEZlc3RwbGF0dGUgaXN0IGZlaGxnZXNjaGxhZ2VuLg==">
+                <source>Speichern der Datei auf die Festplatte ist fehlgeschlagen.</source>
+                <target>L’enregistrement du fichier sur le disque dur a échoué.</target>
+            </trans-unit>
+            <trans-unit id="VW5nw7xsdGlnZSBMb2dpbmRhdGVuITxici8+SGFiZW4gU2llIElociBQYXNzd29ydCB2ZXJnZXNzZW4gb2RlciBiaXNsYW5nIG5vY2gga2VpbiBQYXNzd29ydCBmw7xyIElocmVuIExvZ2luIGdlc2V0enQ/ICBTaWUga8O2bm5lbiBqZWRlcnplaXQgZWluZW4gbmV1ZW4gTGluayAlc2hpZXIlcyBhbmZvcmRlcm4u">
+                <source>Ungültige Logindaten!<br/>Haben Sie Ihr Passwort vergessen oder bislang noch kein Passwort für Ihren Login gesetzt?  Sie können jederzeit einen neuen Link %shier%s anfordern.</source>
+                <target>Ungültige Logindaten!<br/>Haben Sie Ihr Passwort vergessen oder bislang noch kein Passwort für Ihren Login gesetzt? Sie können %shier%s jederzeit einen neuen Link anfordern.</target>
+            </trans-unit>
+            <trans-unit id="VW5nw7xsdGlnZSBMb2dpbmRhdGVuIC0gWnVnYW5nIGdlc3BlcnJ0ITxici8+U2llIGhhYmVuIElociBQYXNzd29ydCBpbiBkZW4gbGV0enRlbiAyNCBTdHVuZGVuIG1laHJtYWxzIGZhbHNjaCBlaW5nZWdlYmVuLCBpaHIgTG9naW4gd3VyZGUgZ2VzcGVycnQuPGJyIC8+UGVyIEUtTWFpbCB3dXJkZSBJaG5lbiBlaW4gTGluayB6dWdlc2FuZHQsIG1pdCB3ZWxjaGVtIFNpZSBJaHIgUGFzc3dvcnQgbmV1IHNldHplbiBrw7ZubmVuLiBEaWVzZXIgTGluayBpc3QgMzAgbWluIGfDvGx0aWcgdW5kIGZ1bmt0aW9uaWVydCBudXIsIHNvIGxhbmdlIFNpZSBJaHJlbiBCcm93c2VyIG5pY2h0IHp3aXNjaGVuemVpdGxpY2ggZ2VzY2hsb3NzZW4gaGFiZW4uIFNpZSBrw7ZubmVuIGplZGVyemVpdCBlaW5lbiBuZXVlbiBMaW5rICVzaGllciVzIGFuZm9yZGVybi4=">
+                <source>Ungültige Logindaten - Zugang gesperrt!<br/>Sie haben Ihr Passwort in den letzten 24 Stunden mehrmals falsch eingegeben, ihr Login wurde gesperrt.<br />Per E-Mail wurde Ihnen ein Link zugesandt, mit welchem Sie Ihr Passwort neu setzen können. Dieser Link ist 30 min gültig und funktioniert nur, so lange Sie Ihren Browser nicht zwischenzeitlich geschlossen haben. Sie können jederzeit einen neuen Link %shier%s anfordern.</source>
+                <target>Ungültige Logindaten– Zugang gesperrt!<br/>Sie haben Ihr Passwort in den letzten 24 Stunden mehrmals falsch eingegeben, Ihr Login wurde gesperrt.<br />Per E-Mail wurde Ihnen ein Link zugesandt, mit welchem Sie Ihr Passwort neu setzen können. Dieser Link ist 30 Minuten gültig und funktioniert nur, solange Sie Ihren Browser nicht zwischenzeitlich geschlossen haben. Sie können %shier%s jederzeit einen neuen Link anfordern.</target>
+            </trans-unit>
+            <trans-unit id="VW5zZXJlIEFkbWluaXN0cmF0b3JlbiB3ZXJkZW4gYXV0b21hdGlzY2ggYmVuYWNocmljaHRpZ3QgdW5kIHdlcmRlbiBzaWNoIHVtZ2VoZW5kIG1pdCBJaG5lbiBpbiBWZXJiaW5kdW5nIHNldHplbi4=">
+                <source>Unsere Administratoren werden automatisch benachrichtigt und werden sich umgehend mit Ihnen in Verbindung setzen.</source>
+                <target>Nos administrateurs seront automatiquement informés et vous contacteront dans les plus brefs délais.</target>
+            </trans-unit>
+            <trans-unit id="V2FydHVuZ3NhcmJlaXRlbiBzaW5kIGltIEdhbmdlLiA8YnIvPnthcHBOYW1lfSB3aXJkIG5hY2ggQWJzY2hsdXNzIGRlciBXYXJ0dW5nc2FyYmVpdGVuIHdpZWRlciB2ZXJmJiMyNTI7Z2JhciBzZWluLg==">
+                <source>Wartungsarbeiten sind im Gange. <br/>{appName} wird nach Abschluss der Wartungsarbeiten wieder verf&#252;gbar sein.</source>
+                <target>Wartungsarbeiten sind im Gange. <br/>{appName} wird nach Abschluss der Wartungsarbeiten wieder verfügbar sein.</target>
+            </trans-unit>
+            <trans-unit id="V2lyIGJpdHRlbiB1bSBFbnRzY2h1bGRpZ3VuZyBmw7xyIGRpZSBhdWZnZXRyZXRlbmUgU3TDtnJ1bmch">
+                <source>Wir bitten um Entschuldigung für die aufgetretene Störung!</source>
+                <target>Veuillez nous excuser pour ce désagrément!</target>
+            </trans-unit>
+            <trans-unit id="V2lyIHNpbmQgPGJyLz5iYWxkIHdpZWRlciBkYSE=">
+                <source>Wir sind <br/>bald wieder da!</source>
+                <target>Wir sind <br/>bald wieder da!</target>
+            </trans-unit>
+            <trans-unit id="WnVyw7xjayB6dXIgU3RhcnRzZWl0ZQ==">
+                <source>Zurück zur Startseite</source>
+                <target>Retour à la page d’accueil</target>
+            </trans-unit>
+            <trans-unit id="WnVzw6R0emxpY2hlIEluZm9ybWF0aW9uZW46IHttZXNzYWdlfTxiciAvPgo8YnIgLz4K">
+                <source>Zusätzliche Informationen: {message}<br />
+<br />
+</source>
+                <target>Zusätzliche Informationen: {message}<br />
+<br />
+</target>
+            </trans-unit>
+            <trans-unit id="ZXE=">
+                <source>eq</source>
+                <target>eq</target>
+            </trans-unit>
+            <trans-unit id="Z3Q=">
+                <source>gt</source>
+                <target>gt</target>
+            </trans-unit>
+            <trans-unit id="Z3RlcQ==">
+                <source>gteq</source>
+                <target>gteq</target>
+            </trans-unit>
+            <trans-unit id="aW4=">
+                <source>in</source>
+                <target>in</target>
+            </trans-unit>
+            <trans-unit id="bGlrZQ==">
+                <source>like</source>
+                <target>like</target>
+            </trans-unit>
+            <trans-unit id="bHQ=">
+                <source>lt</source>
+                <target>lt</target>
+            </trans-unit>
+            <trans-unit id="bHRlcQ==">
+                <source>lteq</source>
+                <target>lteq</target>
+            </trans-unit>
+            <trans-unit id="bm90SW5MaXN0">
+                <source>notInList</source>
+                <target>notInList</target>
+            </trans-unit>
+            <trans-unit id="e2FwcE5hbWV9IC0gQW5rw7xuZGlndW5nIFNlcnZlciBXYXJ0dW5n">
+                <source>{appName} - Ankündigung Server Wartung</source>
+                <target>{appName} - Annonce de la maintenance du serveur</target>
+            </trans-unit>
+            <trans-unit id="e2FwcE5hbWV9IGlzdCBpbiB3ZW5pZ2VuIE1pbnV0ZW4gd2llZGVyIG9ubGluZSE=">
+                <source>{appName} ist in wenigen Minuten wieder online!</source>
+                <target>{appName} sera de nouveau en ligne dans quelques minutes!</target>
+            </trans-unit>
+            <trans-unit id="e2hlYWRlcn0KQXVmZ3J1bmQgdm9uIFdhcnR1bmdzbWHDn25haG1lbiB3aXJkIHthcHBOYW1lfSBhdWYge3BvcnRhbFVybH08YnIgLz4KZsO8ciBrdXJ6ZSBaZWl0IG5pY2h0IGVycmVpY2hiYXIgc2Vpbi48YnIgLz4KPGJyIC8+CkRpZSBXYXJ0dW5nIGlzdCBnZXBsYW50IGbDvHI6IHttYWludGVuYW5jZURhdGV9LjxiciAvPgp7YWRkaXRpb25hbEluZm99RGllIGdlbmF1ZSBVaHJ6ZWl0IGRlciBXYXJ0dW5nIHdpcmQgaW4gZGVyIEFud2VuZHVuZyBzZWxic3QgYW5nZXplaWd0LCA8YnIgLz4KbWl0IGVpbmVtIHplaXRsaWNoZW4gVm9ybGF1ZiB2b24gZWluZXIgU3R1bmRlLjxiciAvPgo8YnIgLz4KV2lyIGJpdHRlbiB1bSBJaHIgVmVyc3TDpG5kbmlzLjxiciAvPgo8YnIgLz4KU2llIGVyaGFsdGVuIGRpZXNlIGF1dG9tYXRpc2NoIHZlcnNlbmRldGUgRS1NYWlsLApkYSBzaWUgYWxzIEFkbWluaXN0cmF0b3IgZWluZ2V0cmFnZW4gc2luZC48YnIgLz4Ke2Zvb3Rlcn0=">
+                <source>{header}
+Aufgrund von Wartungsmaßnahmen wird {appName} auf {portalUrl}<br />
+für kurze Zeit nicht erreichbar sein.<br />
+<br />
+Die Wartung ist geplant für: {maintenanceDate}.<br />
+{additionalInfo}Die genaue Uhrzeit der Wartung wird in der Anwendung selbst angezeigt, <br />
+mit einem zeitlichen Vorlauf von einer Stunde.<br />
+<br />
+Wir bitten um Ihr Verständnis.<br />
+<br />
+Sie erhalten diese automatisch versendete E-Mail,
+da sie als Administrator eingetragen sind.<br />
+{footer}</source>
+                <target>{header}
+Aufgrund von Wartungsmaßnahmen wird {appName} auf {portalUrl}<br />
+für kurze Zeit nicht erreichbar sein.<br />
+<br />
+Die Wartung ist geplant für: {maintenanceDate}.<br />
+{additionalInfo}Die genaue Uhrzeit der Wartung wird in der Anwendung selbst angezeigt, <br />
+mit einem zeitlichen Vorlauf von einer Stunde.<br />
+<br />
+Wir bitten um Ihr Verständnis.<br />
+<br />
+Sie erhalten diese automatisch versendete E-Mail,
+da sie als Administrator eingetragen sind.<br />
+{footer}</target>
+            </trans-unit>
+            <trans-unit id="e2hlYWRlcn0KU2llIGVyaGFsdGVuIGRpZXNlIEVtYWlsLCB3ZWlsIElociBLb250byBhdWYge3BvcnRhbFVybH0gbmV1IGFuZ2VsZWd0IG9kZXIgSWhyIFBhc3N3b3J0IHp1csO8Y2tnZXNldHp0IHd1cmRlLiAKCklociBCZW51dHplcm5hbWU6Ci0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQp7bG9naW59Ci0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQoKV2VubiBTaWUgSWhyIEtvbnRvIGvDvG5mdGlnIG51dHplbiBtw7ZjaHRlbiwgZGFubiBmb3JkZXJuIFNpZSB1bnRlciBkZXIgZm9sZ2VuZGVuCkFkcmVzc2UgZWluZSBMaW5rIGFuLCB1bSBJaHIgUGFzc3dvcnQgbmV1IHNldHplbiB6dSBrw7ZubmVuLgoKLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tCntwb3J0YWxVcmx9e3Jlc2V0dXJsfQotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KCntmb290ZXJ9">
+                <source>{header}
+Sie erhalten diese Email, weil Ihr Konto auf {portalUrl} neu angelegt oder Ihr Passwort zurückgesetzt wurde. 
+
+Ihr Benutzername:
+------------------------------
+{login}
+------------------------------
+
+Wenn Sie Ihr Konto künftig nutzen möchten, dann fordern Sie unter der folgenden
+Adresse eine Link an, um Ihr Passwort neu setzen zu können.
+
+------------------------------
+{portalUrl}{reseturl}
+------------------------------
+
+{footer}</source>
+                <target>{header}
+Sie erhalten diese E-Mail, weil Ihr Konto auf {portalUrl} neu angelegt oder Ihr Passwort zurückgesetzt wurde. 
+
+Ihr Benutzername:
+------------------------------
+{login}
+------------------------------
+
+Wenn Sie Ihr Konto künftig nutzen möchten, dann fordern Sie unter der folgenden
+Adresse einen Link an, um Ihr Passwort neu setzen zu können.
+
+------------------------------
+{portalUrl}{reseturl}
+------------------------------
+
+{footer}</target>
+            </trans-unit>
+            <trans-unit id="e2hlYWRlcn0KU2llIGVyaGFsdGVuIGRpZXNlIEVtYWlsLCB3ZWlsIHdpciBlaW5lIEFuZnJhZ2UgenVyIMOEbmRlcnVuZyBkZXMgUGFzc3dvcnRlcyBmw7xyIElociBLb250byBhdWYge3BvcnRhbFVybH0gZXJoYWx0ZW4gaGFiZW4uIAoKV2VubiBTaWUgSWhyIFBhc3N3b3J0IMOkbmRlcm4gbcO2Y2h0ZW4sIGRhbm4gYmVmb2xnZW4gU2llIGJpdHRlIGZvbGdlbmRlIEFud2Vpc3VuZ2VuOgoKRGVyIGZvbGdlbmRlIExpbmsgZW50aMOkbHQgZWluZW4gZsO8ciAzMCBNaW51dGVuIGfDvGx0aWdlbiBTY2hsw7xzc2VsLCBtaXQgd2VsY2hlbSBTaWUgSWhyIFBhc3N3b3J0IG5ldSBzZXR6ZW4ga8O2bm5lbi4gQXVzIFNpY2hlcmhlaXRzZ3LDvG5kZW4gZnVua3Rpb25pZXJ0IGRpZXMgbnVyLCB3ZW5uIFNpZSBkZW4gZm9sZ2VuZGVuIExpbmsgaW0gc2VsYmVuIEJyb3dzZXIgaW4gZGVtIFNpZSBkaWUgw4RuZGVydW5nIElocmVzIFBhc3N3b3J0IGFuZ2Vmb3JkZXJ0IGhhYmVuIMO2ZmZuZW4gdW5kIHp1ZGVtIG5hY2ggWnVyw7xja3NldHplbiBkZXMgUGFzc3dvcnRzIElocmVuIEJyb3dzZXIgbmljaHQgbmV1IGdlc3RhcnRldCBoYWJlbi4KCj09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQpMaW5rIHVtIFBhc3N3b3J0IG5ldSB6dSBzZXR6ZW4KLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tCntwb3J0YWxVcmx9e2hhc2h1cmx9Ci0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQo9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0KClNvbGx0ZSBJaHIgU2NobMO8c3NlbCBuaWNodCBtZWhyIGfDvGx0aWcgc2Vpbiwga8O2bm5lbiBTaWUgdW50ZXIgamVkZXJ6ZWl0IGVpbmVuIG5ldWVuIFNjaGzDvHNzZWwgYW5mb3JkZXJuLgotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0Ke3BvcnRhbFVybH17cmVzZXR1cmx9Ci0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQoKU29sbHRlbiBTaWUgZGllIEFuZnJhZ2UgbmljaHQgc2VsYnN0IGF1c2dlbMO2c3QgaGFiZW4sIGJpdHRlbiB3aXIgU2llIHVucyBkYXLDvGJlciB6dSBpbmZvcm1pZXJlbi4KCntmb290ZXJ9">
+                <source>{header}
+Sie erhalten diese Email, weil wir eine Anfrage zur Änderung des Passwortes für Ihr Konto auf {portalUrl} erhalten haben. 
+
+Wenn Sie Ihr Passwort ändern möchten, dann befolgen Sie bitte folgende Anweisungen:
+
+Der folgende Link enthält einen für 30 Minuten gültigen Schlüssel, mit welchem Sie Ihr Passwort neu setzen können. Aus Sicherheitsgründen funktioniert dies nur, wenn Sie den folgenden Link im selben Browser in dem Sie die Änderung Ihres Passwort angefordert haben öffnen und zudem nach Zurücksetzen des Passworts Ihren Browser nicht neu gestartet haben.
+
+==============================
+Link um Passwort neu zu setzen
+------------------------------
+{portalUrl}{hashurl}
+------------------------------
+==============================
+
+Sollte Ihr Schlüssel nicht mehr gültig sein, können Sie unter jederzeit einen neuen Schlüssel anfordern.
+------------------------------
+{portalUrl}{reseturl}
+------------------------------
+
+Sollten Sie die Anfrage nicht selbst ausgelöst haben, bitten wir Sie uns darüber zu informieren.
+
+{footer}</source>
+                <target>{header}
+Sie erhalten diese E-Mail, weil wir eine Anfrage zur Änderung des Passwortes für Ihr Konto auf {portalUrl} erhalten haben. 
+
+Wenn Sie Ihr Passwort ändern möchten, dann befolgen Sie bitte folgende Anweisungen:
+
+Der folgende Link enthält einen für 30 Minuten gültigen Schlüssel, mit welchem Sie Ihr Passwort neu setzen können. Aus Sicherheitsgründen funktioniert dies nur, wenn Sie den folgenden Link im selben Browser, indem Sie die Änderung Ihres Passworts angefordert haben, öffnen und zudem nach Zurücksetzen des Passworts Ihren Browser nicht neu gestartet haben.
+
+==============================
+Link um Passwort neu zu setzen
+------------------------------
+{portalUrl}{hashurl}
+------------------------------
+==============================
+
+Sollte Ihr Schlüssel nicht mehr gültig sein, können Sie unter jederzeit einen neuen Schlüssel anfordern.
+------------------------------
+{portalUrl}{reseturl}
+------------------------------
+
+Sollten Sie die Anfrage nicht selbst ausgelöst haben, bitten wir Sie uns darüber zu informieren.
+
+{footer}</target>
+            </trans-unit>
+            <trans-unit id="e2hlYWRlcn0KV2lyIGhhYmVuIGZlc3RnZXN0ZWxsdCwgZGFzcyBJaHIgTG9naW4tTmFtZSBuaWNodCB1bnRlcnN0w7x0enRlIFplaWNoZW4gZW50aMOkbHQuCkRlciBMb2dpbi1OYW1lIHd1cmRlIGF1dG9tYXRpc2NoIGdlw6RuZGVydC4KCklociBuZXVlciBMb2dpbi1OYW1lOgotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0Ke25ld0xvZ2lufQotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KCntmb290ZXJ9">
+                <source>{header}
+Wir haben festgestellt, dass Ihr Login-Name nicht unterstützte Zeichen enthält.
+Der Login-Name wurde automatisch geändert.
+
+Ihr neuer Login-Name:
+------------------------------
+{newLogin}
+------------------------------
+
+{footer}</source>
+                <target>{header}
+Wir haben festgestellt, dass Ihr Loginname nicht unterstützte Zeichen enthält.
+Der Login-Name wurde automatisch geändert.
+
+Ihr neuer Login-Name:
+------------------------------
+{newLogin}
+------------------------------
+
+{footer}</target>
+            </trans-unit>
+        </body>
+    </file>
+</xliff>
