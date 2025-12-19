@@ -22,18 +22,10 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
+use MittagQI\ZfExtended\Localization;
+
 class ZfExtended_Zendoverwrites_Translate extends Zend_Translate
 {
-    /**
-     * The file-extension for the used translation-files
-     */
-    public const FILE_EXTENSION = 'zxliff';
-
-    /**
-     * The file-extension preceided by "." for the used translation-files
-     */
-    public const DOT_EXTENSION = '.zxliff';
-
     /**
      * @var ZfExtended_Zendoverwrites_Translate|null
      */
@@ -124,7 +116,8 @@ class ZfExtended_Zendoverwrites_Translate extends Zend_Translate
 
         $config = [
             'adapter' => 'ZfExtended_Zendoverwrites_Translate_Adapter_Xliff',
-            'content' => $this->config->runtimeOptions->dir->locales . '/' . $this->sourceLang . self::DOT_EXTENSION,
+            'content' => $this->config->runtimeOptions->dir->locales . '/' . $this->sourceLang .
+                Localization::FILE_EXTENSION_WITH_DOT,
             'locale' => $this->sourceLang,
             'disableNotices' => true,
             'logUntranslated' => true,
@@ -161,7 +154,7 @@ class ZfExtended_Zendoverwrites_Translate extends Zend_Translate
         $xliffFiles = scandir($this->config->runtimeOptions->dir->locales);
         foreach ($xliffFiles as $key => &$file) {
             $pathinfo = pathinfo($file);
-            if (empty($pathinfo['extension']) || $pathinfo['extension'] !== self::FILE_EXTENSION) {
+            if (empty($pathinfo['extension']) || $pathinfo['extension'] !== Localization::FILE_EXTENSION) {
                 continue;
             }
             $locale = preg_replace('"^.*-([a-zA-Z]{2,3})$"i', '\\1', $pathinfo['filename']);
@@ -241,7 +234,7 @@ class ZfExtended_Zendoverwrites_Translate extends Zend_Translate
         $dirs = $this->getTranslationDirectories();
 
         foreach ($dirs as $path) {
-            $path = $path . $this->getTargetLang() . self::DOT_EXTENSION;
+            $path = $path . $this->getTargetLang() . Localization::FILE_EXTENSION_WITH_DOT;
             if (file_exists($path)) {
                 $this->translationPaths[] = $path;
             }

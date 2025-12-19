@@ -71,4 +71,6 @@ class ZfExtended_View extends Zend_View implements Zend_View_Interface
      * @var int - total amount of rows for a given sql statement
      */
     public int $total;
+
+    public ZfExtended_Zendoverwrites_Translate $translate;
 }

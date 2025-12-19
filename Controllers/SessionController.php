@@ -23,6 +23,7 @@ END LICENSE AND COPYRIGHT
 */
 
 use MittagQI\ZfExtended\Acl\SystemResource;
+use MittagQI\ZfExtended\Localization;
 use ZfExtended_Authentication as Auth;
 
 /**
@@ -186,7 +187,7 @@ class ZfExtended_SessionController extends ZfExtended_RestController
      */
     protected function setLocale(Zend_Session_Namespace $session, ZfExtended_Models_User $userModel)
     {
-        $session->locale = ZfExtended_Utils::getLocale($userModel->getLocale());
+        $session->locale = Localization::getLocale($userModel->getLocale());
     }
 
     /**

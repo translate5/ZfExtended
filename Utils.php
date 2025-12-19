@@ -552,61 +552,6 @@ class ZfExtended_Utils
     }
 
     /**
-     * Get $desiredLocale arg if it's valid and available locale,
-     * or get from applicationLocale-config,
-     * or from browser,
-     * or from fallbackLocale-config
-     *
-     * @throws Zend_Exception
-     */
-    public static function getLocale(?string $desiredLocale = ''): string
-    {
-        // Get [localeCode => localeName] pairs for valid locales
-        $available = [
-            'en' => true,
-            'de' => true,
-        ];
-        /*$available = ZfExtended_Zendoverwrites_Translate
-            ::getInstance()
-            ->getAvailableTranslations();*/
-
-        // If $desiredLocale is given, and it's valid and available - use it
-        if ($desiredLocale) {
-            if (Zend_Locale::isLocale($desiredLocale)) {
-                if (isset($available[$desiredLocale])) {
-                    return $desiredLocale;
-                }
-            }
-        }
-
-        // Get runtimeOptions and fallback locale from there
-        $rop = Zend_Registry::get('config')->runtimeOptions;
-        $fallback = $rop->translation->fallbackLocale;
-
-        // If fallback is not available - then use first among available
-        if (! isset($available[$fallback])) {
-            $fallback = key($available);
-        }
-
-        // If app locate is set
-        if ($appLocale = $rop->translation->applicationLocale) {
-            // If it's valid - use that
-            if (Zend_Locale::isLocale($appLocale) && isset($available[$appLocale])) {
-                return $appLocale;
-
-                // Else - report that and use fallback
-            } else {
-                error_log('Configured runtimeOptions.translation.applicationLocale is no valid locale, using ' . $fallback);
-
-                return $fallback;
-            }
-        }
-
-        // Else use browser language or fallback
-        return self::getLocaleFromBrowser() ?: $fallback;
-    }
-
-    /**
      * Converts an integer-column value from the database either to an integer or null
      */
     public static function parseDbInt(mixed $dbInt): ?int
@@ -633,31 +578,6 @@ class ZfExtended_Utils
             $select->where($column . ' = ?', $values[0]);
         } else {
             $select->where('1 = 0');
-        }
-    }
-
-    /**
-     * Moved from ZfExtended_Controllers_Plugins_LocaleSetup
-     *
-     * gets locale from browser
-     * @return string
-     */
-    protected static function getLocaleFromBrowser()
-    {
-        $config = Zend_Registry::get('config');
-        $localeObj = new Zend_Locale();
-        $userPrefLangs = array_keys($localeObj->getBrowser());
-        if (count($userPrefLangs) > 0) {
-            //Prüfe, ob für jede locale, ob eine xliff-Datei vorhanden ist - wenn nicht fallback
-            foreach ($userPrefLangs as $testLocale) {
-                $testLocaleObj = new Zend_Locale($testLocale);
-                $testLang = $testLocaleObj->getLanguage();
-                $localePath = $config->runtimeOptions->dir->locales . DIRECTORY_SEPARATOR . $testLang .
-                    ZfExtended_Zendoverwrites_Translate::DOT_EXTENSION;
-                if (file_exists($localePath)) {
-                    return $testLang;
-                }
-            }
         }
     }
 
