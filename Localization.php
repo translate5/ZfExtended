@@ -45,12 +45,12 @@ final class Localization
     /**
      * The locales, that are selectable for the GUI
      * These can be the sum of PRIMARY_LOCALE + SECONDARY_LOCALES
-     * but locales can be deactivated when not yet complete or have deficiancies
+     * locales can be deactivated when e.g. not yet complete
      */
     public const FRONTEND_LOCALES = [
         'de' => 'Deutsch',
         'en' => 'Englisch',
-        'fr' => 'Französisch',
+        /* 'fr' => 'Französisch', */
     ];
 
     /**
