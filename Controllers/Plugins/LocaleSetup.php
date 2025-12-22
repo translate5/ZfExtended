@@ -22,6 +22,8 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
+use MittagQI\ZfExtended\Localization;
+
 /**
  * Plugin, das Locale und Sprache aufsetzt
  */
@@ -57,13 +59,13 @@ class ZfExtended_Controllers_Plugins_LocaleSetup extends Zend_Controller_Plugin_
 
         // Update locale, if explicitly given as param
         if ($locale = $request->getParam('locale')) {
-            $locale = ZfExtended_Utils::getLocale($locale);
+            $locale = Localization::getLocale($locale);
             $session->locale = $locale;
 
             // Else if not given, and not set in session so far
         } elseif (! $session->locale) {
             // Get browser-locale or fallback-locale
-            $session->locale = ZfExtended_Utils::getLocale();
+            $session->locale = Localization::getLocale();
         }
 
         // Register locale

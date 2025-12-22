@@ -71,7 +71,7 @@ class ZfExtended_Models_SystemRequirement_Validator
             if ($module == '.'
                 || $module == '..'
                 || str_ends_with($module, 'Abstract.php')
-                || !str_ends_with($module, '.php')) {
+                || ! str_ends_with($module, '.php')) {
                 continue;
             }
             require_once $path . '/' . $module;

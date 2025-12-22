@@ -53,10 +53,10 @@ END LICENSE AND COPYRIGHT
  * @property bool enableJsLogger
  * @see Editor_IndexController::indexAction
  *
- * @method ZfExtended_View_Helper_PluginLocale PluginLocale()
+ * @method ZfExtended_View_Helper_PluginLocale pluginLocale()
  * @method ZfExtended_View_Helper_Php2JsVars Php2JsVars()
- * @method ZfExtended_View_Helper_TemplateApply TemplateApply()
- * @method ZfExtended_View_Helper_MailEmployeeSalutation MailEmployeeSalutation()
+ * @method ZfExtended_View_Helper_TemplateApply templateApply()
+ * @method ZfExtended_View_Helper_MailEmployeeSalutation mailEmployeeSalutation()
  */
 class ZfExtended_View extends Zend_View implements Zend_View_Interface
 {
@@ -71,4 +71,6 @@ class ZfExtended_View extends Zend_View implements Zend_View_Interface
      * @var int - total amount of rows for a given sql statement
      */
     public int $total;
+
+    public ZfExtended_Zendoverwrites_Translate $translate;
 }

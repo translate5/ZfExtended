@@ -17,7 +17,7 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
  @copyright  Marc Mittag, MittagQI - Quality Informatics
  @author     MittagQI - Quality Informatics
  @license    GNU LESSER GENERAL PUBLIC LICENSE version 3
-			 https://www.gnu.org/licenses/lgpl-3.0.txt
+             https://www.gnu.org/licenses/lgpl-3.0.txt
 
 END LICENSE AND COPYRIGHT
 */
@@ -43,12 +43,8 @@ Ihr neuer Login-Name:
 {newLogin}
 ------------------------------
 
-{footer}',[
+{footer}', [
     'header' => strip_tags($this->header), //since we send plain text here, we have to remove tags
     'footer' => strip_tags($this->footer),
     'newLogin' => $this->newLogin,
 ]);
-
-
-
-

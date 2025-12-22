@@ -22,20 +22,13 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
-/**#@+
- * @author Marc Mittag
- * @package ZfExtended
- * @version 2.0
- *
- */
-/**
- * Klasse zur Initialisierung aller Formulare
- *
- * - liest Form aus ini ein entsprechend der Konvention "controllerAction" des aufrufenden Controllers und der aufrufenden Action
- * - Kinder können auch zur Datenvalidierung im Modell herangezogen werden
- */
+use MittagQI\ZfExtended\Localization;
+
 class ZfExtended_Zendoverwrites_Translate extends Zend_Translate
 {
+    /**
+     * @var ZfExtended_Zendoverwrites_Translate|null
+     */
     protected static $_instance = null;
 
     /**
@@ -86,11 +79,6 @@ class ZfExtended_Zendoverwrites_Translate extends Zend_Translate
     protected $targetLang;
 
     /**
-     * @var string
-     */
-    protected $logPath;
-
-    /**
      * @var array
      */
     protected $translationPaths;
@@ -111,9 +99,13 @@ class ZfExtended_Zendoverwrites_Translate extends Zend_Translate
 
         //this is to have a translation adapter set if an error occurs inside translation
         //process before translation adapter is set - but errorcontroller needs one
-        parent::__construct('Zend_Translate_Adapter_Array', [
-            '' => '',
-        ], 'en');
+        parent::__construct(
+            'Zend_Translate_Adapter_Array',
+            [
+                '' => '',
+            ],
+            'en'
+        );
 
         //store translation instance only in registry if no targetLang is given and its therefore the default instance
         if (empty($targetLang)) {
@@ -121,25 +113,21 @@ class ZfExtended_Zendoverwrites_Translate extends Zend_Translate
         }
         $this->setSourceLang();
         $this->setTargetLang($targetLang);
-        $this->getLogPath();
 
         $config = [
             'adapter' => 'ZfExtended_Zendoverwrites_Translate_Adapter_Xliff',
-            'content' => $this->config->runtimeOptions->dir->locales . '/' . $this->sourceLang . '.xliff',
+            'content' => $this->config->runtimeOptions->dir->locales . '/' . $this->sourceLang .
+                Localization::FILE_EXTENSION_WITH_DOT,
             'locale' => $this->sourceLang,
             'disableNotices' => true,
             'logUntranslated' => true,
-            'logMessage' => '<trans-unit id=\'%id%\'>' .
-                '<source>%message%</source>' .
-                '<target>%message%</target>' .
-                '</trans-unit>',
+            'logMessage' => 'Localization: translation missing for id: "%id%", string: "%message%"',
             'useId' => true,
         ];
 
         if (ZfExtended_Utils::isDevelopment()) {
             $writer = new Zend_Log_Writer_Stream($this->getLogPath());
-            $formatter = new Zend_Log_Formatter_Simple('%message%' . PHP_EOL);
-            $writer->setFormatter($formatter);
+            $writer->setFormatter(new Zend_Log_Formatter_Simple('%message%' . PHP_EOL));
             $config['log'] = new Zend_Log($writer);
         } else {
             //cache translations in production
@@ -166,7 +154,7 @@ class ZfExtended_Zendoverwrites_Translate extends Zend_Translate
         $xliffFiles = scandir($this->config->runtimeOptions->dir->locales);
         foreach ($xliffFiles as $key => &$file) {
             $pathinfo = pathinfo($file);
-            if (empty($pathinfo['extension']) || $pathinfo['extension'] !== 'xliff') {
+            if (empty($pathinfo['extension']) || $pathinfo['extension'] !== Localization::FILE_EXTENSION) {
                 continue;
             }
             $locale = preg_replace('"^.*-([a-zA-Z]{2,3})$"i', '\\1', $pathinfo['filename']);
@@ -180,25 +168,6 @@ class ZfExtended_Zendoverwrites_Translate extends Zend_Translate
         asort($locales, SORT_NATURAL);
 
         return $locales;
-    }
-
-    public function getXliffStartString()
-    {
-        return '<?xml version="1.0" ?>
-<xliff version=\'1.1\' xmlns=\'urn:oasis:names:tc:xliff:document:1.1\'>
-<!-- the transunit-ID should contain the base64-encoded source-string als used in the php source-code. This ID is used for matching. -->
-<!-- html-tags inside the target-string must not be encoded as they should regarding xliff but should be left as plain hmtl. At this stage ZfExtended does not support xliff inline tags -->
- <file original=\'php-sourcecode\' source-language=\'' . $this->getSourceLang() .
-                '\' target-language=\'' . $this->getTargetLang() . '\' datatype=\'php\' xml:space=\'preserve\'>
-  <body>';
-    }
-
-    public function getXliffEndString()
-    {
-        return "
-  </body>
- </file>
-</xliff>";
     }
 
     /**
@@ -245,12 +214,10 @@ class ZfExtended_Zendoverwrites_Translate extends Zend_Translate
     {
         $paths = $this->getTranslationPaths();
         foreach ($paths as $path) {
-            $this->addTranslation(
-                [
-                    'content' => $path,
-                    'locale' => $this->getTargetLang(),
-                ]
-            );
+            $this->addTranslation([
+                'content' => $path,
+                'locale' => $this->getTargetLang(),
+            ]);
         }
     }
 
@@ -267,7 +234,7 @@ class ZfExtended_Zendoverwrites_Translate extends Zend_Translate
         $dirs = $this->getTranslationDirectories();
 
         foreach ($dirs as $path) {
-            $path = $path . $this->getTargetLang() . '.xliff';
+            $path = $path . $this->getTargetLang() . Localization::FILE_EXTENSION_WITH_DOT;
             if (file_exists($path)) {
                 $this->translationPaths[] = $path;
             }
@@ -296,7 +263,7 @@ class ZfExtended_Zendoverwrites_Translate extends Zend_Translate
         // add client-specific Translations
         $directories[] = APPLICATION_ROOT . '/client-specific/locales/';
 
-        return array_unique($directories);
+        return array_values(array_unique($directories));
     }
 
     /**
@@ -325,12 +292,7 @@ class ZfExtended_Zendoverwrites_Translate extends Zend_Translate
      */
     public function getLogPath()
     {
-        if (empty($this->logPath)) {
-            $this->logPath = $this->config->runtimeOptions->dir->logs . '/notFoundTranslation-' .
-        APPLICATION_MODULE . '-' . $this->sourceLang . '-' . $this->getTargetLang() . '.xliff';
-        }
-
-        return $this->logPath;
+        return APPLICATION_DATA . '/logs/l10n.log';
     }
 
     /**
