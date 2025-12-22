@@ -40,7 +40,7 @@ final class Localization
     /**
      * Additional locales translate5 is shipped with
      */
-    public const SECONDARY_LOCALES = ['en', 'fr'];
+    public const SECONDARY_LOCALES = ['en', 'fr', 'it'];
 
     /**
      * The locales, that are selectable for the GUI
@@ -51,6 +51,7 @@ final class Localization
         'de' => 'Deutsch',
         'en' => 'Englisch',
         /* 'fr' => 'Französisch', */
+        /* 'it' => 'Italienisch', */
     ];
 
     /**
