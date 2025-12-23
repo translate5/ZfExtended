@@ -50,8 +50,8 @@ final class Localization
     public const FRONTEND_LOCALES = [
         'de' => 'Deutsch',
         'en' => 'Englisch',
-        /* 'fr' => 'Französisch', */
-        /* 'it' => 'Italienisch', */
+        'fr' => 'Französisch',
+        'it' => 'Italienisch',
     ];
 
     /**
