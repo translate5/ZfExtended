@@ -38,6 +38,11 @@ final class Localization
     public const PRIMARY_LOCALE = 'de';
 
     /**
+     * The locale being used for strings not found in other locales
+     */
+    public const FALLBACK_LOCALE = 'en';
+
+    /**
      * Additional locales translate5 is shipped with
      */
     public const SECONDARY_LOCALES = ['en', 'fr', 'it'];
@@ -56,7 +61,7 @@ final class Localization
 
     /**
      * The default source locale
-     * that is encoded in the
+     * that is encoded in the ZXLIFF files
      */
     public const DEFAULT_SOURCE_LOCALE = 'ha';
 

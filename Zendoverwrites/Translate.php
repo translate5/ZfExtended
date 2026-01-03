@@ -24,6 +24,9 @@ END LICENSE AND COPYRIGHT
 
 use MittagQI\ZfExtended\Localization;
 
+/**
+ * @method ZfExtended_Zendoverwrites_Translate_Adapter_Xliff getAdapter()
+ */
 class ZfExtended_Zendoverwrites_Translate extends Zend_Translate
 {
     /**
@@ -115,7 +118,7 @@ class ZfExtended_Zendoverwrites_Translate extends Zend_Translate
         $this->setTargetLang($targetLang);
 
         $config = [
-            'adapter' => 'ZfExtended_Zendoverwrites_Translate_Adapter_Xliff',
+            'adapter' => ZfExtended_Zendoverwrites_Translate_Adapter_Xliff::class,
             'content' => $this->config->runtimeOptions->dir->locales . '/' . $this->sourceLang .
                 Localization::FILE_EXTENSION_WITH_DOT,
             'locale' => $this->sourceLang,
@@ -182,7 +185,11 @@ class ZfExtended_Zendoverwrites_Translate extends Zend_Translate
             //setzte die sourceLang in der Session  ///
             $sourceLocale = $this->config->runtimeOptions->translation->sourceLocale;
             if (! Zend_Locale::isLocale($sourceLocale)) {
-                throw new Zend_Exception('$sourceLocale war keine gültige locale - fehlerhafte Konfiguration in application.ini (runtimeOptions.translation.locale)', 0);
+                throw new Zend_Exception(
+                    $sourceLocale . ' war keine gültige locale - fehlerhafte Konfiguration in' .
+                    ' application.ini (runtimeOptions.translation.locale)',
+                    0
+                );
             }
             $session = new Zend_Session_Namespace();
             $sourceLocaleObj = new Zend_Locale($sourceLocale);
@@ -275,7 +282,7 @@ class ZfExtended_Zendoverwrites_Translate extends Zend_Translate
         if (! Zend_Registry::isRegistered('PluginManager')) {
             return [];
         }
-        /* @var ZfExtended_Plugin_Manager $pluginmanager */
+        /** @var ZfExtended_Plugin_Manager $pluginmanager */
         $pluginmanager = Zend_Registry::get('PluginManager');
         $paths = $pluginmanager->getActiveLocalePaths();
         if (empty($paths)) {
@@ -323,15 +330,13 @@ class ZfExtended_Zendoverwrites_Translate extends Zend_Translate
         return $this->sourceLang;
     }
 
-    /***
-     * @uses Zend_Translate_Adapter::_
-     * @param string $s: string to be translated
-     * @param string $locale: language locale
+    /**
      * @return string
      */
     public function _($s, $locale = null)
     {
-        $s = parent::_($s, $locale);
+        $s = $this->getAdapter()->translate($s, $locale);
+        // if configured, we JSON-encode the translation to serve JSON translation-files
         if ($this->_jsonEncode) {
             $s = json_encode($s, JSON_HEX_APOS);
             $length = strlen($s);

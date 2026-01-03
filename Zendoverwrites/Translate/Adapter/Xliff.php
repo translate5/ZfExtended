@@ -22,15 +22,11 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
-/**#@+
- * @author Marc Mittag
- * @package ZfExtended
- * @version 2.0
- *
- */
+use MittagQI\ZfExtended\Localization;
+
 /**
  * had to overwrite everything in the parent class because of the need to change
- * 3 lines of code, because the whole parent had been declared priate. Thats's really
+ * 3 lines of code, because the whole parent had been declared private. Thats's really
  * bad still in the normally good ZF
  *
  * only changed part is the base64-decoding of trans-unit-ids _startElement-function
@@ -43,8 +39,6 @@ class ZfExtended_Zendoverwrites_Translate_Adapter_Xliff extends Zend_Translate_A
     private $_file = false;
 
     private $_useId = true;
-
-    private $_cleared = [];
 
     private $_transunit = null;
 
@@ -63,6 +57,51 @@ class ZfExtended_Zendoverwrites_Translate_Adapter_Xliff extends Zend_Translate_A
     private $_ttag = false;
 
     private $_data = [];
+
+    /**
+     * Adjusted logic for central localization API:
+     * if translation is not found for the desired locale, we use the defined fallback-locale
+     * This does not take exotic stuff like plural (array) arguments or locale-routing into account
+     * and is tailored to the way localization is used in t5
+     * @param mixed $messageId
+     * @param string|Zend_Locale|null $locale
+     * @return string
+     * @throws Zend_Locale_Exception
+     */
+    public function translate($messageId, $locale = null)
+    {
+        if ($locale === null) {
+            $locale = $this->_options['locale'];
+        }
+        // any array/plural construct will fall back to the default implementation: we do not use it
+        if (is_array($messageId)) {
+            return parent::translate($messageId, $locale);
+        }
+
+        if (! Zend_Locale::isLocale($locale, true, false)) {
+            if (! Zend_Locale::isLocale($locale, false, false)) {
+                // No proper locale: redirect to parent implementation
+                return parent::translate($messageId, $locale);
+            }
+
+            // create proper zend-locale
+            $locale = new Zend_Locale($locale);
+        }
+
+        $locale = (string) $locale;
+
+        // when translation exists, return it
+        if ((is_string($messageId) || is_int($messageId)) &&
+            $locale !== Localization::FALLBACK_LOCALE &&
+            isset($this->_translate[$locale][$messageId]) &&
+            ! empty($this->_translate[$locale][$messageId])
+        ) {
+            return $this->_translate[$locale][$messageId];
+        }
+
+        // otherwise use fallback-locale and translate with base-implementation
+        return parent::translate($messageId, Localization::FALLBACK_LOCALE);
+    }
 
     /**
      * Logs a message when the log option is set - overwrites parent:_log to base64_encode id
@@ -232,6 +271,7 @@ class ZfExtended_Zendoverwrites_Translate_Adapter_Xliff extends Zend_Translate_A
                     $this->_tcontent = null;
 
                     break;
+
                 case 'source':
                     if ($this->_useId) {
                         if (! empty($this->_scontent) && ! empty($this->_langId) &&
@@ -247,6 +287,7 @@ class ZfExtended_Zendoverwrites_Translate_Adapter_Xliff extends Zend_Translate_A
                     $this->_stag = false;
 
                     break;
+
                 case 'target':
                     if ($this->_useId) {
                         if (! empty($this->_tcontent) && ! empty($this->_langId) &&
@@ -262,6 +303,7 @@ class ZfExtended_Zendoverwrites_Translate_Adapter_Xliff extends Zend_Translate_A
                     $this->_ttag = false;
 
                     break;
+
                 default:
                     break;
             }
