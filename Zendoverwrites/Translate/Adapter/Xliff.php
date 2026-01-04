@@ -99,8 +99,8 @@ class ZfExtended_Zendoverwrites_Translate_Adapter_Xliff extends Zend_Translate_A
         // not found: log the miss ...
         $this->_log($messageId, $locale);
 
-        // the primary locale shall fallback on it's own source,
-        if ($locale === Localization::PRIMARY_LOCALE) {
+        // the primary locale shall fallback on it's own source, the Fallback-locale cannot have a fallback ...
+        if ($locale === Localization::PRIMARY_LOCALE || $locale === Localization::FALLBACK_LOCALE) {
             return $messageId;
         }
 
