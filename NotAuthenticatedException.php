@@ -22,12 +22,23 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
+/**
+ * SECTION TO INCLUDE PROGRAMMATIC LOCALIZATION
+ * ============================================
+ * $translate->_('Nicht authentifiziert!');
+ */
+
 class ZfExtended_NotAuthenticatedException extends ZfExtended_Exception
 {
     /**
      * @var string
      */
     protected $defaultMessage = 'Nicht authentifiziert!';
+
+    /**
+     * @var bool
+     */
+    protected $defaultMessageTranslate = true;
 
     /**
      * @var integer

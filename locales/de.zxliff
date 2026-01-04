@@ -34,9 +34,17 @@
                 <source>Das Passwort enthält ein Wort aus der schwarzen Liste.</source>
                 <target>Das Passwort enthält ein Wort aus der schwarzen Liste.</target>
             </trans-unit>
+            <trans-unit id="RGF0ZW4gbmljaHQgZ2VmdW5kZW4h">
+                <source>Daten nicht gefunden!</source>
+                <target>Daten nicht gefunden!</target>
+            </trans-unit>
             <trans-unit id="RGVyIFJlc2V0SGFzaCBvZGVyIGRpZSBCcm93c2Vyc2l0enVuZyBpc3QgbmljaHQgKG1laHIpIGfDvGx0aWcuIEJpdHRlIGZvcmRlcm4gU2llIMO8YmVyIGRhcyBuZWJlbnN0ZWhlbmRlIEZvcm11bGFyIGVpbmUgRS1NYWlsIG1pdCBlaW5lbSBuZXVlbiBMaW5rIGFuLg==">
                 <source>Der ResetHash oder die Browsersitzung ist nicht (mehr) gültig. Bitte fordern Sie über das nebenstehende Formular eine E-Mail mit einem neuen Link an.</source>
                 <target>Der ResetHash oder die Browsersitzung ist nicht (mehr) gültig. Bitte fordern Sie über das nebenstehende Formular eine E-Mail mit einem neuen Link an.</target>
+            </trans-unit>
+            <trans-unit id="RGllIEF1c2dhbmdzZGF0ZW4gd3VyZGVuIGluIGRlciBad2lzY2hlbnplaXQgdmVyw6RuZGVydC4gQml0dGUgYWt0dWFsaXNpZXJlbiBTaWUgSWhyZSBBbnNpY2h0IQ==">
+                <source>Die Ausgangsdaten wurden in der Zwischenzeit verändert. Bitte aktualisieren Sie Ihre Ansicht!</source>
+                <target>Die Ausgangsdaten wurden in der Zwischenzeit verändert. Bitte aktualisieren Sie Ihre Ansicht!</target>
             </trans-unit>
             <trans-unit id="RGllIERhdGVpIHd1cmRlIG51ciB0ZWlsd2Vpc2UgaG9jaGdlbGFkZW4u">
                 <source>Die Datei wurde nur teilweise hochgeladen.</source>
@@ -90,6 +98,10 @@
                 <source>Kein Passwort angegeben.</source>
                 <target>Kein Passwort angegeben.</target>
             </trans-unit>
+            <trans-unit id="S2VpbmUgWnVncmlmZnNiZXJlY2h0aWd1bmch">
+                <source>Keine Zugriffsberechtigung!</source>
+                <target>Keine Zugriffsberechtigung!</target>
+            </trans-unit>
             <trans-unit id="TG9naW5uYW1lIGdlw6RuZGVydA==">
                 <source>Loginname geändert</source>
                 <target>Loginname geändert</target>
@@ -113,6 +125,14 @@
             <trans-unit id="TmV1ZXMgUGFzc3dvcnQ=">
                 <source>Neues Passwort</source>
                 <target>Neues Passwort</target>
+            </trans-unit>
+            <trans-unit id="TmljaHQgYXV0aGVudGlmaXppZXJ0IQ==">
+                <source>Nicht authentifiziert!</source>
+                <target>Nicht authentifiziert!</target>
+            </trans-unit>
+            <trans-unit id="TmljaHQgZ2VmdW5kZW4h">
+                <source>Nicht gefunden!</source>
+                <target>Nicht gefunden!</target>
             </trans-unit>
             <trans-unit id="UGFzc3dvcnQgbmV1IHNldHplbg==">
                 <source>Passwort neu setzen</source>

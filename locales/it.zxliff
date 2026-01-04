@@ -34,9 +34,17 @@
                 <source>Das Passwort enthält ein Wort aus der schwarzen Liste.</source>
                 <target>La password contiene una parola presente nella lista nera.</target>
             </trans-unit>
+            <trans-unit id="RGF0ZW4gbmljaHQgZ2VmdW5kZW4h">
+                <source>Daten nicht gefunden!</source>
+                <target></target>
+            </trans-unit>
             <trans-unit id="RGVyIFJlc2V0SGFzaCBvZGVyIGRpZSBCcm93c2Vyc2l0enVuZyBpc3QgbmljaHQgKG1laHIpIGfDvGx0aWcuIEJpdHRlIGZvcmRlcm4gU2llIMO8YmVyIGRhcyBuZWJlbnN0ZWhlbmRlIEZvcm11bGFyIGVpbmUgRS1NYWlsIG1pdCBlaW5lbSBuZXVlbiBMaW5rIGFuLg==">
                 <source>Der ResetHash oder die Browsersitzung ist nicht (mehr) gültig. Bitte fordern Sie über das nebenstehende Formular eine E-Mail mit einem neuen Link an.</source>
                 <target>Il ResetHash o la sessione del browser non sono validi (o non lo sono più). Richiedere un’e-mail con un nuovo link tramite il modulo qui di fianco.</target>
+            </trans-unit>
+            <trans-unit id="RGllIEF1c2dhbmdzZGF0ZW4gd3VyZGVuIGluIGRlciBad2lzY2hlbnplaXQgdmVyw6RuZGVydC4gQml0dGUgYWt0dWFsaXNpZXJlbiBTaWUgSWhyZSBBbnNpY2h0IQ==">
+                <source>Die Ausgangsdaten wurden in der Zwischenzeit verändert. Bitte aktualisieren Sie Ihre Ansicht!</source>
+                <target></target>
             </trans-unit>
             <trans-unit id="RGllIERhdGVpIHd1cmRlIG51ciB0ZWlsd2Vpc2UgaG9jaGdlbGFkZW4u">
                 <source>Die Datei wurde nur teilweise hochgeladen.</source>
@@ -90,6 +98,10 @@
                 <source>Kein Passwort angegeben.</source>
                 <target>Nessuna password indicata.</target>
             </trans-unit>
+            <trans-unit id="S2VpbmUgWnVncmlmZnNiZXJlY2h0aWd1bmch">
+                <source>Keine Zugriffsberechtigung!</source>
+                <target></target>
+            </trans-unit>
             <trans-unit id="TG9naW5uYW1lIGdlw6RuZGVydA==">
                 <source>Loginname geändert</source>
                 <target>Nome di login modificato</target>
@@ -113,6 +125,14 @@
             <trans-unit id="TmV1ZXMgUGFzc3dvcnQ=">
                 <source>Neues Passwort</source>
                 <target>Nuova password</target>
+            </trans-unit>
+            <trans-unit id="TmljaHQgYXV0aGVudGlmaXppZXJ0IQ==">
+                <source>Nicht authentifiziert!</source>
+                <target></target>
+            </trans-unit>
+            <trans-unit id="TmljaHQgZ2VmdW5kZW4h">
+                <source>Nicht gefunden!</source>
+                <target></target>
             </trans-unit>
             <trans-unit id="UGFzc3dvcnQgbmV1IHNldHplbg==">
                 <source>Passwort neu setzen</source>
