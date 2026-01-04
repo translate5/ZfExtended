@@ -28,6 +28,9 @@ END LICENSE AND COPYRIGHT
  * @version 2.0
  *
  */
+
+use MittagQI\ZfExtended\Localization;
+
 /**
  * Klasse zur Kapselung des Mailversands
  */
@@ -436,17 +439,12 @@ class ZfExtended_TemplateBasedMail
     {
         $locale = $user->getLocale();
         // user has locale, use that:
-        if (! empty($locale)) {
-            return $locale;
-        }
-        //if an applicationLocale is configured use that
-        $locale = $this->config->runtimeOptions->translation->applicationLocale;
-        if (! empty($locale)) {
+        if (! empty($locale) && Localization::isAvailableLocale($locale)) {
             return $locale;
         }
 
-        //finally use the fallback:
-        return $this->config->runtimeOptions->translation->fallbackLocale;
+        // fallback to application locale
+        return Localization::getApplicationLocale();
     }
 
     /**

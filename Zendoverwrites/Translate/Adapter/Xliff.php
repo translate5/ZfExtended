@@ -74,7 +74,8 @@ class ZfExtended_Zendoverwrites_Translate_Adapter_Xliff extends Zend_Translate_A
             $locale = $this->_options['locale'];
         }
         // any array/plural construct will fall back to the default implementation: we do not use it
-        if (is_array($messageId)) {
+        // also other cases of unclear types
+        if (is_array($messageId) || ! (is_string($messageId) || is_int($messageId))) {
             return parent::translate($messageId, $locale);
         }
 
@@ -91,16 +92,47 @@ class ZfExtended_Zendoverwrites_Translate_Adapter_Xliff extends Zend_Translate_A
         $locale = (string) $locale;
 
         // when translation exists, return it
-        if ((is_string($messageId) || is_int($messageId)) &&
-            $locale !== Localization::FALLBACK_LOCALE &&
-            isset($this->_translate[$locale][$messageId]) &&
-            ! empty($this->_translate[$locale][$messageId])
-        ) {
+        if (isset($this->_translate[$locale][$messageId]) && ! empty($this->_translate[$locale][$messageId])) {
             return $this->_translate[$locale][$messageId];
         }
 
-        // otherwise use fallback-locale and translate with base-implementation
-        return parent::translate($messageId, Localization::FALLBACK_LOCALE);
+        // not found: log the miss ...
+        $this->_log($messageId, $locale);
+
+        // the primary locale shall fallback on it's own source,
+        if ($locale === Localization::PRIMARY_LOCALE) {
+            return $messageId;
+        }
+
+        // secondary locales shall fall back on the defined fallback-locale
+        $fallbackLocale = new Zend_Locale(Localization::FALLBACK_LOCALE);
+        $locale = (string) $fallbackLocale;
+
+        // we may need to load the fallback-locale first ...
+        if (! $this->isAvailable($locale)) {
+            $this->addTranslationsFor($fallbackLocale);
+        }
+
+        if (isset($this->_translate[$locale][$messageId]) && ! empty($this->_translate[$locale][$messageId])) {
+            return $this->_translate[$locale][$messageId];
+        }
+
+        // pass over to parent implementation (which will log the miss for a not found fallback-locale)
+        return parent::translate($messageId, $locale);
+    }
+
+    /**
+     * Loads an additional language (to support a fallback-language)
+     * @throws Zend_Translate_Exception
+     */
+    private function addTranslationsFor(Zend_Locale $locale): void
+    {
+        $pathes = ZfExtended_Zendoverwrites_Translate::getInstance()->getTranslationPathes($locale->getLanguage());
+        foreach ($pathes as $path) {
+            $this->addTranslation([
+                'content' => $path,
+            ]);
+        }
     }
 
     /**

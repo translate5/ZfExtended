@@ -81,10 +81,7 @@ class ZfExtended_Zendoverwrites_Translate extends Zend_Translate
      */
     protected $targetLang;
 
-    /**
-     * @var array
-     */
-    protected $translationPaths;
+    protected array $translationPathes = [];
 
     /**
      * @var Zend_Config
@@ -100,14 +97,14 @@ class ZfExtended_Zendoverwrites_Translate extends Zend_Translate
     {
         $this->config = Zend_Registry::get('config');
 
-        //this is to have a translation adapter set if an error occurs inside translation
-        //process before translation adapter is set - but errorcontroller needs one
+        // this is to have a translation adapter set if an error occurs inside translation
+        // process before translation adapter is set - but errorcontroller needs one
         parent::__construct(
             'Zend_Translate_Adapter_Array',
             [
                 '' => '',
             ],
-            'en'
+            Localization::FALLBACK_LOCALE
         );
 
         //store translation instance only in registry if no targetLang is given and its therefore the default instance
@@ -151,7 +148,7 @@ class ZfExtended_Zendoverwrites_Translate extends Zend_Translate
     public function getAvailableTranslations()
     {
         $session = new Zend_Session_Namespace();
-        $sourceLocale = $this->config->runtimeOptions->translation->sourceLocale;
+        $sourceLocale = Localization::DEFAULT_SOURCE_LOCALE;
 
         $locales = [];
         $xliffFiles = scandir($this->config->runtimeOptions->dir->locales);
@@ -182,8 +179,8 @@ class ZfExtended_Zendoverwrites_Translate extends Zend_Translate
     {
         $this->sourceLang = $lang;
         if (is_null($this->sourceLang)) {
-            //setzte die sourceLang in der Session  ///
-            $sourceLocale = $this->config->runtimeOptions->translation->sourceLocale;
+            // setzte die sourceLang in der Session  ///
+            $sourceLocale = Localization::DEFAULT_SOURCE_LOCALE;
             if (! Zend_Locale::isLocale($sourceLocale)) {
                 throw new Zend_Exception(
                     $sourceLocale . ' war keine gültige locale - fehlerhafte Konfiguration in' .
@@ -212,15 +209,14 @@ class ZfExtended_Zendoverwrites_Translate extends Zend_Translate
                 $this->targetLang = $targetLocaleObj->getLanguage();
             } else {
                 //fallback EN if no locale registered
-                $this->targetLang = 'en';
+                $this->targetLang = Localization::FALLBACK_LOCALE;
             }
         }
     }
 
     protected function addTranslations()
     {
-        $paths = $this->getTranslationPaths();
-        foreach ($paths as $path) {
+        foreach ($this->getTranslationPathes($this->getTargetLang()) as $path) {
             $this->addTranslation([
                 'content' => $path,
                 'locale' => $this->getTargetLang(),
@@ -229,25 +225,25 @@ class ZfExtended_Zendoverwrites_Translate extends Zend_Translate
     }
 
     /**
-     * later paths should overwrite previous ones
+     * later pathes should overwrite previous ones
      */
-    public function getTranslationPaths(): array
+    public function getTranslationPathes(string $language): array
     {
-        if (! empty($this->translationPaths)) {
-            return $this->translationPaths;
+        if (array_key_exists($language, $this->translationPathes)) {
+            return $this->translationPathes[$language];
         }
-        $this->translationPaths = [];
 
+        $this->translationPathes[$language] = [];
         $dirs = $this->getTranslationDirectories();
 
         foreach ($dirs as $path) {
-            $path = $path . $this->getTargetLang() . Localization::FILE_EXTENSION_WITH_DOT;
+            $path = $path . $language . Localization::FILE_EXTENSION_WITH_DOT;
             if (file_exists($path)) {
-                $this->translationPaths[] = $path;
+                $this->translationPathes[$language][] = $path;
             }
         }
 
-        return $this->translationPaths;
+        return $this->translationPathes[$language];
     }
 
     /**
@@ -265,7 +261,7 @@ class ZfExtended_Zendoverwrites_Translate extends Zend_Translate
         }
         $directories[] = APPLICATION_PATH . '/modules/' . APPLICATION_MODULE . '/locales/';
 
-        $directories = array_merge($directories, array_values($this->addPluginPaths()));
+        $directories = array_merge($directories, array_values($this->addPluginPathes()));
 
         // add client-specific Translations
         $directories[] = APPLICATION_ROOT . '/client-specific/locales/';
@@ -277,7 +273,7 @@ class ZfExtended_Zendoverwrites_Translate extends Zend_Translate
      * Adds the locales of the plugins - if any - to the locales system
      * @throws Zend_Exception
      */
-    protected function addPluginPaths(): array
+    protected function addPluginPathes(): array
     {
         if (! Zend_Registry::isRegistered('PluginManager')) {
             return [];
@@ -317,7 +313,7 @@ class ZfExtended_Zendoverwrites_Translate extends Zend_Translate
      */
     public function getSourceCodeLocale()
     {
-        return $this->config->runtimeOptions->translation->sourceCodeLocale;
+        return Localization::FALLBACK_LOCALE;
     }
 
     /**

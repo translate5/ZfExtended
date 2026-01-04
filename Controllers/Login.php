@@ -22,6 +22,7 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
+use MittagQI\ZfExtended\Localization;
 use MittagQI\ZfExtended\Session\SessionInternalUniqueId;
 use ZfExtended_Authentication as Auth;
 use ZfExtended_Models_User as User;
@@ -405,7 +406,7 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
             $this->_setLocale($locale);
         } else {
             //if the user has no valid locale in the DB we set the current locale
-            Auth::getInstance()->getUser()->setLocale($this->_session->locale ?? 'en');
+            Auth::getInstance()->getUser()->setLocale($this->_session->locale ?? Localization::FALLBACK_LOCALE);
         }
     }
 
