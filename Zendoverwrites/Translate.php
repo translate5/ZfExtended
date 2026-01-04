@@ -301,14 +301,6 @@ class ZfExtended_Zendoverwrites_Translate extends Zend_Translate
     }
 
     /**
-     * @return string
-     */
-    public function getSourceCodeLocale()
-    {
-        return Localization::FALLBACK_LOCALE;
-    }
-
-    /**
      * Returns the language part of the locale
      *
      * @return string
