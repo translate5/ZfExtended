@@ -36,6 +36,7 @@ END LICENSE AND COPYRIGHT
  * $translate->_('Der Benutzername ist zu kurz!');
  * $translate->_('E-Mail anfordern');
  * $translate->_('Einloggen');
+ * $translate->_('Login');
  * $translate->_('Mindestlänge: 12 Zeichen. Mindestens enthalten: Ein Großbuchstabe, ein Kleinbuchstabe und eine Zahl.');
  * $translate->_('Neu setzen');
  * $translate->_('Passwort wiederholen');
