@@ -26,6 +26,7 @@ END LICENSE AND COPYRIGHT
  * SECTION TO INCLUDE PROGRAMMATIC LOCALIZATION
  * ============================================
  * These localizations may appear in the validation / titles of Zend-Forms still in use
+ * $translate->_('No token was provided to match against');
  * $translate->_("'%value%' does not match the expected structure for a DNS hostname");
  * $translate->_('Benutzername');
  * $translate->_('Bitte geben Sie ein Passwort an!');
