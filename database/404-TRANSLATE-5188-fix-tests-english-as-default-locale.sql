@@ -28,3 +28,4 @@
 DELETE FROM `Zf_configuration` WHERE `name` = 'runtimeOptions.translation.sourceCodeLocale';
 DELETE FROM `Zf_configuration` WHERE `name` = 'runtimeOptions.translation.sourceLocale';
 DELETE FROM `Zf_configuration` WHERE `name` = 'runtimeOptions.translation.fallbackLocale';
+UPDATE `Zf_configuration` SET `defaults` = 'en,de,fr,it' WHERE `name` = 'runtimeOptions.translation.applicationLocale';
