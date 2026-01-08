@@ -22,12 +22,26 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
-/**#@+
- * @author Marc Mittag
- * @package ZfExtended
- * @version 2.0
- *
+/**
+ * SECTION TO INCLUDE PROGRAMMATIC LOCALIZATION
+ * ============================================
+ * These localizations may appear in the validation / titles of Zend-Forms still in use
+ * $translate->_("'%value%' does not match the expected structure for a DNS hostname");
+ * $translate->_('Benutzername');
+ * $translate->_('Bitte geben Sie ein Passwort an!');
+ * $translate->_('Bitte geben Sie einen Benutzernamen an!');
+ * $translate->_('Bitte laden Sie die Login-Seite neu, geben Sie ihr Passwort erneut ein und senden Sie das Formular erneut ab - Ihr Hash-Wert zur Überprüfung von Cross-Site-Skripting-Attacken war nicht korrekt.');
+ * $translate->_('Das Passwort ist zu kurz!');
+ * $translate->_('Der Benutzername enthält Zeichen, die nicht verwendet werden dürfen!');
+ * $translate->_('Der Benutzername ist zu kurz!');
+ * $translate->_('E-Mail anfordern');
+ * $translate->_('Einloggen');
+ * $translate->_('Mindestlänge: 12 Zeichen. Mindestens enthalten: Ein Großbuchstabe, ein Kleinbuchstabe und eine Zahl.');
+ * $translate->_('Neu setzen');
+ * $translate->_('Passwort wiederholen');
+ * $translate->_('Passwort');
  */
+
 /**
  * Klasse zur Initialisierung aller Formulare
  *
