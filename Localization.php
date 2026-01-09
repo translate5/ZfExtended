@@ -38,6 +38,11 @@ final class Localization
     public const PRIMARY_LOCALE = 'de';
 
     /**
+     * The locale being used for strings not found in other locales
+     */
+    public const FALLBACK_LOCALE = 'en';
+
+    /**
      * Additional locales translate5 is shipped with
      */
     public const SECONDARY_LOCALES = ['en', 'fr', 'it'];
@@ -48,15 +53,15 @@ final class Localization
      * locales can be deactivated when e.g. not yet complete
      */
     public const FRONTEND_LOCALES = [
-        'de' => 'Deutsch',
         'en' => 'Englisch',
+        'de' => 'Deutsch',
         'fr' => 'Französisch',
         'it' => 'Italienisch',
     ];
 
     /**
-     * The default source locale
-     * that is encoded in the
+     * The default source locale. A locale, that never can be a localized language
+     * that is encoded in the PRIMARY_LOCALE ZXLIFF files as source ...
      */
     public const DEFAULT_SOURCE_LOCALE = 'ha';
 
@@ -97,76 +102,65 @@ final class Localization
      *  by argument - if it's a valid and available locale,
      *  or by applicationLocale-config,
      *  or by browser,
-     *  or by fallbackLocale-config
+     *  or by fallback-locale
      */
     public static function getLocale(?string $desiredLocale = null): string
     {
-        // Get [localeCode => localeName] pairs for valid locales
-        $available = [];
-        foreach (self::getAvailableLocales() as $locale) {
-            $available[$locale] = true;
-        }
-        // TODO FIXME: shouldn't we take the locales found by the Translate Adapter into account ?
-        // $available = ZfExtended_Zendoverwrites_Translate::getInstance()->getAvailableTranslations();
-
         // If $desiredLocale is given, and it's valid and available - use it
-        if ($desiredLocale) {
-            if (Zend_Locale::isLocale($desiredLocale)) {
-                if (isset($available[$desiredLocale])) {
-                    return $desiredLocale;
-                }
-            }
+        if ($desiredLocale !== null && self::isAvailableLocale($desiredLocale)) {
+            return $desiredLocale;
         }
 
-        // Get runtimeOptions and fallback locale from there
+        return self::getApplicationLocale(true);
+    }
+
+    public static function getApplicationLocale(bool $evaluateBrowserLocale = false): string
+    {
         $rop = \Zend_Registry::get('config')->runtimeOptions;
-        $fallback = $rop->translation->fallbackLocale;
-
-        // If fallback is not available - then use first among available
-        if (! isset($available[$fallback])) {
-            $fallback = key($available);
+        if (! empty($rop->translation->applicationLocale) &&
+            Zend_Locale::isLocale((string) $rop->translation->applicationLocale) &&
+            array_key_exists((string) $rop->translation->applicationLocale, self::FRONTEND_LOCALES)
+        ) {
+            return (string) $rop->translation->applicationLocale;
         }
 
-        // If app locate is set
-        if ($appLocale = $rop->translation->applicationLocale) {
-            // If it's valid - use that
-            if (Zend_Locale::isLocale($appLocale) && isset($available[$appLocale])) {
-                return $appLocale;
-                // Else - report that and use fallback
-            } else {
-                error_log(
-                    'Configured runtimeOptions.translation.applicationLocale is no valid locale, using ' . $fallback
-                );
+        error_log('Configured runtimeOptions.translation.applicationLocale is not valid, using ' . self::FALLBACK_LOCALE);
 
-                return $fallback;
-            }
+        if ($evaluateBrowserLocale) {
+            return self::getLocaleFromBrowser();
         }
 
-        // Else use browser language or fallback
-        return self::getLocaleFromBrowser() ?: $fallback;
+        return self::FALLBACK_LOCALE;
     }
 
     /**
      * Retrieves the desired locale from the browser - if available
      */
-    protected static function getLocaleFromBrowser(): ?string
+    protected static function getLocaleFromBrowser(): string
     {
-        $config = \Zend_Registry::get('config');
         $localeObj = new Zend_Locale();
         $userPrefLangs = array_keys($localeObj->getBrowser());
         if (count($userPrefLangs) > 0) {
-            //Prüfe, ob für jede locale, ob eine xliff-Datei vorhanden ist - wenn nicht fallback
             foreach ($userPrefLangs as $testLocale) {
-                $testLocaleObj = new Zend_Locale($testLocale);
-                $testLang = $testLocaleObj->getLanguage();
-                $localePath = $config->runtimeOptions->dir->locales . DIRECTORY_SEPARATOR . $testLang .
-                    self::FILE_EXTENSION_WITH_DOT;
-                if (file_exists($localePath)) {
-                    return $testLang;
+                $locale = new Zend_Locale($testLocale);
+                if (array_key_exists($locale->getLanguage(), self::FRONTEND_LOCALES)) {
+                    return $locale->getLanguage();
                 }
             }
         }
 
-        return null;
+        return self::FALLBACK_LOCALE;
+    }
+
+    public static function isAvailableLocale(string $language): bool
+    {
+        if (Zend_Locale::isLocale($language)) {
+            $locale = new Zend_Locale($language);
+
+            return array_key_exists($locale->getLanguage(), self::FRONTEND_LOCALES) &&
+                $locale->getLanguage() === $language;
+        }
+
+        return false;
     }
 }

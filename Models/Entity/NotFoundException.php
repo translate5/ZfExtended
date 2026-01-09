@@ -23,6 +23,12 @@ END LICENSE AND COPYRIGHT
 */
 
 /**
+ * SECTION TO INCLUDE PROGRAMMATIC LOCALIZATION
+ * ============================================
+ * $translate->_('Daten nicht gefunden!');
+ */
+
+/**
  * does not extend ZfExtended_NotFoundException since ZfExtended_NotFoundException is
  * the message, that a route to a resource is not found and
  * ZfExtended_Models_Entity_NotFoundException is the message that an DB-Entity is
@@ -35,6 +41,11 @@ class ZfExtended_Models_Entity_NotFoundException extends ZfExtended_Exception
      * @var string
      */
     protected $defaultMessage = 'Daten nicht gefunden!';
+
+    /**
+     * @var bool
+     */
+    protected $defaultMessageTranslate = true;
 
     /**
      * @var integer

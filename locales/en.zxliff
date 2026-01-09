@@ -2,17 +2,21 @@
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.1" version="1.1">
     <file original="php-sourcecode" source-language="de" target-language="en" datatype="php">
         <body>
+            <trans-unit id="JyV2YWx1ZSUnIGRvZXMgbm90IG1hdGNoIHRoZSBleHBlY3RlZCBzdHJ1Y3R1cmUgZm9yIGEgRE5TIGhvc3RuYW1l">
+                <source>'%value%' does not match the expected structure for a DNS hostname</source>
+                <target>“%value%” does not match the expected structure for a DNS hostname</target>
+            </trans-unit>
             <trans-unit id="JyV2YWx1ZSUnIGlzdCBuaWNodCBGQUxTRQ==">
                 <source>'%value%' ist nicht FALSE</source>
-                <target>'%value%' is not FALSE</target>
+                <target>“%value%” is not FALSE</target>
             </trans-unit>
             <trans-unit id="JyV2YWx1ZSUnIGlzdCBuaWNodCBUUlVF">
                 <source>'%value%' ist nicht TRUE</source>
-                <target>'%value%' is not TRUE</target>
+                <target>“%value%” is not TRUE</target>
             </trans-unit>
             <trans-unit id="JyV2YWx1ZSUnIGlzdCBuaWNodCB2b20gVHlwIEJvb2xlYW4=">
                 <source>'%value%' ist nicht vom Typ Boolean</source>
-                <target>'%value%' is not of type boolean</target>
+                <target>“%value%” is not of type boolean</target>
             </trans-unit>
             <trans-unit id="LyBBdWZydWYgZXJmb2xndGUgZHVyY2ggSVA6IA==">
                 <source>/ Aufruf erfolgte durch IP: </source>
@@ -30,13 +34,45 @@
                 <source>Anwendungsfehler</source>
                 <target>Application error</target>
             </trans-unit>
+            <trans-unit id="Qml0dGUgZ2ViZW4gU2llIGVpbiBQYXNzd29ydCBhbiE=">
+                <source>Bitte geben Sie ein Passwort an!</source>
+                <target>Please enter a password!</target>
+            </trans-unit>
+            <trans-unit id="Qml0dGUgZ2ViZW4gU2llIGVpbmVuIEJlbnV0emVybmFtZW4gYW4h">
+                <source>Bitte geben Sie einen Benutzernamen an!</source>
+                <target>Please enter a username!</target>
+            </trans-unit>
+            <trans-unit id="Qml0dGUgbGFkZW4gU2llIGRpZSBMb2dpbi1TZWl0ZSBuZXUsIGdlYmVuIFNpZSBpaHIgUGFzc3dvcnQgZXJuZXV0IGVpbiB1bmQgc2VuZGVuIFNpZSBkYXMgRm9ybXVsYXIgZXJuZXV0IGFiIC0gSWhyIEhhc2gtV2VydCB6dXIgw5xiZXJwcsO8ZnVuZyB2b24gQ3Jvc3MtU2l0ZS1Ta3JpcHRpbmctQXR0YWNrZW4gd2FyIG5pY2h0IGtvcnJla3Qu">
+                <source>Bitte laden Sie die Login-Seite neu, geben Sie ihr Passwort erneut ein und senden Sie das Formular erneut ab - Ihr Hash-Wert zur Überprüfung von Cross-Site-Skripting-Attacken war nicht korrekt.</source>
+                <target>Please reload this page, enter your password again and submit the login form - your hash-value for the prevention of cross site scripting attacks had not been correct.</target>
+            </trans-unit>
             <trans-unit id="RGFzIFBhc3N3b3J0IGVudGjDpGx0IGVpbiBXb3J0IGF1cyBkZXIgc2Nod2FyemVuIExpc3RlLg==">
                 <source>Das Passwort enthält ein Wort aus der schwarzen Liste.</source>
                 <target>Password contains black-listed word.</target>
             </trans-unit>
+            <trans-unit id="RGFzIFBhc3N3b3J0IGlzdCB6dSBrdXJ6IQ==">
+                <source>Das Passwort ist zu kurz!</source>
+                <target>The password is too short!</target>
+            </trans-unit>
+            <trans-unit id="RGF0ZW4gbmljaHQgZ2VmdW5kZW4h">
+                <source>Daten nicht gefunden!</source>
+                <target>Data not found!</target>
+            </trans-unit>
+            <trans-unit id="RGVyIEJlbnV0emVybmFtZSBlbnRow6RsdCBaZWljaGVuLCBkaWUgbmljaHQgdmVyd2VuZGV0IHdlcmRlbiBkw7xyZmVuIQ==">
+                <source>Der Benutzername enthält Zeichen, die nicht verwendet werden dürfen!</source>
+                <target>The username contains characters that are not permitted!</target>
+            </trans-unit>
+            <trans-unit id="RGVyIEJlbnV0emVybmFtZSBpc3QgenUga3VyeiE=">
+                <source>Der Benutzername ist zu kurz!</source>
+                <target>The username is too short!</target>
+            </trans-unit>
             <trans-unit id="RGVyIFJlc2V0SGFzaCBvZGVyIGRpZSBCcm93c2Vyc2l0enVuZyBpc3QgbmljaHQgKG1laHIpIGfDvGx0aWcuIEJpdHRlIGZvcmRlcm4gU2llIMO8YmVyIGRhcyBuZWJlbnN0ZWhlbmRlIEZvcm11bGFyIGVpbmUgRS1NYWlsIG1pdCBlaW5lbSBuZXVlbiBMaW5rIGFuLg==">
                 <source>Der ResetHash oder die Browsersitzung ist nicht (mehr) gültig. Bitte fordern Sie über das nebenstehende Formular eine E-Mail mit einem neuen Link an.</source>
                 <target>The ResetHash or the browser session is not valid (anymore). Please request a new link via e-mail by using the below form.</target>
+            </trans-unit>
+            <trans-unit id="RGllIEF1c2dhbmdzZGF0ZW4gd3VyZGVuIGluIGRlciBad2lzY2hlbnplaXQgdmVyw6RuZGVydC4gQml0dGUgYWt0dWFsaXNpZXJlbiBTaWUgSWhyZSBBbnNpY2h0IQ==">
+                <source>Die Ausgangsdaten wurden in der Zwischenzeit verändert. Bitte aktualisieren Sie Ihre Ansicht!</source>
+                <target>The displayed data was changed in the meantime on the server. Please refresh your view!</target>
             </trans-unit>
             <trans-unit id="RGllIERhdGVpIHd1cmRlIG51ciB0ZWlsd2Vpc2UgaG9jaGdlbGFkZW4u">
                 <source>Die Datei wurde nur teilweise hochgeladen.</source>
@@ -54,6 +90,10 @@
                 <source>Dieser Benutzer wird bereits verwendet. <br/>Bitte warten Sie bis der Benutzer wieder verfügbar ist, oder benutzen Sie einen anderen!</source>
                 <target>This user already is in use. <br/>Please wait until it is available again or use another user!</target>
             </trans-unit>
+            <trans-unit id="RS1NYWlsIGFuZm9yZGVybg==">
+                <source>E-Mail anfordern</source>
+                <target>Request e-mail</target>
+            </trans-unit>
             <trans-unit id="RWluZSBQSFAgRXJ3ZWl0ZXJ1bmcgaGF0IGRlbiBVcGxvYWQgZGVyIERhdGVpIGdlc3RvcHB0LiBQSFAgYmlldGV0IGtlaW5lIE3DtmdsaWNoa2VpdCBhbiwgdW0gZmVzdHp1c3RlbGxlbiB3ZWxjaGUgRXJ3ZWl0ZXJ1bmcgZGFzIEhvY2hsYWRlbiBkZXIgRGF0ZWkgZ2VzdG9wcHQgaGF0LiDDnGJlcnByw7xmdW5nIGFsbGVyIGdlbGFkZW5lbiBFcndlaXRlcnVuZ2VuIG1pdHRlbHMgcGhwaW5mbygpIGvDtm5udGUgaGVsZmVuLg==">
                 <source>Eine PHP Erweiterung hat den Upload der Datei gestoppt. PHP bietet keine Möglichkeit an, um festzustellen welche Erweiterung das Hochladen der Datei gestoppt hat. Überprüfung aller geladenen Erweiterungen mittels phpinfo() könnte helfen.</source>
                 <target>A PHP extension stopped the file upload. PHP does not provide a way to determine which extension caused this. Checking all loaded extensions using phpinfo() may help.</target>
@@ -61,6 +101,10 @@
             <trans-unit id="RWluZSBXYXJ0dW5nIHN0ZWh0IHVubWl0dGVsYmFyIGJldm9yLCBTaWUga8O2bm5lbiBzaWNoIGRhaGVyIG5pY2h0IGFubWVsZGVuLiBCaXR0ZSB2ZXJzdWNoZW4gU2llIGVzIGluIEvDvHJ6ZSBlcm5ldXQu">
                 <source>Eine Wartung steht unmittelbar bevor, Sie können sich daher nicht anmelden. Bitte versuchen Sie es in Kürze erneut.</source>
                 <target>We’re about to start maintenance, so logins are temporarily unavailable. Please try again in a few minutes.</target>
+            </trans-unit>
+            <trans-unit id="RWlubG9nZ2Vu">
+                <source>Einloggen</source>
+                <target>Login</target>
             </trans-unit>
             <trans-unit id="RXMgbGllZ3Qga2VpbiBGZWhsZXIgdm9yLCBkaWUgRGF0ZWkgd3VyZGUgZXJmb2xncmVpY2ggaG9jaGdlbGFkZW4u">
                 <source>Es liegt kein Fehler vor, die Datei wurde erfolgreich hochgeladen.</source>
@@ -90,6 +134,10 @@
                 <source>Kein Passwort angegeben.</source>
                 <target>No password given.</target>
             </trans-unit>
+            <trans-unit id="S2VpbmUgWnVncmlmZnNiZXJlY2h0aWd1bmch">
+                <source>Keine Zugriffsberechtigung!</source>
+                <target>No access granted!</target>
+            </trans-unit>
             <trans-unit id="TG9naW5uYW1lIGdlw6RuZGVydA==">
                 <source>Loginname geändert</source>
                 <target>Login name changed</target>
@@ -114,6 +162,22 @@
                 <source>Neues Passwort</source>
                 <target>New password</target>
             </trans-unit>
+            <trans-unit id="TmV1IHNldHplbg==">
+                <source>Neu setzen</source>
+                <target>Reset</target>
+            </trans-unit>
+            <trans-unit id="TmljaHQgYXV0aGVudGlmaXppZXJ0IQ==">
+                <source>Nicht authentifiziert!</source>
+                <target>Unauthenticated!</target>
+            </trans-unit>
+            <trans-unit id="TmljaHQgZ2VmdW5kZW4h">
+                <source>Nicht gefunden!</source>
+                <target>Not found!</target>
+            </trans-unit>
+            <trans-unit id="Tm8gdG9rZW4gd2FzIHByb3ZpZGVkIHRvIG1hdGNoIGFnYWluc3Q=">
+                <source>No token was provided to match against</source>
+                <target>No token was provided to match against</target>
+            </trans-unit>
             <trans-unit id="UGFzc3dvcnQgbmV1IHNldHplbg==">
                 <source>Passwort neu setzen</source>
                 <target>Reset password</target>
@@ -121,6 +185,10 @@
             <trans-unit id="UGFzc3dvcnQgc2V0emVu">
                 <source>Passwort setzen</source>
                 <target>Set password</target>
+            </trans-unit>
+            <trans-unit id="UGFzc3dvcnQgd2llZGVyaG9sZW4=">
+                <source>Passwort wiederholen</source>
+                <target>Please repeat the password</target>
             </trans-unit>
             <trans-unit id="UGVyIEUtTWFpbCB3dXJkZSBJaG5lbiBlaW4gTGluayB6dWdlc2FuZHQsIG1pdCB3ZWxjaGVtIFNpZSBJaHIgUGFzc3dvcnQgbmV1IHNldHplbiBrw7ZubmVuLiBEaWVzZXIgTGluayBpc3QgMzAgbWluIGfDvGx0aWcgdW5kIGZ1bmt0aW9uaWVydCBudXIsIHNvIGxhbmdlIFNpZSBJaHJlbiBCcm93c2VyIG5pY2h0IHp3aXNjaGVuemVpdGxpY2ggZ2VzY2hsb3NzZW4gaGFiZW4uIFNpZSBrw7ZubmVuIGplZGVyemVpdCBlaW5lbiBuZXVlbiBMaW5rIMO8YmVyIGRpZXNlcyBGb3JtdWxhciBhbmZvcmRlcm4u">
                 <source>Per E-Mail wurde Ihnen ein Link zugesandt, mit welchem Sie Ihr Passwort neu setzen können. Dieser Link ist 30 min gültig und funktioniert nur, so lange Sie Ihren Browser nicht zwischenzeitlich geschlossen haben. Sie können jederzeit einen neuen Link über dieses Formular anfordern.</source>
