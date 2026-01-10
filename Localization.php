@@ -122,9 +122,10 @@ final class Localization
             array_key_exists((string) $rop->translation->applicationLocale, self::FRONTEND_LOCALES)
         ) {
             return (string) $rop->translation->applicationLocale;
+        } elseif (! empty($rop->translation->applicationLocale)) {
+            error_log('Configured runtimeOptions.translation.applicationLocale is not valid, using “'
+                . self::FALLBACK_LOCALE . '”');
         }
-
-        error_log('Configured runtimeOptions.translation.applicationLocale is not valid, using ' . self::FALLBACK_LOCALE);
 
         if ($evaluateBrowserLocale) {
             return self::getLocaleFromBrowser();
