@@ -675,7 +675,7 @@ class ZfExtended_Test_ApiHelper
             throw new \RuntimeException(sprintf('Directory "%s" was not created', $dir));
         }
         $zip->extractTo($dir);
-        $files = glob($dir . $pathToFileInZip, GLOB_NOCHECK);
+        $files = glob($dir . ltrim($pathToFileInZip, '/'), GLOB_NOCHECK);
         $file = reset($files);
         $this->test::assertFileExists($file);
         $content = $getFileSize ? filesize($file) : file_get_contents($file);

@@ -23,6 +23,8 @@ END LICENSE AND COPYRIGHT
 */
 
 use MittagQI\ZfExtended\Acl\SystemResource;
+use MittagQI\ZfExtended\Localization;
+use MittagQI\ZfExtended\Sanitizer\Type;
 use ZfExtended_Authentication as Auth;
 
 /**
@@ -36,7 +38,7 @@ class ZfExtended_SessionController extends ZfExtended_RestController
     public const STATE_NOT_AUTHENTICATED = 'not authenticated';
 
     protected array $dataSanitizationMap = [
-        'passwd' => ZfExtended_Sanitizer::UNSANITIZED,
+        'passwd' => Type::Unsanitized,
     ];
 
     /**
@@ -186,7 +188,7 @@ class ZfExtended_SessionController extends ZfExtended_RestController
      */
     protected function setLocale(Zend_Session_Namespace $session, ZfExtended_Models_User $userModel)
     {
-        $session->locale = ZfExtended_Utils::getLocale($userModel->getLocale());
+        $session->locale = Localization::getLocale($userModel->getLocale());
     }
 
     /**

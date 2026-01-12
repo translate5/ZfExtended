@@ -22,6 +22,8 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
+use MittagQI\ZfExtended\Sanitizer\Type;
+
 /**
  * Contains the config handler for core config types
  * These are (see table definition): string | integer | boolean | list | map | absolutepath | float | markup | json | regex | regexlist | xpath | xpathlist
@@ -60,16 +62,16 @@ class ZfExtended_DbConfig_Type_CoreTypes extends ZfExtended_DbConfig_Type_Abstra
      * Retrieves the sanititzation-type for a config-type
      * Note, that the application therefore is responsible to sanitize REGEX & REGEXLIST types (what for Config-values is achieved with the validation via ::validateValue)
      */
-    public static function sanitizationType(string $configType): string
+    public static function sanitizationType(string $configType): Type
     {
         return match ($configType) {
             self::TYPE_REGEX,
             self::TYPE_REGEXLIST,
             self::TYPE_XPATH,
             self::TYPE_MAP,
-            self::TYPE_XPATHLIST => ZfExtended_Sanitizer::UNSANITIZED,
-            self::TYPE_MARKUP => ZfExtended_Sanitizer::MARKUP,
-            default => ZfExtended_Sanitizer::STRING,
+            self::TYPE_XPATHLIST => Type::Unsanitized,
+            self::TYPE_MARKUP => Type::Markup,
+            default => Type::String,
         };
     }
 

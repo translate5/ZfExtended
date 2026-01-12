@@ -22,45 +22,46 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
+namespace MittagQI\ZfExtended;
+
+use DOMNode;
+use MittagQI\ZfExtended\Sanitizer\Attribute\ImageSrcDataSanitizer;
+use MittagQI\ZfExtended\Sanitizer\Attribute\TrackChangesAttrSanitizer;
+use MittagQI\ZfExtended\Sanitizer\SegmentContentException;
+use MittagQI\ZfExtended\Sanitizer\Type;
 use MittagQI\ZfExtended\Tools\Markup;
+use stdClass;
+use Symfony\Component\HtmlSanitizer\HtmlSanitizer;
+use Symfony\Component\HtmlSanitizer\HtmlSanitizerConfig;
+use Zend_Exception;
+use Zend_Registry;
+use ZfExtended_BadRequest;
+use ZfExtended_Dom;
+use ZfExtended_Logger;
 use ZfExtended_SecurityException as SecurityException;
 
 /**
  * general sanitizer that sanitizes ALL request params
  */
-final class ZfExtended_Sanitizer
+final class Sanitizer
 {
-    /**
-     * Leads to stripping of all tags
-     */
-    public const STRING = 'string';
-
-    /**
-     * Leads to checking for script-tags & on** handlers and javascript: URLs
-     * In these cases exceptions are thrown
-     */
-    public const MARKUP = 'markup';
-
-    /**
-     * leads to NO sanitization and thus the application logic must ensure XSS prevention
-     */
-    public const UNSANITIZED = 'unsanitized';
-
     /**
      * Sanitizes a request value that represents the given type
      * The type must be one of our constants
      *
      * @throws SecurityException
+     * @throws ZfExtended_BadRequest
      */
-    public static function sanitize(?string $val, string $type): ?string
+    public static function sanitize(?string $val, Type $type): ?string
     {
         if (empty($val)) {
             return $val;
         }
 
         return match ($type) {
-            self::MARKUP => self::markup($val),
-            self::UNSANITIZED => $val,
+            Type::SegmentContent => self::segmentContent($val),
+            Type::Markup => self::markup($val),
+            Type::Unsanitized => $val,
             default => self::string($val),
         };
     }
@@ -122,8 +123,12 @@ final class ZfExtended_Sanitizer
             return;
         }
 
-        if (strtolower($node->nodeName) === 'script') {
+        if (strtolower($node->nodeName) === 'script' || strtolower($node->nodeName) === 'iframe') {
             throw new SecurityException('Script tags are not allowed in the sent markup');
+        }
+
+        if (strtolower($node->nodeName) === 'iframe') {
+            throw new SecurityException('Iframe tags are not allowed in the sent markup');
         }
 
         if ($node->hasChildNodes()) {
@@ -196,17 +201,14 @@ final class ZfExtended_Sanitizer
             return $content;
         }
 
-        $result = [];
-        foreach ($content as $key => $value) {
-            $result[$key] = match (true) {
+        return array_map(function ($value) use ($exceptionRegex) {
+            return match (true) {
                 is_array($value) => self::escapeHtmlRecursive($value, $exceptionRegex),
                 is_string($value) => self::escapeHtml($value, $exceptionRegex),
                 is_object($value) => self::escapeHtmlInObject($value, $exceptionRegex),
                 default => $value
             };
-        }
-
-        return $result;
+        }, $content);
     }
 
     public static function escapeHtmlInObject(?object $content, ?string $exceptionRegex = null): ?object
@@ -215,7 +217,7 @@ final class ZfExtended_Sanitizer
             return $content;
         }
 
-        $result = new \stdClass();
+        $result = new stdClass();
         foreach ((array) $content as $key => $value) {
             $result->{$key} = match (true) {
                 is_array($value) => self::escapeHtmlRecursive($value, $exceptionRegex),
@@ -226,5 +228,116 @@ final class ZfExtended_Sanitizer
         }
 
         return $result;
+    }
+
+    /**
+     * @throws SegmentContentException
+     * @throws ZfExtended_BadRequest
+     * @throws Zend_Exception
+     */
+    public static function segmentContent(string $markup): string
+    {
+        // Invalid markup will be rejected
+        if (! Markup::isValid($markup)) {
+            // Note: we do not throw a security-exception here since this error usually comes from our frontend!
+            throw new ZfExtended_BadRequest('E1623', [
+                'markup' => $markup,
+            ]);
+        }
+
+        $markup = strip_tags($markup, '<span><div><img><ins><del>');
+
+        $config = (new HtmlSanitizerConfig())
+            ->allowElement('div')
+            ->allowElement('span')
+            ->allowElement('img')
+            ->allowElement('ins')
+            ->allowElement('del')
+            ->allowAttribute('src', ['img'])
+            ->allowAttribute('class', ['ins', 'del', 'span', 'div', 'img'])
+            ->allowAttribute('title', ['ins', 'del', 'span', 'div'])
+            ->allowAttribute('data-usertrackingid', ['ins', 'del'])
+            ->allowAttribute('data-usertrackingid', ['ins', 'del'])
+            ->allowAttribute('data-userguid', ['ins', 'del'])
+            ->allowAttribute('data-username', ['ins', 'del'])
+            ->allowAttribute('data-usercssnr', ['ins', 'del'])
+            ->allowAttribute('data-workflowstep', ['ins', 'del'])
+            ->allowAttribute('data-timestamp', ['ins', 'del'])
+            ->allowAttribute('data-tbxid', ['div'])
+            ->allowAttribute('data-comment', ['img'])
+            ->allowAttribute('data-t5qid', ['img', 'div'])
+            ->allowAttribute('data-segmentid', ['img'])
+            ->allowAttribute('data-fieldname', ['img'])
+            ->allowAttribute('id', ['img'])
+            ->allowAttribute('data-originalid', ['span'])
+            ->allowAttribute('data-length', ['span'])
+            // keep track-changes attrs (timestamps, ids, cssnr, workflowstep) intact while validating format
+            ->withAttributeSanitizer(new TrackChangesAttrSanitizer())
+            // Restrict data: URIs on img src to safe image mime types only
+            ->withAttributeSanitizer(new ImageSrcDataSanitizer())
+            ->allowRelativeMedias()
+            ->allowRelativeLinks();
+
+        $sanitizer = new HtmlSanitizer($config);
+
+        $cleaned = $sanitizer->sanitize($markup);
+        // HtmlSanitizer encodes '+' in attribute values; decode for timestamps so they round-trip
+        $cleaned = preg_replace_callback(
+            '/data-timestamp="([^"]*)"/',
+            static fn (array $m) => 'data-timestamp="' . str_replace('&#43;', '+', $m[1]) . '"',
+            $cleaned
+        );
+        // Restore empty attributes that get rendered as boolean attributes (important for equality check)
+        $cleaned = preg_replace('/\b(data-comment|title)(?=[\s>])/i', '$1=""', $cleaned);
+
+        if (self::normalizeForComparison($cleaned) !== self::normalizeForComparison($markup)) {
+            self::handleSegmentContentError($markup, $cleaned);
+        }
+
+        // Return the original markup to avoid DOM normalization changes (self-closing tags, entity encoding)
+        return $markup;
+    }
+
+    private static function normalizeEntities(string $markup): string
+    {
+        return htmlspecialchars(
+            html_entity_decode($markup, ENT_QUOTES | ENT_HTML5),
+            ENT_QUOTES | ENT_HTML5
+        );
+    }
+
+    private static function normalizeForComparison(string $markup): string
+    {
+        // Align void elements (self-closing slash, trailing whitespace) to a single <img…> form
+        $markup = preg_replace_callback(
+            '/<img([^>]*?)\/?\s*>/i',
+            static fn (array $m) => '<img' . rtrim($m[1]) . '>',
+            $markup
+        );
+
+        return self::normalizeEntities($markup);
+    }
+
+    /**
+     * @throws SegmentContentException
+     * @throws Zend_Exception
+     */
+    private static function handleSegmentContentError(string $markup, string|null $cleaned): void
+    {
+        $e = new SegmentContentException('E1764', [
+            'input' => $markup,
+            'cleaned' => $cleaned,
+        ]);
+
+        if (! Zend_Registry::get('config')->runtimeOptions->input->segmentContent->warnOnly) {
+            throw $e;
+        }
+
+        Zend_Registry::get('logger')->exception(
+            $e,
+            [
+                'level' => ZfExtended_Logger::LEVEL_WARN,
+            ]
+        );
     }
 }

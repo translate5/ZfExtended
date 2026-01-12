@@ -4,7 +4,7 @@ START LICENSE AND COPYRIGHT
 
  This file is part of ZfExtended library
 
- Copyright (c) 2013 - 2021 Marc Mittag; MittagQI - Quality Informatics;  All rights reserved.
+ Copyright (c) 2013 - 2022 Marc Mittag; MittagQI - Quality Informatics;  All rights reserved.
 
  Contact:  http://www.MittagQI.com/  /  service (ATT) MittagQI.com
 
@@ -21,30 +21,27 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 
 END LICENSE AND COPYRIGHT
 */
+declare(strict_types=1);
 
-/**#@+
- * @author Leon Kyz
- * @package ZfExtended
- * @version 2.0
- *
- */
+namespace MittagQI\ZfExtended\Sanitizer;
 
-$this->render('general.phtml');
+enum Type
+{
+    /**
+     * Leads to stripping of all tags
+     */
+    case String; // = 'string';
 
-// Ask
-$this->subject = $this->translate->_('Loginname geändert');
+    /**
+     * Leads to checking for script-tags & on** handlers and javascript: URLs
+     * In these cases exceptions are thrown
+     */
+    case Markup; // = 'markup';
 
-echo $this->templateApply('{header}
-Wir haben festgestellt, dass Ihr Login-Name nicht unterstützte Zeichen enthält.
-Der Login-Name wurde automatisch geändert.
+    case SegmentContent; // = 'segmentContent';
 
-Ihr neuer Login-Name:
-------------------------------
-{newLogin}
-------------------------------
-
-{footer}', [
-    'header' => strip_tags($this->header), //since we send plain text here, we have to remove tags
-    'footer' => strip_tags($this->footer),
-    'newLogin' => $this->newLogin,
-]);
+    /**
+     * leads to NO sanitization and thus the application logic must ensure XSS prevention
+     */
+    case Unsanitized; // = 'unsanitized';
+}

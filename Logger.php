@@ -324,7 +324,6 @@ class ZfExtended_Logger
         try {
             $this->fillStaticData($event);
         } catch (Zend_Exception $e) {
-
         }
         $previous = $exception->getPrevious();
         if (! empty($previous)) {

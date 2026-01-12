@@ -26,7 +26,7 @@ END LICENSE AND COPYRIGHT
  * Generates gender-specific salutation in emails sent to the logged-in employee.
  *
  * @param string $gender (optional) If not set, it will use the gender of the currently logged-in employee.
- *                       If set, only the values 'm' and 'f' are allowed.
+ *                       If set, only the values 'm' and 'f' and 'n' are allowed.
  * @return string Salutation
  */
 class ZfExtended_View_Helper_MailEmployeeSalutation extends Zend_View_Helper_Abstract

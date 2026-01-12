@@ -112,7 +112,7 @@ final class ConfigHelper
             foreach (explode('.', $configName) as $section) {
                 // to avoid warnings ...
                 if (empty($value)) {
-                    throw new Exception('Value is null');
+                    throw new Exception('Value “' . $value . '” is null in config “' . $configName . '”');
                 }
                 $value = $value->$section;
             }

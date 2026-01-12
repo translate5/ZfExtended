@@ -23,6 +23,12 @@ END LICENSE AND COPYRIGHT
 */
 
 /**
+ * SECTION TO INCLUDE PROGRAMMATIC LOCALIZATION
+ * ============================================
+ * $translate->_('Keine Zugriffsberechtigung!');
+ */
+
+/**
  * Since no access is mostly an ACL misconfiguration we leave logging enabled.
  */
 class ZfExtended_NoAccessException extends ZfExtended_Exception
@@ -33,7 +39,7 @@ class ZfExtended_NoAccessException extends ZfExtended_Exception
     protected $defaultMessage = 'Keine Zugriffsberechtigung!';
 
     /**
-     * @var boolean
+     * @var bool
      */
     protected $defaultMessageTranslate = true;
 

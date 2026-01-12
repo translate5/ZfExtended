@@ -41,6 +41,11 @@ if (empty($this) || empty($argv) || $argc < 5 || $argc > 7) {
     die("please dont call the script direct! Call it by using DBUpdater!\n\n");
 }
 
+// no need to run this in tests or installs
+if ($this->isTestOrInstallEnvironment()) { // @phpstan-ignore-line
+    return;
+}
+
 $db = Zend_Db_Table::getDefaultAdapter();
 
 $users = $db->query("SELECT `id`, `login`, `email` FROM `Zf_users` WHERE `login` LIKE '% %'")->fetchAll();
@@ -48,7 +53,7 @@ $users = $db->query("SELECT `id`, `login`, `email` FROM `Zf_users` WHERE `login`
 $userModel = ZfExtended_Factory::get(ZfExtended_Models_User::class);
 
 if (count($users) === 0) {
-    $this->output('Nothing to process.');
+    $this->output('No users to process.');
 } else {
     foreach ($users as $userData) {
         $newLogin = trim($userData['login']);
@@ -67,5 +72,3 @@ if (count($users) === 0) {
 
     $this->output(sprintf('Processed %d users.', count($users)));
 }
-
-$this->output('Exit.');

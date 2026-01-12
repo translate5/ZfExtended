@@ -23,9 +23,10 @@ END LICENSE AND COPYRIGHT
 */
 
 use MittagQI\ZfExtended\CsrfProtection;
+use MittagQI\ZfExtended\Sanitizer\HttpRequest;
 
 /**
- * @method ZfExtended_Sanitized_HttpRequest getRequest() getRequest()
+ * @method HttpRequest getRequest() getRequest()
  */
 abstract class ZfExtended_RestController extends Zend_Rest_Controller
 {
@@ -137,7 +138,7 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller
 
     /**
      * a map to define special sanitizers for certain fields/keys of the sent data
-     * the structure must be key => type whereas type is one of the constants of ZfExtended_Sanitizer
+     * the structure must be key => type whereas type is one of the constants of MittagQI\ZfExtended\Sanitizer
      */
     protected array $dataSanitizationMap = [];
 
@@ -176,7 +177,7 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller
         //enable simple front end interaction with fatal errors
         register_shutdown_function(function () {
             $error = error_get_last();
-            if (!is_null($error) && ($error['type'] & FATAL_ERRORS_TO_HANDLE)) {
+            if (! is_null($error) && ($error['type'] & FATAL_ERRORS_TO_HANDLE)) {
                 ob_get_clean(); //to remove Internal Server Error headline
                 $res = new stdClass();
                 $res->errors = $error;
@@ -192,7 +193,7 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller
         }
 
         // by default, all actions are protected against CSRF attacks
-        if (!in_array($action, $this->_unprotectedActions)) {
+        if (! in_array($action, $this->_unprotectedActions)) {
             CsrfProtection::getInstance()->validateRequest($this->_request);
         }
     }
@@ -276,8 +277,8 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller
 
         $version = $this->_request->getHeader(self::ENTITY_VERSION_HEADER);
         if ($version === false) {
-            $data = get_object_vars((object)$this->data);
-            if (!isset($data[$entity::VERSION_FIELD])) {
+            $data = get_object_vars((object) $this->data);
+            if (! isset($data[$entity::VERSION_FIELD])) {
                 return; //no version is set either in header nor in given data
             }
             $version = $data[$entity::VERSION_FIELD];
@@ -290,7 +291,7 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller
      */
     protected function handleLimit()
     {
-        if (empty($this->entity) || !$this->entity instanceof ZfExtended_Models_Entity_Abstract) {
+        if (empty($this->entity) || ! $this->entity instanceof ZfExtended_Models_Entity_Abstract) {
             //instance without entity
             return;
         }
@@ -307,7 +308,7 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller
      */
     protected function prepareFilterAndSort()
     {
-        if (empty($this->entity) || !$this->entity instanceof ZfExtended_Models_Entity_Abstract) {
+        if (empty($this->entity) || ! $this->entity instanceof ZfExtended_Models_Entity_Abstract) {
             //instance without entity
             return;
         }
@@ -350,8 +351,8 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller
         try {
             parent::dispatch($action);
         }
-            //this is the only useful place in processing REST request to translate
-            //the entityVersion DB exception to an 409 conflict exception
+        //this is the only useful place in processing REST request to translate
+        //the entityVersion DB exception to an 409 conflict exception
         catch (Zend_Db_Statement_Exception $e) {
             ZfExtended_VersionConflictException::logAndThrow($e);
         } catch (ZfExtended_BadGateway $e) {
@@ -429,7 +430,7 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller
 
         //ExtJS does not parse the HTTP Status well on file uploads.
         // In this case we deliver the status as additional information
-        if (!empty($_FILES)) {
+        if (! empty($_FILES)) {
             $this->view->httpStatus = $httpStatus;
         }
 
@@ -467,7 +468,7 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller
     {
         $result = [];
         foreach ($zendErrors as $id => $oneField) {
-            if (!is_array($oneField)) {
+            if (! is_array($oneField)) {
                 $oneField = [$oneField];
             }
             foreach ($oneField as $oneMsg) {
@@ -548,13 +549,13 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller
             'entity' => $this->entity,
             'data' => $this->data,
         ]);
-        if (!empty($this->data)) {
+        if (! empty($this->data)) {
             foreach ($this->data as $key => $value) {
                 $hasField = in_array($key, $fields);
                 $modeWl = $mode === self::SET_DATA_WHITELIST;
-                $whiteListed = !$modeWl || $hasField && $modeWl;
+                $whiteListed = ! $modeWl || $hasField && $modeWl;
                 $blackListed = $hasField && $mode === self::SET_DATA_BLACKLIST;
-                if ($this->entity->hasField($key) && $whiteListed && !$blackListed) {
+                if ($this->entity->hasField($key) && $whiteListed && ! $blackListed) {
                     $this->entity->__call('set' . ucfirst($key), [$value]);
                     if (isset($this->_sortColMap[$key]) && is_string($this->_sortColMap[$key])) {
                         $toSort = $this->_sortColMap[$key];
@@ -680,7 +681,7 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller
             'params' => $this->getAllParams(),
             'controller' => $this,
         ]);
-        if ($response->isEmpty() && !$hasPlainMethod) {
+        if ($response->isEmpty() && ! $hasPlainMethod) {
             unset($this->view->rows);
 
             throw new ZfExtended_NotFoundException($type . ' not supported');
@@ -693,7 +694,7 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller
      */
     protected function checkAccess(string $resource, string $right, string $resourceName): void
     {
-        if (!$this->isAllowed($resource, $right)) {
+        if (! $this->isAllowed($resource, $right)) {
             throw new ZfExtended_NoAccessException('Access to ' . $resourceName . ' not permitted');
         }
     }
