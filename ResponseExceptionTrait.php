@@ -46,10 +46,8 @@ trait ZfExtended_ResponseExceptionTrait
         Exception $previous = null,
         array $extraData = []
     ): ZfExtended_ErrorCodeException {
-        $t = ZfExtended_Zendoverwrites_Translate::getInstance();
-        /* @var $t ZfExtended_Zendoverwrites_Translate */
         $logger = Zend_Registry::get('logger');
-        /* @var $logger ZfExtended_Logger */
+        /** @var ZfExtended_Logger $logger */
 
         $data['errors'] = [];
         $data['errorsTranslated'] = [];
@@ -66,9 +64,7 @@ trait ZfExtended_ResponseExceptionTrait
                 $data['errorsTranslated'][$field] = [$error];
             }
             //translate the field
-            $data['errorsTranslated'][$field] = array_map(function ($text) use ($t, $logger, $data) {
-                $text = $t->_($text);
-
+            $data['errorsTranslated'][$field] = array_map(function ($text) use ($logger, $data) {
                 return $logger->formatMessage($text, $data);
             }, $data['errorsTranslated'][$field]);
         }
