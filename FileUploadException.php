@@ -22,21 +22,36 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
-/**
- * SECTION TO INCLUDE PROGRAMMATIC LOCALIZATION
- * ============================================
- * $translate->_('Es liegt kein Fehler vor, die Datei wurde erfolgreich hochgeladen.');
- * $translate->_('Die hochgeladene Datei überschreitet die in der Anweisung upload_max_filesize in php.ini festgelegte Größe.');
- * $translate->_('Die hochgeladene Datei überschreitet die in dem HTML Formular mittels der Anweisung MAX_FILE_SIZE angegebene maximale Dateigröße.');
- * $translate->_('Die Datei wurde nur teilweise hochgeladen.');
- * $translate->_('Es wurde keine Datei hochgeladen.');
- * $translate->_('Fehlender temporärer Ordner.');
- * $translate->_('Speichern der Datei auf die Festplatte ist fehlgeschlagen.');
- * $translate->_('Eine PHP Erweiterung hat den Upload der Datei gestoppt. PHP bietet keine Möglichkeit an, um festzustellen welche Erweiterung das Hochladen der Datei gestoppt hat. Überprüfung aller geladenen Erweiterungen mittels phpinfo() könnte helfen.');
- */
-
 class ZfExtended_FileUploadException extends ZfExtended_UnprocessableEntity
 {
+    #[MittagQI\ZfExtended\Localization\LocalizableProp]
+    public const UPLOAD_ERR_OK_MSG = 'Es liegt kein Fehler vor, die Datei wurde erfolgreich hochgeladen.';
+
+    #[MittagQI\ZfExtended\Localization\LocalizableProp]
+    public const UPLOAD_ERR_INI_SIZE_MSG = 'Die hochgeladene Datei überschreitet die in der Anweisung ' .
+        'upload_max_filesize in php.ini festgelegte Größe.';
+
+    #[MittagQI\ZfExtended\Localization\LocalizableProp]
+    public const UPLOAD_ERR_FORM_SIZE_MSG = 'Die hochgeladene Datei überschreitet die in dem HTML Formular ' .
+        'mittels der Anweisung MAX_FILE_SIZE angegebene maximale Dateigröße.';
+
+    #[MittagQI\ZfExtended\Localization\LocalizableProp]
+    public const UPLOAD_ERR_PARTIAL_MSG = 'Die Datei wurde nur teilweise hochgeladen.';
+
+    #[MittagQI\ZfExtended\Localization\LocalizableProp]
+    public const UPLOAD_ERR_NO_FILE_MSG = 'Es wurde keine Datei hochgeladen.';
+
+    #[MittagQI\ZfExtended\Localization\LocalizableProp]
+    public const UPLOAD_ERR_NO_TMP_DIR_MSG = 'Fehlender temporärer Ordner.';
+
+    #[MittagQI\ZfExtended\Localization\LocalizableProp]
+    public const UPLOAD_ERR_CANT_WRITE_MSG = 'Speichern der Datei auf die Festplatte ist fehlgeschlagen.';
+
+    #[MittagQI\ZfExtended\Localization\LocalizableProp]
+    public const UPLOAD_ERR_EXTENSION_MSG = 'Eine PHP Erweiterung hat den Upload der Datei gestoppt. PHP bietet ' .
+        'keine Möglichkeit an, um festzustellen welche Erweiterung das Hochladen der Datei gestoppt hat. ' .
+        'Überprüfung aller geladenen Erweiterungen mittels phpinfo() könnte helfen.';
+
     //Since such errors are mainly intresting for the uploading user, we just log it as debug
     protected $level = ZfExtended_Logger::LEVEL_INFO;
 
@@ -49,21 +64,23 @@ class ZfExtended_FileUploadException extends ZfExtended_UnprocessableEntity
     {
         switch ($errorNr) {
             case UPLOAD_ERR_OK:
-                return 'Es liegt kein Fehler vor, die Datei wurde erfolgreich hochgeladen.';
+                return self::UPLOAD_ERR_OK_MSG;
             case UPLOAD_ERR_INI_SIZE:
-                return 'Die hochgeladene Datei überschreitet die in der Anweisung upload_max_filesize in php.ini festgelegte Größe.';
+                return self::UPLOAD_ERR_INI_SIZE_MSG;
             case UPLOAD_ERR_FORM_SIZE:
-                return 'Die hochgeladene Datei überschreitet die in dem HTML Formular mittels der Anweisung MAX_FILE_SIZE angegebene maximale Dateigröße.';
+                return self::UPLOAD_ERR_FORM_SIZE_MSG;
             case UPLOAD_ERR_PARTIAL:
-                return 'Die Datei wurde nur teilweise hochgeladen.';
+                return self::UPLOAD_ERR_PARTIAL_MSG;
             case UPLOAD_ERR_NO_FILE:
-                return 'Es wurde keine Datei hochgeladen.';
+                return self::UPLOAD_ERR_NO_FILE_MSG;
             case UPLOAD_ERR_NO_TMP_DIR:
-                return 'Fehlender temporärer Ordner.';
+                return self::UPLOAD_ERR_NO_TMP_DIR_MSG;
             case UPLOAD_ERR_CANT_WRITE:
-                return 'Speichern der Datei auf die Festplatte ist fehlgeschlagen.';
+                return self::UPLOAD_ERR_CANT_WRITE_MSG;
             case UPLOAD_ERR_EXTENSION:
-                return 'Eine PHP Erweiterung hat den Upload der Datei gestoppt. PHP bietet keine Möglichkeit an, um festzustellen welche Erweiterung das Hochladen der Datei gestoppt hat. Überprüfung aller geladenen Erweiterungen mittels phpinfo() könnte helfen.';
+                return self::UPLOAD_ERR_EXTENSION_MSG;
+            default:
+                return self::UPLOAD_ERR_OK_MSG;
         }
     }
 }
