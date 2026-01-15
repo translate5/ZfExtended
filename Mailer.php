@@ -109,4 +109,13 @@ class Mailer extends Zend_Mail
     {
         return $this->lastError;
     }
+
+    public function setFrom($email, $name = null)
+    {
+        if (! empty($name)) {
+            $name = str_replace('{companyName}', $this->config->runtimeOptions->companyName, $name);
+        }
+
+        return parent::setFrom($email, $name);
+    }
 }
