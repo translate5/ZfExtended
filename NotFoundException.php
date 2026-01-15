@@ -22,17 +22,12 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
-/**
- * SECTION TO INCLUDE PROGRAMMATIC LOCALIZATION
- * ============================================
- * $translate->_('Nicht gefunden!');
- */
-
 class ZfExtended_NotFoundException extends ZfExtended_Exception
 {
     /**
      * @var string
      */
+    #[MittagQI\ZfExtended\Localization\LocalizableProp]
     protected $defaultMessage = 'Nicht gefunden!';
 
     /**

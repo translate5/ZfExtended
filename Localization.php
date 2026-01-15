@@ -25,6 +25,7 @@ END LICENSE AND COPYRIGHT
 namespace MittagQI\ZfExtended;
 
 use Zend_Locale;
+use ZfExtended_Zendoverwrites_Translate;
 
 /**
  * Central class to manage the App Localizations
@@ -76,6 +77,14 @@ final class Localization
     public const FILE_EXTENSION_WITH_DOT = '.zxliff';
 
     /**
+     * Global API to ranslate localized strings in translate5
+     */
+    public static function trans(string $messageId, string $locale = null): string
+    {
+        return ZfExtended_Zendoverwrites_Translate::getInstance()->_($messageId, $locale);
+    }
+
+    /**
      * Retrieves all locales that are available as GUI languages in translate5
      * @return string[]
      */
@@ -114,6 +123,9 @@ final class Localization
         return self::getApplicationLocale(true);
     }
 
+    /**
+     * Retrieves the application-locale representing the desired fallback-locale for texts where no user is involved
+     */
     public static function getApplicationLocale(bool $evaluateBrowserLocale = false): string
     {
         $rop = \Zend_Registry::get('config')->runtimeOptions;
@@ -153,6 +165,9 @@ final class Localization
         return self::FALLBACK_LOCALE;
     }
 
+    /**
+     * Retrieves, if the passed locale-string is a valid locale in translate5
+     */
     public static function isAvailableLocale(string $language): bool
     {
         if (Zend_Locale::isLocale($language)) {

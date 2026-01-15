@@ -23,34 +23,30 @@ END LICENSE AND COPYRIGHT
 */
 
 /**
- * SECTION TO INCLUDE PROGRAMMATIC LOCALIZATION
- * ============================================
- * These localizations may appear in the validation / titles of Zend-Forms still in use
- * $translate->_('No token was provided to match against');
- * $translate->_("'%value%' does not match the expected structure for a DNS hostname");
- * $translate->_('Benutzername');
- * $translate->_('Bitte geben Sie ein Passwort an!');
- * $translate->_('Bitte geben Sie einen Benutzernamen an!');
- * $translate->_('Bitte laden Sie die Login-Seite neu, geben Sie ihr Passwort erneut ein und senden Sie das Formular erneut ab - Ihr Hash-Wert zur Überprüfung von Cross-Site-Skripting-Attacken war nicht korrekt.');
- * $translate->_('Das Passwort ist zu kurz!');
- * $translate->_('Der Benutzername enthält Zeichen, die nicht verwendet werden dürfen!');
- * $translate->_('Der Benutzername ist zu kurz!');
- * $translate->_('E-Mail anfordern');
- * $translate->_('Einloggen');
- * $translate->_('Login');
- * $translate->_('Mindestlänge: 12 Zeichen. Mindestens enthalten: Ein Großbuchstabe, ein Kleinbuchstabe und eine Zahl.');
- * $translate->_('Neu setzen');
- * $translate->_('Passwort wiederholen');
- * $translate->_('Passwort');
- */
-
-/**
  * Klasse zur Initialisierung aller Formulare
  *
  * - liest Form aus ini ein entsprechend der Konvention "controllerAction" des aufrufenden Controllers und der aufrufenden Action
  * - Kinder können auch zur Datenvalidierung im Modell herangezogen werden
  * @deprecated  should be removed!
+ *
+ * the following localizations may appear in the validation / titles of Zend-Forms still in use
  */
+#[MittagQI\ZfExtended\Localization\LocalizableString('No token was provided to match against')]
+#[MittagQI\ZfExtended\Localization\LocalizableString("'%value%' does not match the expected structure for a DNS hostname")]
+#[MittagQI\ZfExtended\Localization\LocalizableString('Benutzername')]
+#[MittagQI\ZfExtended\Localization\LocalizableString('Bitte geben Sie ein Passwort an!')]
+#[MittagQI\ZfExtended\Localization\LocalizableString('Bitte geben Sie einen Benutzernamen an!')]
+#[MittagQI\ZfExtended\Localization\LocalizableString('Bitte laden Sie die Login-Seite neu, geben Sie ihr Passwort erneut ein und senden Sie das Formular erneut ab - Ihr Hash-Wert zur Überprüfung von Cross-Site-Skripting-Attacken war nicht korrekt.')]
+#[MittagQI\ZfExtended\Localization\LocalizableString('Das Passwort ist zu kurz!')]
+#[MittagQI\ZfExtended\Localization\LocalizableString('Der Benutzername enthält Zeichen, die nicht verwendet werden dürfen!')]
+#[MittagQI\ZfExtended\Localization\LocalizableString('Der Benutzername ist zu kurz!')]
+#[MittagQI\ZfExtended\Localization\LocalizableString('E-Mail anfordern')]
+#[MittagQI\ZfExtended\Localization\LocalizableString('Einloggen')]
+#[MittagQI\ZfExtended\Localization\LocalizableString('Login')]
+#[MittagQI\ZfExtended\Localization\LocalizableString('Mindestlänge: 12 Zeichen. Mindestens enthalten: Ein Großbuchstabe, ein Kleinbuchstabe und eine Zahl.')]
+#[MittagQI\ZfExtended\Localization\LocalizableString('Neu setzen')]
+#[MittagQI\ZfExtended\Localization\LocalizableString('Passwort wiederholen')]
+#[MittagQI\ZfExtended\Localization\LocalizableString('Passwort')]
 class ZfExtended_Zendoverwrites_Form extends Zend_Form
 {
     /**
