@@ -30,7 +30,7 @@ class ZfExtended_FileUploadException extends ZfExtended_UnprocessableEntity
     protected $level = ZfExtended_Logger::LEVEL_INFO;
 
     /**
-     * returns a german error message to the given file upload error code
+     * returns a localized error message to the given file upload error code
      * TODO currently not used by the excption itself.
      */
     public static function getUploadErrorMessage(int $errorNr, string $locale = null)
