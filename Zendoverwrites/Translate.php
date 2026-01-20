@@ -318,7 +318,7 @@ class ZfExtended_Zendoverwrites_Translate extends Zend_Translate
         $s = $this->getAdapter()->translate($s, $locale);
         // if configured, we JSON-encode the translation to serve JSON translation-files
         if ($this->_jsonEncode) {
-            $s = json_encode($s, JSON_HEX_APOS);
+            $s = json_encode($s, JSON_HEX_APOS | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
             $length = strlen($s);
             if ($s[0] == '"' && $s[$length - 1] == '"') {
                 //we do not use trim here, because then a second trailing quote would be removed also
