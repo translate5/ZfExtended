@@ -32,9 +32,9 @@ namespace MittagQI\ZfExtended\Localization;
 use Attribute;
 
 /**
- * Represents an array of properties that are no real localizable text but e.g. variable-names
+ * Represents an array of strings that actually are real localizable text
  */
 #[Attribute(Attribute::TARGET_PROPERTY | Attribute::TARGET_CLASS_CONSTANT | Attribute::IS_REPEATABLE)]
-final class LocalizableArrayProp
+final class LocalizableMsgArray
 {
 }

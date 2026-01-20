@@ -31,6 +31,9 @@ namespace MittagQI\ZfExtended\Localization;
 
 use Attribute;
 
+/**
+ * Represents an entry in Zf_configuration that needs to be localized
+ */
 #[Attribute(Attribute::TARGET_CLASS | Attribute::IS_REPEATABLE)]
 final class LocalizableConfigValue implements ExtractableLocalization
 {

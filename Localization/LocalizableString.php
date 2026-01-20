@@ -31,6 +31,10 @@ namespace MittagQI\ZfExtended\Localization;
 
 use Attribute;
 
+/**
+ * Represents a string that actually is real localizable text but is not contained in the source-code
+ * and therefore needs to be added by defining it inline
+ */
 #[Attribute(Attribute::TARGET_PROPERTY | Attribute::TARGET_CLASS_CONSTANT | Attribute::TARGET_CLASS | Attribute::IS_REPEATABLE)]
 final class LocalizableString implements ExtractableLocalization
 {

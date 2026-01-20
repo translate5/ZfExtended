@@ -31,6 +31,9 @@ namespace MittagQI\ZfExtended\Localization;
 
 use Attribute;
 
+/**
+ * Represents a column of a table where the values are the base for lacalization
+ */
 #[Attribute(Attribute::TARGET_CLASS | Attribute::IS_REPEATABLE)]
 final class LocalizableTableColumn implements ExtractableLocalization
 {
