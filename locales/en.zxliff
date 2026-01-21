@@ -214,6 +214,10 @@
                 <source>Ungültige Logindaten - Zugang gesperrt!<br/>Sie haben Ihr Passwort in den letzten 24 Stunden mehrmals falsch eingegeben, ihr Login wurde gesperrt.<br />Per E-Mail wurde Ihnen ein Link zugesandt, mit welchem Sie Ihr Passwort neu setzen können. Dieser Link ist 30 min gültig und funktioniert nur, so lange Sie Ihren Browser nicht zwischenzeitlich geschlossen haben. Sie können jederzeit einen neuen Link %shier%s anfordern.</source>
                 <target>Invalid login credentials – access locked!<br/>You have entered your password incorrectly several times in the last 24 hours, so your login has been locked.<br />An email has been sent to you with a link to reset your password. This link is valid for 30 minutes and works only as long as you have not closed your browser in the meantime. You can request a new link %shere%s at any time.</target>
             </trans-unit>
+            <trans-unit id="VW5rbm93biBlcnJvciBvY2N1cnJlZA==">
+                <source>Unknown error occurred</source>
+                <target>An unknown error occurred</target>
+            </trans-unit>
             <trans-unit id="VW5zZXJlIEFkbWluaXN0cmF0b3JlbiB3ZXJkZW4gYXV0b21hdGlzY2ggYmVuYWNocmljaHRpZ3QgdW5kIHdlcmRlbiBzaWNoIHVtZ2VoZW5kIG1pdCBJaG5lbiBpbiBWZXJiaW5kdW5nIHNldHplbi4=">
                 <source>Unsere Administratoren werden automatisch benachrichtigt und werden sich umgehend mit Ihnen in Verbindung setzen.</source>
                 <target>Our administrators have been notified and will get in touch with you shortly.</target>

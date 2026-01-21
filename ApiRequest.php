@@ -134,7 +134,10 @@ final class ApiRequest
     {
         if (isset($fileInfo['error']) && $fileInfo['error'] > 0) {
             throw new ZfExtended_FileUploadException('E1211', [
-                'msg' => ZfExtended_FileUploadException::getUploadErrorMessage($fileInfo['error']),
+                'msg' => ZfExtended_FileUploadException::getUploadErrorMessage(
+                    (int) $fileInfo['error'],
+                    Localization::FALLBACK_LOCALE
+                ),
             ]);
         }
     }

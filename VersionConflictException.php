@@ -22,16 +22,11 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
-/**
- * SECTION TO INCLUDE PROGRAMMATIC LOCALIZATION
- * ============================================
- * $translate->_('Die Ausgangsdaten wurden in der Zwischenzeit verändert. Bitte aktualisieren Sie Ihre Ansicht!');
- */
-
 class ZfExtended_VersionConflictException extends ZfExtended_Exception
 {
     protected $defaultCode = 409;
 
+    #[MittagQI\ZfExtended\Localization\LocalizableProp]
     protected $defaultMessage = 'Die Ausgangsdaten wurden in der Zwischenzeit verändert. Bitte aktualisieren Sie Ihre Ansicht!';
 
     protected $defaultMessageTranslate = true;

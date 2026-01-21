@@ -23,43 +23,56 @@ END LICENSE AND COPYRIGHT
 */
 
 /**
- * SECTION TO INCLUDE PROGRAMMATIC LOCALIZATION
- * ============================================
- * hint: translation happens in ZfExtended_Models_Filter_ExtJs6
- * $translate->_('like');
- * $translate->_('notInList');
- * $translate->_('in');
- * $translate->_('eq');
- * $translate->_('gt');
- * $translate->_('gteq');
- * $translate->_('lt');
- * $translate->_('lteq');
- * $translate->_('=');
- * $translate->_('==');
- */
-
-/**
  * converts the given Filter and Sort String from ExtJS to an object structure appliable to a Zend Select Object
  * @author Marc Mittag
  */
 class ZfExtended_Models_Filter_ExtJs5 extends ZfExtended_Models_Filter_ExtJs
 {
+    #[MittagQI\ZfExtended\Localization\LocalizableProp]
+    public const OPERATOR_LIKE = 'like';
+
+    #[MittagQI\ZfExtended\Localization\LocalizableProp]
+    public const OPERATOR_NOTINLIST = 'notInList';
+
+    #[MittagQI\ZfExtended\Localization\LocalizableProp]
+    public const OPERATOR_IN = 'in';
+
+    #[MittagQI\ZfExtended\Localization\LocalizableProp]
+    public const OPERATOR_EQ = 'eq';
+
+    #[MittagQI\ZfExtended\Localization\LocalizableProp]
+    public const OPERATOR_GT = 'gt';
+
+    #[MittagQI\ZfExtended\Localization\LocalizableProp]
+    public const OPERATOR_GTEQ = 'gteq';
+
+    #[MittagQI\ZfExtended\Localization\LocalizableProp]
+    public const OPERATOR_LT = 'lt';
+
+    #[MittagQI\ZfExtended\Localization\LocalizableProp]
+    public const OPERATOR_LTEQ = 'lteq';
+
+    #[MittagQI\ZfExtended\Localization\LocalizableProp]
+    public const OPERATOR_IS = '=';
+
+    #[MittagQI\ZfExtended\Localization\LocalizableProp]
+    public const OPERATOR_IDENTICAL = '==';
     /**
      * This list contains a mapping between new ExtJS 5 operator parameters (key)
      * to the old ExtJS 4 type parameters (value)
      * @var array
      */
     protected $operatorToType = [
-        'like' => 'string',
-        'notInList' => 'notInList',
-        'in' => 'list',
-        'eq' => 'numeric',
-        'gt' => 'numeric',
-        'gteq' => 'numeric',
-        'lt' => 'numeric',
-        'lteq' => 'numeric',
-        '=' => 'boolean',
-        '==' => 'boolean',
+        self::OPERATOR_LIKE => 'string',
+        self::OPERATOR_NOTINLIST => 'notInList',
+        self::OPERATOR_IN => 'list',
+        self::OPERATOR_EQ => 'numeric',
+        self::OPERATOR_GT => 'numeric',
+        self::OPERATOR_GTEQ => 'numeric',
+        self::OPERATOR_LT => 'numeric',
+        self::OPERATOR_LTEQ => 'numeric',
+        self::OPERATOR_IS => 'boolean',
+        self::OPERATOR_IDENTICAL => 'boolean',
     ];
 
     /**
