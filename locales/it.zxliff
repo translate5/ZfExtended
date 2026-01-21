@@ -118,9 +118,9 @@
                 <source>Fehlender temporärer Ordner.</source>
                 <target>Cartella temporanea mancante.</target>
             </trans-unit>
-            <trans-unit id="R2VuZXJhbE1ldGF0YWdUaXRsZVN1ZmZpeA==">
-                <source>GeneralMetatagTitleSuffix</source>
-                <target>GeneralMetatagTitleSuffix</target>
+            <trans-unit id="VDU6OkdlbmVyYWxNZXRhdGFnVGl0bGVTdWZmaXg=">
+                <source>T5::GeneralMetatagTitleSuffix</source>
+                <target></target>
             </trans-unit>
             <trans-unit id="SWhyIFBhc3N3b3J0IHd1cmRlIG5ldSBnZXNldHp0LiBTaWUga8O2bm5lbiBzaWNoIG51biBlaW5sb2dnZW4u">
                 <source>Ihr Passwort wurde neu gesetzt. Sie können sich nun einloggen.</source>

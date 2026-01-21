@@ -118,8 +118,8 @@
                 <source>Fehlender temporärer Ordner.</source>
                 <target>Missing temporary folder.</target>
             </trans-unit>
-            <trans-unit id="R2VuZXJhbE1ldGF0YWdUaXRsZVN1ZmZpeA==">
-                <source>GeneralMetatagTitleSuffix</source>
+            <trans-unit id="VDU6OkdlbmVyYWxNZXRhdGFnVGl0bGVTdWZmaXg=">
+                <source>T5::GeneralMetatagTitleSuffix</source>
                 <target>translate5 – Open Source translation system</target>
             </trans-unit>
             <trans-unit id="SWhyIFBhc3N3b3J0IHd1cmRlIG5ldSBnZXNldHp0LiBTaWUga8O2bm5lbiBzaWNoIG51biBlaW5sb2dnZW4u">
