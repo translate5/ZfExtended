@@ -39,6 +39,12 @@ final class Localization
     public const PRIMARY_LOCALE = 'de';
 
     /**
+     * The primary locale of translations encoded in JSON files
+     * If new strings are added, this always has to be done in this locale
+     */
+    public const PRIMARY_JSON_LOCALE = 'en';
+
+    /**
      * The locale being used for strings not found in other locales
      */
     public const FALLBACK_LOCALE = 'en';
