@@ -36,13 +36,7 @@ final class Localization
      * The primary locale translations exist in the code with
      * Must match runtimeOptions.translation.sourceCodeLocale
      */
-    public const PRIMARY_LOCALE = 'de';
-
-    /**
-     * The primary locale of translations encoded in JSON files
-     * If new strings are added, this always has to be done in this locale
-     */
-    public const PRIMARY_JSON_LOCALE = 'en';
+    public const PRIMARY_LOCALE = 'en';
 
     /**
      * The locale being used for strings not found in other locales
@@ -52,7 +46,7 @@ final class Localization
     /**
      * Additional locales translate5 is shipped with
      */
-    public const SECONDARY_LOCALES = ['en', 'fr', 'it'];
+    public const SECONDARY_LOCALES = ['de', 'fr', 'it'];
 
     /**
      * The locales, that are selectable for the GUI
