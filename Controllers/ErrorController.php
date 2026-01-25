@@ -179,7 +179,7 @@ class ErrorController extends ZfExtended_Controllers_Action
         $isHttp404 = false;
         if (($missingAction || $notFound || $missingController) && ! $this->isRestRoute()) {
             $isHttp404 = true;
-            $this->view->errorMessage = $this->_translate->_('Seite nicht gefunden: ') . $_SERVER['REQUEST_URI'] . $this->_translate->_('/ Aufruf erfolgte durch IP: ') . $_SERVER['REMOTE_ADDR'];
+            $this->view->errorMessage = $this->_translate->_('Page not found:') . $_SERVER['REQUEST_URI'] . $this->_translate->_('/ Call was made by IP:') . $_SERVER['REMOTE_ADDR'];
         }
 
         if ($loggingEnabled) {

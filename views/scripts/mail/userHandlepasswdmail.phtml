@@ -31,18 +31,18 @@ END LICENSE AND COPYRIGHT
 
 $this->render('general.phtml');
 
-$this->subject = $this->translate->_('Passwort setzen');
+$this->subject = $this->translate->_('Set password');
 
 echo $this->templateApply('{header}
-Sie erhalten diese Email, weil Ihr Konto auf {portalUrl} neu angelegt oder Ihr Passwort zurückgesetzt wurde. 
+You have received this e-mail, because your account on {portalUrl} was created, or your password was reset. 
 
-Ihr Benutzername:
+Your username:
 ------------------------------
 {login}
 ------------------------------
 
-Wenn Sie Ihr Konto künftig nutzen möchten, dann fordern Sie unter der folgenden
-Adresse eine Link an, um Ihr Passwort neu setzen zu können.
+If you want to use your account in the future, then please request a link
+to reset your password from the following address.
 
 ------------------------------
 {portalUrl}{reseturl}

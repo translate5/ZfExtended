@@ -28,7 +28,7 @@ class ZfExtended_NotFoundException extends ZfExtended_Exception
      * @var string
      */
     #[MittagQI\ZfExtended\Localization\LocalizableMsg]
-    protected $defaultMessage = 'Nicht gefunden!';
+    protected $defaultMessage = 'Not found!';
 
     /**
      * @var bool

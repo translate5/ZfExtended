@@ -31,25 +31,27 @@ END LICENSE AND COPYRIGHT
 
 $this->render('general.phtml');
 
-$this->subject = $this->templateApply('{appName} - Ankündigung Server Wartung');
+$this->subject = $this->templateApply('{appName} – server maintenance announcement');
 
 $mail = $this->templateApply('{header}
-Aufgrund von Wartungsmaßnahmen wird {appName} auf {portalUrl}<br />
-für kurze Zeit nicht erreichbar sein.<br />
+Please note that {appName} on {portalUrl}<br />
+will be temporarily unavailable due to scheduled maintenance.<br />
 <br />
-Die Wartung ist geplant für: {maintenanceDate}.<br />
-{additionalInfo}Die genaue Uhrzeit der Wartung wird in der Anwendung selbst angezeigt, <br />
-mit einem zeitlichen Vorlauf von einer Stunde.<br />
+The maintenance is planned for:{maintenanceDate}.<br />
+{additionalInfo}The exact time is displayed in the application,<br />
+one hour in advance.<br />
 <br />
-Wir bitten um Ihr Verständnis.<br />
+We appreciate your understanding.<br />
 <br />
-Sie erhalten diese automatisch versendete E-Mail,
-da sie als Administrator eingetragen sind.<br />
+You are receiving this automated e-mail,
+as you are registered as an administrator.<br />
 {footer}', [
     'header' => $this->header,
     'footer' => $this->footer,
     'maintenanceDate' => $this->maintenanceDate,
-    'additionalInfo' => empty($this->message) ? '' : $this->templateApply("Zusätzliche Informationen: {message}<br />\n<br />\n", [
+    'additionalInfo' => empty($this->message) ? '' : $this->templateApply('Additional information: {message}<br />
+<br />
+', [
         'message' => $this->message,
     ]),
 ]);
