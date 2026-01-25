@@ -28,7 +28,7 @@ class ZfExtended_NotAuthenticatedException extends ZfExtended_Exception
      * @var string
      */
     #[MittagQI\ZfExtended\Localization\LocalizableMsg]
-    protected $defaultMessage = 'Unauthenticated!';
+    protected $defaultMessage = 'Nicht authentifiziert!';
 
     /**
      * @var bool

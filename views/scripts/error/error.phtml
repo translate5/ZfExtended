@@ -25,10 +25,10 @@ END LICENSE AND COPYRIGHT
 /* @var $this Zend_View */
 $config = Zend_Registry::get('config');
 ?>
-  <h2><?php echo $this->translate->_('Application error'); ?></h2>
-  <p><?php echo $this->translate->_('We apologize for the problem you encountered!'); ?></p>
-  <p><?php echo $this->translate->_('Our administrators have been notified and will get in touch with you shortly.'); ?></p>
-  <p><?php echo $this->translate->_('If no contact has been made within the next business day, a general malfunction is likely preventing the automatic notification of our administrators. In that case, please contact us as soon as possible using the following details:'); ?></p>
+  <h2><?php echo $this->translate->_('Anwendungsfehler'); ?></h2>
+  <p><?php echo $this->translate->_('Wir bitten um Entschuldigung für die aufgetretene Störung!'); ?></p>
+  <p><?php echo $this->translate->_('Unsere Administratoren werden automatisch benachrichtigt und werden sich umgehend mit Ihnen in Verbindung setzen.'); ?></p>
+  <p><?php echo $this->translate->_('Sollte innerhalb des nächsten Arbeitstags keine Kontaktaufnahme erfolgt sein, liegt eine allgemeine Störung vor, die die automatische Benachrichtigung unserer Administratoren verhindert. Bitte benachrichtigen Sie uns dann möglichst umgehend unter den folgenden Kontaktdaten:'); ?></p>
   <p>
     <?php echo $config->runtimeOptions->contactData->emergencyContactDepartment; ?><br/>
   </p>

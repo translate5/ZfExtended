@@ -37,33 +37,33 @@ class ZfExtended_FileUploadException extends ZfExtended_UnprocessableEntity
     {
         return match ($errorNr) {
             UPLOAD_ERR_OK => Localization::trans(
-                'No error occurred, the file was uploaded successfully.',
+                'Es liegt kein Fehler vor, die Datei wurde erfolgreich hochgeladen.',
                 $locale
             ),
             UPLOAD_ERR_INI_SIZE => Localization::trans(
-                'The uploaded file exceeds the size that is set in ' .
-                'the upload_max_filesize instruction in php.ini.',
+                'Die hochgeladene Datei überschreitet die in der Anweisung ' .
+                'upload_max_filesize in php.ini festgelegte Größe.',
                 $locale
             ),
             UPLOAD_ERR_FORM_SIZE => Localization::trans(
-                'The uploaded file exceeds the maximum size set ' .
-                'in the HTML form via the MAX_FILE_SIZE value.',
+                'Die hochgeladene Datei überschreitet die in dem HTML Formular ' .
+                'mittels der Anweisung MAX_FILE_SIZE angegebene maximale Dateigröße.',
                 $locale
             ),
-            UPLOAD_ERR_PARTIAL => Localization::trans('The file was only partially uploaded.', $locale),
-            UPLOAD_ERR_NO_FILE => Localization::trans('No file was uploaded.', $locale),
-            UPLOAD_ERR_NO_TMP_DIR => Localization::trans('Missing temporary folder.', $locale),
+            UPLOAD_ERR_PARTIAL => Localization::trans('Die Datei wurde nur teilweise hochgeladen.', $locale),
+            UPLOAD_ERR_NO_FILE => Localization::trans('Es wurde keine Datei hochgeladen.', $locale),
+            UPLOAD_ERR_NO_TMP_DIR => Localization::trans('Fehlender temporärer Ordner.', $locale),
             UPLOAD_ERR_CANT_WRITE => Localization::trans(
-                'Failed to save the file to disk.',
+                'Speichern der Datei auf die Festplatte ist fehlgeschlagen.',
                 $locale
             ),
             UPLOAD_ERR_EXTENSION => Localization::trans(
-                'A PHP extension stopped the file upload. PHP does not ' .
-                'provide a way to determine which extension caused this. ' .
-                'Checking all loaded extensions using phpinfo() may help.',
+                'Eine PHP Erweiterung hat den Upload der Datei gestoppt. PHP bietet keine ' .
+                'Möglichkeit an, um festzustellen welche Erweiterung das Hochladen der Datei gestoppt hat. ' .
+                'Überprüfung aller geladenen Erweiterungen mittels phpinfo() könnte helfen.',
                 $locale
             ),
-            default => Localization::trans('An unknown error occurred', $locale),
+            default => Localization::trans('Unknown error occurred', $locale),
         };
     }
 }

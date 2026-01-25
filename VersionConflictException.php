@@ -27,7 +27,7 @@ class ZfExtended_VersionConflictException extends ZfExtended_Exception
     protected $defaultCode = 409;
 
     #[MittagQI\ZfExtended\Localization\LocalizableMsg]
-    protected $defaultMessage = 'The displayed data was changed in the meantime on the server. Please refresh your view!';
+    protected $defaultMessage = 'Die Ausgangsdaten wurden in der Zwischenzeit verändert. Bitte aktualisieren Sie Ihre Ansicht!';
 
     protected $defaultMessageTranslate = true;
 

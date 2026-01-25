@@ -32,13 +32,13 @@ END LICENSE AND COPYRIGHT
 $this->render('general.phtml');
 
 // Ask
-$this->subject = $this->translate->_('Login name changed');
+$this->subject = $this->translate->_('Loginname geändert');
 
 echo $this->templateApply('{header}
-We have found that your login name contains unsupported characters.
-The login name was changed automatically.
+Wir haben festgestellt, dass Ihr Login-Name nicht unterstützte Zeichen enthält.
+Der Login-Name wurde automatisch geändert.
 
-Your new login name:
+Ihr neuer Login-Name:
 ------------------------------
 {newLogin}
 ------------------------------
