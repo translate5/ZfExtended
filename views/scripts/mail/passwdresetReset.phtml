@@ -31,28 +31,28 @@ END LICENSE AND COPYRIGHT
 
 $this->render('general.phtml');
 
-$this->subject = $this->translate->_('Passwort neu setzen');
+$this->subject = $this->translate->_('Reset password');
 
 echo $this->templateApply('{header}
-Sie erhalten diese Email, weil wir eine Anfrage zur Änderung des Passwortes für Ihr Konto auf {portalUrl} erhalten haben. 
+You have received this e-mail because we have received a request to change the password for your account at {portalUrl}.
 
-Wenn Sie Ihr Passwort ändern möchten, dann befolgen Sie bitte folgende Anweisungen:
+If you have sent such a request and would like to change your password, please follow these instructions:
 
-Der folgende Link enthält einen für 30 Minuten gültigen Schlüssel, mit welchem Sie Ihr Passwort neu setzen können. Aus Sicherheitsgründen funktioniert dies nur, wenn Sie den folgenden Link im selben Browser in dem Sie die Änderung Ihres Passwort angefordert haben öffnen und zudem nach Zurücksetzen des Passworts Ihren Browser nicht neu gestartet haben.
+The following link contains a key which is valid for 30 minutes, and which can be used to reset your password. For security reasons, this will only work if you open the link in the same browser in which you requested the change to your password, and in addition, if you have not reopened your browser after resetting the password.
 
 ==============================
-Link um Passwort neu zu setzen
+Link to reset password
 ------------------------------
 {portalUrl}{hashurl}
 ------------------------------
 ==============================
 
-Sollte Ihr Schlüssel nicht mehr gültig sein, können Sie unter jederzeit einen neuen Schlüssel anfordern.
+If your key is no longer valid, you can request a new one at any time.
 ------------------------------
 {portalUrl}{reseturl}
 ------------------------------
 
-Sollten Sie die Anfrage nicht selbst ausgelöst haben, bitten wir Sie uns darüber zu informieren.
+If you did not send the request yourself, please inform us of this.
 
 {footer}', [
     'hashurl' => '/login/passwdnew?resetHash=' . $this->resetHash,

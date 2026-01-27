@@ -61,24 +61,24 @@ class ZfExtended_PasswordCheck
 
         $errors = [];
         if (strlen($password) < 12) {
-            $errors[] = $translate->_('Mindestens 12 Zeichen');
+            $errors[] = $translate->_('At least 12 characters');
         }
 
         if (! preg_match('#[\d]+#', $password)) {
-            $errors[] = $translate->_('Mindestens eine Zahl');
+            $errors[] = $translate->_('At least one number');
         }
 
         if (! preg_match('#[a-z]+#', $password)) {
-            $errors[] = $translate->_('Mindestens ein Kleinbuchstabe');
+            $errors[] = $translate->_('At least one lowercase letter');
         }
 
         if (! preg_match('#[A-Z]+#', $password)) {
-            $errors[] = $translate->_('Mindestens ein Großbuchstabe');
+            $errors[] = $translate->_('At least one uppercase letter');
         }
 
         $match = '';
         if (self::isBlacklisted($password, $match)) {
-            $errors[] = $translate->_('Das Passwort enthält ein Wort aus der schwarzen Liste.') . ' (' . $match . ')';
+            $errors[] = $translate->_('Password contains black-listed word.') . ' (' . $match . ')';
         }
 
         return empty($errors);

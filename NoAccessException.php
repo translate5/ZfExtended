@@ -31,7 +31,7 @@ class ZfExtended_NoAccessException extends ZfExtended_Exception
      * @var string
      */
     #[MittagQI\ZfExtended\Localization\LocalizableMsg]
-    protected $defaultMessage = 'Keine Zugriffsberechtigung!';
+    protected $defaultMessage = 'No access granted!';
 
     /**
      * @var bool
