@@ -32,6 +32,8 @@ class DbUpdateFileCheck
 {
     private string $error;
 
+    private bool $segmentTablesChanged;
+
     public function __construct(
         private readonly string $absolutePath,
     ) {
@@ -40,6 +42,11 @@ class DbUpdateFileCheck
     public function getError(): string
     {
         return $this->error;
+    }
+
+    public function hasSegmentTablesChanges(): bool
+    {
+        return $this->segmentTablesChanged;
     }
 
     public function checkAndSanitize(): ?string
@@ -75,6 +82,8 @@ class DbUpdateFileCheck
 
             return null;
         }
+
+        $this->checkSegmentTablesChanges($content);
 
         return $content;
     }
@@ -125,6 +134,28 @@ class DbUpdateFileCheck
         }
 
         return $constraints;
+    }
+
+    private function checkSegmentTablesChanges(string $sql): void
+    {
+        $this->segmentTablesChanged = preg_match(
+                 // altering table
+                '~alter\s+table\s+' .
+                // table-name with/without database-prefix
+                '(?:`?\w+`?\.)?`?(LEK_segments|LEK_segment_data)`?\s+(' .
+                // add column
+                'add\s|' .
+                'add\s+column\s|' .
+                // drop column
+                'drop\s|' .
+                'drop\s+column\s|' .
+                // modify/change/rename column
+                'modify\s+column\s|' .
+                'change\s+column\s|' .
+                'rename\s+column\s' .
+                ')~i',
+                $sql
+            ) === 1;
     }
 
     private function normalizeWhitespace(string $sql): string
