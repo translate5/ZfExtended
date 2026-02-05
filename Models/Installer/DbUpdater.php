@@ -434,6 +434,12 @@ class ZfExtended_Models_Installer_DbUpdater
                 foreach ($warnings->fetchAll() as $warning) {
                     $this->warnings[] = join(', ', $warning) . ' in file ' . $file;
                 }
+                // may the DB-update makes a renewal of the materialized views neccessary
+                // HINT: this is done for every DB-update file - what does not hurt because once all
+                // materialized views are dropped, no materialized views are found anymore ...
+                if ($checker->hasSegmentTablesChanges()) {
+                    $this->dropAllMaterializedViews($db);
+                }
 
                 return true;
             }
@@ -632,5 +638,32 @@ class ZfExtended_Models_Installer_DbUpdater
     public function isTestOrInstallEnvironment(): bool
     {
         return (defined('DATABASE_RECREATION') && DATABASE_RECREATION);
+    }
+
+    /**
+     * @throws Zend_Exception
+     * @throws Zend_Db_Exception
+     */
+    public function dropSegmentMaterializedViews(): void
+    {
+        $config = Zend_Registry::get('config');
+        $db = Zend_Db::factory($config->resources->db->adapter, $config->resources->db->params->toArray());
+        $this->dropAllMaterializedViews($db);
+    }
+
+    /**
+     * Helper to drop all materialized views
+     */
+    private function dropAllMaterializedViews(Zend_Db_Adapter_Abstract $db)
+    {
+        $conf = $db->getConfig();
+        $res = $db->query('SHOW TABLES FROM `' . $conf['dbname'] . '` LIKE "LEK_segment_view_%"');
+        $tables = $res->fetchAll(Zend_Db::FETCH_NUM);
+        if (! empty($tables)) {
+            foreach ($tables as $table) {
+                $tableName = $table[0];
+                $db->query('DROP TABLE IF EXISTS `' . $tableName . '`');
+            }
+        }
     }
 }
