@@ -259,7 +259,7 @@ abstract class ZfExtended_Languages extends ZfExtended_Models_Entity_Abstract
     /**
      * Gibt die interne default Sublanguage zu einem Sprachkürzel nach RFC5646 zurück
      */
-    public function getSublanguageByRfc5646(string $lang): string
+    public function getSublanguageByRfc5646(string $lang): ?string
     {
         $this->loadByRfc5646($lang);
 
