@@ -74,7 +74,7 @@ class ZfExtended_Models_Installer_DbUpdater
     public function __construct(bool $checkCredentials = false)
     {
         if (Zend_Registry::isRegistered('logger')) {
-            $this->log = Zend_Registry::get('logger')->cloneMe('core.database.update');
+            $this->log = Zend_Registry::get('logger')->cloneMe('system.database.update');
             if ($checkCredentials) {
                 $this->checkCredentials();
             }
