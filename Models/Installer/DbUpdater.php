@@ -74,7 +74,7 @@ class ZfExtended_Models_Installer_DbUpdater
     public function __construct(bool $checkCredentials = false)
     {
         if (Zend_Registry::isRegistered('logger')) {
-            $this->log = Zend_Registry::get('logger')->cloneMe('core.database.update');
+            $this->log = Zend_Registry::get('logger')->cloneMe('system.database.update');
             if ($checkCredentials) {
                 $this->checkCredentials();
             }
@@ -665,5 +665,8 @@ class ZfExtended_Models_Installer_DbUpdater
                 $db->query('DROP TABLE IF EXISTS `' . $tableName . '`');
             }
         }
+        $this->log->info('E1773', 'Dropped all materialized views. Drop count: {count}', [
+            'count' => count($tables),
+        ]);
     }
 }
