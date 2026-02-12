@@ -94,16 +94,24 @@ final class Localization
     }
 
     /**
-     * Retrieves the locales model for the frontend
+     * Retrieves the locales model for the frontend as JSON
      */
-    public static function getFrontendLocales(\ZfExtended_Zendoverwrites_Translate $translate): string
+    public static function getFrontendLocalesJson(): string
+    {
+        return json_encode(self::getFrontendLocales(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    }
+
+    /**
+     * Retrieves the available frontend locale as LOCALE => TRANSLATED NAME
+     */
+    public static function getFrontendLocales(): array
     {
         $locales = [];
         foreach (self::FRONTEND_LOCALES as $locale => $name) {
-            $locales[$locale] = $translate->_($name);
+            $locales[$locale] = self::trans($name);
         }
 
-        return json_encode($locales, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        return $locales;
     }
 
     /**

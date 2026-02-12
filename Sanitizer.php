@@ -271,6 +271,8 @@ final class Sanitizer
             ->allowAttribute('id', ['img'])
             ->allowAttribute('data-originalid', ['span'])
             ->allowAttribute('data-length', ['span'])
+            ->allowAttribute('data-source', ['span'])
+            ->allowAttribute('data-target', ['span'])
             // keep track-changes attrs (timestamps, ids, cssnr, workflowstep) intact while validating format
             ->withAttributeSanitizer(new TrackChangesAttrSanitizer())
             // Restrict data: URIs on img src to safe image mime types only

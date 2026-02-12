@@ -140,37 +140,6 @@ class ZfExtended_Zendoverwrites_Translate extends Zend_Translate
     }
 
     /**
-     * returns an assoc array with the available translations.
-     * Key is the localeKey (de/en), value is the name of the language.
-     * The name is already translated into the current language!
-     * @return array
-     */
-    public function getAvailableTranslations()
-    {
-        $session = new Zend_Session_Namespace();
-        $sourceLocale = Localization::DEFAULT_SOURCE_LOCALE;
-
-        $locales = [];
-        $xliffFiles = scandir($this->config->runtimeOptions->dir->locales);
-        foreach ($xliffFiles as $key => &$file) {
-            $pathinfo = pathinfo($file);
-            if (empty($pathinfo['extension']) || $pathinfo['extension'] !== Localization::FILE_EXTENSION) {
-                continue;
-            }
-            $locale = preg_replace('"^.*-([a-zA-Z]{2,3})$"i', '\\1', $pathinfo['filename']);
-            if ($locale == $sourceLocale) {
-                continue;
-            }
-            Zend_Locale::setCache(Zend_Registry::get('cache'));
-            $lang = Zend_Locale::getTranslation($locale, 'language', $session->locale);
-            $locales[$locale] = $lang;
-        }
-        asort($locales, SORT_NATURAL);
-
-        return $locales;
-    }
-
-    /**
      * protected, because if public the instances has to be newly instantiated, which is unneccessary currently
      *
      * @param string $lang
