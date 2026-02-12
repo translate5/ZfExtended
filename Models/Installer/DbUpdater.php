@@ -665,5 +665,8 @@ class ZfExtended_Models_Installer_DbUpdater
                 $db->query('DROP TABLE IF EXISTS `' . $tableName . '`');
             }
         }
+        $this->log->info('E1773', 'Dropped all materialized views. Drop count: {count}', [
+            'count' => count($tables),
+        ]);
     }
 }
