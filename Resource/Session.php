@@ -270,8 +270,6 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
         $sysLog = Zend_Registry::get('logger');
         /* @var ZfExtended_Logger $sysLog */
         $sysLog->error('E1443', 'Authentication Token: The token is not valid');
-        error_log(print_r($_POST,true));
-        error_log(print_r($this->getFromHeader(),true));
         //since we are in an early stage of bootstrapping we must return the HTTP directly (no response available)
         header('HTTP/1.1 401 Unauthorized', true, 401);
         if (ZfExtended_Utils::requestAcceptsJson()) {
