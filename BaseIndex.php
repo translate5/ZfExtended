@@ -441,7 +441,7 @@ class ZfExtended_BaseIndex
         }
         header('HTTP/1.1 500 Internal Server Error');
         if (ZfExtended_Utils::requestAcceptsJson()) {
-            die('{"success": false, "httpStatus": 500, "errorMessage": "<b>Fatal: Could not connect to the database!</b> <br>If you get this message in the Browser: try to reload the application. <br>See error log for details."}');
+            die('{"success": false, "httpStatus": 500, "errorMessage": "<b>Fatal: Could not connect to the database!</b> <br>If you get this message in the Browser: try to reload the application in few seconds / minutes. <br>See error log for details."}');
         }
         define('BACKUP_RUNNING', $this->isBackupRunning());
         include('layouts/dbdown.phtml');
