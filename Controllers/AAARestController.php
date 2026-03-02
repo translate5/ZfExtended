@@ -139,6 +139,8 @@ abstract class ZfExtended_RestController extends Zend_Rest_Controller
     /**
      * a map to define special sanitizers for certain fields/keys of the sent data
      * the structure must be key => type whereas type is one of the constants of MittagQI\ZfExtended\Sanitizer
+     * that leads to the param named by key to be sanitized by the given sanitizer
+     * This also applies when using the getData-API: Then the first level named by key will be sanitized as defined
      */
     protected array $dataSanitizationMap = [];
 
