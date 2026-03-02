@@ -43,7 +43,9 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
      * we introduce a delay that is acceptable, meaning this delay may is deducted from the global session-lifetime
      * to reduce the neccessary updates on these tables. A delay of 5 sec reduces the DB-writes from 13 to 5
      */
-    public const TIMESTAMP_UPDATE_DELAY = 5;
+    public const int TIMESTAMP_UPDATE_DELAY = 5;
+
+    public const int APP_TOKEN_SESSION_LIFETIME = 1200;
 
     /**
      * @var array config Konfiguration der Parameter für die DB-Sessioninitialisierung
@@ -97,7 +99,7 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
         $bootstrap->bootstrap('ZfExtended_Resource_ErrorHandler');
         $bootstrap->bootstrap('ZfExtended_Resource_DbConfig');
         $bootstrap->bootstrap('ZfExtended_Resource_GarbageCollector');
-        $config = new Zend_config($bootstrap->getOptions());
+        $config = new Zend_Config($bootstrap->getOptions());
         // the session-name should be configurable by installation.ini, the lifetime via config
         $resconf = $config->resources->ZfExtended_Resource_Session->toArray();
         $resconf['cookie_lifetime'] =
@@ -135,7 +137,7 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
         // default handling
         Zend_Session::start();
 
-        $this->handleAuthToken();
+        $this->handleAuthToken($saveHandler);
     }
 
     private function reload(): void
@@ -249,9 +251,14 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
 
     /**
      * Handle authentication via app token
+     * @throws ReflectionException
+     * @throws Zend_Db_Statement_Exception
      * @throws Zend_Exception
+     * @throws Zend_Session_SaveHandler_Exception
+     * @throws ZfExtended_Models_Entity_Exceptions_IntegrityConstraint
+     * @throws ZfExtended_Models_Entity_Exceptions_IntegrityDuplicateKey
      */
-    private function handleAuthToken(): void
+    private function handleAuthToken(ZfExtended_Session_SaveHandler_DbTable $saveHandler): void
     {
         $tokenParam = $_POST[Auth::APPLICATION_TOKEN_HEADER] ?? $this->getFromHeader() ?? false;
 
@@ -262,6 +269,8 @@ class ZfExtended_Resource_Session extends Zend_Application_Resource_ResourceAbst
         $auth = Auth::getInstance();
 
         if ($auth->authenticateByToken($tokenParam)) {
+            $saveHandler->setLifetime(self::APP_TOKEN_SESSION_LIFETIME);
+
             ZfExtended_Models_LoginLog::addSuccess($auth, "authtoken");
 
             return;
