@@ -129,20 +129,19 @@ class ZfExtended_Session_SaveHandler_DbTable extends Zend_Session_SaveHandler_Db
      *
      * @param int $maxlifetime The maximum lifetime of a session in seconds.
      * @return bool Returns true on success.
-     * @throws Zend_Exception
      */
     public function gc($maxlifetime): bool
     {
         $this->getAdapter()->query('SET TRANSACTION ISOLATION LEVEL READ COMMITTED');
 
-        $lifetime = Zend_Registry::get('config')->resources->ZfExtended_Resource_Session->lifetime;
-        $thresh = time() - $lifetime;
-
-        // Convert Unix timestamp to MySQL datetime format
-        $threshDateTime = date('Y-m-d H:i:s', $thresh);
+        $modifiedColumn = $this->getAdapter()->quoteIdentifier($this->_modifiedColumn);
+        $lifetimeColumn = $this->getAdapter()->quoteIdentifier($this->_lifetimeColumn);
+        $expirationExpr = new Zend_Db_Expr(
+            'DATE_ADD(' . $modifiedColumn . ', INTERVAL ' . $lifetimeColumn . ' SECOND)'
+        );
 
         // delete data from session table
-        $this->delete('modified < ' . $this->getAdapter()->quote($threshDateTime) . ' OR session_id = \'\'');
+        $this->delete($expirationExpr . ' < NOW() OR session_id = \'\'');
 
         return true;
     }

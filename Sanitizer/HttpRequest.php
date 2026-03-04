@@ -89,6 +89,7 @@ class HttpRequest extends REST_Controller_Request_Http
         } elseif ($keyName != 'data' && in_array('_GET', $paramSources) && isset($_GET[$keyName])) {
             return $this->sanitizeRequestValue($_GET[$keyName]);
         } elseif ($keyName != 'data' && in_array('_POST', $paramSources) && isset($_POST[$keyName])) {
+            // we may have a string-param "data" flagged as unsanitized
             return $this->sanitizeRequestValue($_POST[$keyName]);
         }
 
@@ -122,7 +123,7 @@ class HttpRequest extends REST_Controller_Request_Http
     {
         $return = $this->_params;
         $paramSources = $this->getParamSources();
-        if (in_array('_GET', $paramSources) && isset($_GET) && is_array($_GET)) {
+        if (in_array('_GET', $paramSources) && isset($_GET) && is_array($_GET)) { // @phpstan-ignore-line
             foreach ($_GET as $key => $val) {
                 if (array_key_exists($key, $this->explicitlySet)) {
                     continue;
@@ -131,7 +132,7 @@ class HttpRequest extends REST_Controller_Request_Http
                 $return[$key] = ($key === 'data' || $key === 'filter') ? $val : $this->sanitizeRequestValue($val);
             }
         }
-        if (in_array('_POST', $paramSources) && isset($_POST) && is_array($_POST)) {
+        if (in_array('_POST', $paramSources) && isset($_POST) && is_array($_POST)) { // @phpstan-ignore-line
             foreach ($_POST as $key => $val) {
                 if (array_key_exists($key, $this->explicitlySet)) {
                     continue;
@@ -181,10 +182,10 @@ class HttpRequest extends REST_Controller_Request_Http
             ], $e);
         }
         if (is_array($data)) {
-            return $this->sanitizeArray($data, $typeMap);
+            return $this->sanitizeArray($data, $typeMap, true);
         } elseif (is_object($data)) {
-            return $this->sanitizeObject($data, $typeMap);
-        } elseif (is_string($data)) {
+            return $this->sanitizeObject($data, $typeMap, true);
+        } elseif (is_string($data) && ! (array_key_exists('data', $typeMap) && $typeMap['data'] === Type::Unsanitized)) {
             return Sanitizer::string($data);
         }
 
@@ -228,15 +229,19 @@ class HttpRequest extends REST_Controller_Request_Http
      * @throws ZfExtended_BadRequest
      * @throws ZfExtended_SecurityException
      */
-    private function sanitizeArray(array $data, array $typeMap): array
+    private function sanitizeArray(array $data, array $typeMap, bool $isFirstLevel): array
     {
         foreach ($data as $key => $val) {
-            if (is_string($val)) {
+            // a controllers sanitization-map may flag a property of the sent data as unsanitized
+            // in this case the controller is fully responsible to prevent XSS attacks
+            if ($isFirstLevel && array_key_exists($key, $typeMap) && $typeMap[$key] === Type::Unsanitized) {
+                $data[$key] = $val;
+            } elseif (is_string($val)) {
                 $data[$key] = $this->sanitizeDataValue($key, $val, $typeMap);
             } elseif (is_array($val)) {
-                $data[$key] = $this->sanitizeArray($val, []);
+                $data[$key] = $this->sanitizeArray($val, [], false);
             } elseif (is_object($val)) {
-                $data[$key] = $this->sanitizeObject($val, []);
+                $data[$key] = $this->sanitizeObject($val, [], false);
             }
         }
 
@@ -249,15 +254,19 @@ class HttpRequest extends REST_Controller_Request_Http
      * @throws ZfExtended_BadRequest
      * @throws ZfExtended_SecurityException
      */
-    private function sanitizeObject(object $data, array $typeMap): object
+    private function sanitizeObject(object $data, array $typeMap, bool $isFirstLevel): object
     {
         foreach ($data as $key => $val) {
-            if (is_string($val)) {
+            // a controllers sanitization map may flags a property of the sent data as unsanitized
+            // in this case the controller is fully responsible to prevent XSS attacks
+            if ($isFirstLevel && array_key_exists($key, $typeMap) && $typeMap[$key] === Type::Unsanitized) {
+                $data->$key = $val;
+            } elseif (is_string($val)) {
                 $data->$key = $this->sanitizeDataValue($key, $val, $typeMap);
             } elseif (is_array($val)) {
-                $data->$key = $this->sanitizeArray($val, []);
+                $data->$key = $this->sanitizeArray($val, [], false);
             } elseif (is_object($val)) {
-                $data->$key = $this->sanitizeObject($val, []);
+                $data->$key = $this->sanitizeObject($val, [], false);
             }
         }
 
