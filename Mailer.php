@@ -61,6 +61,16 @@ class Mailer extends Zend_Mail
         parent::__construct($charset);
     }
 
+    public function setSubject($subject)
+    {
+        /**
+         * To fix problems with certain outlook versions that cannot display encoded subject-headers properly
+         * we reduce the probability the header needs to be encoded by replacing certain typographical quotes
+         * used widely in translate5 localization with their ASCII counterparts
+         */
+        return parent::setSubject(str_replace(['“', '”'], '"', str_replace(['’', '‘', '’'], "'", $subject)));
+    }
+
     /**
      * Sends this email using the given transport or a previously
      * set DefaultTransport or the internal mail function if no
