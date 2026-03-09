@@ -45,6 +45,7 @@ class ZfExtended_Models_SystemRequirement_Modules_Environment extends ZfExtended
         $this->isWin = strtoupper(substr(PHP_OS, 0, 3)) === 'WIN';
         $this->checkLocale();
         $this->checkGitInstallation();
+        $this->checkApplicationDataOwnership();
 
         return $this->result;
     }
@@ -95,6 +96,63 @@ class ZfExtended_Models_SystemRequirement_Modules_Environment extends ZfExtended
         }
         if ($this->isWin) {
             $this->result->warning[] = 'You are using WINDOWS as server environment. Please ensure that the configuration runtimeOptions.fileSystemEncoding is set correct.';
+        }
+    }
+
+    /**
+     * Checks ownership consistency of files below APPLICATION_DATA.
+     * Shows warning if the data directory itself belongs to root.
+     * Shows error if files below data are owned by a different user than the data directory owner.
+     */
+    protected function checkApplicationDataOwnership(): void
+    {
+        if ($this->isWin || ! defined('APPLICATION_DATA') || ! is_dir(APPLICATION_DATA)) {
+            return;
+        }
+
+        $dataOwnerId = @fileowner(APPLICATION_DATA);
+        if ($dataOwnerId === false) {
+            return;
+        }
+
+        $dataOwnerInfo = @posix_getpwuid($dataOwnerId);
+        $dataOwnerName = is_array($dataOwnerInfo) ? (string) $dataOwnerInfo['name'] : (string) $dataOwnerId;
+
+        if ($dataOwnerId === 0 || strtolower($dataOwnerName) === 'root') {
+            $this->result->warning[] = 'The data directory "' . APPLICATION_DATA . '" belongs to root. This might lead to broken file permissions.';
+        }
+
+        $mismatchingFiles = [];
+        $maxListedMismatches = 10;
+
+        $iterator = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator(APPLICATION_DATA, FilesystemIterator::SKIP_DOTS)
+        );
+
+        /** @var SplFileInfo $entry */
+        foreach ($iterator as $entry) {
+            if (! $entry->isFile()) {
+                continue;
+            }
+
+            $ownerId = @fileowner($entry->getPathname());
+            if ($ownerId === false || $ownerId === $dataOwnerId) {
+                continue;
+            }
+
+            if (count($mismatchingFiles) < $maxListedMismatches) {
+                $mismatchingFiles[] = $entry->getPathname();
+            }
+        }
+
+        if (! empty($mismatchingFiles)) {
+            $this->result->error[] = 'Found files below "' . APPLICATION_DATA . '" not owned by data directory user "' . $dataOwnerName . '".';
+            foreach ($mismatchingFiles as $file) {
+                $this->result->error[] = 'Ownership mismatch: ' . $file;
+            }
+            if (count($mismatchingFiles) === $maxListedMismatches) {
+                $this->result->error[] = 'More ownership mismatches may exist. Only first ' . $maxListedMismatches . ' files are shown.';
+            }
         }
     }
 }
