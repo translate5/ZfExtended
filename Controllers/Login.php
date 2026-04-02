@@ -61,7 +61,6 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
      *
      * - checks if login has been blocked
      * - blocks login, if necessary
-     * @return bool
      */
     public function indexAction()
     {
@@ -402,26 +401,19 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
     {
         $user = ZfExtended_Authentication::getInstance()->getUser();
         $locale = $user?->getLocale();
-        if ($locale !== null && Zend_Locale::isLocale($locale)) {
-            $this->_setLocale($locale);
+        if ($locale !== null && Localization::isAvailableLocale($locale)) {
+            $zendLocale = new Zend_Locale($locale);
+            // save locale in session
+            $this->_session->locale = $locale;
+            // set locale as Zend App default locale
+            Zend_Registry::set('Zend_Locale', $zendLocale);
         } else {
-            //if the user has no valid locale in the DB we set the current locale
-            Auth::getInstance()->getUser()->setLocale($this->_session->locale ?? Localization::FALLBACK_LOCALE);
+            // if the user has no valid locale in the DB we set the current locale either by a (valid) session locale
+            // or the general fallback-locale. This will not overwrite the current user's locale (!)
+            $locale = (! empty($this->_session->locale) && Localization::isAvailableLocale($this->_session->locale)) ?
+                $this->_session->locale : Localization::FALLBACK_LOCALE;
+            Auth::getInstance()->getUser()->setLocale($locale);
         }
-    }
-
-    /**
-     * internal, overwriteable helper function to set the locale information
-     * @param string $locale
-     * @throws Zend_Locale_Exception
-     */
-    protected function _setLocale($locale)
-    {
-        $Zend_Locale = new Zend_Locale($locale);
-        // save locale in session
-        $this->_session->locale = $locale;
-        // set locale as Zend App default locale
-        Zend_Registry::set('Zend_Locale', $Zend_Locale);
     }
 
     /**

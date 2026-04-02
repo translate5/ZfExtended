@@ -52,13 +52,7 @@ class ZfExtended_Controller_Helper_Access extends Zend_Controller_Action_Helper_
         $isAuthenticated = false;
         if ($auth->isAuthenticated()) {
             $isAuthenticated = true;
-            $locale = (string) Zend_Registry::get('Zend_Locale');
             $this->_roles = $auth->getUserRoles();
-            $user = $auth->getUser();
-            if ($locale !== $user->getLocale()) {
-                $user->setLocale($locale);
-                $user->save();
-            }
         }
 
         $resource = $this->getResource();
@@ -132,15 +126,9 @@ class ZfExtended_Controller_Helper_Access extends Zend_Controller_Action_Helper_
             throw $e;
         }
 
-        $redirector = ZfExtended_Factory::get('Zend_Controller_Action_Helper_Redirector');
-        /* @var $redirector Zend_Controller_Action_Helper_Redirector */
-
-        if (in_array('noRights', $this->_roles) && count($this->_roles) >= 1) {
-            $this->updateStoredRedirectTo();
-            $redirector->gotoSimpleAndExit('index', 'login', 'default');
-        } else {
-            $redirector->gotoSimpleAndExit('index', 'index', 'default');
-        }
+        $this->updateStoredRedirectTo();
+        $redirector = ZfExtended_Factory::get(Zend_Controller_Action_Helper_Redirector::class);
+        $redirector->gotoSimpleAndExit('index', 'login', 'default');
     }
 
     /**
