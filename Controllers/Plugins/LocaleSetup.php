@@ -25,63 +25,27 @@ END LICENSE AND COPYRIGHT
 use MittagQI\ZfExtended\Localization;
 
 /**
- * Plugin, das Locale und Sprache aufsetzt
+ * Plugin to register the locale to be used by the app
  */
 class ZfExtended_Controllers_Plugins_LocaleSetup extends Zend_Controller_Plugin_Abstract
 {
     /**
-     * Wird nach dem Routing aufgerufen
-     *
-     * <ul><li>liest locale aus den get oder post parametern aus<li>
-     * <li>falls in locale in get oder post vorhanden
-     *   <ul>
-     *   <li>wird Zend_Locale anhand der locale initialisiert und in
-     *       $session->Zend_Locale gespeichert</li>
-     *   <li>wird Zend_Translation im Cache für die locale initialisiert</li>
-     *   </ul>
-     * </li>
-     * <li>ansonsten: Falls Zend_Locale bereits in Session, passiert nichts weiter</li>
-     * <li>falls alles nicht der Fall:
-     *   <ul>
-     *   <li>Hole locale aus den Browserpräferenzen</li>
-     *   <li>falls Präferenz nicht als xliff-Datei im Portal verfügbar, gehe zur nächsten Präferenz, etc.</li>
-     *   <li>falls immer noch nicht beziehbar nehme die default-locale aus der application.ini</li>
-     *   </ul>
-     * </li>
-     * <li>Darüber hinaus: Hinterlege Zend_Locale-Objekt in der Registry als
-     *     Default für alle Zend_Locale und Zend_Translation-Operationen</li>
-     * </ul>
+     * Is called after routing
+     * initializes the session locale as the user locale - if no valid session locale exists
      */
     public function routeShutdown(Zend_Controller_Request_Abstract $request)
     {
         // Get session
         $session = new Zend_Session_Namespace();
 
-        // Update locale, if explicitly given as param
-        if ($locale = $request->getParam('locale')) {
-            $locale = Localization::getLocale($locale);
-            $session->locale = $locale;
-
-            // Else if not given, and not set in session so far
-        } elseif (! $session->locale) {
+        // Update locale, if not already in session or invalid
+        if (empty($session->locale) || ! Localization::isAvailableLocale($session->locale)) {
             // Get browser-locale or fallback-locale
             $session->locale = Localization::getLocale();
         }
 
-        // Register locale
-        $this->registerLocale($session->locale);
-    }
-
-    /**
-     * registers the given locale in the application as locale to be used
-     * @param string $locale
-     */
-    protected function registerLocale($locale)
-    {
-        // Speicher locale und translation-object in Registry - so gilt sie für alle locale und
-        $localeRegObj = new Zend_Locale($locale);
-        $localeRegObj->getLanguage();
-        //Prüfe, ob für die locale eine xliff-Datei vorhanden ist - wenn nicht fallback
-        Zend_Registry::set('Zend_Locale', $localeRegObj);
+        // register locale
+        $zendLocale = new Zend_Locale($session->locale);
+        Zend_Registry::set('Zend_Locale', $zendLocale);
     }
 }
