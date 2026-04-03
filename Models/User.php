@@ -40,7 +40,7 @@ use MittagQI\ZfExtended\Acl\ConfigLevelResource;
  * @method void setOpenIdIssuer(string $openIdIssuer)
  * @method void setOpenIdSubject(string $openIdSubject)
  *
- * @method int getId()
+ * @method string getId()
  * @method string getUserGuid()
  * @method string getFirstName()
  * @method string getSurName()

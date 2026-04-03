@@ -165,7 +165,7 @@ class ZfExtended_SessionController extends ZfExtended_RestController
             $this->view->sessionId = $sessionId;
 
             $sessionDb = new ZfExtended_Models_Db_Session();
-            $this->view->sessionToken = $sessionDb->updateAuthToken($this->view->sessionId, $userModel->getId());
+            $this->view->sessionToken = $sessionDb->updateAuthToken($this->view->sessionId, (int) $userModel->getId());
 
             $this->log('User authentication by API successful for ' . $login);
             $invalidLoginCounter->resetCounter($login);
