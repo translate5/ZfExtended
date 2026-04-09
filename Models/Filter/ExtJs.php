@@ -162,11 +162,10 @@ class ZfExtended_Models_Filter_ExtJs extends ZfExtended_Models_Filter
         //populate the internal vars
         $select = ZfExtended_Factory::get('Zend_Db_Select', [$this->select->getAdapter()]);
 
-        $subFilter = ZfExtended_Factory::get(get_class($this), [
+        $subFilter = new self(
             $this->entity,
             $field->value,
-        ]);
-        /* @var $subFilter ZfExtended_Models_Filter_ExtJs */
+        );
         $subFilter->whereOp = $isOr ? 'orWhere' : 'where';
 
         //start recursive walk through the OR filters
