@@ -31,6 +31,9 @@ namespace MittagQI\ZfExtended\Localization;
 
 use Attribute;
 
+/**
+ * Represents a property that is no real localizable text but e.g. a variable-name
+ */
 #[Attribute(Attribute::TARGET_PROPERTY | Attribute::TARGET_CLASS_CONSTANT | Attribute::IS_REPEATABLE)]
 final class LocalizableProp
 {

@@ -132,11 +132,11 @@ class ZfExtended_SessionController extends ZfExtended_RestController
         $t = ZfExtended_Zendoverwrites_Translate::getInstance();
         /* @var $t ZfExtended_Zendoverwrites_Translate */
         if (empty($login)) {
-            $errors['login'] = $t->_('Kein Benutzername angegeben.');
+            $errors['login'] = $t->_('No user name given.');
         }
 
         if (empty($passwd)) {
-            $errors['passwd'] = $t->_('Kein Passwort angegeben.');
+            $errors['passwd'] = $t->_('No password given.');
         }
         $authentication = Auth::getInstance();
 

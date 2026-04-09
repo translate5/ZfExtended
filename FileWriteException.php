@@ -22,21 +22,21 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
-class ZfExtended_NotFoundException extends ZfExtended_Exception
+namespace MittagQI\ZfExtended;
+
+/**
+ * Backend marker exception to markk a failed file-write
+ */
+class FileWriteException extends \Exception
 {
-    /**
-     * @var string
-     */
-    #[MittagQI\ZfExtended\Localization\LocalizableMsg]
-    protected $defaultMessage = 'Not found!';
+    public string $path;
 
     /**
-     * @var bool
+     * Pass the affected absolute path that cannot be written
      */
-    protected $defaultMessageTranslate = true;
-
-    /**
-     * @var integer
-     */
-    protected $defaultCode = 404;
+    public function __construct(string $absolutePath, int $code = 0, ?\Throwable $previous = null)
+    {
+        $this->path = $absolutePath;
+        parent::__construct('Could not write file “' . $absolutePath . '”', $code, $previous);
+    }
 }

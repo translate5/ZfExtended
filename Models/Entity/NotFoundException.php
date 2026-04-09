@@ -34,8 +34,8 @@ class ZfExtended_Models_Entity_NotFoundException extends ZfExtended_Exception
     /**
      * @var string
      */
-    #[MittagQI\ZfExtended\Localization\LocalizableProp]
-    protected $defaultMessage = 'Daten nicht gefunden!';
+    #[MittagQI\ZfExtended\Localization\LocalizableMsg]
+    protected $defaultMessage = 'Data not found!';
 
     /**
      * @var bool

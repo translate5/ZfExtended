@@ -75,7 +75,7 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
         }
         if ($this->isMaintenanceLoginLock()) {
             //set login status to 'maintenance'
-            $this->_form->addError($this->_translate->_("Eine Wartung steht unmittelbar bevor, Sie können sich daher nicht anmelden. Bitte versuchen Sie es in Kürze erneut."));
+            $this->_form->addError($this->_translate->_('We’re about to start maintenance, so logins are temporarily unavailable. Please try again in a few minutes.'));
             $this->view->loginStatus = ZfExtended_Authentication::LOGIN_STATUS_MAINTENANCE;
 
             return;
@@ -171,7 +171,7 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
         }
         $this->view->errors = true;
         $this->_form->addError(sprintf(
-            $this->_translate->_('Ungültige Logindaten!<br/>Haben Sie Ihr Passwort vergessen oder bislang noch kein Passwort für Ihren Login gesetzt?  Sie können jederzeit einen neuen Link %shier%s anfordern.'),
+            $this->_translate->_('We couldn’t log you in.<br/>Forgot your password, or haven’t set one yet? Request a new link %shere%s anytime.'),
             '<a href="' . APPLICATION_RUNDIR . '/login/passwdreset">',
             '</a>'
         ));
@@ -218,7 +218,7 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
         }
 
         $this->view->errors = true;
-        $this->_form->addError($this->_translate->_('Dieser Benutzer wird bereits verwendet. <br/>Bitte warten Sie bis der Benutzer wieder verfügbar ist, oder benutzen Sie einen anderen!'));
+        $this->_form->addError($this->_translate->_('This user already is in use. <br/>Please wait until it is available again or use another user!'));
 
         return true;
     }
@@ -240,7 +240,7 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
             $passwdreset->reset($this->_form->getValue('login'), __FUNCTION__);
             $this->view->errors = true;
             $this->_form->addError(sprintf(
-                $this->_translate->_('Ungültige Logindaten - Zugang gesperrt!<br/>Sie haben Ihr Passwort in den letzten 24 Stunden mehrmals falsch eingegeben, ihr Login wurde gesperrt.<br />Per E-Mail wurde Ihnen ein Link zugesandt, mit welchem Sie Ihr Passwort neu setzen können. Dieser Link ist 30 min gültig und funktioniert nur, so lange Sie Ihren Browser nicht zwischenzeitlich geschlossen haben. Sie können jederzeit einen neuen Link %shier%s anfordern.'),
+                $this->_translate->_('Invalid login credentials – access locked!<br/>You have entered your password incorrectly several times in the last 24 hours, so your login has been locked.<br />An email has been sent to you with a link to reset your password. This link is valid for 30 minutes and works only as long as you have not closed your browser in the meantime. You can request a new link %shere%s at any time.'),
                 '<a href="' . APPLICATION_RUNDIR . '/login/passwdreset">',
                 '</a>'
             ));
@@ -306,7 +306,7 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
             $passwdreset = ZfExtended_Factory::get('ZfExtended_Models_Passwdreset');
             /* @var $passwdreset ZfExtended_Models_Passwdreset */
             $passwdreset->reset($this->_form->getValue('login'), __FUNCTION__);
-            $this->view->message = $this->_translate->_('Per E-Mail wurde Ihnen ein Link zugesandt, mit welchem Sie Ihr Passwort neu setzen können. Dieser Link ist 30 min gültig und funktioniert nur, so lange Sie Ihren Browser nicht zwischenzeitlich geschlossen haben. Sie können jederzeit einen neuen Link über dieses Formular anfordern.');
+            $this->view->message = $this->_translate->_('A link for resetting your password has been sent to you via e-mail. This link is valid for 30 minutes and will work only if you have not closed your browser in the meantime. You can request a new link at any time using this form.');
         }
         $this->view->form = $this->_form;
     }
@@ -371,7 +371,7 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
                 $this->_form = new ZfExtended_Zendoverwrites_Form('loginIndex.ini');
                 $this->_form->setTranslator($this->_translate);
                 $this->view->heading = $this->_translate->_('Login');
-                $this->view->message = $this->_translate->_('Ihr Passwort wurde neu gesetzt. Sie können sich nun einloggen.');
+                $this->view->message = $this->_translate->_('Your password has been reset. You can log in now.');
             }
             $this->view->form = $this->_form;
 
@@ -388,7 +388,7 @@ abstract class ZfExtended_Controllers_Login extends ZfExtended_Controllers_Actio
         $this->_form = new ZfExtended_Zendoverwrites_Form('loginPasswdreset.ini');
         $this->_form->setTranslator($this->_translate);
         $this->view->errors = true;
-        $this->_form->addError($this->_translate->_('Der ResetHash oder die Browsersitzung ist nicht (mehr) gültig. Bitte fordern Sie über das nebenstehende Formular eine E-Mail mit einem neuen Link an.'));
+        $this->_form->addError($this->_translate->_('The ResetHash or the browser session is not valid (anymore). Please request a new link via e-mail by using the below form.'));
         $this->view->form = $this->_form;
         $this->render('passwdreset');
     }
