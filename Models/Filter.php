@@ -98,7 +98,7 @@ abstract class ZfExtended_Models_Filter
 
     /**
      * @param ZfExtended_Models_Entity_Abstract $entity optional, needed for default invocation in controller
-     * @param string $filter optional, needed for default invocation in controller
+     * @param string|array|null $filter optional, needed for default invocation in controller
      */
     public function __construct(ZfExtended_Models_Entity_Abstract $entity = null, $filter = null)
     {
