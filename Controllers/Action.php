@@ -73,7 +73,6 @@ abstract class ZfExtended_Controllers_Action extends Zend_Controller_Action
     public function preDispatch()
     {
         // Mandatory security headers for all controllers
-        $this->_response->setHeader('strict-transport-security', 'max-age=31536000; includeSubDomains; preload', true);
         $this->_response->setHeader('x-content-type-options', 'nosniff', true);
         $this->_response->setHeader('referrer-policy', 'strict-origin-when-cross-origin', true);
 
