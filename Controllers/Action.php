@@ -72,63 +72,63 @@ abstract class ZfExtended_Controllers_Action extends Zend_Controller_Action
      */
     public function preDispatch()
     {
-//        // Mandatory security headers for all controllers
-//        $this->_response->setHeader('x-content-type-options', 'nosniff', true);
-//        $this->_response->setHeader('referrer-policy', 'strict-origin-when-cross-origin', true);
-//
-//        // Optional security headers for all controllers
-//        $config = \Zend_Registry::get('config');
-//        if ($config->runtimeOptions->headers->enableXFrameHeader) {
-//            $this->_response->setHeader('x-frame-options', 'sameorigin', true);
-//        }
-//
-//        $defaultSrc = "'self'";
-//        if (! empty($config->runtimeOptions->headers->defaultSrcUrls)) {
-//            $defaultSrc .= ' ' . $config->runtimeOptions->headers->defaultSrcUrls;
-//        }
-//
-//        $scriptSrc = "'self' 'unsafe-inline' 'unsafe-eval' https://app.therootcause.io";
-//        if (! empty($config->runtimeOptions->headers->scriptSrcUrls)) {
-//            $scriptSrc .= ' ' . $config->runtimeOptions->headers->scriptSrcUrls;
-//        }
-//
-//        $connectSrc = "'self'";
-//        $frontendMessageBusUrl = $config->runtimeOptions->plugins->FrontEndMessageBus->socketServer->httpHost;
-//        if ($frontendMessageBusUrl) {
-//            $connectSrc .= " wss://$frontendMessageBusUrl";
-//        }
-//
-//        if (! empty($config->runtimeOptions->headers->connectSrcUrls)) {
-//            $connectSrc .= ' ' . $config->runtimeOptions->headers->connectSrcUrls;
-//        }
-//
-//        $styleSrc = "'self' 'unsafe-inline' https://fonts.googleapis.com";
-//        if (! empty($config->runtimeOptions->headers->styleSrcUrls)) {
-//            $styleSrc .= ' ' . $config->runtimeOptions->headers->styleSrcUrls;
-//        }
-//
-//        $imgSrc = "'self' data: https://www.translate5.net";
-//        if (! empty($config->runtimeOptions->headers->imgSrcUrls)) {
-//            $imgSrc .= ' ' . $config->runtimeOptions->headers->imgSrcUrls;
-//        }
-//
-//        $fontSrc = "'self' https://fonts.googleapis.com https://fonts.gstatic.com";
-//        if (! empty($config->runtimeOptions->headers->fontSrcUrls)) {
-//            $fontSrc .= ' ' . $config->runtimeOptions->headers->fontSrcUrls;
-//        }
-//
-//        $this->_response->setHeader(
-//            'content-security-policy',
-//            sprintf('default-src %s; script-src %s; connect-src %s; style-src %s; img-src %s; font-src %s;',
-//                $defaultSrc,
-//                $scriptSrc,
-//                $connectSrc,
-//                $styleSrc,
-//                $imgSrc,
-//                $fontSrc
-//            ),
-//            true
-//        );
+        // Mandatory security headers for all controllers
+        $this->_response->setHeader('x-content-type-options', 'nosniff', true);
+        $this->_response->setHeader('referrer-policy', 'strict-origin-when-cross-origin', true);
+
+        // Optional security headers for all controllers
+        $config = \Zend_Registry::get('config');
+        if ($config->runtimeOptions->headers->enableXFrameHeader) {
+            $this->_response->setHeader('x-frame-options', 'sameorigin', true);
+        }
+
+        $defaultSrc = "'self'";
+        if (! empty($config->runtimeOptions->headers->defaultSrcUrls)) {
+            $defaultSrc .= ' ' . $config->runtimeOptions->headers->defaultSrcUrls;
+        }
+
+        $scriptSrc = "'self' 'unsafe-inline' 'unsafe-eval' https://app.therootcause.io";
+        if (! empty($config->runtimeOptions->headers->scriptSrcUrls)) {
+            $scriptSrc .= ' ' . $config->runtimeOptions->headers->scriptSrcUrls;
+        }
+
+        $connectSrc = "'self'";
+        $frontendMessageBusUrl = $config->runtimeOptions->plugins->FrontEndMessageBus->socketServer->httpHost;
+        if ($frontendMessageBusUrl) {
+            $connectSrc .= " wss://$frontendMessageBusUrl";
+        }
+
+        if (! empty($config->runtimeOptions->headers->connectSrcUrls)) {
+            $connectSrc .= ' ' . $config->runtimeOptions->headers->connectSrcUrls;
+        }
+
+        $styleSrc = "'self' 'unsafe-inline' https://fonts.googleapis.com";
+        if (! empty($config->runtimeOptions->headers->styleSrcUrls)) {
+            $styleSrc .= ' ' . $config->runtimeOptions->headers->styleSrcUrls;
+        }
+
+        $imgSrc = "'self' data: https://www.translate5.net";
+        if (! empty($config->runtimeOptions->headers->imgSrcUrls)) {
+            $imgSrc .= ' ' . $config->runtimeOptions->headers->imgSrcUrls;
+        }
+
+        $fontSrc = "'self' https://fonts.googleapis.com https://fonts.gstatic.com";
+        if (! empty($config->runtimeOptions->headers->fontSrcUrls)) {
+            $fontSrc .= ' ' . $config->runtimeOptions->headers->fontSrcUrls;
+        }
+
+        $this->_response->setHeader(
+            'content-security-policy',
+            sprintf('default-src %s; script-src %s; connect-src %s; style-src %s; img-src %s; font-src %s;',
+                $defaultSrc,
+                $scriptSrc,
+                $connectSrc,
+                $styleSrc,
+                $imgSrc,
+                $fontSrc
+            ),
+            true
+        );
 
         $this->displayMaintenance();
         $eventName = "before" . ucfirst($this->_request->getActionName()) . "Action";
