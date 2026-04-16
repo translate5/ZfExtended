@@ -32,17 +32,6 @@ use MittagQI\ZfExtended\Worker\Rescheduler;
  */
 class ZfExtended_Resource_GarbageCollector extends Zend_Application_Resource_ResourceAbstract
 {
-    /**
-     * @deprecated remove the feature switch after feature was rolled out and tested in the wild
-     */
-    private bool $exportCleanining;
-
-    public function __construct($options = null)
-    {
-        parent::__construct($options);
-        $this->exportCleanining = (bool) ($this->_options['featureSwitchExportCleaning'] ?? false);
-    }
-
     public function init()
     {
         // currently nothing to do
@@ -110,9 +99,7 @@ class ZfExtended_Resource_GarbageCollector extends Zend_Application_Resource_Res
 
     protected function cleanUpData(): void
     {
-        if ($this->exportCleanining) {
-            $exportCleanUpService = new QueuedExportCleanUpService();
-            $exportCleanUpService->cleanUp();
-        }
+        $exportCleanUpService = new QueuedExportCleanUpService();
+        $exportCleanUpService->cleanUp();
     }
 }
