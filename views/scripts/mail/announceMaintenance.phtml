@@ -22,12 +22,7 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
-/**#@+
- * @author Marc Mittag
- * @package ZfExtended
- * @version 2.0
- *
- */
+/** @var ZfExtended_View $this */
 
 $this->render('general.phtml');
 
@@ -49,11 +44,12 @@ as you are registered as an administrator.<br />
     'header' => $this->header,
     'footer' => $this->footer,
     'maintenanceDate' => $this->maintenanceDate,
-    'additionalInfo' => empty($this->message) ? '' : $this->templateApply('Additional information: {message}<br />
-<br />
-', [
-        'message' => $this->message,
-    ]),
+    'additionalInfo' => empty($this->message) ? '' : $this->templateApply(
+        $this->translate->_('Additional information') . ": {message}<br />\n<br />\n",
+        [
+            'message' => $this->message,
+        ]
+    ),
 ]);
 
 $this->textbody = strip_tags($mail);
