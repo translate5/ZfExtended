@@ -188,7 +188,7 @@ class ZfExtended_SessionController extends ZfExtended_RestController
      */
     protected function setLocale(Zend_Session_Namespace $session, ZfExtended_Models_User $userModel)
     {
-        $session->locale = Localization::getLocale($userModel->getLocale());
+        $session->locale = Localization::evaluateLocale($userModel->getLocale());
     }
 
     /**

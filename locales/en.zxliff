@@ -22,13 +22,9 @@
                 <source>A PHP extension stopped the file upload. PHP does not provide a way to determine which extension caused this. Checking all loaded extensions using phpinfo() may help.</source>
                 <target>A PHP extension stopped the file upload. PHP does not provide a way to determine which extension caused this. Checking all loaded extensions using phpinfo() may help.</target>
             </trans-unit>
-            <trans-unit id="QWRkaXRpb25hbCBpbmZvcm1hdGlvbjoge21lc3NhZ2V9PGJyIC8+CjxiciAvPgo=">
-                <source>Additional information: {message}<br />
-<br />
-</source>
-                <target>Additional information: {message}<br />
-<br />
-</target>
+            <trans-unit id="QWRkaXRpb25hbCBpbmZvcm1hdGlvbg==">
+                <source>Additional information</source>
+                <target>Additional information</target>
             </trans-unit>
             <trans-unit id="QSBsaW5rIGZvciByZXNldHRpbmcgeW91ciBwYXNzd29yZCBoYXMgYmVlbiBzZW50IHRvIHlvdSB2aWEgZS1tYWlsLiBUaGlzIGxpbmsgaXMgdmFsaWQgZm9yIDMwIG1pbnV0ZXMgYW5kIHdpbGwgd29yayBvbmx5IGlmIHlvdSBoYXZlIG5vdCBjbG9zZWQgeW91ciBicm93c2VyIGluIHRoZSBtZWFudGltZS4gWW91IGNhbiByZXF1ZXN0IGEgbmV3IGxpbmsgYXQgYW55IHRpbWUgdXNpbmcgdGhpcyBmb3JtLg==">
                 <source>A link for resetting your password has been sent to you via e-mail. This link is valid for 30 minutes and will work only if you have not closed your browser in the meantime. You can request a new link at any time using this form.</source>

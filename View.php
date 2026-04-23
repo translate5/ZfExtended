@@ -22,13 +22,6 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
-/**#@+
- * @author Marc Mittag
- * @package ZfExtended
- * @version 2.0
- *
- */
-
 /**
  * Synthetic class for documentation purposes
  * Adds hints to IDE autocompletion
@@ -54,9 +47,9 @@ END LICENSE AND COPYRIGHT
  * @see Editor_IndexController::indexAction
  *
  * @method ZfExtended_View_Helper_PluginLocale pluginLocale()
- * @method ZfExtended_View_Helper_Php2JsVars Php2JsVars()
- * @method ZfExtended_View_Helper_TemplateApply templateApply()
- * @method ZfExtended_View_Helper_MailEmployeeSalutation mailEmployeeSalutation()
+ * @method ZfExtended_View_Helper_Php2JsVars php2JsVars()
+ * @method string templateApply(string $template, array $data = null) // from ZfExtended_View_Helper_TemplateApply
+ * @method string mailEmployeeSalutation(bool $gender = false) // from ZfExtended_View_Helper_MailEmployeeSalutation
  */
 class ZfExtended_View extends Zend_View implements Zend_View_Interface
 {

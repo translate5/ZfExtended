@@ -41,7 +41,7 @@ class ZfExtended_Controllers_Plugins_LocaleSetup extends Zend_Controller_Plugin_
         // Update locale, if not already in session or invalid
         if (empty($session->locale) || ! Localization::isAvailableLocale($session->locale)) {
             // Get browser-locale or fallback-locale
-            $session->locale = Localization::getLocale();
+            $session->locale = Localization::evaluateLocale();
         }
 
         // register locale

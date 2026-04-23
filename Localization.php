@@ -85,6 +85,21 @@ final class Localization
     }
 
     /**
+     * Retrieves the currently used GUI locale
+     */
+    protected function getLocale(): string
+    {
+        if (\Zend_Registry::isRegistered('Zend_Locale')) {
+            /** @var \Zend_Locale $localeObj */
+            $localeObj = \Zend_Registry::get('Zend_Locale');
+
+            return $localeObj->getLanguage();
+        }
+
+        return self::FALLBACK_LOCALE;
+    }
+
+    /**
      * Retrieves all locales that are available as GUI languages in translate5
      * @return string[]
      */
@@ -115,13 +130,13 @@ final class Localization
     }
 
     /**
-     * Retrieves the GUI locale:
+     * Evaluates the GUI locale:
      *  by argument - if it's a valid and available locale,
      *  or by applicationLocale-config,
      *  or by browser,
      *  or by fallback-locale
      */
-    public static function getLocale(?string $desiredLocale = null): string
+    public static function evaluateLocale(?string $desiredLocale = null): string
     {
         // If $desiredLocale is given, and it's valid and available - use it
         if ($desiredLocale !== null && self::isAvailableLocale($desiredLocale)) {
@@ -148,7 +163,7 @@ final class Localization
         }
 
         if ($evaluateBrowserLocale) {
-            return self::getLocaleFromBrowser();
+            return self::evaluateLocaleFromBrowser();
         }
 
         return self::FALLBACK_LOCALE;
@@ -157,7 +172,7 @@ final class Localization
     /**
      * Retrieves the desired locale from the browser - if available
      */
-    protected static function getLocaleFromBrowser(): string
+    protected static function evaluateLocaleFromBrowser(): string
     {
         $localeObj = new Zend_Locale();
         $userPrefLangs = array_keys($localeObj->getBrowser());

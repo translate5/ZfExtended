@@ -22,10 +22,8 @@
                 <source>A PHP extension stopped the file upload. PHP does not provide a way to determine which extension caused this. Checking all loaded extensions using phpinfo() may help.</source>
                 <target>Une extension PHP a stoppé le téléchargement du fichier. PHP ne permet pas de déterminer quelle extension a arrêté le téléchargement du fichier. Vérifier toutes les extensions chargées à l’aide de la fonction phpinfo() pourrait vous aider.</target>
             </trans-unit>
-            <trans-unit id="QWRkaXRpb25hbCBpbmZvcm1hdGlvbjoge21lc3NhZ2V9PGJyIC8+CjxiciAvPgo=">
-                <source>Additional information: {message}<br />
-<br />
-</source>
+            <trans-unit id="QWRkaXRpb25hbCBpbmZvcm1hdGlvbg==">
+                <source>Additional information</source>
                 <target></target>
             </trans-unit>
             <trans-unit id="QSBsaW5rIGZvciByZXNldHRpbmcgeW91ciBwYXNzd29yZCBoYXMgYmVlbiBzZW50IHRvIHlvdSB2aWEgZS1tYWlsLiBUaGlzIGxpbmsgaXMgdmFsaWQgZm9yIDMwIG1pbnV0ZXMgYW5kIHdpbGwgd29yayBvbmx5IGlmIHlvdSBoYXZlIG5vdCBjbG9zZWQgeW91ciBicm93c2VyIGluIHRoZSBtZWFudGltZS4gWW91IGNhbiByZXF1ZXN0IGEgbmV3IGxpbmsgYXQgYW55IHRpbWUgdXNpbmcgdGhpcyBmb3JtLg==">
