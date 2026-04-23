@@ -87,7 +87,7 @@ final class Localization
     /**
      * Retrieves the currently used GUI locale
      */
-    protected function getLocale(): string
+    public static function getLocale(): string
     {
         if (\Zend_Registry::isRegistered('Zend_Locale')) {
             /** @var \Zend_Locale $localeObj */
