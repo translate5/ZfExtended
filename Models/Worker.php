@@ -349,7 +349,7 @@ final class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
         //it may happen that a worker is not set to waiting if the deadlock was ignored, at least at the next worker queue call it is triggered again
         $this->ignoreOnDeadlock(function () use ($sql) {
             $this->db->getAdapter()->query($sql);
-        }, true);
+        }, $this->db);
     }
 
     /**
@@ -387,7 +387,7 @@ final class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
 
         $result = $this->retryOnDeadlock(function () use ($sql, $bindings) {
             return $this->db->getAdapter()->query($sql, $bindings);
-        }, true);
+        }, $this->db);
         Logger::getInstance()->logRaw('schedulePrepared ' . $result->rowCount() . ' workers; task: ' . $taskGuid);
     }
 
@@ -410,7 +410,7 @@ final class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
                 $parentWorkerId,       //children of
                 self::STATE_PREPARE,   // parent is not in state
             ]);
-        }, true);
+        }, $this->db);
 
         $rowCount = $result->rowCount();
 
@@ -435,7 +435,7 @@ final class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
             . ' AND `delayedUntil` < ' . time();
         $stmt = $this->retryOnDeadlock(function () use ($sql) {
             return $this->db->getAdapter()->query($sql);
-        }, true);
+        }, $this->db);
         /** @var Zend_Db_Statement_Interface $stmt */
         if (ZfExtended_Debug::hasLevel('core', 'Workers') && $stmt->rowCount() > 0) {
             error_log("WORKER RESCHEDULE: Rescheduled " . $stmt->rowCount() . ' delayed workers.');
@@ -465,7 +465,7 @@ final class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
 
         $countRows = $this->retryOnDeadlock(function () use ($data, $whereStatements) {
             return $this->db->update($data, $whereStatements);
-        }, true);
+        }, $this->db);
 
         // workerModel can not be set to mutex because no entry with same id and hash can be found in database
         // nothing to log since this can happen often
@@ -529,7 +529,7 @@ final class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
         $values = [$this->getId()];
         $stmt = $this->retryOnDeadlock(function () use ($sql, $values) {
             return $this->db->getAdapter()->query($sql, $values);
-        }, true);
+        }, $this->db);
         $result = $stmt->rowCount();
 
         return $result > 0;
@@ -649,7 +649,7 @@ final class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
      */
     public function clean(array $states): void
     {
-        $this->reduceDeadlocks();
+        $this->reduceDeadlocks($this->db);
         $this->db->delete([
             'state in (?)' => $states,
         ]);
@@ -829,7 +829,7 @@ final class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
                 $workerExclude = $this->db->getAdapter()->quoteInto(' AND worker NOT IN (?)', $exludedWorkers);
             }
 
-            $this->reduceDeadlocks();
+            $this->reduceDeadlocks($this->db);
             $affectedStates = [self::STATE_WAITING, self::STATE_SCHEDULED, self::STATE_PREPARE, self::STATE_DELAYED];
             if ($includeRunning) {
                 $affectedStates[] = self::STATE_RUNNING;
@@ -870,7 +870,7 @@ final class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
         $bindings = [$this->getTaskGuid(), $this->getWorker(), $this->getId()];
         $this->retryOnDeadlock(function () use ($sql, $bindings) {
             return $this->db->getAdapter()->query($sql, $bindings);
-        }, true);
+        }, $this->db);
     }
 
     /**
@@ -963,7 +963,7 @@ final class ZfExtended_Models_Worker extends ZfExtended_Models_Entity_Abstract
             ], [
                 'id = ?' => $id,
             ]) > 0;
-        }, true);
+        }, $this->db);
 
         return $isUpdated;
     }

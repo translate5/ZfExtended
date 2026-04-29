@@ -270,10 +270,8 @@ class ZfExtended_Logger
 
     /**
      * Prepares the event instance
-     * @param array? $extraData or null
-     * @return ZfExtended_Logger_Event
      */
-    protected function prepareEvent(int $level, string $code, ?array $extraData = [])
+    protected function prepareEvent(int $level, string $code, ?array $extraData = []): ZfExtended_Logger_Event
     {
         $event = new ZfExtended_Logger_Event();
         $event->created = NOW_ISO;
@@ -386,9 +384,8 @@ class ZfExtended_Logger
 
     /**
      * The trace information is set if
-     * @param Exception $e
      */
-    protected function fillTrace(ZfExtended_Logger_Event $event, \Throwable $e = null)
+    protected function fillTrace(ZfExtended_Logger_Event $event, \Throwable $e = null): void
     {
         if (($this->enableTraceFor & $event->level) == 0) {
             return;

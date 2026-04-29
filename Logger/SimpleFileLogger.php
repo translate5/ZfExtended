@@ -29,8 +29,8 @@ class SimpleFileLogger
     {
         // securing non-rotated logfiles: prevent growing too big ...
         if ($this->maxSize > 0) {
-            $size = filesize($this->logDirPath) ?? 0;
-            if ($size > $this->maxSize) {
+            $size = filesize($this->logDirPath);
+            if ($size && $size > $this->maxSize) {
                 $remain = -1 * (int) floor($this->maxSize / 2);
                 $lastHalf = file_get_contents($this->logDirPath, false, null, $remain);
                 file_put_contents($this->logDirPath, $lastHalf);
