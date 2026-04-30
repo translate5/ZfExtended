@@ -93,6 +93,10 @@ class Mailer extends Zend_Mail
         }
 
         try {
+            /* @phpstan-ignore-next-line value IS null, phpdoc from parent is wrong */
+            if ($this->getMessageId() === null) {
+                $this->setMessageId();
+            }
             parent::send($transport);
             $this->mailLog->logMail($this, 'SUCCESS');
         } catch (Throwable $e) {
@@ -110,6 +114,14 @@ class Mailer extends Zend_Mail
         }
 
         return $this;
+    }
+
+    public function createMessageId(): string
+    {
+        $secret = $this->config->runtimeOptions->authentication->secret;
+
+        return sha1($secret . time() . getmypid() . bin2hex(random_bytes(64)))
+            . '@' . $this->config->runtimeOptions->server->name;
     }
 
     /**
