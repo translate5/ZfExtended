@@ -54,19 +54,6 @@ class ZfExtended_Zendoverwrites_Form extends Zend_Form
      */
     protected $_form;
 
-    /**
-     * Sorgt dafür, dass Optionen übergeben werden können
-     *
-     * - sorgt dafür, dass der eigene noCsrf-Validator NoCsrfs ausgeführt werden kann
-     *   indem alle nocsrf-Hashs mit dem Key $bisheriger_key.'__nocsrfCopyOld' in der
-     *   Session gespeichert werden. Grund: Sobald der Kontruktor von Zend_Form
-     *   für ein Formular aufgerufen wird, wird der vorhandene Hash aus der Session
-     *   gelöscht.
-     *
-     * @param string form Dateiname inkl. Endung einer ini-Konfigurationsdatei
-     *               für das Formular
-     * @param mixed options options-Paramter von Zend_Form
-     */
     public function __construct(string $form, $options = null)
     {
         foreach ($_SESSION as $key => $val) {

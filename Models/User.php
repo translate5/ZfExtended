@@ -40,7 +40,6 @@ use MittagQI\ZfExtended\Acl\ConfigLevelResource;
  * @method void setOpenIdIssuer(string $openIdIssuer)
  * @method void setOpenIdSubject(string $openIdSubject)
  *
- * @method string getId()
  * @method string getUserGuid()
  * @method string getFirstName()
  * @method string getSurName()
@@ -466,5 +465,12 @@ class ZfExtended_Models_User extends ZfExtended_Models_Entity_Abstract
     public function assignCustomers(array $customers): void
     {
         $this->setCustomers(',' . implode(',', $customers) . ',');
+    }
+
+    public function getId(): ?int
+    {
+        $id = $this->get('id');
+
+        return $id === null ? $id : (int) $id;
     }
 }

@@ -114,13 +114,7 @@ class ZfExtended_Validate_IdenticalField extends Zend_Validate_Abstract
         return $this->_fieldTitle;
     }
 
-    /**
-     * Sets the field title.
-     *
-     * @param  string:null $fieldTitle
-     * @return Zend_Validate_Abstract Provides a fluent interface
-     */
-    public function setFieldTitle($fieldTitle = null)
+    public function setFieldTitle(?string $fieldTitle = null): static
     {
         $this->_fieldTitle = $fieldTitle ? $fieldTitle : $this->_fieldName;
 

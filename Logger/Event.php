@@ -72,10 +72,7 @@ class ZfExtended_Logger_Event
      */
     public $domain;
 
-    /**
-     * @var Exception
-     */
-    public $exception;
+    public ?Throwable $exception = null;
 
     /**
      * @var ZfExtended_Logger_Event

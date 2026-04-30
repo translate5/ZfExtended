@@ -26,29 +26,27 @@ trait ZfExtended_Models_Db_DeadLockHandlerTrait
 {
     /**
      * how often should the function be retried on a deadlock
-     * @var integer
      */
-    private $DEADLOCK_REPETITIONS = 10;
+    private const int DEADLOCK_REPETITIONS = 10;
 
     /**
      * how long should we wait between the retries, in seconds
-     * @var integer
      */
-    protected $MAX_DEADLOCK_SLEEP = 20;
+    protected const int MAX_DEADLOCK_SLEEP = 20;
 
     /**
      * Executes the given function, and just do nothing if a DB DeadLock occurs
      *  (for example if retrying the transaction makes no sense)
-     * @param bool $reduceDeadlocks Usable when trait is used on Model! Otherwise, call reduceDeadlocks manually!
+     * @param Zend_Db_Table_Abstract|null $reduceDeadlocks Give $db instance to call optional reduceDeadlocks call
      * @return mixed returns the $function return value
      * @throws Zend_Db_Exception
      * @throws Zend_Exception
      */
-    public function ignoreOnDeadlock(callable $function, bool $reduceDeadlocks = false)
+    public function ignoreOnDeadlock(callable $function, ?Zend_Db_Table_Abstract $reduceDeadlocks = null): mixed
     {
         try {
-            if ($reduceDeadlocks) {
-                $this->reduceDeadlocks();
+            if (! is_null($reduceDeadlocks)) {
+                $this->reduceDeadlocks($reduceDeadlocks);
             }
 
             return $function();
@@ -72,39 +70,40 @@ trait ZfExtended_Models_Db_DeadLockHandlerTrait
      * the usage of READ COMMITTED reduces the risk of dead locks for update and delete statements,
      * since record locks are released after evaluating the WHERE condition of the statement with that level.
      */
-    public function reduceDeadlocks(Zend_Db_Table_Abstract $db = null)
+    public function reduceDeadlocks(Zend_Db_Table_Abstract $db): void
     {
-        $db = $db ?? $this->db ?? null;
-        if (! $db instanceof Zend_Db_Table_Abstract) {
-            throw new LogicException('db is not given or no instance of Zend_Db_Table_Abstract!');
-        }
         $db->getAdapter()->query('SET TRANSACTION ISOLATION LEVEL READ COMMITTED');
     }
 
     /**
      * Executes the given function, and retries the execution if a DB DeadLock occurs
-     * @param bool $reduceDeadlocks Only usable when trait is used on Model!
+     * @param Zend_Db_Table_Abstract|null $reduceDeadlocks Give $db instance to call optional reduceDeadlocks call
      * @return mixed returns the $function return value
      * @throws Zend_Db_Exception
      * @throws Zend_Exception
      * @throws ZfExtended_Models_Db_Exceptions_DeadLockHandler
      */
-    public function retryOnDeadlock(callable $function, bool $reduceDeadlocks = false)
+    public function retryOnDeadlock(callable $function, ?Zend_Db_Table_Abstract $reduceDeadlocks = null): mixed
     {
         $e = null;
-        for ($i = 0; $i < $this->DEADLOCK_REPETITIONS; $i++) {
+        for ($i = 0; $i < self::DEADLOCK_REPETITIONS; $i++) {
             try {
-                if ($reduceDeadlocks) {
-                    $this->reduceDeadlocks();
+                if (! is_null($reduceDeadlocks)) {
+                    $this->reduceDeadlocks($reduceDeadlocks);
                 }
                 $result = $function();
                 if ($i > 0 && ! empty($e)) {
-                    $logger = Zend_Registry::get('logger')->cloneMe(ZfExtended_Models_Db_Exceptions_DeadLockHandler::DOMAIN);
+                    $logger = Zend_Registry::get('logger')
+                        ->cloneMe(ZfExtended_Models_Db_Exceptions_DeadLockHandler::DOMAIN);
                     /* @var $logger ZfExtended_Logger */
-                    $logger->debug('E1202', 'A transaction could be completed after {retries} retries after a DB deadlock.', [
-                        'deadlock' => (string) $e,
-                        'retries' => $i,
-                    ]);
+                    $logger->debug(
+                        'E1202',
+                        'A transaction could be completed after {retries} retries after a DB deadlock.',
+                        [
+                            'deadlock' => (string) $e,
+                            'retries' => $i,
+                        ]
+                    );
                 }
 
                 return $result;
@@ -112,7 +111,7 @@ trait ZfExtended_Models_Db_DeadLockHandlerTrait
                 //hier schleife
                 $this->throwIfNotDeadLockException($e);
                 // use random time to avoid that two processes collide again and again
-                sleep(rand(1, $this->MAX_DEADLOCK_SLEEP));
+                sleep(rand(1, self::MAX_DEADLOCK_SLEEP));
             }
         }
 
@@ -123,14 +122,18 @@ trait ZfExtended_Models_Db_DeadLockHandlerTrait
 
     /**
      * Handles DB Exceptions: encapsulates Deadlock found exception
+     * @throws Zend_Db_Exception
      */
-    protected function throwIfNotDeadLockException(Zend_Db_Exception $e)
+    protected function throwIfNotDeadLockException(Zend_Db_Exception $e): void
     {
         $message = $e->getMessage();
-        if (strpos($message, 'Serialization failure: 1213 Deadlock found when trying to get lock; try restarting transaction,') !== false) {
+        if (str_contains(
+            $message,
+            'Serialization failure: 1213 Deadlock found when trying to get lock; try restarting transaction,'
+        )) {
             return;
         }
-        if (strpos($message, 'General error: 1205 Lock wait timeout exceeded; try restarting transaction') !== false) {
+        if (str_contains($message, 'General error: 1205 Lock wait timeout exceeded; try restarting transaction')) {
             return;
         }
 
