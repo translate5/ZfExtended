@@ -22,12 +22,8 @@ https://www.gnu.org/licenses/lgpl-3.0.txt
 END LICENSE AND COPYRIGHT
 */
 
-/**#@+
- * @author Marc Mittag
- * @package ZfExtended
- * @version 2.0
- *
- */
+use MittagQI\ZfExtended\Csp\FrameSourceResolver;
+
 /**
  * Abstract Class, with some general controller-methods
  *
@@ -87,6 +83,16 @@ abstract class ZfExtended_Controllers_Action extends Zend_Controller_Action
             $defaultSrc .= ' ' . $config->runtimeOptions->headers->defaultSrcUrls;
         }
 
+        $frameSrc = $defaultSrc;
+        $dynamicFrameSources = (new FrameSourceResolver(
+            $config,
+            $this->getRequestHost(),
+            $this->getRequestScheme(),
+        ))->getSources();
+        if (! empty($dynamicFrameSources)) {
+            $frameSrc .= ' ' . implode(' ', $dynamicFrameSources);
+        }
+
         $scriptSrc = "'self' 'unsafe-inline' 'unsafe-eval' https://app.therootcause.io";
         if (! empty($config->runtimeOptions->headers->scriptSrcUrls)) {
             $scriptSrc .= ' ' . $config->runtimeOptions->headers->scriptSrcUrls;
@@ -119,8 +125,10 @@ abstract class ZfExtended_Controllers_Action extends Zend_Controller_Action
 
         $this->_response->setHeader(
             'content-security-policy',
-            sprintf('default-src %s; script-src %s; connect-src %s; style-src %s; img-src %s; font-src %s;',
+            sprintf(
+                'default-src %s; frame-src %s; script-src %s; connect-src %s; style-src %s; img-src %s; font-src %s;',
                 $defaultSrc,
+                $frameSrc,
                 $scriptSrc,
                 $connectSrc,
                 $styleSrc,
@@ -146,5 +154,27 @@ abstract class ZfExtended_Controllers_Action extends Zend_Controller_Action
         $this->events->trigger($eventName, $this, [
             'view' => $this->view,
         ]);
+    }
+
+    protected function getRequestScheme(): string
+    {
+        $request = $this->getRequest();
+        if ($request instanceof Zend_Controller_Request_Http) {
+            return $request->getScheme();
+        }
+
+        return 'http';
+    }
+
+    protected function getRequestHost(): string
+    {
+        $request = $this->getRequest();
+        if ($request instanceof Zend_Controller_Request_Http) {
+            $host = $request->getHttpHost();
+
+            return preg_replace('/:\d+$/', '', (string) $host) ?: 'localhost';
+        }
+
+        return 'localhost';
     }
 }
