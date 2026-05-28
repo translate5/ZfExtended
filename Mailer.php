@@ -66,9 +66,17 @@ class Mailer extends Zend_Mail
         /**
          * To fix problems with certain outlook versions that cannot display encoded subject-headers properly
          * we reduce the probability the header needs to be encoded by replacing certain typographical quotes
-         * used widely in translate5 localization with their ASCII counterparts
+         * and dashes used widely in translate5 localization with their ASCII counterparts
          */
-        return parent::setSubject(str_replace(['“', '”'], '"', str_replace(['’', '‘', '’'], "'", $subject)));
+        return parent::setSubject(str_replace(
+            ['“', '”'],
+            '"',
+            str_replace(
+                ['’', '‘', '’'],
+                "'",
+                str_replace(['–', '—', '−'], '-', $subject)
+            )
+        ));
     }
 
     /**
