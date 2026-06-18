@@ -98,7 +98,7 @@ abstract class ZfExtended_Controllers_Action extends Zend_Controller_Action
             $scriptSrc .= ' ' . $config->runtimeOptions->headers->scriptSrcUrls;
         }
 
-        $connectSrc = "'self'";
+        $connectSrc = "'self' https://app.therootcause.io";
         $frontendMessageBusUrl = $config->runtimeOptions->plugins->FrontEndMessageBus->socketServer->httpHost;
         if ($frontendMessageBusUrl) {
             $connectSrc .= " wss://$frontendMessageBusUrl";
