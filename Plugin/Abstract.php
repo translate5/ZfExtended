@@ -85,6 +85,8 @@ abstract class ZfExtended_Plugin_Abstract
      */
     protected static array $services = [];
 
+    private string $appVersion = ZfExtended_Utils::VERSION_DEVELOPMENT;
+
     /**
      * Return the plug-in description
      */
@@ -250,6 +252,7 @@ abstract class ZfExtended_Plugin_Abstract
         $rc = new ReflectionClass($this);
         $this->absolutePluginPath = rtrim(dirname($rc->getFileName()), "/\\");
         $this->init();
+        $this->appVersion = ZfExtended_Utils::getAppVersion();
     }
 
     abstract public function init();
@@ -311,7 +314,8 @@ abstract class ZfExtended_Plugin_Abstract
     public function getResourcePath(string $resource): string
     {
         //the parts /plugins/resources/ are defined by convention
-        return APPLICATION_RUNDIR . '/' . Zend_Registry::get('module') . '/plugins/resources/' . $this->pluginName . '/' . ltrim($resource, '/');
+        return APPLICATION_RUNDIR . '/' . Zend_Registry::get('module') . '/plugins/resources/' . $this->pluginName
+            . '/' . ltrim($resource, '/') . '?v=' . $this->appVersion;
     }
 
     /**
